@@ -1,0 +1,8 @@
+# Business Rule
+
+-  [a_combined_use_between_rules_ontology_and_agents_in brms_design_application_to _sme_in_algeria.pdf](a_combined_use_between_rules_ontology_and_agents_in brms_design_application_to _sme_in_algeria.pdf) 
+-  [a_comparative_study_of rule-based_Inference_engines_for_the_semantic_web.pdf](a_comparative_study_of rule-based_Inference_engines_for_the_semantic_web.pdf) 
+-  [an_efficient_rule-based_distributed_reasoning_framework_for_resource-bounded_systems.pdf](an_efficient_rule-based_distributed_reasoning_framework_for_resource-bounded_systems.pdf) 
+-  [rule_engines_and_production_rule_systems.pdf](rule_engines_and_production_rule_systems.pdf) 
+-  [rule-based_and_ontology-based_policies_toward_a_hybrid_approach_to _control_agents_in_pervasive_environments.pdf](rule-based_and_ontology-based_policies_toward_a_hybrid_approach_to _control_agents_in_pervasive_environments.pdf) 
+-  [semantic_of_business_vocabulary_and_business_rules.pdf](semantic_of_business_vocabulary_and_business_rules.pdf) 
