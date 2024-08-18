@@ -1,0 +1,744 @@
+Knowl Inf Syst
+DOI 10.1007/s10115-016-0933-0
+REGULAR PAPER
+Representation and analysis of enterprise models
+with semantic techniques: an application to ArchiMate,
+e3value and business model canvas
+Artur Caetano1,2·Gonçalo Antunes2·João Pombinho1,2,3·
+Marzieh Bakhshandeh2·José Granjo2,4·José Borbinha1,2·
+Miguel Mira da Silva1,2
+Received: 22 June 2014 / Revised: 23 November 2015 / Accepted: 3 March 2016
+© Springer-V erlag London 2016
+Abstract Enterprise models assist the governance and transformation of organizations
+through the speciﬁcation, communication and analysis of strategy, goals, processes, infor-
+mation, along with the underlying application and technological infrastructure. Such models
+cross-cut different concerns and are often conceptualized using domain-speciﬁc modelling
+languages. This paper explores the application of graph-based semantic techniques to specify,
+integrate and analyse multiple, heterogeneous enterprise models. In particular, the proposal
+described in this paper (1) speciﬁes enterprise models as ontological schemas, (2) uses
+transformation mapping functions to integrate the ontological schemas and (3) analyses
+the integrated schemas with graph querying and logical inference. The proposal is evaluated
+through a scenario that integrates three distinct enterprise modelling languages: the business
+model canvas, e3value, and the business layer of the ArchiMate language. The results show,
+B Artur Caetano
+artur.caetano@tecnico.ulisboa.pt
+Gonçalo Antunes
+goncalo.antunes@tecnico.ulisboa.pt
+João Pombinho
+jpmp@tecnico.ulisboa.pt
+Marzieh Bakhshandeh
+marzieh.bakhshandeh@tecnico.ulisboa.pt
+José Granjo
+jose.granjo@screeninteraction.com
+José Borbinha
+jose.borbinha@tecnico.ulisboa.pt
+Miguel Mira da Silva
+mms@tecnico.ulisboa.pt
+1IST, University of Lisbon, Av. Rovisco Pais 1, 1049-001 Lisboa, Portugal
+2INESC-ID, Rua Alves Redol 9, 1000-029 Lisboa, Portugal
+3NOS Comunicações, Rua Actor António Silva 9, 1600-404 Lisboa, Portugal
+4Screen Interaction AB, Arne Beurlings Torg 3, 164 40 Kista, Stockholm, Sweden
+123
+A. Caetano et al.
+on the one hand, that the graph-based approach is able to handle the speciﬁcation, integration
+and analysis of enterprise models represented with different modelling languages and, onthe other, that the integration challenge resides in deﬁning appropriate mapping functionsbetween the schemas.
+Keywords Enterprise modelling ·Model analysis ·Model integration ·Semantic
+techniques ·Ontology ·ArchiMate ·e3value ·Business model canvas
+1 Introduction
+Enterprise models play an important role in the governance and transformation of digital
+organizations where the business is supported in some degree by information systems andinformation technology [ 1–4]. Enterprise model analysis examines the artefacts, properties
+and dependencies of a model to generate information that can be used to assess, transform orredesign organizational systems [ 5–7]. Model analysis uses information within the models
+or information about the models to drive the overall analysis process [ 8].
+Abusiness model describes how an organization creates and delivers value, and depicts
+the organization from a high level of abstraction [ 9]. A value network describes how a group
+of organizational entities, such as suppliers, producers and clients, exchange value acrossthe value network, and how value ﬂows between the entities, while each implements its ownbusiness model [ 10]. Since a business model abstracts the organization from a high-level
+strategic perspective, it does not to detail how the business is operated or automated. Toachieve such a goal, an enterprise model describes business processes and how processesare realized by applications and technology. An enterprise modelling language ,s u c ha s
+ArchiMate [ 11], can be used for this purpose.
+Business models, value networks and enterprise architecture models address different
+organizational concerns and provide different views on an organization: a business modeldescribes the organization’s strategy in terms of value propositions and value creation; anenterprise architecture model describes how an organization operates, often through thedescription of the relationships between its processes, resources, applications and technol-ogy; and a value network model describes the role of each organization within the widervalue chain. When the system of interest is a single organization, then modelling these threedifferent concerns entails specifying the three underlying models for that organization. Butwhen the system of interest includes multiple organizations, the model landscape comprisesseveral models: there will be a shared value chain model that represents all the organizations,along with at least one business model and one enterprise architecture model for each indi-vidual organization that pertains to the value chain. Although these models address differentconcerns, being able to jointly represent and analyse them is attractive because it contributesto understand the relationships and dependencies between the concepts that are otherwisedistributed across different models. Thus, the integrated models enable to check how thebusiness model of an organization ﬁts into the wider value network, and how the businessoperations are actually realizing the business model [ 12–15].
+There are different approaches to deal with the speciﬁcation, integration and analysis
+of enterprise models. These include multi-perspective enterprise modelling [ 16–19], model
+mapping [ 14,20,21], federated enterprise modelling [ 3,22–25], as well as the application
+of knowledge representation techniques to enterprise modelling [ 26–28]. This paper uses
+semantic techniques to represent and integrate enterprise models through the deﬁnition ofmapping functions that relate conceptual schemas. The content and structure of the integrated
+123
+Representation and analysis of enterprise models
+models can then be analysed with graph querying and logical inference. In other words,
+this paper assesses the suitability of applying ontologies to represent and analyse federated
+enterprise models . In particular, the research here reported explores the following avenues:
+•The application of ontologies to represent enterprise models. The paper represents the
+business model canvas [ 9], e3value [ 29], and a subset of ArchiMate’s business layer [ 11].
+•The application of ontologies to integrate enterprise models. Integration is accomplished
+through the speciﬁcation of mapping functions.
+•The application of computational semantic techniques (in particular, graph querying and
+logical inference) to analyse the integrated enterprise models.
+The contribution of this paper is presented as a design artefact [ 30,31], containing a
+set of ontological schemas designed to represent, integrate and analyse federated enterprisemodels. The artefact is demonstrated through the speciﬁcation, integration and analysis of amodel landscape comprising three enterprise modelling languages: the business model canvas(BMC), e3value and ArchiMate. To produce the design artefact, the different models werespeciﬁed as individual ontological schemas and then integrated through mapping. The artefactwas evaluated with a scenario that analyses the integrated models. The main contribution ofthe paper is assessing the application of semantic techniques with regard to enterprise modelspeciﬁcation, integration and analysis. These techniques provide support for creating andvalidating models for different but related perspectives of the enterprise [ 7,15,32].
+The remainder of this paper is structured as follows. The next section introduces the BMC,
+e3value and the ArchiMate modelling languages, along with a short introduction to ontologyengineering. Section 3describes the proposed approach to the representation, integration and
+analysis of enterprise models. Section 4applies the approach to the integration of the BMC,
+e3value and ArchiMate languages. Section 5evaluates the design of the artefact with the
+analysis of an electronic health service business model. Finally, Sect. 6concludes the article.
+2 Background
+This section introduces the business model canvas, e3value and ArchiMate. The combination
+of these enterprise modelling languages emphasizes their collective capability to represent thecomplementary perspectives of teleology and ontology . The concept of teleology originates
+from the Greek telos , which means “end”, “purpose” or “goal”. It concerns the explanation
+of a thing in terms of the end for which the thing exists or was produced for. The teleologicalperspective of an enterprise is presented in duality with its ontological perspective. Ontologyis deﬁned as the study or description of things as they are. As explained in the following sub-sections, the business model canvas and e3V alue languages mainly focus on the teleologicalperspective, i.e. on the “purpose” or “goal” of an organization and thus abstract from detailedenterprise operations, whereas ArchiMate focusses on the ontological perspective.
+2.1 Business model canvas
+A business model describes how an organization creates, delivers and captures value [ 9]. Since
+organizations depend on the value they create and on how they capture it, the development ofbusiness models is often considered a vector for innovation. In the words of Chesbrough [ 33],
+“a company has at least as much value to gain from developing an innovative new businessmodel as from developing an innovative new technology”. The business model canvas (BMC)is a “visual template that represents the business model of an organization and translates it
+123
+A. Caetano et al.
+Fig. 1 The business model canvas (from [ 9])
+Table 1 The concepts of the business model canvas (adapted from [ 9])
+Concept Domain Deﬁnition
+V alue proposition Offering A bundle of services or products that create value for a
+Customer Segment
+Customer segment Customers A group to whom the organization delivers
+Value Proposition
+Channel Customers The mechanism used by the organization to deliver a
+Value Proposition to a Customer Segment
+Customer relationship Customers The type of relationship towards a Customer Segment
+(e.g. customer acquisition, customer retention, upselling)
+Key activities Infrastructure The core activities that create or support the creation of the
+Value Proposition
+Key resources Infrastructure The assets required for the organization to operate its
+business model. These resources are often used by theKey Activities .
+Key partnerships Infrastructure The external entities (e.g. suppliers, distributors) that the
+organization relies on to operate its business model
+Cost structure Finances The costs incurred while creating and delivering the Value
+Proposition and maintaining Customer Relationships
+Revenue streams Finances How each Customer Segment generates revenue
+into explicit knowledge” [ 9]. The focus of the BMC is describing a single organization from
+a high-level strategic perspective. As depicted in Fig. 1, the canvas comprises nine building
+blocks, whose content is described in Table 1.
+123
+Representation and analysis of enterprise models
+Fig. 2 The business model ontology (adapted from [ 34])
+The BMC is often populated through collaborative and visual thinking techniques, such as
+ideation, brainstorming, prototyping and storytelling [ 9]. These techniques promote commu-
+nication between the stakeholders and to foster innovation. Although the BMC is presentedas a visual template, it is grounded on the business model ontology (v. Fig. 2) that establishes
+the foundations behind its concepts and relationships [ 34].
+2.2 e3value
+A value network provides a common understanding of a business idea that is executed by a
+network of actors that jointly create, distribute and consume value [ 12]. The e3value considers
+that value transactions are economically reciprocal, i.e. an actor providing a value objectexpects to receive a reciprocal value object in return. V alue models communicate the role ofa single company within the value network, and make possible analysing how the networkcreates and delivers value as the result of inter-organizational cooperation[ 10]. Figure 3
+depicts the e3value meta-model, and Table 2describes its main concepts.
+V alue networks are abstracted as a set of value transactions occurring between actors.
+While the business model canvas focuses on a single node of the value network, the e3valueencompasses the overall value network [ 13]. BMC is designed to convey and discuss sub-
+jective business ideas while lowering the adoption barriers to its users [ 9]. The e3value is
+designed not only to visually communicate a value network model but also to support modelchecking and numerical computation, e.g. to simulate the economic viability of differentvalue networks. Therefore, combining BMC and e3value models makes possible describingand analysing the same scenario according to complementary perspectives [ 13,14,36,37].
+2.3 ArchiMate
+ArchiMate is an enterprise architecture modelling language that describes the relation-
+ships between business services, processes and the underlying application and technologicalinfrastructure. To do so, the concepts of ArchiMate are organized according to a frameworkcomposed of three layers: business, application and infrastructure [ 11]. The internal busi-
+123
+A. Caetano et al.
+Fig. 3 The e3value meta-model (adapted from [ 12,35])
+Table 2 The concepts of e3value (adapted from [ 10,12])
+Concept Deﬁnition
+V alue object A service or a product that is of value to at least one Actor
+Actor An economically independent entity able to exchange Value Objects
+Market segment A group of Actors that evaluate the same Value Object in a similar way
+V alue port An abstraction of how an Actor provides or requests Value Objects .
+It is realized by one or more Value Activities
+V alue activity An activity performed by an Actor that directly yields proﬁt or that increases the
+value of a Value Object
+V alue offer A group of Value Por ts with the same value ﬂow direction
+(either inbound or outbound)
+V alue interface A group of Value Por ts with economic reciprocity. It consists of one or more
+pairs of Value Offers
+V alue exchange The transmission of a Value Object from an outbound to an inbound Value Por t
+V alue transaction The set of all Value Exchanges associated to the same Value Interface .A Value
+T ransaction is atomic
+ness operations interface with the external environment by providing business services and
+products to the organization’s external clients. Business services are internally realized bybusiness processes that use and transform business objects, which are assigned or executed bybusiness actors. The application layer describes how automated or semi-automated businessprocess are supported by applications, along with the structure, behaviour and dependenciesof the applications. The technological infrastructure layer describes how applications aresupported by technology in terms of processing, communication and storage. Thus, eachlayer isolates a domain and provides services that support the operation of the upper adjacentlayer. The ArchiMate framework further classiﬁes all of the concepts found in these threelayers according to three types: behaviour, active structure and passive structure. These typesconform to the same set of rules: behaviour elements are always assigned to active struc-
+123
+Representation and analysis of enterprise models
+Fig. 4 The ArchiMate meta-model (adapted from [ 11,21])
+Table 3 A subset of concepts from ArchiMate’s business layer (adapted from [ 11])
+Concept Deﬁnition
+V alue The relative worth or utility of a Business Service or a Product
+Product A coherent collection of Business Services offered to an internal or external
+Actor , e.g. an internal department, an external customer
+Business service A behavioural element that fulﬁls a business need of an Actor
+Business interface A point of access from where a Business Service is made available to the
+environment
+Business process A behavioural element that sequences activities as a means to create Products or
+deliver Business Services .A Process isassigned to Actors and uses
+Business Objects
+Business object A passive structural entity that is relevant from a business perspective to support
+the operation of the organization
+Actor An active structural entity that is capable of performing behaviour
+ture elements, and passive structure elements are only accessed by behaviour elements. This
+means that active structure elements perform behaviour, while behaviour elements specifyhow the state of passive structure elements changes. Thus, a passive structure element is onlyable to change state as the result of behaviour performed on it by some active structure ele-ment. Figure 4shows a simpliﬁed view of ArchiMate’s meta-model, and Table 3summarizes
+a subset of the concepts found in ArchiMate’s business layer.
+123
+A. Caetano et al.
+2.4 Ontologies
+The term ontology originates from the Greek ontos (being) and logos (word). From a
+philosophical perspective, it is deﬁned as a “systematic explanation of existence”, whilein computer science it is often used to convey the notion of a “formal, explicit speciﬁca-tion of a shared conceptualisation” [ 38]. The term conceptualization refers to an “abstract,
+simpliﬁed view of the world” that contains “the objects, concepts, and other entities that areassumed to exist in some area of interest” along with “the relationships that hold amongthem” [ 39]. The term explicit refers to the deﬁnition of the “type of concepts used, and the
+constraints on their use” while formal refers to the fact that the conceptualization “should be
+machine readable”. Finally, shared means that the ontology “captures consensual knowledge”
+[40].
+Ontology integration is about identifying shared concepts and relationships between two
+or more ontologies. Integration relates these elements and uses the resulting knowledge forsome purpose, such as merging a group of ontologies into a single ontology [ 41]. Integration
+is closely related to ontology alignment ,merging and mapping . Ontology alignment concerns
+the discovery of contextual correspondences between two or more ontologies. Merging is
+the creation of a new ontology through the “union of the source ontologies” while capturing“all the knowledge from the original ontologies”. Merging can be challenging since “allcorrespondences and differences between the ontologies need to be reﬂected in the mergedontology”. Ontology mapping concerns the “representation of the correspondences between
+ontologies”. Correspondences are typically “stored separately from the ontologies” sincethey are not “part of the ontologies themselves”. Thus, mapping often represents the resultsof aligning different ontologies [ 42].
+Reasoning denotes a mechanism that takes facts that are implicit in an ontology and
+transforms them to explicit facts. Reasoning can be classiﬁed as deductive, inductive andabductive [ 43]. Deductive reasoning derives a logical consequence from a set of assumptions.
+For example, if all swans are white, and if a bird is a swan, then, by deduction, the bird iswhite. Induction produces conclusions with a degree of uncertainty: if all swans observedso far are white, then, by induction, all swans are likely to be white, although that fact maynot hold universally true. Abduction infers a condition from a consequence: given that swanscan ﬂy and that ﬂying is a means of motion, then if a swan has moved, thus, by abduction,the swan has ﬂown.
+Description logics (DL) are “a family of logic-based knowledge representation languages
+suitable for the representation of ontologies”, which can be seen as “a decidable fragment ofﬁrst-order logic” [ 44]. DL describe domains in terms of concepts ,roles ,a n d individuals .R o l e s
+and concepts are related using logical statements named axioms . Axioms can be of two kinds:
+terminological and assertional. T erminological axioms describe concepts and properties of
+the concepts, while assertional axioms are statements about the individuals or instances that
+are compatible with terminological axioms. A T-Box is a ﬁnite set of terminological axioms,and a A-Box is a ﬁnite set of assertional axioms. Together, the T-Box and A-Box statementsdeﬁne a knowledge base .
+Several varieties of DL exist with differing degrees of expressiveness. The base DL is the
+Attributive Language with Complements (
+ALC ), which enables relating the concepts with
+the following functions: union, intersection, complement, universal restriction and existentialrestriction. The expressiveness of
+ALC can be augmented with transitive and inverse roles,
+role hierarchy, cardinality restrictions, qualiﬁed cardinality restrictions, concrete domainsand enumerated classes.
+123
+Representation and analysis of enterprise models
+3 Enterprise model representation and analysis
+This section describes fundamentals of the proposed approach, namely schema representation
+(Sect. 3.1), schema integration (Sect. 3.2) and schema analysis (Sect. 3.3).
+3.1 Model representation
+A domain model is speciﬁed using a conceptual schema that deﬁnes its domain-speciﬁc entity
+types and relationship types. Thus, the instances of each entity and relationship are classiﬁedaccording to the types deﬁned in the schema. These conceptual schemas and the underlyinginformation base can be represented as triples (subject, predicate, object) or as ontologies[45,46].
+Enterprise models often involve multiple domains and stakeholders. To manage this fact,
+ISO 42010 recommends deﬁning viewpoints and generating views according to the view-points to promote separation of concerns, i.e. isolating certain aspects of an architectureaccording to the concerns of its stakeholders [ 47]. Since ontologies can be analysed with
+graph-based and semantic queries, a viewpoint can be speciﬁed as a set of axioms fromwhich views are derived from. This approach makes possible specifying viewpoints such as“determine all entities of type Business Process that relate with at least two entities of typeBusiness Object via the userelationship”.
+3.2 Model integration
+Enterprise models cross-cut multiple domains, ranging from strategy, goals and business
+processes, to information systems, performance indicators and technological infrastructure.One approach to handle multiple-domain models is deﬁning a common meta-model thatuniﬁes all the relevant concepts found in the multiple domains being addressed [ 22]. A beneﬁt
+is that the meta-model can be designed with conceptual consistency as a principle, but at theexpense of speciﬁcity and design effort. Moreover, such meta-models often need to generalizeor specify concepts at a high level of abstraction in order to make concept uniﬁcation possible.This approach may prove not to be adequate to address the concerns of the stakeholders ofthe model in terms of the required granularity or level of detail. As a result, some authorsargue that this approach is only appropriate to integrate domains that already share similarconcepts at a similar level of abstraction [ 5,48–50]. An alternative approach is using federated
+models or domain-speciﬁc modelling languages [ 4,18–20,22,24,28,51]. Domain speciﬁcity
+is also acknowledged by the application of situational modelling to enterprise architecturemanagement as it facilitates the selection of a suitable modelling approach according to theconstraints and goals of the project at hand [ 3,48,52,53].
+This article proposes a design artefact that consists of a set of domain-speciﬁc ontologies
+(DSO) that are linked together by functions that act as transformation maps [ 7,54,55]. Each
+DSO is regarded as a domain-speciﬁc modelling language that conceptualizes and representsthe concerns bounded to a given domain. The domain-speciﬁc ontologies can be comple-mented by an upper ontology (UO). An UO is a schema that deﬁnes generic entity andrelationship types from where the domain-speciﬁc ontologies can be derived from. Using anUO facilitates the integration of domain-speciﬁc ontologies and guides the development ofnew ontologies [ 56]. Examples of related upper ontologies include the Uniﬁed Foundational
+Ontology [ 27], the Simple Knowledge Organization System Reference [ 57], and the General
+Formal Ontology [ 58].
+123
+A. Caetano et al.
+DSO 0 DSO 1
+DSO 3DSO 0-DSO 1
+mapDSO 1-DSO 2
+map
+DSO 4DSO 0-DSO 3
+mapDSO 2
+DSO 4-DSO 2
+map
+Fig. 5 Using four transformation maps to federate ﬁve domain-speciﬁc ontologies
+The modelling of multiple domains is addressed through the speciﬁcation of multiple
+DSO along with transformation maps that link the domain-speciﬁc concepts according to theconcerns of the stakeholders. Thus, a transformation map states the contextual relationshipsbetween a pair of DSO. As a result, a transformation map cannot be regarded as universal asit is designed to translate how concepts relate in a speciﬁc context and for a speciﬁc purpose.
+Atransformation map is deﬁned as a conceptual schema and speciﬁes the semantics
+behind the relationships between schemas. The same schema may map to more than oneschema, which means that the same concept may be mapped to multiple concepts in differentschemas. A transformation map describes the transformation functions between the concepts
+pertaining to a pair of DSO. A function may describe several types of concept relationships,such as isomorphic 1:1 equivalence relationships, 1:n aggregation, concept classiﬁcation, aswell as rule-based or pattern-based transformations [ 7,20,54]. The deﬁnition of a function
+must also consider mapping deﬁciencies, such as incompleteness, redundancy, excess andoverload [ 59]. There are speciﬁc techniques to handle these deﬁciencies depending on the
+integration requirements [ 46,60].
+Figure 5exempliﬁes the transformation mapping between ﬁve ontological schemas. Each
+map deﬁnes the structural and semantic relationships that are required to match their types.
+3.3 Model analysis
+Model analysis focuses on the examination of model artefacts, properties and dependencies[5]. Since the conceptualization of multiple domains implies the deﬁnition of a landscape of
+schemas (DSO), the analysis task can be classiﬁed as:
+•Intra-schema analysis , when it targets a single schema S,
+•Inter-schema analysis , when it targets a pair of schemas (S
+1,S2),o r
+•Chained analysis , when it combines intra- and inter-schema analysis over two or more
+schemas (S1,..., Sn).
+The analysis of schemas can be accomplished through logical inference or graph analysis.
+Graph analysis is applicable because an ontology intrinsically represents a labelled anddirected graph. This means that the corresponding RDF(S) graph of (subject, predicate,object) triples can be analysed using a semantic query language such as SPARQL [ 61].
+Description logics uses inference to provide ﬁve types of reasoning: subsumption, instance
+checking, relation checking, concept consistency, and knowledge base consistency. Reason-ing can be used to analyse the entity and relationship types speciﬁed in the conceptualschema as well as the individual instances of these types. Subsumption and instance check-
+inganalyse model heterogeneity and involve classifying types and its individuals in order
+to refactor the model. Relation checking determines how entity types relate to each other
+through a chain of relationship types. Thus, it supports dependency analysis, i.e. checkingwhether two elements are related to each other and determining the nature of the relationship.
+123
+Representation and analysis of enterprise models
+It also supports analysing the coverage of a model, e.g. to determine how the model’s artefacts
+intersect architecture layers. It also plays a role in interface analysis as it enables assessingcohesion and coupling of an artefact. Finally, relation checking aids the computation of met-
+rics, e.g. used for complexity and cost/beneﬁt analysis. Concept consistency can be used to
+verify the existence of contradictions between the deﬁnitions of a type. This can be used todetermine whether rules or requirements are met by a schema. Knowledge base consistency
+checking can be used to verify whether the deﬁnition of an individual entity or relationshipcomplies with the deﬁnition of the corresponding type, i.e. whether a model is valid againstthe speciﬁcation of a meta-model.
+The application of reasoning to analyse dependencies is limited to the relationships
+between different types since it is not possible to analyse relationships between type properties[50]. Reasoning is also not a good candidate to perform the computation of metrics required
+for complexity analysis and cost/beneﬁt analysis. In these scenarios, reasoning requires tobe complemented with other analytical techniques, such as graph analysis.
+4 Federating ArchiMate, e3value, and BMC
+This section describes an application of the concepts described earlier to the representa-tion, integration and analysis of the ArchiMate, e3value and BMC modelling languages asdepicted in Fig. 6. Integrating these models into a federated model landscape proves to be
+attractive because it contributes to understanding how the business model of an organizationﬁts into a value network, and how the processes of an organization realize the corresponding
+Consumer/Client Organiza/g415on #1 Organiza/g415on #2
+Value network model
+Business model Business model
+EA model EA model
+Fig. 6 The federated BMC, e3value and ArchiMate models
+123
+A. Caetano et al.
+Fig. 7 The T-box OWL schema of e3value’s Value Interface
+business model [ 13,14,35]. This goal is achieved by performing three steps: (1) representing
+schemas that specify the ArchiMate, BMC and e3value modelling languages, (2) deﬁning thetransformation maps that integrate these schemas for the purpose of alignment checking and(3) analysing the federated models. These steps are described in the following three sections.
+4.1 Model representation
+Model representation concerns creating conceptual schemas that specify the domain to beanalysed. It entails specifying the concepts behind a modelling language as an ontologicalschema. This section deals with representing the e3value, business model canvas, and Archi-Mate meta-models using ontological schemas. Therefore, the e3value concepts are speciﬁedas a OWL-DL schema that represents its T-box. OWL object properties deﬁne the constraintsfrom the meta-model, such as the restrictions that e3value deﬁnes over the concept of V alueInterface as depicted in Fig. 7. ArchiMate entities are speciﬁed as OWL Classes ,a n dr e l a -
+tionships as Object Properties . Restrictions are speciﬁed using Inverse Object Properties
+and Super Object Properties so that ArchiMate’s derived relationships can be extracted
+through the use of reasoners. Dependencies between entities are represented with Super
+Object Property chains. The depends from and depends to Object Property are inverse
+and transitive Super Object Property relationships that specify ArchiMate’s aggregation ,
+composition ,assignment ,usage and realization relationships.
+4.2 Model integration
+Schema federation is accomplished through the speciﬁcation of transformation maps that
+relate the concepts deﬁned in the domain-speciﬁc ontologies. This section describes the inte-gration of the ArchiMate, e3value and BMC schemas using three domain-speciﬁc ontologies.But other schema integration conﬁgurations are possible, e.g. using ArchiMate as an upperontology and considering e3value and BMC as two DSO. Other alternatives include usingan ontology such as TOVE or the Enterprise Ontology [ 26] as upper-level ontology and
+integrating the ArchiMate, e3value and BMC schemas with this UO.
+A transformation map deﬁnes functions that map the relevant types between a pair of
+schemas. Table 4describes the source material that was used to deﬁne the transformation
+123
+Representation and analysis of enterprise models
+Table 4 Sources used to ground the mapping between BMC, e3value and ArchiMate
+Languages Source
+BMC↔e3value Gordijn et al. [ 13]
+BMC→ArchiMate Iacob et al. [ 36], Meertens et al. [ 37], Fritscher and Pigneur [ 62]
+e3value →ArchiMate de Kinderen et al. [ 14,63], Pombinho et al. [ 35],
+Pombinho and Tribolet [ 64]
+Enterprise models
+Business Model
+Value Network 
+Model
+Business Layer 
+Modelcomplies with
+complies withrealizesrepresented with
+represented withBMC-e3value map
+BMC-ArchiMate 
+map
+e3value-ArchiMate
+mapBMC DSO
+e3value DSO
+ArchiMate DSO represented withSeman/g415c (DSO) representa/g415ons
+Fig. 8 Relationships between the three enterprise modelling languages from a value exchange perspective
+and the corresponding DSO representations
+functions between e3value, business model canvas and the ArchiMate languages. It is impor-
+tant to remark that is not a goal of this paper to demonstrate the soundness of these mappingsbut instead to assess whether semantic techniques can be used to represent, integrate andanalyse different enterprise models, regardless of the actual mapping functions.
+Schema representation and integration are context dependent as the mappings are designed
+to address speciﬁc concerns. For this demonstration, we set as the primary concern theanalysis of business models from a value network perspective . This means that the e3value
+schema deﬁnes the baseline to analyse how value exchange occurs, while the BMC andArchiMate schemas are used to understand the strategic and operational perspectives of valueexchange. Thus, federating these schemas allows to understand the alignment between thesedomains. Figure 8depicts the federation strategy here described, where the value network
+concepts (e3value) are satisﬁed by the strategic business model (BMC) and realized by theoperational business concepts (ArchiMate). One value network model relates to many BMCand ArchiMate models, as there is one BMC and ArchiMate model for each organizationthat is part of the value network.
+An overview of the mapping functions between the three schemas is shown in Fig. 9:
+e3value: Key Partners and e3value: Customer Segments have direct correspondence
+toArchiMate: Actors and to ArchiMate: Business Actors .A BMC: Revenue Stream
+corresponds to e3value: Value T ransmission . V alue transmission corresponds to a Archi-
+Mate: Business Service and gets value from BMC: Key Partners using a certain BMC:
+Key Activity to transmit a BMC: Value Proposition to a certain customer segment through
+123
+A. Caetano et al.
+Key Partner Actor Actor
+Customer Segment
+Revenue Stream
+Key Ac/g415vity
+Value Proposi/g415on
+Key Resources
+ChannelValue Ac/g415vity
+Value Interface
+Value ObjectBusiness Service
+Business Process
+Product
+ValueBusiness Object
+Business InterfacegetsValueFrom
+transmitsValueTo
+transmitsValueTooTeulaVstimsnarttransmitsValueTo
+getsValueFromValue 
+Transmission
+equivalenceBMC 
+conceptse3value 
+conceptsArchiMate 
+concepts
+value to/from
+Fig. 9 Overview of the mapping functions between BMC, e3value and ArchiMate
+aBMC: Channel .A BMC: Value Proposition corresponds to e3value: Value Interface
+and ArchiMate: product .A BMC: Key Activity corresponds to e3value: Value Activity
+and to ArchiMate: Business Process .T h e BMC: Key Resources correspond to e3value:
+Value Object that map to tangible ArchiMate: Business Objects . Finally, BMC: Channel
+corresponds to ArchiMate: Business Interface .
+The set of mapping functions between each pair of schemas is implemented as a separate
+ontology so that the relationships do not become coupled to a speciﬁc meta-model. Figure 10
+shows part of the OWL-DL mapping functions that specify e3value’s Value T ransmission
+concept. The next sections detail the rationale of the mapping between the e3value, BMCand ArchiMate languages.
+123
+Representation and analysis of enterprise models
+Fig. 10 Partial OWL-DL speciﬁcation of e3value’s value transmission
+4.2.1 Mapping BMC and e3value
+Although modelling an organization from different perspectives, the business model canvas
+and e3value share a number of similarities. Gordijn et al. [ 13] compares and maps the con-
+cepts between these two languages. Table 5summarizes how the ﬁve core concepts of e3value
+relate to BMC. Note that the BMC classiﬁes actors as either clients or partners, while thatdistinction is not evident in e3value. As a result, the BMC deﬁnes customer segments, cus-tomer relationships, channels, value proposition and revenue streams as client-side buildingblocks, whereas key partners, key activities, key resources and cost structure are consideredpartner-side building blocks.
+4.2.2 Mapping BMC to ArchiMate
+The mapping functions described in Table 6result from prior work on attempting to align the
+concepts found in the BMC and ArchiMate languages [ 36,37,62]. Not all transformations
+are considered here. In particular, the relationships between internal Cost Structure and V aluewere disregarded since only the external business services are visible from a value networkperspective.
+4.2.3 Mapping e3value to ArchiMate
+The integration of e3value and ArchiMate models is constrained by the semantic gap thatderives from the different abstractions used to represent the same economic transactions [ 14].
+123
+A. Caetano et al.
+Table 5 Mappings between BMC and e3value
+BMC e3value Relationship Rationale
+Customer segment Actor Equivalence (1:1) Customer Segments are
+groups of economic entities(Actors ) that generate proﬁt
+Customer segment Market Segment Equivalence (1:1) Market Segment is a kind of
+collective Actor
+Key partner Actor Equivalence (1:1) Key Partners are external
+Actors that collaborate with an
+organization
+Channel V alue Transmission Aggregation (1:n) Value T ransmission delivers
+Value toCustomers through
+one or more Channels
+Key activity V alue Activity Equivalence (1:n) Key Activities are Value
+Activities that specify how the
+business model is executed
+Revenue stream V alue Transmission Aggregation (1:n) Revenue Stream corresponds to
+as e to f Value Exchanges
+Key resources V alue Object Equivalence (1:1) Key Resources are the objects
+that contribute to the generationofValue
+V alue proposition V alue Interface Equivalence (1:1) Value Proposition corresponds
+to the Value Objects that ﬂow
+through the ports of a Value
+Interface
+Table 6 Mapping from BMC to ArchiMate’s business layer
+BMC ArchiMate Relationship Rationale
+Customer segment Business Actor Equivalence (1:1) Customer Segments are
+external groups of Actors
+Key partner Business Actor Equivalence (1:1) Key Partners are external Actors
+that support the operation of thebusiness model
+Channel Business Interface Equivalence (1:1) Channel interfaces with
+Customer segments to
+deliver Value Propositions
+Revenue stream V alue Equivalence (1:1) Value depicts the net result of a
+Revenue Stream
+V alue proposition Service, Product Aggregation (1:n) Service orProduct represent the
+externalization to a customer ofaValue Proposition
+V alue proposition V alue Aggregation (1:n) Value depicts the relative worth
+of a Service orProduct from
+the perspective of an Actor
+Key activity Process, Function Equivalence (1:n) Key Activity is realized as a
+Business process or
+Business Function
+123
+Representation and analysis of enterprise models
+Table 7 Mappings from e3value’s concepts to ArchiMate’s business layer
+e3value ArchiMate Relationship Rationale
+Actor Business Actor Equivalence (1:1) Actor is a Business Actor that
+generates proﬁt or increases theutility of a Product orService
+Market segment Business Actor Equivalence (1:1) Market Segment is a kind of
+Actor
+V alue interface Product Equivalence (1:1) Value Interface groups Value
+Objects that are provided by an
+Actor .T h e Value Objects are
+realized as Business Services
+and aggregated as Products
+V alue transmission Business Service Equivalence (1:1) Value is transmitted through the
+usage and completion of aBusiness Service
+V alue activity Business Process Equivalence (1:n) Value Activity is a Business
+process that supports the
+delivery of Value Objects
+V alue object Business Object Equivalence (1:n) Value Object is a tangible or
+intangible Business Object
+V alue object V alue Equivalence (1:n) Value is the perceived worth of a
+Business service orProduct ,
+which is transmitted as a Value
+Object
+One approach to address the abstraction gap is using an intermediate language as described
+by Pombinho et al. [ 35], Pombinho and Tribolet [ 64] and de Kinderen et al. [ 63], who use
+DEMO’s transaction model [ 65,66] as a bridge between e3value and ArchiMate. The main
+advantage of using DEMO is exploiting PSI theory’s distinction axiom. This axiom statesthat the acts performed by an organization are classiﬁed either as ontological, infologicaland datalogical. These classes relate with the three human abilities: ontological acts relate toperforma (deciding, judging, etc.), infological acts relate to informa (deducing, reasoning,
+computing, etc.), and datalogical acts relate to forma (storing, transmitting, etc.). DEMO
+also separates the teleology of an enterprise from its ontology, and focuses on the later whileabstracting from the former. The combination of these two features acts as a ﬁlter that reducescomplexity and improves model conciseness [ 66]. Based on these approaches, we use the
+mapping functions described in Table 7to integrate e3value’s concepts with ArchiMate’s
+business layer.
+4.3 Model analysis
+Analysis generates information from a single model or from a federated set of models. Itmay focus on (1) the speciﬁcation of a schema of an enterprise modelling language, (2) aninstantiation of a schema of a speciﬁc modelling scenario and (3) a case of a modelling sce-nario. Let us consider the ArchiMate enterprise modelling language to provide an example.The ﬁrst case of analysis would target ArchiMate’s meta-model, i.e. the representation as anontological schema of its meta-model. This enables to explore its concepts, direct relation-ships and derived relationships. Examples of analysis include determining which conceptscan be related through ArchiMate’s assignment relationship, or explaining how an actor isinvolved in the realization of a business service. The second case would target an instance
+123
+A. Caetano et al.
+of an ArchiMate model. Consider the model of a business process Pcontaining activities
+P1,P1,P3and actors A1,A2, along with control ﬂow relationships between activities, and
+assignment relationships between activities and actors. The analysis of this scenario entailslooking at the instances of ArchiMate’s meta-model. For instance, one can determine whichactor instance is assigned to activity P
+1, or which activities are sequenced after activity P2.
+Another example is checking the conformance of the instantiated schema with regard toArchiMate’s meta-model, i.e. checking whether the instantiated entities and relationshipsconform with the meta-model. If an activity is assigned to another activity, this would violatethe meta-model and would be detected as an inconsistency. Finally, the third case of analysistargets the cases or instances of process P. An example of analysis is determining the actual
+actors assigned to P
+1.
+Graph analysis is performed with the SPARQL language [ 61]. A simple example is using
+a SPARQL query to traverse the graph and ﬁnd all business services in an ArchiMate model.SPARQL queries may also make use of nesting and operators such as union, ﬁlters, valueaggregation and path expressions. SPARQL queries can also be used to analyse multipleschemas using inter-schema analysis or chained queries. An example of a chained queryis ﬁnding the relationships between BMC’s customer segments and ArchiMate’s businessservices. As depicted in Fig. 9, a business service has a derived relationship to BMC’s
+customer segment via e3value’s value transmission. This chained query translates to thefollowing in SPARQL.
+The mapping functions presented in Tables 5,6and 7were translated to further SPARQL
+queries.
+5 Case study
+This section evaluates the artefact using competency questions. Competency questions are ameans to assess the completeness and consistency of an ontological schema [ 67–69]. In this
+paper, the questions are designed to check whether a federated enterprise modelling scenariois consistent with regard to the set of mapping functions described in the previous section.
+The scenario describes the business model of ePharmacare, an electronic health initiative.
+ePharmacare provides health services to chronic medicated patients through an electronicservice hub. The services include registering treatment plans, supporting the prescription,ordering and delivery of drugs and other pharmaceutical products, following up the treatmentsprescribed by doctors to patients, and enabling chronic patients to receive notiﬁcations as wellas to log drug intake and the effects of medication. ePharmacare is therefore a virtual networkof organizations and includes doctors and chronic patients as well as pharmacies, pharma-ceutical companies, the national health insurance system, as well as healthcare providers.From a business perspective, the services of ePharmacare are considered to be value-addingto its stakeholders since they are designed to provide economic savings while increasingthe traceability of treatments and the ability to perform cause-effect analysis. The enterprise
+123
+Representation and analysis of enterprise models
+Fig. 11 The e3value model of ePharmacare
+models of ePharmacare used in this case study result from the analysis of existing project
+documentation and business process models, and from workshops and semi-structured inter-views with the project’s stakeholders [ 70–72]. The subset of models included in this paper
+is the following:
+•the e3value value network model of ePharmacare that links together the individual busi-
+ness partners (Fig. 11),
+•the BMC of ePharmacare (Fig. 16),
+•the BMC of a subset of ePharmacare’s partners (Fig. 17),
+•the ArchiMate models that describe the business services and processes of ePharmacare
+(Fig. 14), as well as those of a subset of its business partners (Fig. 15).
+These models serve different purposes. The value network model describes the value
+ﬂow between the partners. Each partner has its own business model canvas describing itsindividual business model, along with ArchiMate models describing the underlying businessservices and processes.
+5.1 Schema evaluation
+The integrated schemas are evaluated by testing the ability to assess the 18 statementsdescribed in Table 8. These competency questions are designed so that each of the trans-
+formation functions is tested by at least one competency question, thus covering all of themapping functions.
+123
+A. Caetano et al.
+Table 8 List of competency questions
+1 Customer Segments orKey Partners (BMC) that are not
+represented in e3value as an Actor
+2 Actors (e3value) not represented in a BMC model
+3 Actors (e3value) not represented in a ArchiMate model
+4 Business Actors (ArchiMate) not represented in a e3value model
+5 Revenue Streams not represented in a e3value model
+6 Key Activities not represented in e3value or ArchiMate models
+7 Value Activities not represented in BMC or ArchiMate models
+8 Business Processes not represented in BMC or e3value models
+9 Value T ransmission without a relationship to Business Service
+10 Business Service without a relationship to Value T ransmission
+11 Value T ransmission not related to the delivery of Value
+Proposition or not related to a Key Activity
+12 ( Key Activity ,Key Partner ) pair that has no mapping to Value
+T ransmission
+13 ( Value Proposition ,Customer Segment ,Distribution Channel )
+triple that has no mapping to Value T ransmission
+14 Value Objects without a corresponding Key Resource
+15 Value Objects not represented as a Value or a Business Object
+16 Value orBusiness Objects not represented as a Value Objects
+17 Channels without related concepts on a ArchiMate model
+18 Business Interface without related concepts on a BMC model
+Each question was translated to a SPARQL query. The following query implements ques-
+tion 1 by subtracting the Customer Segments that relate to an e3value Actor from the
+set of all BMC Customer Segments . The same subtraction is applied to Key Partners .
+The result is a set of BMC Customer Segment and Key Partner individuals that do not
+correspond to any Actor individual in the e3value model and thus do not comply with this
+constraint.
+123
+Representation and analysis of enterprise models
+Fig. 12 Results of the SPARQL query showing the relationships between value objects and business objects
+The remaining questions were implemented in a similar fashion. Figures 18and 19in the
+Appendix illustrate the answers to the ﬁrst nine questions. Each answer that is a nonempty setof individuals is an inconsistency at instance level because an answer contains the individualsthat do not comply with the given constraint. Thus, if all questions produce empty answers,then the scenario is deemed consistent with regard to that set of constraints.
+SPARQL queries can be used to analyse individual schemas as well as the integrated
+schemas. The following query iterates through all Business Object and discovers all Value
+Objects associated with it. The results of this query are depicted in Fig. 12.
+The models can also be analysed using a logical reasoner instead of SPARQL. In this case,
+the queries are speciﬁed with OWL-DL and a reasoner is used to infer facts from a model.The six statements shown in listing 4 were processed with the HermiT reasoner using theProtégé tool. Figure 13shows the results of reasoning.
+123
+A. Caetano et al.
+Fig. 13 Results of OWL-DL reasoning, queries 1–6
+Note that the proposed artefact is not able to resolve the detected inconsistencies. Indeed,
+some inconsistencies may be simple syntactical mismatches that can be corrected semi-automatically. But contradictory interpretations of the same business concept at semanticlevel need to be addressed by the stakeholders using techniques such as concept elicitationor workshops. Therefore, the approach described in this paper is not meant to automate theprocess of resolving the inconsistencies but to automatically detect the inconsistencies withregard to a speciﬁc set of constraints.
+This section described the ePharmacare scenario to demonstrate the ability of using seman-
+tic techniques to (1) represent the meta-models of three enterprise modelling languages, BMC,ArchiMate and e3value, as well as instances of models speciﬁed in these languages, (2) fed-erate the models using transformation functions and (3) analyse the integrated models. Theresults of the integrated model analysis show, on the one hand, the ability to use SPARQLand OWL-DL to analyse individual schemas as well as integrated schemas, and, on the other,the ability to assess the consistency of a model regarding a set of constraints.
+123
+Representation and analysis of enterprise models
+6 Conclusions
+Enterprise models cross-cut different domains that can be observed from multiple viewpoints.
+These models enable stakeholders to communicate, understand, analyse, design and transforman enterprise system. This paper explored the application of semantic techniques to integrateand jointly analyse different enterprise modelling languages.
+The design artefact presented in this paper is a federated set of schemas that represent
+domain-speciﬁc languages (conceptual schemas), and the instances of those schemas (infor-mation bases). Each domain is represented as a domain-speciﬁc schema (DSO) that speciﬁesentity and relationship types. A federated model landscape is generated by integrating theschemas using transformation maps that relate the relevant types across the different domains.The speciﬁcation of a transformation map is situational, i.e. the mapping functions dependon the context and purpose of the integration.
+The schemas are formalized with RDFS and the OWL-DL languages, which makes possi-
+ble analysing the models with graph analysis or with reasoners that perform logical inference.The analysis may target a single domain or a combination of integrated domains. Differenttypes of analysis are possible, including assessing the conformance of a model against a setof constraints.
+The utility of the artefact is demonstrated through the integration of three languages
+that describe an organization from different perspectives, namely the business model can-vas, e3value and ArchiMate. This involved specifying the conceptual schemas behindeach of these modelling languages, along with the transformation maps between theschemas. A case study was used to deﬁne the information base and to assess the abilityof semantic techniques to integrate and analyse the different enterprise modelling lan-guages.
+The main contribution of this paper is accounting how semantic techniques, in partic-
+ular ontology-based techniques, can be used to computationally represent, integrate andanalyse enterprise models. As such, a fundamental challenge resides in deﬁning map-ping functions between the schemas that ﬁt the context and purpose of the integration.Deﬁning such functions may prove to be a complex or even unfeasible task dependingon the semantic gap between the languages being mapped. Nevertheless, the applicationof semantic techniques to enterprise modelling brings value to the enterprise engineeringcommunity of practice as it facilitates the integration and analysis of diverse modellingdomains.
+Acknowledgments This work was partially funded by FCT, Fundação para a Ciênci aeaT e c n o l o g i a ,t h r ough
+projects UID/CEC 50021/2013 and DataStorm EXCL/EEI-ESS 0257/2012, and by the European Commissionunder the Seventh Framework Programme for research and technological development and demonstrationactivities under Grant Agreement No. 269940 (TIMBUS project, http://timbusproject.net/ ).
+123
+A. Caetano et al.
+Appendix
+Fig. 14 The ArchiMate business layer model of ePharmacare
+Fig. 15 The ArchiMate business layer model of a pharmacy within the ePharmacare network
+123
+Representation and analysis of enterprise models
+Fig. 16 The business model canvas of ePharmacare
+Fig. 17 The business model canvas of a pharmacy within the ePharmacare network
+123
+A. Caetano et al.
+Fig. 18 Answers to competency questions 1–6
+123
+Representation and analysis of enterprise models
+Fig. 19 Answers to competency questions 7–9
+References
+1. Lankhorst M (2004) Enterprise architecture modelling—the issue of integration. Adv Eng Inform
+18(4):205–216
+2. Lankhorst M (2013) Enterprise architecture at work: modeling, communication, and analysis, 3rd edn.
+Springer, NewY ork
+3. Aleatrati Khosroshahi P , Aier S, Hauder M, Roth S, Matthes F, Winter R (2015) Success factors for fed-
+erated enterprise architecture model management. In: Persson A, Stirna J (eds), CAiSE 2015 Workshops,LNBIP 215, Springer, Berlin, pp 413–425
+4. Zdravkovic J, Stirna J, Kirikova M, Karagiannis D, Winter R (2015) Advanced enterprise modeling. Bus
+Inform Syst Eng 57(1):1–2. doi: 10.1007/s12599-014-0367-8 ISSN 2363-7005
+123
+A. Caetano et al.
+5. Bucher T, Fisher R, Kurpjuweit S, Winter R (2006) Enterprise architecture analysis and application.
+An exploratory study. In: Proceedings of the 1st workshop on trends in enterprise architecture research(TEAR)
+6. Johnson P , Ekstedt M (2007) Enterprise architecture: models and analyses for information systems deci-
+sion making. Lightning source incorporated
+7. Antunes G, Barateiro J, Caetano A, Borbinha J (2015) Analysis of federated enterprise architecture
+models. In: 23rd European conference on information systems (ECIS)
+8. Narman P , Johnson P , Nordstrom L (2007) Enterprise architecture: a framework supporting system quality
+analysis. In: 11th IEEE international enterprise distributed object computing conference (EDOC)
+9. Osterwalder A, Pigneur Y (2010) Business model generation: a handbook for visionaries, game changers,
+and challengers. Wiley, Hoboken
+10. Gordijn J (2004) V alue creation from E-business models, chapter e-business value modelling using the
+e3-value ontology. Elsevies, Butterworth-Heinemann
+11. The Open Group (2013) ArchiMate 2.1 speciﬁcation. The open group12. Gordijn J, Akkermans JM (2003) V alue-based requirements engineering: exploring innovative
+e-commerce ideas. Requir Eng 8(2):114–134
+13. Gordijn J, Osterwalder A, Pigneur Y (2005) Comparing two business model ontologies for designing
+e-business models and value constellations. In: Proceedings of the 18th BLED eConference, pp 6–8.http://aisel.aisnet.org/bled2005/15
+14. de Kinderen S, Gaaloul K, Proper HE (2012a) Integrating value modelling into archimate. In: Exploring
+services science, Lecture Notes in business information processing, Springer, Berlin, pp 125–139
+15. Pombinho J (2015) V alue-oriented enterprise transformation—design and engineering of value networks.
+Ph.D. thesis, Universidade de Lisboa—Instituto Superior Técnico
+16. Sousa P , Caetano A, V asconcelos A, Pereira C, Tribolet J (2006) Enterprise architecture modeling with
+the uml 2.0. In: Rittgen P (ed), Enterprise modelling and computing with UML, Idea Group Inc, pp 67–94
+17. Caetano A, Silva A, Tribolet J (2009) A role-based enterprise architecture framework. In: Proceedings of
+the ACM symposium on applied computing, pp 253–258. ACM
+18. Frank U (2014) Multi-perspective enterprise modeling: foundational concepts, prospects and future
+research challenges. Softw Syst Model 13(3):941–962
+19. Bork D (2015) Using conceptual modeling for designing multi-view modeling tools. In: Americas Confer-
+ence on information systems (AMCIS) 2015, 21st Americas conference on information systems (AMCIS).http://eprints.cs.univie.ac.at/4315/
+20. Zivkovic S, Kuhn H, Karagiannis D (2007) Facilitate modelling using method integration: an approach
+using mappings and integration rules. In: European conference on information systems (ECIS), pp 2038–2049
+21. Iacob ME, Meertens LO, Jonkers H, Quartel DAC, Nieuwenhuis LJM, V an Sinderen MJ (2013) From
+enterprise architecture to business models and back. Softw Syst Model 13(3):1059–1083
+22. Fischer R, Aier S, Winter R (2007) A federated approach to enterprise architecture model maintenance.
+Enterp Model Inform Syst Archit 2:14–22
+23. Bjekovi´ c M, Proper HA, Sottet J-S (2012) Towards a coherent enterprise modelling landscape. In: Emerg-
+ing topics in the practice of enterprise modeling : 5th IFIP WG8.1 working conference on the practice of
+enterprise modeling, pp 1–12
+24. Bjekovi´ c M, Proper HA (2013) Challenges of modelling landscapes: pragmatics swept under the carpet?
+In: Proceedings of third international symposium business modeling and software design, Lecture Notesin business information processing (Book 173), Springer, pp 11–22
+25. Proper HA, Lankhorst MM (2014) Enterprise architecture—towards essential sensemaking. Enterp Model
+Inform Syst Archit J 01(01):5–21
+26. Uschold M, Gruninger M (1996) Ontologies: principles, methods and applications. Knowl Eng Rev
+11(02):93–136
+27. Guizzardi G, Wagner G (2010) Using the uniﬁed foundational ontology (ufo) as a foundation for gen-
+eral conceptual modeling languages. In: Theory and applications of ontology: Computer applications,Springer, pp 175–196
+28. Prackwieser C, Buchmann RA, Grossmann W, Karagiannis D (2014) Overcoming heterogeneity in busi-
+ness process modeling with rule-based semantic mappings. Int J Softw Eng Knowl Eng 24(8):1131–1159.http://eprints.cs.univie.ac.at/4243/
+29. Gordijn J, Akkermans H (2001) Designing and evaluating e-business models. IEEE Intell Syst 16(4):11–
+17
+30. Offermann P , Blom S, Schönherr M, Bub U (2010) Artifact types in information systems design science—
+a literature review. In: Winter R, Zhao JL, Aier S (eds), Global perspectives on design science research,
+123
+Representation and analysis of enterprise models
+volume 6105 of Lecture Notes in computer science, pages, Springer, Berlin, pp 77–92. ISBN 978-3-642-
+13334-3. doi: 10.1007/978-3-642-13335-0_6
+31. von Alan RH, March ST, Park J, Ram S (2004) Design science in information systems research. MIS Q
+28(1):75–105
+32. de Simoni G (2015) Innovation insight: leveraging ontology to exploit business value hid-
+den in information. Gartner innovation. https://www.gartner.com/doc/2990119/innovation-insight-leve
+raging-ontology-exploit
+33. Chesbrough H (2007) Business model innovation: it’s not just about technology anymore. Strategy Lead-
+ersh 35(6):12–17
+34. Osterwalder A (2004) The business model ontology: a proposition in a design science approach. Ph.D.
+thesis, University of Lausanne, Ecole des Hautes Etudes Commerciales HEC, Lausanne, Switzerland
+35. Pombinho J, Aveiro D, Tribolet J (2014) Linking value chains—combining e3value and demo for speci-
+fying value networks. In: Fourth enterprise engineering working conference (EEWC), Funchal, Madeira
+36. Iacob ME, Quartel D, Jonkers H (2012) Capturing business strategy and value in enterprise architecture to
+support portfolio valuation. In: 16th IEEE international enterprise distributed object computing conference(EDOC)
+37. Meertens LO, Iacob ME, Jonkers H, Quartel D, Nieuwenhuis LJM, van Sinderen MJ (2012) Mapping
+the business model canvas to archimate. In: Proceedings of the 27th annual ACM symposium on appliedcomputing, pp 1694–1701. ACM. http://doc.utwente.nl/82858/
+38. Gruber TR (1993) A translation approach to portable ontology speciﬁcations. Knowl Acquis 5(2):199–22039. Guarino N, Oberle D, Staab S (2009) Handbook on Ontologies, chapter what is an Ontology?, Springer,
+Berlin, pp 1–17
+40. Studer R, Benjamins R, Fensel D (1998) Knowledge engineering: principles and methods. Data Knowl
+Eng 25:161–198
+41. Pinto HS, Gómez-Pérez A, Martins JP (1999) Some issues on ontology integration. In: Proceedings
+of IJCAI99’s workshop on ontologies and problem solving methods: lessons learned and future trends,vol 18, pp 1–12
+42. Davies J, Studer R, Warren P (2006) Semantic web technologies: trends and research in ontology-based
+systems. Wiley, Hoboken
+43. Lenzerini D, Milano M, Poggi A (2004) Ontology representation and reasoning. Technical report, Uni-
+versity di Roma La Sapienza
+44. V aculin R (2009) Process mediation framework for semantic web services. Ph.D. thesis, Department of
+Theoretical Computer Science and Mathematical Logic, Faculty of Mathematics and Physics, CharlesUniversity
+45. Olivé A (2007) Conceptual modeling of information systems. Springer, Berlin46. Breitman K, Casanova MA, Truszkowski W (2007) Semantic web: concepts, technologies and applica-
+tions. Springer, Berlin
+47. ISO/IEC/IEEE (2011) ISO/IEC/IEEE 42010:2011 Systems and software engineering—architecture
+description. ISO/IEC/IEEE
+48. Saat J, Franke U, Lagerstrom R, Ekstedt M (2010) Enterprise architecture meta models for it/business
+alignment situations. In: 14th IEEE international enterprise distributed object computing conference
+(EDOC)
+49. Buckl S, Buschle M, Johnson P , Matthes F, Schweda CM (2011) A meta-language for enterprise archi-
+tecture analysis. In: 16th international conference on exploring modeling methods for systems analysisand design (EMMSAD)
+50. Niemann KD (2005) From enterprise architecture to IT governance. Vieweg /& Sohn V erlag, Friedr51. Kurpjuweit S, Winter R (2007) Viewpoint-based meta model engineering. In: 2nd international workshop
+on enterprise modelling and information systems architectures (EMISA)
+52. Buckl S, Schweda CM, Matthes F (2010) A design theory nexus for situational enterprise architecture
+management. In: 14th IEEE international enterprise distributed object computing conference workshops(EDOCW)
+53. Caetano A, Pereira C, Sousa P (2011) Generating multiple consistent views from business process models.
+In Lecture Notes in business information processing, research and practical issues of enterprise informa-tion systems. Springer, Berlin
+54. Antunes G, Bakhshandeh M, Mayer R, Borbinha J, Caetano A (2014) Using ontologies for enterprise
+architecture integration and analysis. Complex Syst Inform Model Q 1:1–23
+55. Mayer R, Antunes G, Caetano A, Bakhshandeh M, Rauber A, Borbinha J (2015) Using ontologies to
+capture the semantics of a business process for digital preservation. Int J Digit Libr 15(2–4):129–152.doi:10.1007/s00799-015-0141-7
+123
+A. Caetano et al.
+56. Granitzer M, Sabol V , Onn KW, Lukose D, Tochtermann K (2010) Ontology alignment—a survey with
+focus on visually supported semi-automatic techniques. Future Internet 2:238–258
+57. Miles A, Bechhofer S (2009) Skos: simple knowledge organization system reference, w3c recommenda-
+tion. Technical report, W3C
+58. Herre B, Heller H, Burek P , Hoehndorf R, Loebe F, Michalek H (2007) General formal ontology (gfo):
+a foundational ontology integrating objects and processes. part i: Basic principles. Technical report,Research Group Ontologies in Medicine (Onto-Med), University of Leipzig
+59. Wand Y , Weber R (1993) On the ontological expressiveness of information systems analysis and design
+grammars. Inform Syst J 3(4):217–237
+60. Fettke P , Loos P (2003) Ontological evaluation of reference models using the bunge-wand-weber model.
+In: Proceedings of the AMCIS 2003
+61. Harris S, Seaborne A (2013) SPARQL 1.1 Query language. W3C. http://www.w3.org/TR/sparql11-query/
+62. Fritscher B, Pigneur Y (2011) Business it alignment from business model to enterprise architecture. In:
+Advanced information systems engineering workshops, Springer, Berlin, pp 4–15
+63. de Kinderen S, Gaaloul K, Proper HA (2012b) Bridging value modelling to archimate via transaction
+modelling. Softw Syst Model 13(3):1043–1057
+64. Pombinho J, Tribolet J (2012) Modelling the value of a system’s production—matching demo and e3value.
+In: 6th international workshop on value modelling and business ontology, Vienna, Austria
+65. Dietz JLG (2006) Enterprise ontology: theory and methodology. Springer, Berlin66. Dietz JLG, Hoogervorst JAP , Albani A, Aveiro D, Babkin E, Barjis J, Caetano A, Huysmans P , Iijima J,
+van Kervel S et al (2013) The discipline of enterprise engineering. Int J Organ Des Eng 3(1):86–114
+67. Fox MS, Gruninger M (1998) Enterprise modeling. AI Mag 19(3):10968. Grüninger M, Fox MS (1995) Methodology for the design and evaluation of ontologies. In: Proceedings
+of the IJCAI-95 workshop on basic ontological issues in knowledge sharing
+69. Bezerra C, Freitas F, Santana F (2013) Evaluating ontologies with competency questions. In: Web
+intelligence (WI) and intelligent agent technologies (IA T), 2013 IEEE/WIC/ACM International JointConferences on, vol 3, pp 284–285. doi: 10.1109/WI-IA T.2013.199
+70. Lapão LV , Gregorio J, Ferreira T, Cavaco A, Lovis C, Russo G, da Silva MM (2013) ehealth services for
+enhanced pharmaceutical care provision: From counseling to patient education. In: IEEE 2nd internationalconference on serious games and applications for health (SeGAH), pp 1–7
+71. Gregorio J, Ferreira TL, Cavaco A, da Silva MM, Lovis C, Lapão LV (2013a) Community pharmacies
+and ehealth services: barriers and opportunities for real primary healthcare integration. In: IEEE 26thinternational symposium on computer-based medical systems (CBMS), pp 393–396
+72. Gregorio J, Cavaco A, da Silva MM, Lovis C, Lapão LV (2013b) Challenges of information technologies
+adoption to enable community pharmacies ehealth services. Int J Clin Pharm 35(3):490–498
+Artur Caetano is tenured assistant professor of information systems at
+the Department of Computer Science and Engineering, Instituto Supe-rior Técnico (IST), University of Lisbon, and researcher at the Infor-mation and Decision Support Systems (IDSS) group, INESC-ID. Hisareas of research intersect enterprise modelling, business process man-agement, conceptual modelling and semantic web technologies, and
+he is involved in the development of computational techniques to aid
+the representation, analysis and (re)design of enterprise models. Arturregularly contributes to European framework programme research anddevelopment projects related to these topics and works with the indus-try in knowledge transfer and enterprise transformation projects as aconsultant, and also as an ArchiMate and BPMN trainer. He is memberof the ACM and IEEE.
+123
+Representation and analysis of enterprise models
+Gonçalo Antunes is a postdoctoral researcher at IDSS, INESC-ID. He
+holds a Ph.D. in computer science and engineering from IST, Univer-sity of Lisbon. His areas of interest include enterprise model analysisand enterprise architecture. He has been involved in several nationaland European framework research projects, and published in peer-reviewed journals and in international conferences in topics relatedto enterprise model analysis, information life-cycle management andsemantic web technologies.
+João Pombinho holds a Ph.D. in computer science and engineer-
+ing from IST, University of Lisbon, concerning enterprise engineeringand value-oriented systems design. His academic interests also includevalue modelling, enterprise architecture and enterprise transformation.João is currently invited assistant professor of computer science andengineering at IST, and researcher at INESC-ID. João began his profes-sional career in 2005 in the Portugal Telecom group as IT Planning andChange Manager. He then became responsible for Business Accountsand Requirements Management at ZON Multimedia. He is currently ITDemand Manager at NOS Comunicações. He is a regular speaker atindustry events about IT demand management, enterprise architectureand value-oriented systems.
+Marzieh Bakhshandeh is Ph.D. student at IST, University of Lisbon,
+and a researcher at the IDSS group, INESC-ID. Her research interestsare semantic web technologies, enterprise architecture model analysis,in particular process model similarity matching.
+123
+A. Caetano et al.
+José Granjo is software engineer at Screen Interaction AB, Sweden,
+where he leads the front-end product development and user experi-
+ence design for monitoring global telecom networks. He has a M.Sc.
+in Computer Engineering and Information Systems from IST, Univer-sity of Lisbon and was a researcher at the Information and DecisionSupport Systems group at INESC-ID, where he applied ontologies toanalyse and represent enterprise models.
+José Borbinha is associate professor of computer science and engi-
+neering at IST, University of Lisbon, and coordinator of the IDSS groupat INESC-ID. His main research interests are systems engineering, con-ceptual modelling, requirements engineering, information management
+(especially on records management and digital preservation), enterprise
+architecture and information systems. He was CIO of the PortugueseNational Library (1998–2005). He is member of the ACM and IEEE.He is a founding member and elected chair (2008–2010) of the IEEETechnical Committee on Digital Libraries, and member of the Advi-sory Board of the Dublin Core Metadata Initiative. He is chair of theSteering Committee of the conference Theory and Practice of DigitalLibraries (TPDL) and Portugal’s representative at ISO’s TC46/SC11WG14 “Records requirements in enterprise Architecture”.
+Miguel Mira da Silva is associate professor of information systems at
+the University of Lisbon, and coordinator of the Digital Transforma-
+tion group at the INESC-INOV research institute. Miguel graduated in1989 and received his master’s degree in 1993 in electrical and com-puter engineering from the University of Lisbon, received his Ph.D.in 1997 in computing science from the University of Glasgow, and a“Sloan Fellowship” master in management in 2005 from the LondonBusiness School. Miguel has supervised 5 Ph.D. and over 100 M.Sc.projects, and published over 150 research papers in international con-ferences and journals, as well as four teaching books.
+123

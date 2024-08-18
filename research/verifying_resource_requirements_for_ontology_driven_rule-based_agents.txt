@@ -1,0 +1,939 @@
+See discussions, st ats, and author pr ofiles f or this public ation at : https://www .researchgate.ne t/public ation/262169995
+Verifying Resou rce Requirements for Ontology-Driven Rule-Based Agents
+Conf erence Paper  · Mar ch 2012
+DOI: 10.1007/978-3-642-28472-4_18
+CITATIONS
+6READS
+84
+3 author s:
+Some o f the author s of this public ation ar e also w orking on these r elat ed pr ojects:
+Development of an Ar chit ectural Frame work f or Syst ematic ally Designing Ont ologies.  View pr oject
+A Frame work t o Implement V erified R esour ce-Bounded Syst ems f or Smart Sp aces, Ministr y of Scienc e, Technolog y and Inno vation (MOS TI), Govt. of Malaysia, Dec 2014-
+Nov 2016 MYR 86,500  View pr oject
+Abdur R akib
+Univ ersity of the West of England, Brist ol
+49 PUBLICA TIONS    220 CITATIONS    
+SEE PROFILE
+Rokan Uddin F aruqui
+McMast er Univ ersity
+7 PUBLICA TIONS    41 CITATIONS    
+SEE PROFILE
+Wendy Mac caull
+St. Francis X avier Univ ersity
+93 PUBLICA TIONS    602 CITATIONS    
+SEE PROFILE
+All c ontent f ollo wing this p age was uplo aded b y Abdur R akib  on 26 F ebruar y 2014.
+The user has r equest ed enhanc ement of the do wnlo aded file.
+Verifying resource requirements for ontology
+driven rule-based agents
+Abdur Rakib, Rokan Uddin Faruqui, and Wendy MacCaull
+StFX Centre for Logic and Information
+St. Francis Xavier University, Canada
+farakib, x2010mcd, wmaccaul g@stfx.ca
+Abstract. Recent eorts towards the Semantic Web have resulted in
+powerful languages such as Semantic Web Rule Language (SWRL) based
+on OWL-DL and RuleML. Rule languages and inference engines in-
+corporate reasoning capabilities to Semantic Web application systems.
+In this paper we present an approach for the design and specication
+of ontology-driven multi-agent rule-based systems. We use the Maude
+rewriting system and its Linear Temporal Logic (LTL) model checking
+tool to verify response time guarantees for the target systems. We present
+TOVRBA , an extended version of a verication tool developed by the rst
+author, for ontology-driven multi-agent rule-based systems which allows
+the designer to specify information about agents' interactions, behav-
+ior, and execution strategies at dierent levels of abstraction. TOVRBA
+generates an encoding of the system for the Maude LTL model checker,
+allowing properties of the system to be veried. We illustrate the use of
+the framework on a simple healthcare system.
+Keywords: Multi-agent systems, Semantic Web, Ontology, Model check-
+ing.
+1 Introduction
+There has recently been considerable interest in Semantic Web and rule-based
+approaches to various aspects of agent technology. The integration of the Seman-
+tic Web and intelligent agents research has been realized [11, 35], and intelligent
+agents are considered as a promising approach towards realizing the Semantic
+Web vision [20]. In order to make better use of the articial intelligent research
+experience and the practical application of Semantic Web technologies, the World
+Wide Web Consortium (W3C) has adopted the Web ontology language (OWL)
+as a language for processing Web information [8]. While the adoption of the stan-
+dard ontology language OWL provides the basis for some forms of reasoning, it
+has been realized that rules are a key element of the Semantic Web vision [22].
+For example, ontology based reasoning using DAML/OWL and, more generally,
+in rule extensions to ontologies (OWL extended with Horn-style rules) such as
+ORL [22] and SWRL [23] signicantly increase the expressive power of ontol-
+ogy languages [22]. While rule-based systems are rapidly becoming an important
+2 A. Rakib et al.
+component of Semantic Web application, the resulting system behavior and the
+resources required to realize them, namely, how to ensure the correctness of rule-
+based designs (will a rule-based system produce the correct output for all legal
+inputs), termination (will a rule-based system produce an output at all) and
+response time (how much computation will a rule-based system have to do be-
+fore it generates an output) can be dicult to predict. These problems become
+even more challenging for distributed rule-based systems, where the system be-
+ing designed or analyzed consists of several communicating rule-based programs
+which exchange information via messages. A communicated fact may be added
+asynchronously to the state of a rule-based system while the system is running,
+potentially triggering a new strand of computation which executes in parallel
+with current processing. In order to provide response time guarantees for such
+systems, we must know how much time a rule-based system needs to perform the
+required reasoning. Furthermore, for a rule-based system running on a PDA or
+other mobile device, the number of messages exchanged may be a critical factor.
+In this paper, we present a verication framework for an ontology-driven sys-
+tem that supports automated verication of time and communication require-
+ments in distributed rule-based agents. We consider distributed problem-solving
+in systems of communicating rule-based agents, and ask how much time (mea-
+sured as the number of rule rings) and how many message exchanges it takes
+the system to nd a solution. We use standard model checking techniques to
+verify interesting properties of such systems, and show how the Maude model
+checker can be used to verify properties including response-time guarantees of
+the form: if the system receives a query, then a response will be produced within
+ntime steps.
+The remainder of the paper is organized as follows. In section 2 we provide
+an overview of ontologies and how rules are derived from ontologies which are
+the basis of designing our rule-based agents. In section 3 we describe our model
+of communicating ontology-driven rule-based agents. An example illustrating
+the approach is provided in section 4. In section 5 we briey describe a tool
+TOVRBA for translating ontology based specication of the agents into Maude,
+and in section 6 we present some experimental results using TOVRBA . We discuss
+related work in section 7 and conclude in section 8.
+2 Ontology-driven Horn clause rules
+Ontologies and rules play a central role in the design and development of Se-
+mantic Web applications. In this section, rst we briey discuss ontologies and
+their integration with rules. Then we show how we extract Horn clause rules
+from ontologies to design our rule-based agents.
+2.1 Ontologies and rules
+An ontology is an explicit formal specication of a conceptualization which de-
+nes certain terms of a domain and the relationships among them [18]. The Web
+Verifying resource requirements for ontology driven rule-based agents 3
+ontology language OWL is a semantic markup language for ontologies that pro-
+vides a formal syntax and semantics for them. The W3C declared two dierent
+standardizations for OWL: OWL 1 [27] and OWL 2 [28]. The rst standardiza-
+tion has three proles, namely OWL Lite, OWL DL, and OWL Full. The OWL
+Lite prole is less expressive than the other two proles and the OWL DL prole
+is based on description logic (DL). Description logic based OWL is a good can-
+didate for dening ontologies where automated reasoning is required to exploit
+reasoning algorithms. The OWL Full prole has the maximal expressive power
+but reasoning over an ontology using all features of OWL Full is undecidable [27].
+For ecient and tractable reasoning, a new standardization was declared called
+OWL 2, which trades some expressive power for more ecient reasoning [26].
+OWL 2 DL has three sublanguages known as proles, namely, OWL 2 EL, OWL
+2 QL, and OWL 2 RL; each of them is useful in dierent application scenarios.
+All the proles exhibit a polynomial time complexity for ontological reasoning
+tasks. For the rest of this paper we refer OWL 2 DL as OWL 2.
+In this work, we use the OWL 2 RL and SWRL [23] languages for dening
+ontologies and rules. OWL 2 RL is suitable for the design and development of
+rule-based systems. The inspiration behind the design of OWL 2 RL is pD[24]
+and description logic programs (DLP) [17]. OWL 2 RL describes the domain of
+an ontology in terms of classes, properties, individuals, and datatypes and values.
+Individual names refer to elements of the domain, e.g., Mary ; classes describe sets
+of individuals having similar characteristics, e.g., Patient ; properties describe
+binary relationships between pairs of individuals, e.g., isFeeling describes a
+relationship between two individuals Mary and MucositisPainTwo . Here Mary
+is an individual of the class Patient andMucositisPainTwo is an individual of
+the class Pain . Notice that properties may be object or data properties depend-
+ing on the types of individuals. Similarly, datatypes represent types of literal
+values (e.g., integers). An object property links an individual to an individual,
+whereas a datatype property links an individual to a data value. In OWL 2
+RL, object properties can be functional, inverse functional, reexive, irreexive,
+symmetric, asymmetric, and transitive; however, data properties can be only
+functional [28]. In addition, complex class descriptions can be constructed using
+all the above components (classes, properties, individuals, and datatypes and
+values) and various constructors including union and intersection.
+In OWL 2, International Resource Identiers (IRIs) are used to identify on-
+tologies and their elements. OWL 2 has several syntaxes, including the Manch-
+ester Syntax [3] and the Functional-Style Syntax [4]. In this paper, we use the
+Functional-Style Syntax and we consider the Unique Name Assumption (UNA)
+for each element of our ontology; the latter allows us to omit the prex IRI
+during the translation of an ontology to derive a rule-based system. To illus-
+trate, we present OWL 2 RL axioms (1)-(4) for an ontology about pain man-
+agement. In order to dene the elements of the ontology, we declare a prex IRI
+aas<http://logic.stfx.ca/ontologies/PainOntology.owl#> . The rst ax-
+iom denes the concept \Either a doctor or a nurse or a relative of a patient can
+be a caregiver". The second and third axioms assert the facts that \Mary is a
+4 A. Rakib et al.
+patient" and \Mary is feeling Mucositis Pain". The last axiom characterizes the
+object property isFeeling as the inverse object property of isFeltBy .
+Prefix (a:=<http :==logic:stfx:ca=ontologies=PainOntology:owl #>)
+SubClassOf (ObjectUnionOf (DoctorNurseRelative )CareGiver ) (1)
+ClassAssertion (a:Patienta :Mary ) (2)
+ObjectPropertyAssertion (a:isFeelinga :Marya :MucositisPainTwo ) (3)
+InverseObjectProperties (a:isFeelinga :isFeltBy ) (4)
+Both the description logic based OWL 1 and OWL 2 are decidable frag-
+ments of rst order logic; however, the expressive power of OWL 1 is strictly
+limited to certain tree structure-like axioms [17]. For instance, a simple rule
+hasFather (?x;?y)^hasBrother (?y;?z)!hasUncle (?x;?z) can not be mod-
+eled using OWL 1 axioms. Although OWL 2 can express this uncle rule in-
+directly, many rules are still not possible to model using OWL 2 axioms [25].
+Function-free Horn clause rules can remove such restrictions while being decid-
+able but they are restricted to universal quantication and no negation [29]. A
+combination of OWL 2 with rules oers a more expressive formalism for build-
+ing Semantic Web applications. Several proposals have been made to combine
+rules with ontologies. We use one of them, the SWRL that extends OWL DL by
+adding new axioms, namely Horn clause rules. Although SWRL was a proposed
+extension for OWL 1, it can be used as an rule extension for OWL 2 [16]. We
+combine a set of SWRL rules with the set of OWL 2 RL axioms and facts to
+build our ontology. For example, the statement \if a patient has pain level \2"
+then the pain intensity (s)he is feeling is mild" can be written in SWRL rule
+format in Functional-Style syntax as follows:
+Prefix (var:=<urn :swrl#>)
+DLSafeRule (
+Body (
+ClassAtom (a:PatientVariable (var:p))
+ObjectPropertyAtom (a:isFeelingVariable (var:p)Variable (var:x))
+ClassAtom (a:PainVariable (var:x))
+DataPropertyAtom (a:hasPainLevelVariable (var:x)\2"^^xsd:string )
+)
+Head (
+ObjectPropertyAtom (a:hasPainIntensityVariable (var:p)a:MildPainIn )
+))
+More precisely, the SWRL rule dened above states that an individual pfrom
+thePatient class who is feeling pain xthat has pain level \2" asserts the fact
+thatphas pain intensity MildPainIn . Here MildPainIn is an individual of the
+class MildPain . Such rule is best described in plain text syntax as follows:
+Patient (?p)^isFeeling (?p;?x)^Pain (?x)^hasPainLevel (?x;"2")
+!hasPaintIntensity (?p; MildPainIn ) (5)
+Verifying resource requirements for ontology driven rule-based agents 5
+2.2 Translation of ontologies into rules
+Since OWL 2 RL is based on DLP, the set of axioms and facts of an OWL
+2 RL ontology can be translated to Horn clause rules [17]. In order to design
+an ontology-driven rule-based system, rst we use the DLP framework [17] to
+translate an ontology to a set of Horn clause rules. In OWL 2 RL, facts are de-
+scribed using ClassAssertion and ObjectPropertyAssertion/DataPropertyAsser-
+tion which correspond to DL axioms of the form a:Candha; bi:P, respectively,
+where aandbare individuals, Cis a class, and Pis an object/data property.
+Note that these facts are already in the Horn clause rule format with empty
+bodies. For instance, the facts in (2) and (3) are translated as Patient(Mary)
+andisFeeling(Mary,MucositisPainTwo) .
+OWL 2 Axioms and Facts DL Syntax Horn clause rule
+ClassAssertions a:C C(a)
+PropertyAssertion ha; bi:P P(a; b)
+SubClassOf CvD C(x)!D(x)
+EquivalentClasses CD C(x)!D(x),D(x) C(x)
+EquivalentProperties PQ Q(x; y)!P(x; y)
+P(x; y)!Q(x; y)
+ObjectInverseOf PQ P(x; y)!Q(y; x)
+Q(y; x)!P(x; y)
+TransitiveObjectProperty P+vP P(x; y)^P(y; z)!P(x; z)
+SymmetricObjectProperty PP P(x; y)!P(y; x)
+Object/DataUnionOf C1tC2vDC1(x)!D(x),C2(x)!D(x)
+Object/DataIntersectionOf CvD1uD2C(x)!D1(x),C(x)!D2(x)
+Object/DataSomeValuesFrom 9P:CvD P(x; y)^C(y)!D(x)
+Object/DataAllValuesFrom Cv8P:D C(x)^P(x; y)!D(y)
+Object/DataPropertyDomain >v8 P :CP(y; x)!C(y)
+Object/DataPropertyRange >v8 P:C P(x; y)!C(y)
+Table 1. Translation of OWL 2 RL axioms and facts into Horn clause rules
+The syntax of OWL 2 RL is asymmetric, i.e., the syntactic restrictions al-
+lowed for subclass expressions dier from those allowed for superclass expres-
+sions. For instance, an existential quantication to a class expression ( ObjectSo-
+meValuesFrom ) is allowed only in subclass expressions whereas universal quan-
+tication to a class expression ( ObjectAllValuesFrom ) is allowed only in su-
+perclass expressions. These restrictions facilitate the translation of OWL 2 RL
+axioms into Horn clause rules based on the DLP framework. Translations of some
+of the OWL 2 RL axioms and facts into rules are given in Table 1. In the second
+column, complete DL statements are given which are constructed by the corre-
+sponding OWL 2 RL axioms and facts to illustrate the translation. For example,
+ObjectIntersectionOf (u) is represented by the statement C1vD1uD2. The
+translation of SWRL rules is straightforward because they are already in the
+Horn clause rule format. In our approach, agents in a multi-agent rule-based
+system are designed using the translated Horn clause rules of an ontology. The
+translation process is automated and is a part of the TOVRBA tool (cf.x5).
+6 A. Rakib et al.
+3 Systems of communicating rule-based agents
+We adopt the model of distributed agents presented in [6]. A distributed rea-
+soning system consists of nAg(1) individual reasoners or agents . Each agent
+is identied by a value in f1;2; : : : ; n Aggand we use variables iandjover
+f1;2; : : : ; n Aggto refer to agents. An agent in the system is either concrete or
+abstract. Each concrete agent has a program, consisting of Horn clause rules
+(derived from OWL 2 RL + SWRL), and a working memory, which contains
+facts (ground atomic formulae) representing the initial state of the system. The
+introduction of ontology-driven rules increases the expressiveness of the frame-
+work in [6], and makes it easier to model complex real world Semantic Web
+problems. In addition, existing tools, including Prot eg e [5], support the design
+of OWL 2 RL + SWRL based ontologies, making it easier to model rule-based
+agents using semantic rules. The behavior of each abstract agent is represented
+in terms of a set of temporal doxastic formulae. A doxastic logic is a modal logic
+concerned with reasoning about beliefs. That is, abstract specications are given
+as LTL formulae which describe the external behavior of agents, and allow their
+temporal behavior (the response time behavior of the agent), to be compactly
+modeled. The agents (concrete and abstract) execute synchronously. We assume
+that each agent executes in a separate process and that agents communicate
+via message passing. We further assume that each agent can communicate with
+multiple agents in the system at the same time.
+3.1 Concrete agents
+The two main components of rule-based agents are the knowledge base (KB)
+which contains a set of IF-THEN rules and the working memory (WM) which
+contains a set of facts that constitute the current (local) state of the system.
+Another component of a rule-based system is the inference engine which reasons
+over rules when the application is executed. The inference engine may have some
+reasoning strategies to handle cases when multiple rule instances are eligible to
+re.
+In Listing 1.1, we specify the abstract syntax for concrete agents rules using
+a BNF. In this notation, the terminals are quoted, the non-terminals are not
+quoted, alternatives are separated by vertical bars, and components that can
+occur zero or more times are enclosed braces followed by a superscript asterisk
+symbol (f: : :g). A class atom represented by description(i-object) in the
+BNF consists of an OWL 2-named class and a single argument representing an
+OWL 2 individual, for example an atom Person(x) holds if xis an instance of
+the class description Person . Similarly, an individual property atom represented
+byindividualvaluedProperty(i-object,i-object) consists of an OWL 2
+object property and two arguments representing OWL 2 individuals, for example
+an atom hasCarer(x,y) holds if xis related to yby property hasCarer and
+so on. Note that OWL 2 is limited to unary and binary predicates and it is
+function-free. Therefore, in the Prot eg e editor all the arguments of Ask and
+Tell are represented using constant symbols and these annotated symbols are
+Verifying resource requirements for ontology driven rule-based agents 7
+translated appropriately when designing the target system using the Maude
+specication.
+Rule ::= '<' Priority ':' Atoms ' !' Atom '>'
+Atoms ::= Atom f^Atomg
+Atom ::= standardAtom | commmunicationAtom
+standardAtom ::= description'('i-object ')'
+| individualvaluedProperty'('i-object ',' i-object ')'
+| datavaluedProperty'('i-object ',' d-object ')'
+| sameIndividuals'('i-object ',' i-object ')'
+| differentIndividuals'('i-object ',' i-object ')'
+| dataRange'(' d-object ')'
+| builtIn'(' builtinId ',' fd-objectg')'
+communicationAtom ::= 'Ask(' i ',' j ',' standardAtom ')'
+j'Tell(' i ',' j ',' standardAtom ')'
+Priority ::= N 0
+N0::= 0 | 1 | 2 | ...
+i ::= 1 | 2 | ... | n Ag
+j ::= 1 | 2 | ... | n AgbuiltinID ::= URIreference
+i-object ::= i-variable | individualID
+d-object ::= d-variable | dataLiteral
+i-variable ::= 'I-variable('URIreference')'
+d-variable ::= 'D-variable('URIreference')'
+Listing 1.1. Abstract syntax for concrete agents rules
+Rules derived from OWL 2 RL + SWRL are translated using TOVRBA into
+the simplied text format for the encoding and verication of the target system.
+In other words, the rules of a concrete agent have the plain text format hn:P1^
+P2^: : :^Pn!Piwhere nis a constant that represents the annotated priority
+of the rule and the Pi's and Pare atoms. For communication, we assume a
+simple query-response scheme based on asynchronous message passing. Each
+agent's rules may contain two distinguished communication atoms: Ask(i; j; P ),
+and Tell(i; j; P ), where iandjare agents and Pis an atomic formula not
+containing an Askor a Tell.Ask(i; j; P ) means ` iasksjwhether Pis the case'
+and Tell(i; j; P ) means ` itellsjthatP' (i6=j). The positions in which the Ask
+andTellprimitives may appear in a rule depends on which agent's program the
+rule belongs to. Agent imay have an Askor a Tell with arguments ( i; j; P ) in
+the consequent of a rule; for example, hn:P1^P2^: : :^Pn!Ask(i; j; P )i
+whereas agent jmay have an Ask or a Tell with arguments ( i; j; P ) in the
+antecedent of the rule; for example, hn:Tell(i; j; P )!Piis a well-formed
+rule (we call it trust rule) for agent jthat causes it to believe iwhen iinforms it
+thatPis the case. No other occurrences of AskorTellare allowed. When a rule
+has either an Askor a Tell as its consequent, we call it a communication rule.
+All other rules are known as deduction rules. These include rules with Asks and
+Tells in the antecedent as well as rules containing neither an Asknor a Tell.
+Firing a communication rule instance with the consequent Ask(i; j; P ) adds
+the atom Ask(i; j; P ) both to the working memory of iand of j. Intuitively, ihas
+a record that it asked jwhether Pis the case, and jhas a record of being asked
+byiwhether Pis the case. Similarly, if the consequent of a communication rule
+instance is of the form Tell(i; j; P ), then the corresponding atom Tell(i; j; P ) is
+8 A. Rakib et al.
+added to the working memories of both the agents iandj. The set of facts are
+ground atomic formulae.
+We assume that each concrete agent has a reasoning strategy (or conict
+resolution strategy) which determines the order in which rules are applied when
+more than one rule matches the contents of the agent's working memory. The
+framework (and the TOVRBA tool presented in x5) supports a set of standard
+conict resolution strategies often used in rule-based systems [12, 15, 37] includ-
+ing: rule ordering, depth, breadth, simplicity, and complexity. Dierent agents
+in the system may use dierent types of reasoning strategies. To allow the im-
+plementation of reasoning strategies, each atom is associated with a time stamp
+which records the cycle at which the atom was added to the working memory.
+The internal congurations of the rules follow the syntax given below:
+hn: [t1:P1]^[t2:P2]^: : :^[tn:Pn]![t:P]i
+where the ti's and trepresent time stamps of atoms. When a rule instance of the
+above rule is red, its consequent atom Pwill be added to the working memory
+with time stamp t=t0+1, i.e., twill be replaced by t0+1, where t0is the current
+cycle time of the system.
+3.2 Abstract agents
+An abstract agent consists of a working memory and a behavioral specication.
+The behavior of abstract agents is specied using the temporal logic LTLextended
+with belief operators. The decision regarding which agents to abstract and how
+their external behavior should be specied rests with the system designer. Speci-
+cations of the external (observable) behavior of abstract agents may be derived
+from, e.g., assumed characteristics of as-yet-unimplemented parts of the system,
+or from assumptions regarding the behavior of parts of the overall system the
+designer does not control (e.g., quality of service guarantees oered by an exist-
+ing web service) or from the prior verication of the behavior of other (concrete)
+agents in the system. The general form of the formulae used to represent the
+external behavior of an abstract agent iis given below:
+::= Xn'1jG('2!Xn'3)
+'1::= BiAsk(i;j;P)jBiTell(i;j;P)
+jBiAsk(j;i;P)jBiTell(j;i;P)
+jBiP
+'2::= BiAsk(j;i;P)jBiTell(j;i;P)
+'3::= BiTell(i;j;P)jBiTell(i;k;P)
+jBiAsk(i;j;P)jBiAsk(i;k;P)
+where Xis the next step temporal operator, Xnis a sequence of n Xoperators,
+Gis the temporal `in all future states' operator, and Bifor each agent iis a
+syntactic doxastic operator used to specify agent i's `beliefs', i.e., the contents of
+its working memory. Formulae of the form Xn'1describe agents which produce
+a certain message or input to the system within ntime steps. A formula '1of the
+form BiAsk(i; j; P ) orBiTell(i; j; P ) results in communication with the other
+agent as follows: when the beliefs appear (as an Ask or a Tell) in the abstract
+Verifying resource requirements for ontology driven rule-based agents 9
+agent i's working memory, they are also copied to agent j's working memory
+at the next step. A formula of the form BiPrepresenting a belief involving an
+atom P(other than Ask and Tell) may also appear in the abstract agent i's
+working memory within ntime steps. This is not critical to how abstract agents
+interact with communication; however it describes agent i's own behavior.
+TheG('2!Xn'3) formulae describe agents which are always guaranteed
+to reply to a request for information within ntime steps. We interpret the
+formula G(BiAsk(j; i; P )!XnBiTell(i; j; P )) as follows: if tis the time
+stamp when abstract agent icame to believe formula Ask(j; i; P ) (agent jasked
+forP), then the formula Tell(i; j; P ) must appear in the working memory of
+agent iwithin t+nsteps. The formula Tell(i; j; P ) is then copied to agent j's
+working memory at the next step. The other possible combinations of Ask and
+Tell in places of '2and'3in the G('2!Xn'3) formulae can be interpreted
+in a similar way. Note that we do not need the full language of LTL(for example,
+the Until operator) in order to specify these abstract agents, and the language
+described above for abstract agents is independent of the language of concrete
+agents.
+4 Example of two communicating agents
+To illustrate the use of the proposed framework, let us consider an example
+system consisting of two agents where one is concrete and the other is abstract.
+We consider a scenario in which agent 1, the concrete agent, has the following
+set of rules:
+Rule1<1:prescribedOpioid (?p;0NonOpioidRegimen )
+!Ask(1;2;needAssessment (?p))>
+Rule2<2:Tell(2;1;isFeeling (?p;?x))!isFeeling (?p;?x)>
+Rule3<3:Patient (?p)^isFeeling (?p;?x)^Pain (?x)^hasPainLevel (?x;02)
+!hasPaintIntensity (?p;0MildPainIn )
+Rule4<4:hasPaintIntensity (?p;0MildPainIn )
+!prescribedOpioid (?p;0WeakOpioidRegimen )>
+For the rest of this paper constants are preceded by a single quote (note that '
+and0have the same meaning). The rst rule states that if a patient is currently
+in the non-opioid regimen then ask the abstract agent 2 for an assessment. The
+second rule is a trust rule for agent 1 which makes it trust agent 2 when agent
+2 informs it, say for example, isFeeling('Mary,'MucositisPainTwo) which
+is a ground instantiation of isFeeling(?p, ?x) . The third rule states that if
+a patient has a pain level \2" then the pain intensity (s)he is feeling is mild.
+The fourth rule state that if a patient feels mild pain then the prescribed opioid
+regimen is weak. The external behavior of the abstract agent 2 is described by
+the following temporal logic formula:
+G(B2Ask(1;2;needAssessment (0Mary ))!X3B2Tell(2;1;isFeeling (0Mary;0Mu 
+cositisPainTwo )))
+10 A. Rakib et al.
+Time Agent 1 Agent 2
+0f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)]
+[0 : hasPainLevel('MucositisPainTwo,'2)] g
+Rule1 Idle
+1f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)]
+[0 : hasPainLevel('MucositisPainTwo,'2)]
+[1 :Ask(1,2,needAssessment('Mary))] g
+Idle Copy ( Ask(1,2,needAssessment('Mary))
+from Agent 1)
+2f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f[2 :Ask(1,2,needAssessment('Mary))] g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)]
+[0 : hasPainLevel('MucositisPainTwo,'2)]
+[1 :Ask(1,2,needAssessment('Mary))] g
+Idle Idle
+3f[0 : Pain('MucositisPainTwo)] [0:Patient('Mary)] f[2 :Ask(1,2,needAssessment('Mary))] g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)]
+[0 : hasPainLevel('MucositisPainTwo,'2)]
+[1 :Ask(1,2,needAssessment('Mary))] g
+Idle Idle
+4f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f[2 :Ask(1,2,needAssessment('Mary))] g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)]
+[0 : hasPainLevel('MucositisPainTwo,'2)]
+[1 :Ask(1,2,needAssessment('Mary))] g
+Idle Tell
+5f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f[2 :Ask(1,2,needAssessment('Mary))] g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)] [5 :Tell(2,1,isFeeling('Mary, 'Mucositis-
+[0 : hasPainLevel('MucositisPainTwo,'2)] PainTwo))]g
+[1 :Ask(1,2,needAssessment('Mary))] g
+Copy ( Tell(2,1,isFeeling('Mary, 'MucositisPainTwo)) Idle
+from Agent 2)
+6f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f[2 :Ask(1,2,needAssessment('Mary))] g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)] [5 :Tell(2,1,isFeeling('Mary, 'Mucositis-
+[0 : hasPainLevel('MucositisPainTwo,'2)] PainTwo))]g
+[1 :Ask(1,2,needAssessment('Mary))]
+[6 :Tell(2,1,isFeeling('Mary, 'MucositisPainTwo))] g
+Rule2 Idle
+7f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f[2 :Ask(1,2,needAssessment('Mary))] g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)] [5 :Tell(2,1,isFeeling('Mary, 'Mucositis-
+[0 : hasPainLevel('MucositisPainTwo,'2)] PainTwo))]g
+[1 :Ask(1,2,needAssessment('Mary))]
+[6 :Tell(2,1,isFeeling('Mary, 'MucositisPainTwo))]
+[7 : isFeeling('Mary, 'MucositisPainTwo)] g
+Rule3 Idle
+8f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f[2 :Ask(1,2,needAssessment('Mary))] g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)] [5 :Tell(2,1,isFeeling('Mary, 'Mucositis-
+[0 : hasPainLevel('MucositisPainTwo,'2)] PainTwo))]g
+[1 :Ask(1,2,needAssessment('Mary))]
+[6 :Tell(2,1,isFeeling('Mary, 'MucositisPainTwo))]
+[7 : isFeeling('Mary, 'MucositisPainTwo)]
+[8 : hasPaintIntensity('Mary,'MildPainIn)] g
+Rule4 Idle
+9f[0 : Pain('MucositisPainTwo)] [0 : Patient('Mary)] f[2 :Ask(1,2,needAssessment('Mary))] g
+[0 : prescribedOpioid('Mary, 'NonOpioidRegimen)] [5 :Tell(2,1,isFeeling('Mary, 'Mucositis-
+[0 : hasPainLevel('MucositisPainTwo,'2)] PainTwo))]g
+[1 :Ask(1,2,needAssessment('Mary))]
+[6 :Tell(2,1,isFeeling('Mary, 'MucositisPainTwo))]
+[7 : isFeeling('Mary, 'MucositisPainTwo)]
+[8 : hasPaintIntensity('Mary,'MildPainIn)]
+[9 : prescribedOpioid('Mary, 'WeakOpioidRegimen)] g
+Table 2. Example derivation of two communicating agents
+Verifying resource requirements for ontology driven rule-based agents 11
+which states that whenever the atom Ask(1,2,needAssessment('Mary)) ap-
+pears in the working memory of agent 2 (i.e., agent 2 believes the atom Ask(1,2,
+needAssessment('Mary)) ), the atom Tell(2,1,isFeeling('Mary,'Mucositi-
+sPainTwo)) will appear in the working memory of agent 2 (i.e., agent 2 will be-
+lieve atom Tell(2,1,isFeeling('Mary,'MucositisPainTwo)) ) within 3 time
+steps. Suppose now that the initial working memories of the agents as follows:
+WM 1:f[0: prescribedOpioid('Mary,'NonOpioidRegimen)] [0 : Patient('Mary)]
+[0: hasPainLevel('MucositisPainTwo,'2)] [0 : Pain('MucositisPainTwo)] g
+WM 2:fg.
+Table 2 gives a simple example of a run of the system starting from the initial
+conguration. This example helps to explain how facts are derived and commu-
+nicated, and what happens when the abstract agent receives an Ask query by
+communication. Note that in this derivation it is assumed that at step 2, when
+abstract agent 2 came to believe atom Ask(1,2,needAssessment('Mary)) (i.e.,
+agent 1 asked for needAssessment('Mary) ), the atom Tell(2,1,isFeeling('Ma-
+ry,'MucositisPainTwo)) appeared in the working memory of agent 2 at time
+2 + 3 i.e., at the 5th step. However, the atom Tell(2,1,isFeeling('Mary,
+'MucositisPainTwo)) could also appear at the 3rd or 4th step but denitely
+appears at step 5 if it is not already present in the working memory of agent 2.
+In the example run, at the 2ndand 3rdsteps both agents perform an Idle action.
+In this model, communication requires a single time step, i.e., when agent iasks
+a query (or tells an information to) agent jat time step t, agent jwill receive the
+query (information) at time step t+1. The table shows that from the initial con-
+guration agents can derive prescribedOpioid('Mary, 'WeakOpioidRegimen)
+(appears in the conguration of one of the agents) in 9 time steps and exchange
+two messages.
+5 Automated verication tool TOVRBA
+We use the Prot eg e version 4 :1 ontology editor and knowledge-base framework to
+build the ontologies and dene the rules for concrete agents. The SWRL editor
+is integrated with Prot eg e and permits the interactive editing of SWRL rules. In
+order to encode an ontology-driven rule-based system using a Maude [10] speci-
+cation and formally verify its interesting properties, we rst need to translate
+the ontology in the OWL/XML format to a set of simple plain text Horn clause
+rules. We developed a translator that takes as input an OWL 2 RL ontology
+in the OWL/XML format (an output le of the Prot eg e editor) and translates
+it to a set of plain text Horn clause rules. We use the OWL API [21] to parse
+the ontology and extract the set of axioms and facts. The design of the OWL
+API is directly based on the OWL 2 Structural Specication and it treats an
+ontology as a set of axioms and facts which are read using the visitor design
+pattern. The DLP-based translation rules (cf. x2.2) are then recursively applied
+to generate equivalent plain text Horn clause rules for each axiom and fact. We
+also extract the set of SWRL rules using the OWL API which are already in the
+Horn clause rule format. First, atoms with corresponding arguments associated
+12 A. Rakib et al.
+with the head and the body of a rule are identied and we then generate a plain
+text Horn clause rule for each SWRL rule using these atoms.
+The translated Horn clause rules of an ontology are then used to create agents
+of a multi-agent rule-based system using the Maude specication. We then au-
+tomatically verify interesting properties of the system using the Maude LTL
+model checker. The high-level architecture of the TOVRBA tool is shown in Fig-
+ure 1. We use the Maude rewriting system because it allows ecient modeling
+of the agents' rst order rules and reasoning strategies. For example, the vari-
+ables that appear in a rule can be represented directly in the Maude encoding,
+without having to generate all ground instances resulting from possible variable
+substitutions.
+Modeling problems using
+Ontology plus Rules
+(OWL 2 RL + SWRL)Read/Write/Edit
+OWL 2 RL + SWRLDevelop Ontologies
+Pellet ontology reasoner
+plugged inOntology plus Rules in
+OWL/XML syntax
+Translator
+Plain text syntax rules which
+are used in system designEncoding generator
+Generating Maude encoding
+and
+allowing property speciﬁcation
+to be veriﬁedThe Maude
+LTL model checkerVeriﬁed design
+Fig. 1. TheTOVRBA tool architecture
+In [7] a preliminary description of the tool was published for rule-based multi-
+agent systems which allows the designer to specify information about agents in-
+teractions, behavior, and execution strategies at dierent levels of abstraction.
+The extended version of the tool presented in this paper allows the designer to
+model ontology-driven rule-based agents consisting of rules derived from OWL
+2 RL + SWRL. Each agent in a multi-agent system has a conguration (local
+state) and the composition of all these congurations (local states) make the
+conguration (global state) of the multi-agent system. The types necessary to
+implement the local state of an agent (working memory, program, agenda, rea-
+soning strategies, message counters, time stamps etc.) are declared in a generic
+agent conguration functional module called ACM. The structure of the ACMis
+given in Listing 1.2.
+1fmod ACM is
+2 protecting NAT .
+3 protecting BOOL .
+4 protecting QID .
+5 sorts Constant Atom sAtom cAtom Term Rule Agenda WM .
+6 sorts TimeA TimeWM RepT RepTime Config .
+Verifying resource requirements for ontology driven rule-based agents 13
+7 subsort Atom < WM .
+8 subsorts aAtom cAtom < Atom .
+9 subsort Rule < Agenda .
+10 subsort Qid < Constant .
+11 subsort TimeA < TimeWM .
+12 subsorts Constant < Term .
+13 subsort RepT < RepTime .
+14 ops void rule : -> Atom .
+15 ops com exec : -> Phase [ctor] .
+16 op nil : -> Term[ctor] .
+17 op [_ : _] : Nat Atom -> TimeA .
+18 op _ _ : WM WM -> WM [comm assoc] .
+19 op _ _ : TimeWM TimeWM -> TimeWM [comm assoc] .
+20 op _ _ : Agenda Agenda -> Agenda [comm assoc] .
+21 op <_ : _->_> : Nat TimeWM TimeA -> Rule .
+22 op _ _ : RepTime RepTime -> RepTime [comm assoc] .
+23 op Ask : Nat Nat sAtom -> cAtom .
+24 op Tell : Nat Nat sAtom -> cAtom .
+25 .
+26 .
+27 .
+28 endfm
+Listing 1.2. Sorts declaration and their relationships
+A number of Maude library modules such as NAT,BOOL , and QIDhave been
+imported into the ACMfunctional module. The modules NATand BOOL are used
+to dene natural and Boolean values, respectively, whereas the module QIDis
+used to dene the set of constant symbols (constant terms of the rule-based
+system). The set of variable symbols (variable terms of the rule-based system)
+are simply Maude variables of sort QID. Both variables and constants are sub-
+sorts of sort Term . Similarly, an atom is declared as an operator whose argu-
+ments are of sort Term , and returns an element of sort Atom . For example,
+op isFeeling : Term Term -> Atom . The sort Atom is declared as a subsort
+of the sort WM(working memory), and a concatenation operator is declared on
+sort WMwhich is the double underscore shown below.
+op _ _ : WM WM -> WM [ comm assoc ] .
+The above operation is in mixx notation and it is commutative and associa-
+tive. This means that working memory elements are a set of atoms whose order
+does not matter. In order to maintain time stamps for each atom, a sort TimeA is
+declared whose elements are of the form [ t : P ] , where trepresents the time
+stamp of atom Pindicating when that atom was added to the working memory.
+The sort TimeA is declared as a subsort of the sort TimeWM , and a concatenation
+operator is declared on sort TimeWM which is also the double underscore and is
+commutative and associative.
+op _ _ : TimeWM TimeWM -> TimeWM [ comm assoc ] .
+Note that WMandTimeWM are updated simultaneously, for example, whenever
+an atom Pis added to WMthe corresponding element [ t : P ] is also added
+toTimeWM for an appropriate time step t. Fact time stamps are maintained to
+implement reasoning strategies. The rules of each agent are dened using an
+operator which takes as arguments a sort Natspecifying the priority, a set of
+atoms (of sort TimeWM ) specifying the antecedents of the rule and a single atom
+14 A. Rakib et al.
+(of sort TimeA ) specifying the consequent, and returns an element of sort Rule
+(line 21 of Listing 1.2). The sort Rule is declared as a subsort of the sort Agenda ,
+and a concatenation operator is declared on sort Agenda which is also the double
+underscore and is commutative and associative.
+op _ _ : Agenda Agenda -> Agenda [ comm assoc ] .
+In a similar fashion, other sorts and operators are declared and manipulated.
+We model each (concrete and abstract) agent using a functional module which
+imports the ACMmodule dened above. The local conguration of an agent iis
+represented as a tuple Si[A|RL|TM|M|RT|RT'|t|msg|syn]iS , where SiandiS
+indicate start and end of a state of agent i. The variables Aand RLare of sort
+Agenda ,TMis of sort TimeWM ,Mis of sort WM,RTand RT'are of sort RepTime .
+Moreover, t,msg, and synare of sort Nat. The variables t,msg, and synhave
+been used to represent respectively the time step, message counter, and a ag for
+synchronization. Note that the structure of local congurations for both concrete
+and abstract agents are the same. This is to maintain consistency of the shape
+of each agent's conguration. However, for example, the sort RepTime is of no
+use for concrete agents and its value is always empty for them. For the sake of
+brevity, we do not describe the encoding in any further details here, we refer the
+interested reader to [32].
+6 Pain management system
+In this section, we consider an example system adopted from the guidelines for
+the management of cancer related pain in adults [9]. A simplied owchart of
+the guidelines is shown in Figure 2. The guidelines say that if a patient is not
+currently on a regular opioid regimen then depending on the pain intensity of
+a patient (s)he will be placed on one of the three regimens non-opioid, weak
+opioid, or strong opioid. Depending on the patient's response the opioid may be
+changed, e.g., from non-opioid to weak opioid or weak opioid to strong opioid.
+The guidelines for the strong opioid regimen say that if a patient is responding
+(i.e., if the current pain level is equal or less than previous pain level) then an-
+other reassessment should be done at an appropriate interval, say within a week.
+However, if a patient is not responding then it suggests a dierent reassessment
+interval depending on the current pain level and considers increasing the dose by
+a certain percentage. The reassement also suggests that if there are side eects
+(side eects are symptoms which may occur at any dose e.g., constipation) then
+management of side eects from opioid therapy will take eect. Also, when on
+the strong opioid regimen, if a pain crisis occurs with any patient at any point
+in time, it is an emergency situation.
+We built a pain monitoring ontology, that integrates the terminology and con-
+cepts of health and medicine used in the Guysborough Antigonish Strait Health
+Authority (GASHA). A set of standard terms were also obtained from SNOMED-
+CT [2], ICNP [19], and the guidelines for Cancer pain treatment. We followed the
+Basic Formal Ontology [1] which is a philosophically inspired top level ontology
+Verifying resource requirements for ontology driven rule-based agents 15
+Complete pain assessment
+and care plan
+Currently on
+regular opioidPain intensityOn weak opioid with
+go to Strong Opioid Regimenmoderate-severe pain
+Backgound
+Discomfort (0 −1)Mild pain
+(2−3)Moderate
+Pain (4 −6)Severe
+Pain (7 −10)
+Non Opioid
+RegimenIf pain is not
+stable may start
+with weak opioidIf pain is not
+stable may start
+with weak opioid
+Weak Opioid
+Regimen No response
+Strong Opioid
+Regimen No response
+Opioid
+MaintenanceResponseYesPain
+IntensityNo
+Mild pain
+(2−3)Moderate
+Pain (4 −6)Severe
+Pain (7 −10)
+Dose titration of opioid
+For mild pain: Consider increasing dose by 10% q4h ATC
+Reassess at least every 48 −72 hours
+For moderate pain: Increase dose by 10 −25% q4h ATC
+Reassess at least every 24 hours
+For severe pain: Increase dose by 25 −50% q4h ATC
+Reassess at least every 12 hoursreassess at
+appropriate
+intervalsAppropriate
+dose and
+ResponseSide
+eﬀect
+Continue
+dose titrationNoYesNo
+Yes
+NoYes
+Management
+of side eﬀectYes No
+Fig. 2. Cancer pain treatment guidelines [9]
+that provides a coherent, unied understanding of the whole domain. A frag-
+ment of the pain monitoring ontology is depicted in Figure 3. In our ontology,
+we have several classes including Pain ,Person ,Patient ,PainintensityType ,
+SpecialPainProblem ,SideEffects , object properties include, e.g., hasPainIn-
+tensity, Domain:Pain, Range:PainIntensityType , and data properties in-
+clude, e.g., hasPainLevel, Domain:Pain, Range:xsd:int . It also includes in-
+verse object properties such as, for example, isFeeling andisFeltBy and func-
+tional object properties, e.g., hasPainLevel , i.e., each pain level belongs to an
+instance of Pain class. We also use propositional connectives to create complex
+class expressions; an example of such expressions is given in axiom 1 (cf. x2.1).
+We model a multi-agent rule-based system using TOVRBA based on the above
+dened pain monitoring ontology. The system consists of one concrete agent and
+several abstract agents. The concrete agent in the system is modeled as a central
+Health Planner planner (p). We model ve abstract agents, namely, an assessor
+assessor (a), a reassessor reassessor (r), a side eect manager sideeectmanager (s),
+a care giver caregiver (c), and an emergency emergency (e). These abstract agents
+interact with the agent pand they communicate via message passing. For sim-
+plicity, we assume that agent acan be a patient or a family member, agent r
+16 A. Rakib et al.
+Fig. 3. A fragment of the pain monitoring ontology
+can be a physician or a nurse or a relative or a patient herself, and agent ccan
+be a physician or a nurse.
+Example rules for the concrete agent pare:
+<2:Patient (?p)^isFeeling (?p;?x)^Pain (?x)^hasPainLevel (?x;02)
+!hasPaintIntensity (?p;0MildPainIn )>
+<2:Patient (?p)^isFeeling (?p;?x)^Pain (?x)^hasPainLevel (?x;01)
+!hasPaintIntensity (?p;0BackgroundDiscomfortIn )>
+The abstract agent aassesses the current pain level of a patient and informs the
+planner p, with messages of the form: Tell(a;p;isFeeling (?p;?x)).
+Upon receiving the pain level information from agent a, agent pderives (pre-
+scribes) a medication for the patient by ring a sequence of rules from its knowl-
+edge base. The type of medication could be non-opioid, weak-opioid, or strong-
+opioid depending on the levels of pain. Agent pthen asks agent aif the patient
+is responding. Depending on the response, agent psuggests either to continue
+the current medication or change from the current opioid to another opioid. If
+a patient is on the strong opioid regimen, when agent pinteracts with agent r
+for the reassessment, agent palso asks rif there is any side eect during medi-
+cation. If at any point in time agent rinforms agent pabout a pain crisis, then
+the planner will contact agent c. If agent preceives a negative (notAvailable or
+Busy) response from agent cthen planner pcontacts agent e. Agent ain the sys-
+tem generates information about the pain levels at dierent times in the interval
+[1;5]. For example, agent agenerates pain information for a patient named Mary
+who is feeling MucositisPainOne using the following formula:
+Verifying resource requirements for ontology driven rule-based agents 17
+X5BaTell(a;p;isFeeling (0Mary;0MucositisPainOne ))
+Similarly, the behavior of agent ais also represented, for example, using
+formulas of the form:
+G(BaAsk(p;a;needAssessment (0Mary ))!X4BaTell(a;p;isFeeling (0Mary;0Mu 
+cositisPainSeven )))
+We verify the following properties of the system:
+G(BpTell(a;p;isFeeling (0Mary;0MucositisPainOne ))
+!XnBphasPaintIntensity (0Mary;0BackgroundDiscomfortIn ) )
+the above property species that whenever agent atells agent pthat Mary is
+feeling MucositisPainOne , agent pclassies Mary 's pain intensity as Background
+Discomfort within ntime steps and
+G(BphasCarer (0Mary;0John )^BpTell(c;p;hasAcknowledgement (0John;0Busy ))
+^BphasPainCrisis (0Mary )!XnBpTell(p;e;hasPainCrisis (0Mary )) )
+which species that whenever a pain crisis occurs with a patient and agent phas
+received negative acknowledgment from agent c, agent pcontacts the emergency
+agent ewithin ntime steps.
+The above properties are veried as true when the value of nis 2 in the rst
+property, and 3 in the second property; and the model checker uses 2 seconds for
+each property. However, when we assign a value to nwhich is less than 2 in the
+rst property, and less than 3 in the second property, the properties are veried
+as false and the model checker returns counterexamples. This also demonstrates
+the correctness of the encoding in that the model checker does not return true for
+arbitrary values of n. Note that in our experiment, we use discrete time steps;
+however, we can map the value of ninto minutes, for example nequals 3 is
+treated as sixty minutes.
+7 Related work
+There has been considerable work on the Semantic Web and rule-based agents,
+both in AI and in the active database community. In [35], Subercaze and Maret
+present a semantic agent model that allows SWRL programming of agents. A
+Java interpreter has been developed that communicates with the Knowledge
+Base using the Prot eg e-OWL API. The prototype tool takes advantages of the
+Java-based domain modeling tool JADE that allows agent registration, service
+discovery and messages passing. The framework supports FIPA-ACL for agent
+communication.
+In [30], Mousavi et al. present an ontology-driven reasoning system based
+on BDI agent model [33]. In contrast to Jadex (that utilizes an XML format to
+represent agents' plans, beliefs and goals), in their framework, an ontology (in an
+OWL format) has been used to represent agents' believes, plans and events. The
+Java-based tool JADE was used to implement the agents, and the Prot eg e OWL
+was used to create the ontology. To illustrate the use of the framework, a simple
+Mobile Workforce Brokering Systems ( a multi-agent system that automates the
+process of allocating tasks to Mobile Workforces) was modeled for simulation.
+18 A. Rakib et al.
+In [34] Ruan and MacCaull present an approach to monitor healthcare work-
+ows using a logic-based formal method. To specify the system the authors have
+presented FO-LTL-K a logic fusion of rst order LTL and description logic. They
+have shown how some of the norms in [14] can be specied using FO-LTL-K,
+however, the paper produced no practical results. In [31] Rabbi et al. present a
+dierent approach for modeling and verifying compensable healthcare workow
+with time constraints and monitors. They use NOVA workow tool for the mod-
+eling and automated translation of the monitoring system into the specication
+language of DiVinE model checker to verify properties of the system. However
+their framework is neither ontology nor agent based.
+In [13], Dekhtyar et al. studied the complexity of verication of behavior
+(dynamic) properties of deterministic, nondeterministic and asynchronous multi-
+agent systems. They considered the MAS framework based on the IMPACT ar-
+chitecture presented in [36]. In order to analyze complexities in MAS verication,
+the authors impose easy-to-formulate limitations on IMPACT agents, which lead
+to a polynomial time semantics of the systems. Although in this paper we do
+not intend to analyze the complexity of MAS verication, the work presented
+in [13] motivates us to explore some research in this direction.
+While in the above a number of ontology-driven modeling and reasoning ap-
+proaches [30, 35] have been developed for multi-agent systems, to our knowledge
+tools for automated formal verication for such systems are lacking.
+8 Conclusions
+In this paper, we proposed an approach to modeling and verifying response time
+guarantees of ontology-driven multi-agent rule-based systems. We use standard
+model checking techniques to verify interesting properties of such systems, and
+show how the Maude LTL model checker can be used to verify properties in-
+cluding response-time guarantees of the form: if the system receives a query,
+then a response will be produced within ntime steps. We described results of
+experiments on a simple healthcare monitoring system. In future work, we plan
+to evaluate our approach on more real-life examples of Semantic Web and rule-
+based systems, and enhance our framework with context-aware capabilities.
+Acknowledgments This work is supported by an ACEnet Post Doctoral Fellow-
+ship, an NSERC Industrial Post Graduate Fellowship, and ACOA. The computational
+facilities are provided by ACEnet. We would like to thank Rachel Embree and Mary
+Heather Jewers for the fruitful discussions about ontologies and the guidelines for the
+management of cancer related pain in adults [9].
+References
+1. Basic formal ontology. http://ontology.bualo.edu/bfo/ (2002)
+2. SNOMED-CT Systematized Nomenclature of Medicine-Clinical Terms.
+http://www.ihtsdo.org/snomed-ct/ (2007)
+Verifying resource requirements for ontology driven rule-based agents 19
+3. OWL 2 Web Ontology Language Manchester Syntax. W3C Candidate Recommen-
+dation. http://www.w3.org/TR/owl2-manchester-syntax/ (Oct 2009)
+4. OWL 2 Web Ontology Language Structural Specication and Functional-style
+Syntax. W3C Candidate Recommendation. http://www.w3.org/TR/owl2-syntax/
+(Oct 2009)
+5. The Prot eg e ontology editor and knowledge-base framework (Version 4.1).
+http://protege.stanford.edu/ (July 2011)
+6. Alechina, N., Logan, B., Nga, N.H., Rakib, A.: Verifying time and communication
+costs of rule-based reasoners. In: Proceedings of the 5th international conference on
+Model checking and articial intelligence. pp. 1{14. MoChArt'08, Springer-Verlag,
+Berlin, Heidelberg (2008)
+7. Alechina, N., Logan, B., Nga, N.H., Rakib, A.: Automated verication of resource
+requirements in multi-agent systems using abstraction. In: Proceedings of the 6th
+international conference on Model checking and articial intelligence. pp. 69{84.
+MoChArt'10, Springer-Verlag, Berlin, Heidelberg (2011)
+8. Bechhofer, S., van Harmelen, F., Hendler, J.A., Horrocks, I., McGuinness, D.L.,
+Patel-Schneider, P.F., Stein, L.A.: OWL Web Ontology Language Reference,
+World Wide Web Consortium, recommendation rec-owl-ref-20040210 (February
+2004)
+9. Broadeld, L., Banerjee, S., Jewers, H., Pollett, A.J., Simpson, J.: Guidelines for
+the management of cancer-related pain in adults. Supportive care cancer site team,
+cancer care Nova Scotia, Canada. (2005)
+10. Clavel, M., Eker, S., Lincoln, P., Meseguer, J.: Principles of Maude. Electronic
+Notes in Theoretical Computer Science. 4, 65{89 (1996)
+11. Cost, R.S., Finin, T.W., Joshi, A., Peng, Y., Nicholas, C.K., Soboro, I., Chen,
+H., Kagal, L., Perich, F., Zou, Y., Tolia, S.: ITtalks: A case study in the Semantic
+Web and DAML+OIL. IEEE Intelligent Systems 17, 40{47 (January 2002)
+12. Culbert, C.: CLIPS reference manual. NASA (2007)
+13. Dekhtyar, M.I., Dikovsky, A.J., Valiev, M.K.: On complexity of verication of
+interacting agents' behavior. Annals of pure and applied logic 141(3), 336{362
+(2006)
+14. Ferris, F.D., Balfour, H.M., Bowen, K., Farley, J., Hardwick, M., Lamontagne, C.,
+Lundy, M., Syme, A., West, P.J.: A model to guide hospice palliative care: Based
+on national principles and norms of practice (March 2002)
+15. Friedman-Hill, E.J.: Jess, the rule engine for the java platform. Sandia national
+laboratories (2008)
+16. Glimm, B., Horridge, M., Parsia, B., Patel-Schneider, P.F.: A syntax for rules in
+OWL 2. In: Proceedings of the 6th International Workshop on OWL: Experiences
+and Directions (OWLED 2009). vol. 529. CEUR (2009)
+17. Grosof, B.N., Horrocks, I., Volz, R., Decker, S.: Description logic programs: Com-
+bining logic programs with description logic. In: Proceedings of the 12th interna-
+tional conference on World Wide Web. pp. 48{57. ACM Press (2003)
+18. Gruber, T.: A translation approach to protable ontology specications. Knowledge
+Acquisition 5, 199{220 (1993)
+19. Hardiker, N., Coenen, A.: A formal foundation for ICNP. Journal of Stud Health
+Technol Inform 122, 705{709 (2006)
+20. Hendler, J.: Agents and the semantic web. IEEE Intelligent Systems 16, 30{37
+(2001)
+21. Horridge, M., Bechhofer, S.: The OWL API: A java API for working with OWL 2
+Ontologies. In: 6th OWL Experienced and Directions Workshop (OWLED) (Oc-
+tober 2009)
+20 A. Rakib et al.
+22. Horrocks, I., Patel-Schneider, P.F.: A proposal for an OWL rules language. In:
+Proceedings of the 13th international conference on World Wide Web. pp. 723{
+731. WWW '04, ACM Press (2004)
+23. Horrocks, I., Patel-Schneider, P.F., Boley, H., Tabet, S., Grosof, B., Dean, M.:
+SWRL: A Semantic Web rule language combining OWL and RuleML. Acknowl-
+edged W3C submission, standards proposal research report: Version 0.6 (April
+2004)
+24. ter Horst, H.J.: Completeness, decidability and complexity of entailment for RDF
+Schema and a semantic extension involving the OWL vocabulary. Journal of Web
+Semantics 3(2-3), 79{115 (2005)
+25. Kr otzsch, M., Maier, F., Krisnadhi, A., Hitzler, P.: A better uncle for owl: nominal
+schemas for integrating rules and ontologies. In: Proceedings of the 20th interna-
+tional conference on World wide web. pp. 645{654. ACM (2011)
+26. Kr otzsch, M., Mehdi, A., Rudolph, S.: Orel: Database-driven reasoning for OWL 2
+proles. In: Proceedings of the 23rd International Workshop on Description Logics.
+vol. 573. CEUR (2010)
+27. McGuinness, D., Smith, M., Welty, C.: OWL Web Ontology Language Guide, W3C
+Recommendation. http://www.w3.org/TR/owl-guide/ (February 2004)
+28. Motik, B., Grau, B., Horrocks, I., Wu, Z., Fokoue, A., Lutz, C.: OWL 2 Web On-
+tology Language: Proles, W3C Recommendation. http://www.w3.org/TR/owl2-
+proles/ (October 2009)
+29. Motik, B., Sattler, U., Studer, R.: Query answering for OWL-DL with rules. Jour-
+nal of Web Semantics: Science, Services and Agents on the World Wide Web 3,
+41{60 (2005)
+30. Mousavi, A., Nordin, M.J., Othman, Z.A.: An ontology driven, procedural rea-
+soning system-like agent model,for multi-agent based mobile workforce brokering
+systems. Journal of Computer Science. 6, 557{565 (2010)
+31. Rabbi, F., Mashiyat, A., MacCaull, W.: Model checking workow monitors and
+its application to a pain management process. In: Proceedings of International
+Symposium on Foundations of Health Information Engineering and Systems. pp.
+110{127. Johannesburg, South Africa (2011)
+32. Rakib, A.: Verifying requirements for resource-bounded agents. Ph.D. thesis, The
+University of Nottingham. (2011)
+33. Rao, A.S., George, M.P.: BDI Agents: From Theory to Practice. In: Proceedings
+of the First International Conference on Multi-agent Systems. pp. 312{319. The
+MIT Press (1995)
+34. Ruan, J., MacCaull, W.: Data-aware monitoring for healthcare workows using for-
+mal methods. In: Proceedings of The Second Workshop Knowledge Representation
+for Health Care(KR4HC'10). pp. 51{60. Lisbon, Portugal (2010)
+35. Subercaze, J., Maret, P.: SAM - semantic agent model for swrl rule-based agents. In:
+Proceedings of the International Conference on Agents and Articial Intelligence.
+pp. 245{248. INSTICC Press (2010)
+36. Subrahmanian, V.S., Bonatti, P., Dix, J., Eiter, T., Kraus, S., Ozcan, F., Ross, R.:
+Heterogeneous Agent Systems. MIT Press (2000)
+37. Tzafestas, S.G.: Knowledge-Based System Diagnosis, Supervision, and Control.
+Plenum Publishing Co. (1988)
+View publication statsView publication stats

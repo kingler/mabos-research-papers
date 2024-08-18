@@ -1,0 +1,1202 @@
+Under consideration for publication in Formal Aspects of Computing
+Reasoning about Goal-Directed Real-Time
+Teleo-Reactive Programs
+Brijesh Dongol1;2, Ian J. Hayes2and Peter J. Robinson2
+1Department of Computer Science, The University of Shefﬁeld, S1 4DP, UK
+2School of Information Technology and Electrical Engineering, The University of Queensland, Brisbane, Australia
+Abstract. The teleo-reactive programming model is a high-level approach to developing real-time systems that sup-
+ports hierarchical composition and durative actions. The model is different from frameworks such as action systems,
+timed automata and TLA+, and allows programs to be more compact and descriptive of their intended behaviour.
+Teleo-reactive programs are particularly useful for implementing controllers for autonomous agents that must react
+robustly to their dynamically changing environments. In this paper, we develop a real-time logic that is based on Du-
+ration Calculus and use this logic to formalise the semantics of teleo-reactive programs. We develop rely/guarantee
+rules that facilitate reasoning about a program and its environment in a compositional manner. We present several
+theorems for simplifying proofs of teleo-reactive programs and present a partially mechanised method for proving
+progress properties of goal-directed agents.
+Keywords: Teleo-reactive programming, goal-directed agents, rely/guarantee reasoning, real-time programs, reactive
+systems, interval-based logics
+1. Introduction
+Software is increasingly being used to implement controllers for safety-critical applications in real-time environments
+[?,?,?]. For such systems, failures can have a high cost, and hence it is important to ensure dependability of the
+underlying software. As the applications become more sophisticated, the programming languages and the logics that
+one uses must accordingly become more sophisticated. This paper is concerned with methods for specifying and
+proving correctness of goal-directed agents , which are agents that progress towards a main goal by achieving a number
+of intermediate subgoals. The environments of such agents are assumed to be dynamic and may hinder the agent from
+achieving any of its goals, and may even cause the agent to re-establish previously achieved goals.
+The teleo-reactive programming language, developed by Nils Nilsson, is a high-level language that has been shown
+to be useful for implementing controllers for autonomous agents that react robustly to continually changing environ-
+ments [ ?,?,?,?]. We present a logic over dense time intervals to formalise the real-time semantics of teleo-reactive
+programs. The logic combines aspects of Duration Calculus [ ?] and temporal logic [ ?,?]. To facilitate compositional
+reasoning, we develop rely/guarantee-style reasoning rules [ ?], where the relycondition describes properties of the
+environment and the guarantee condition describes how the program will behave under the assumption that the rely
+Correspondence and offprint requests to : B.Dongol@shefﬁeld.ac.uk, fIan.Hayes,pjrg@itee.uq.edu.au
+2 B. Dongol, I. J. Hayes and P. J. Robinson
+/0/0/0/0/0/0/1/1/1/1/1/1
+/0/0/0/1/1/1sensor
+cansdepot
+tablerobot
+grippers
+Fig. 1. Top down view of can clearing robot example
+condition holds. Our framework allows one to verify guarantee properties that hold over all intervals (to prove safety
+properties), intervals of a certain length (to prove progress properties), and about the lengths of the intervals (to prove
+timing properties). We provide a number of proof rules for simplifying proofs of progress in goal-directed agents. In
+particular, we focus on a progression theorem that allows a rely condition that is sufﬁcient for a program to satisfy
+progress to be derived.
+In this paper, we introduce teleo-reactive programs by presenting a controller for a can-collecting robot in Sec-
+tion??. Furthermore, we present:
+an interval-based real-time temporal logic (Section ??),
+formalisation of the semantics of teleo-reactive programs (Section ??) using the logic in Section ??,
+a compositional rely/guarantee-style theory for proving properties of teleo-reactive programs with a focus on
+controllers for goal-directed agents (Section ??and Section ??),
+a method of decomposing proof of progress properties by automatically generating the necessary proof obligations
+and assumptions (Section ??).
+In Section ??, we demonstrate our approach by proving that the can-clearing robot example in Fig. ??achieves its
+goal of moving cans from the table to the depot. As part of the proof, we develop the required rely conditions, i.e.,
+assumptions on the environment that are necessary for the robot to make progress.
+2. Teleo-reactive programs
+We explain teleo-reactive programs by considering the program in Fig. ??, which implements a controller for the robot
+depicted in Fig. ??. The robot must clear cans from the table by moving them to the depot. The robot is able to sense
+when it is pointing towards a can or the depot, rotate on its axis (to scan the environment for cans or the depot), move
+forward (in the direction of its front sensor), and grasp/ungrasp its grippers (to pick up and drop cans). The primitive
+actions nil,grasp ,ungrasp ,rotate andforward from Fig. ??are formalised in Example ??.
+The main program robot speciﬁes the set of output variables as rot:robot , pos:robot and gdist , where xdenotes
+the rate of change of variable x(c.f. [ ?]). Thus, the outputs of the robot modify the rate of change of the robot rotation,
+robot position and distance between the grippers, respectively. For each guarded program c!M,cis a state predicate
+andMis either a (primitive) durative action or a sequence of guarded programs. The guard cmust hold continuously
+over any interval over which Mis executed. In a sequence of guarded programs, the guards that appear earlier in a
+sequence are given priority over those that appear later. For example, in a sequence hc1!M1;c2!M2i,
+if the guard c1ever becomes true, then M2stops and M1begins executing,
+ifc1ever becomes false, then
+–M2is executed if c2holds, and
+–if neither c1norc2holds, then neither M1norM2is executed and the behaviour is chaotic [ ?].
+Hence, the guard of M2is effectively:c1^c2. Note that the effective guards must hold continuously over the intervals
+in which M1andM2execute. Each of the programs in Fig. ??avoid chaotic behaviour because the last guard of each
+program is true. Program robot executes so that:
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 3
+robotÒ=out rot:robot;pos:robot;gdist±:depot empty^(:atdepot_open)! nil;
+:depot empty! ungrasp;
+holding! godepot;
+true! collect»
+collectÒ=­seecan! fetch;
+true! rotate·
+godepotÒ=­seedepot! forward;
+true! rotate·fetchÒ=*may hold can! grasp;
+open! forward;
+true! ungrasp+
+Fig. 2. Teleo-reactive controller for the can-clearing robot
+while there is already a can in the depot (i.e., :depot empty holds), and if the robot is at the depot the grippers
+are fully open (i.e., atdepot)open holds), the robot executes action nil(which does nothing),
+else, while the depot is non-empty the robot executes ungrasp to release the can that it may currently be holding,
+else, while the robot is holding a can, the robot delivers the can it is holding to the depot by executing program
+deliver ,
+else, the robot attempts to collect a can by executing collect .
+Because negations of earlier guards appear as conjuncts to each guard, the effective guard of ungrasp within program
+robot implicitly implies atdepot^:open .
+Teleo-reactive programs are often structured so that the overall goal of the agent is represented by the guard of the
+ﬁrst action of the program, i.e., executing the ﬁrst action represents achievement of the goal. Hence, the ﬁrst action
+of such a teleo-reactive program is often nilto indicate that the goal has been reached. The rest of the actions must
+establish subgoals corresponding to one of the guards of the actions earlier in the list.
+Teleo-reactive programs are useful for implementing controllers for goal-directed agents in dynamically changing
+environments [ ?]. For the robot program, the environment of the robot may add/remove cans from the table, the depot
+and the robot’s grasp. The environment may also move cans around the table. Thus, the behaviour of the environment
+may both help and hinder the robot from achieving its task. The robot program reacts to both circumstances and
+switches to (different) subgoals in order to progress towards the overall goal of moving a can to the depot. For example,
+given that the depot stays empty during the execution of godepot , it may be possible for holding to become false (e.g.,
+due to an environment action), in which case the robot switches to program collect . Conversely, if holding becomes
+true during the execution of collect , the robot switches to program godepot , which causes the robot to move the
+collected can to the depot and to deposit it there. Note that even after achieving the overall goal, the environment may
+change in a way that causes the agent to attempt re-establishing the goal. For example, in the robot program, the robot
+will attempt to collect and deliver a can to the depot if the depot is empty. After a can has been placed in the depot, the
+environment may remove the can from the depot (e.g., via a conveyor belt or a chute) which causes the robot to begin
+searching for a can to move from the table to the depot once again.
+Teleo-reactive programs support hierarchical composition (nesting) in a straightforward manner. For example, pro-
+gram collect (which itself expands into a program fetch and an action rotate ) is nested hierarchically within robot .
+Although collect is a self-contained program, within the context of the robot program, collect only executes over inter-
+vals in which depot empty^:holding is continuously true. Hence, the guard of fetch is effectively depot empty^
+:holding^seecan, and similarly the guard of rotate is effectively depot empty^:holding^:seecan. Our
+proof rules exploit this structuring and allow properties of the subprograms nested within a higher-level program to be
+used in proofs of properties of higher-level programs.
+To see the beneﬁts of teleo-reactive programming, we compare the program in Fig. ??with its hybrid action
+system [ ?] equivalent in Fig. ??, where variables speed androtrepresent the forward speed and rotation of the robot,
+respectively and gripper represents the movement of the grippers. Note that the implicit negations of guards and
+updates to variables in Fig. ??must be made explicit, which results in more complicated guards, and hence a more
+complicated program. The purpose of each action is difﬁcult to understand and the goal-directed structure of the teleo-
+reactive program is lost. Furthermore, we are not able to reason about the properties of each component separately and
+combine these to prove properties of the whole system. Unlike action systems where the state is modiﬁed by assigning
+4 B. Dongol, I. J. Hayes and P. J. Robinson
+do :depot empty^(:atdepot_open)! speed;rot;gripper := 0;0;idle (nil)
+[] :depot empty^atdepot^:open! speed;rot;gripper := 0;0;release (ungrasp )
+[] depot empty^holding^seedepot! speed;rot;gripper :=;0;idle (forward )
+[] depot empty^holding^:seedepot! speed;rot;gripper := 0;;idle (rotate )
+[] depot empty^:holding^may hold can! speed;rot;gripper := 0;0;close (grasp )
+[]depot empty^seecan^:may hold can^open! speed;rot;gripper :=;0;idle (forward )
+[]depot empty^seecan^:may hold can^:open! speed;rot;gripper := 0;0;release (ungrasp )
+[] depot empty^:seecan! speed;rot;gripper := 0;;idle (rotate )
+od
+Fig. 3. Hybrid action system equivalent of program in Fig. ??
+to variables, teleo-reactive programs modify the state by executing durative actions (see Example ??). Hence, there
+may be several consecutive iterations of an action system without a state change, which is avoided in a teleo-reactive
+program. A teleo-reactive program is able to switch from any program Mito another Mjif the actual (explicit) guard
+ofMibecomes false and the actual guard of Mjbecomes true.
+3. A temporal logic for intervals
+In this section we present the logic for reasoning about teleo-reactive programs that we have developed. Because the
+actions of a teleo-reactive program are durative, Linear Temporal Logic [ ?,?], which is deﬁned for discrete traces of
+states is inappropriate. An interval temporal logic for discrete traces [ ?] has been extended to dense streams to obtain
+the Duration Calculus [ ?]. However, Duration Calculus assumes all intervals are closed, allows adjoining intervals to
+overlap and uses the almost everywhere operator. A state predicate holds almost everywhere in an interval iff it is only
+false for a set of measure zero. This is inappropriate for our purposes because we aim to extend our work with time
+bands [ ?] where a single time at one time scale may expand to an interval of time at another time scale. Thus, we
+develop a logic that is inﬂuenced by interval temporal logic [ ?] and Duration Calculus [ ?] but is better suited to later
+incorporation with the theory of time bands [ ?,?,?].
+In this logic we consider the behaviour of teleo-reactive programs on time intervals. Furthermore, we restrict time
+intervals to be of ﬁnite length. We can do this because although teleo-reactive programs can theoretically run forever,
+any machine on which we run a program has only a ﬁnite lifetime. Hence we consider the behaviour of teleo-reactive
+programs on arbitrary ﬁnite length time intervals as deﬁned below. Curiously, inﬁnite intervals are often used to do
+termination proofs for procedural code in order to distinguish terminating and non-terminating executions. Because
+teleo-reactive programs are non-terminating by nature, inﬁnite intervals do not need to be considered.
+3.1. Intervals
+We let TimeÒ=Rdenote the set of all times. We consider an interval to be a contiguous ﬁnite-length non-empty
+subset of Time and allow intervals to be open/closed at either end. Given that (l;u)Ò=ft:Timejl<t<ugand
+[l;u]Ò=ft:Timejltugrespectively denote open and closed intervals from l2Time tou2Time , an
+interval has type
+Interval Ò=fTimej6=fg^9 l;u2Time(l;u)[l;u])g:
+We use ‘:’ for function application and let glb:andlub:denote the greatest lower and least upper bounds of interval
+, respectively. The length of an interval is given by
+`:Ò=lub: glb::
+Thus, each interval includes all times between glb:andlub:and may or may not include these bounds.
+For intervals and0, we say adjoins 0(denoted _0) iff the following holds.
+_0Ò= (lub: = glb:0)^([02Interval )^(\0=fg)
+That is, _0states that 0is an interval that immediately follows . The sets of preﬁxes and sufﬁxes of are
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 5
+deﬁned as follows.
+prex:Ò=f02Intervalj0^8t2;t020tt0)t20g
+sux:Ò=f02Intervalj0^8t2;t020tt0)t20g
+3.2. Interval predicates
+We assume that variable names are taken from the set Var. Astate space is given by VÒ=V!Val, which is a
+total function from a set of variable names, VVar to a set of values, Val. Astate is a member of V. Astream is
+a member of Stream VÒ=Time!V, which formalises the behaviour of a system over all time. A predicate over a
+type Xis given byPXÒ=X!B. Hence, a state predicate is a member ofPVand a stream predicate is a member
+ofPStream V. An interval predicate is a member of IntvPred VÒ=Interval!P Stream V, which deﬁnes a property
+of the given stream with respect to the given interval. Because streams deﬁne behaviours over all time, it is possible to
+use interval predicates to formalise behaviours outside a given interval (c.f., operators prev andnext below).
+One must often reason about properties that hold over two portions of an interval [ ?,?], over all subintervals of an
+interval [ ?] and about properties that hold before and after an interval (c.f. neighbourhood logic [ ?]). Thus, we deﬁne
+the following operators, where p,p1,p2are interval predicates and is an interval.
+(p1;p2)::sÒ=902prex:(6= 0)^p1:0:s^p2:(n0):s
+(2p)::sÒ=802Interval0)p:0:s
+(prev:p)::sÒ=902Interval(0_)^p:0:s
+(next:p)::sÒ=902Interval(_0)^p:0:s
+Thechop operator ‘;’ allows the given interval to be split into two so that p1holds for the ﬁrst part and p2holds for
+the second. Note that unlike Duration Calculus [ ?], our chop operator does not require that the two chopped intervals
+are closed and hence overlap by one point.1Interval predicate 2pholds iff pholds for every subinterval of the given
+interval, prev:pholds iff pholds for some interval that immediately precedes the given interval, and next:pholds iff p
+holds for some interval that immediately follows the given interval. We deﬁne the weak chop operator ‘:’ that allows
+either p1to hold for the given interval, or the interval to be split into two so that (p1;p2)holds in the interval.
+(p1:p2)::sÒ=p1::s_(p1;p2)::s
+The Boolean operators may be lifted pointwise to state, stream, and interval predicates. Thus, for example the dis-
+junction (p1_p2)::sis equivalent to (p1::s_p2::s)for any interval predicates p1andp2. This allows one to
+abbreviate a deﬁnition like that for weak chop above to
+p1:p2Ò=p1_(p1;p2)
+in which the interval and stream sare implicit and the occurrence of “ _” is lifted disjunction. We make use of such
+lifted operators from here on to allow deﬁnitions and equations to be expressed more succinctly.
+When reasoning about properties of programs, one would like to state that whenever a property p1holds over any
+interval and stream s, a property p2also holds over ands. Hence, we deﬁne universal implication over intervals
+and streams as follows.
+p1:Vp2:Ò=8s2Streamp1::s)p2::s
+p1Vp2Ò=82Intervalp1:Vp2:
+We say p2Wp1holds iff p1Vp2holds, and say p1p2holds iff both p1Vp2andp2Vp1hold. These relations
+are lower in precedence than any other operators.
+The following lemma relates chop to a weak chop using the lengths of the intervals under consideration.
+Lemma 3.1. For interval predicates pandqand reals L1andL2such that L10andL2>0, we have
+(`L1+L2)^((`L1^p) :q)V(`L1^p) ; (`L2^q) (1)
+1Frameworks that include inﬁnite length intervals often deﬁne chop so that (p1;p2)::salso holds if lub : =1andp1::sholds [ ?,?,?,?],
+which essentially allows p1to model inﬁnite behaviour. However, this generalised deﬁnition of chop is not necessary here because we restrict our
+attention to ﬁnite length intervals.
+6 B. Dongol, I. J. Hayes and P. J. Robinson
+p
+V(psplits)
+p
+p
+V(ppreﬁx closed)
+p
+Fig. 4. Splits and preﬁx-closed
+The lemma below allows simpliﬁcation of interval predicates that use next and chop operators.
+Lemma 3.2. For any interval predicate p,
+true; (next:p)Vnext:p (2)
+We deﬁne some properties on state and interval predicates that are required to enable compositional proofs. Fig. ??
+illustrates properties splits and preﬁx-closed properties of an interval predicate pthat are useful for proof decompo-
+sition. Provided that psplits, p:0holds for any subinterval 0whenever p:holds, and provided that pis
+preﬁx-closed, p:0holds for any preﬁx 0ofwhenever p:holds.
+Deﬁnition 3.1. Suppose pis an interval predicate. We say
+1.psplits iniffp:V(2p):, and
+2.pispreﬁx closed iniffp:V802prex:p:0.
+We say psplits andpispreﬁx closed iffpsplits in andpis preﬁx closed in , respectively, for every interval .
+Note that if psplits in then pis preﬁx-closed in . The lemma below presents distributivity properties for interval
+predicates over the chop operator.
+Lemma 3.3. For interval predicates p,p1,p2,qandrsuch that p,qand:qare preﬁx closed and rsplits, each of the
+following hold.
+p^(p1;p2)V(p^p1) ;p2 (3)
+r^(p1;p2)V(r^p1) ; (r^p2) (4)
+next:q::qnext:q (5)
+Proof. The proofs of ( ??) and ( ??) are straightforward and are omitted here. For ( ??), by deﬁnition of weak chop ‘:’,
+the proof of next:qVnext:q::qis trivial. To prove the other direction, we have the following calculation for some
+arbitrarily chosen interval .
+(next:q;:q):
+V deﬁnition of ‘;’
+91;2(1_2)^next:q:1^:q:2
+ deﬁnition of next
+91;2;3(1_2)^(1_3)^q:3^:q:2
+V (1_2)^(1_3)
+92;3((22prex:3)_(32prex:2))^q:3^:q:2
+ logic
+(92;3(22prex:3)^q:3^:q:2)_(92;3(32prex:2)^q:3^:q:2)
+V both qand:qare preﬁx closed
+false
+Hence, next:q::qVnext:q.
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 7
+3.3. Always and sometime
+For a state predicate c, we say (c)::sifcholds for all states of swithin interval . Similarly, we use (c)::s
+to denote that cholds for some state of swithin interval , where
+(c)::sÒ=8t2c:(s:t)
+(c)::sÒ=9t2c:(s:t)
+Example 3.1. We consider the formalisation of the durative actions of the program in Fig. ??. We assume each object,
+obj, on the table is associated with a vector, pos:obj, that determines the position of the object objin polar coordinates,
+i.e., using a magnitude and an angle . We assume that addition and subtraction of vectors is deﬁned in the standard
+manner. Furthermore, we assume rot:robot denotes the angle of rotation of the robot, gdist denotes the distance
+between the ﬁngers of the robot’s grippers, and max gdis a constant for the maximum distance between the grippers.
+We useandto denote the rotational and forward speed of the robot, respectively, and use 'to denote the speed at
+which the grippers open/close. We obtain the formalisations of the actions below.
+nilÒ=(rot:robot = pos:robot =gdist = 0) (6)
+rotateÒ=(rot:robot =)^(pos:robot =gdist = 0) (7)
+forwardÒ=(pos:robot = (;rot:robot ))^(rot:robot =gdist = 0) (8)
+graspÒ=(gdist = (ifgdist>0then 'else0))^(rot:robot = pos:robot = 0) (9)
+ungraspÒ=(gdist = (ifgdist<max gdthen'else0))^(rot:robot = pos:robot = 0) (10)
+We assume that the program is an abstraction of a real system, and hence may safely assume that rot:robot ,pos:robot
+andgdist are continuous. However, we assume idealised behaviour and hence, the variables rot:robot , pos:robot and
+gdist that correspond to the rates of change are discrete, but are piecewise continuous.
+Thenilaction resets the rates of change, i.e., the robot and its grippers do not move while the nilaction is executing.
+Therotate action ( ??) ensures that the robot rotates at a constant angular velocity without changing its position or
+the distance between the grippers. The forward action, ( ??), modiﬁes the position of the robot at the velocity with
+magnitudeand angle rot:robot . The angle of rotation of the robot, i.e., rot:robot and gripper distance gdist are not
+modiﬁed by forward . The grasp action guarantees that the rate of change of gdist is 'as long as gdist is above 0
+and does not change the position or rotation. The ungrasp action is similar. |
+Lemma 3.4. For a state predicate c, both of the following hold:
+c(c:c) (11)
+`>0Vc= (c;c) (12)
+Both properties above hold because csplits and hence is also preﬁx closed.
+3.4. Values at the limits
+In this paper, intervals may be open or closed at either end and variables are assumed to be piecewise continuous [ ?].
+Hence, deﬁning the value of variable at the ends of an interval needs care. For instance, suppose we are interested in
+deﬁning the value of variable vat the right end of an interval . Ifis right closed, the value of vat the right end
+ofis simply its value at the least upper bound of . However, if is right open, because lub:62, one must
+take the limit of vapproaching lub:. Because, we only assume piecewise continuity, it is possible for the values of
+vapproaching lub:from the left and right to differ (e.g., if there is a point of discontinuity at lub:). To ensure that
+the right limit value of vforis sensible, we take the limit of vapproaching lub:from the left. A similar argument
+applies to the value of vat the left end of .
+We use lim
+x!a f:xand lim
+x!a+f:xto denote the limit of f:xasxtends to afrom the left and right, respectively. For
+any variable v, interval and stream s, we deﬁne the following operators:
+ (v::sÒ=¨(s:(glb:)):v ifglb:2
+lim
+t!glb:+(s:t):votherwise *v::sÒ=¨(s:(lub:)):v iflub:2
+lim
+t!lub: (s:t):votherwise
+8 B. Dongol, I. J. Hayes and P. J. Robinson
+0u
+v 11
+2 11012
+Fig. 5. Variables uandvover interval [0;2]withu= 1andv= 1
+where (vreturns the limit value of vinsat the greatest lower bound of the given interval ifis left closed, and
+the value of vas it approaches the left limit of from the right, if is left open (similarly *v).
+Lemma 3.5. For a continuous variable vand constant k
+( *v=k)next:( (v=k)
+Example 3.2. Lemma ??does not hold for variables that are only piecewise continuous for intervals starting/ending
+at a point of discontinuity. Suppose vis a piecewise continuous variable and sis a stream such that (v= 10):[0;1]:s
+and(v= 11):(1;2]. Then, both ( *v= 10):[0;1]:sand( (v= 11):(1;2]:shold but next:( (v= 10):[0;1]does not
+hold. |
+As with variables, we must often refer to the limit values of a state predicate. However, unlike variables, state
+predicates are boolean-valued, and hence are discrete. For a state predicate c, interval and stream swe deﬁne:
+  c::sÒ=¨c:(s:(glb:)) ifglb:2
+lim
+t!glb:+c:(s:t)otherwise  !c::sÒ=¨c:(s:(lub:)) iflub:2
+lim
+t!lub: c:(s:t)otherwise
+Note that for a variable vand constant k,( (v=k)may not imply    v=k, and vice versa.
+Example 3.3. For example, consider the continuous variable vin Fig. ??. In Fig. ??,(s:0):v= 10 and(v):[0;2] = 1
+hold. Hence, both ( (v= 11):(1;2]:sand(     v6= 11):(1;2]:shold. Clearly, the value of vat time 1is11. Hence, the
+left limit of the variable vwithin (1;2]is11because the value of the vwill be arbitrarily close to 11as we approach
+greatest lower bound 1from the right. However, the left limit of the predicate v= 11 isfalse because v= 11 is
+evaluated in states within the interval (1;2], and v6= 11 for each of these states. However, for the closed interval [1;2],
+both( (v= 11):[1;2]:sand(     v= 11):[1;2]:shold because the value of vin state s:1is11. |
+It is often useful to specify that a state predicate holds at the start of an interval that immediately follows the given
+interval. Thus for a state predicate c, we deﬁne
+cÒ=next:  c
+It is also useful to specify that a variable vis stable, i.e., that the value of vdoes not change from its value at the end
+of some previous interval. Hence, we deﬁne interval predicate stable:vas follows:
+stable:vÒ=9k2Valprev:( *v=k)^(v=k)
+That is, stable:vholds iff for some k, the value of vat the right end of the previous interval is kandv=kholds
+throughout the current interval. Our deﬁnition of stable is necessary because adjoining intervals are disjoint. Hence, to
+link values of variables between successive intervals, we must consider their values at the end of the previous interval.
+By Lemma ??, for a continuous variable v, we have
+stable:v(9k(v=k))(9k(v=k)^next:( (v=k))
+As highlighted by Example ??, there is a fundamental difference between the limit of a variable vbeing equal
+to a value kand the limit of the predicate v=k. Hence, even though stable:vfor a continuous variable guarantees
+next:( (v=k)the value of vmay never be equal to kin any next interval. We can only deduce that v=kholds at
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 9
+the start of the next interval if the stronger property (v=k)holds. Hence, we say a variable visright stable iff
+right stable:vholds, where
+right stable:vÒ=9k:Val   !v=k^(v=k)
+Lemma 3.6. For a state predicate cand interval predicates p1andp2, we have
+(p1^c) ;p2p1; (  c^p2) (13)
+3.5. Zeno-like behaviour
+Because we have a dense notion of time, it is possible for interval predicates to specify Zeno-like behaviour, e.g., a
+state predicate may switch between true to false an inﬁnite number of times within a ﬁnite interval. A speciﬁcation that
+allows Zeno-like behaviour is not problematic because a real system will not behave in a Zeno-like manner. However,
+one must take care not to require Zeno-like behaviour, which would mean the system speciﬁcation is unimplementable.
+We assume sequences have natural number indices (starting from 0) and may be inﬁnite.
+Deﬁnition 3.2 (Partition). The set of all partitions of an interval is given by
+:Ò=fz2seq:Intervalj( =Sran:z)^(8i2dom:znf0gz:(i 1)_z:i)g
+The set of non-Zeno partitions ofis given by
+NZ:Ò=fz2:jdom:z6=Ng
+Thus, zis a non-Zeno partition of iffzhas a ﬁnite number of elements.
+Deﬁnition 3.3 (Alternates). For a state predicate c, interval , partition z2:and stream s, we deﬁne
+alt:c:z:sÒ=8i2dom:z(c_:c):(z:i):s^(i>0)((c):(z:(i 1):s) = (:c):(z:i):s))
+Thus, alt:c:z:sholds iff zcontains a single interval and either (c)::sor(:c)::sholds, or calternates
+between cand:cholding within the partition z.
+Deﬁnition 3.4 (Non-Zeno). A state predicate cisnon-Zeno in stream swithin interval , denoted (NZ:c)::s, iff
+there exists a z2NZ:such that alt:c:z:sholds.
+Note that, if such a zexists then it is unique.
+4. Formalising teleo-reactive programs
+The syntax of teleo-reactive programs is formalised as follows.
+Deﬁnition 4.1. IfVis a set of variables, pis a preﬁx-closed interval predicate and cis a state predicate, then the
+abstract syntax of a teleo-reactive program is given by TPbelow.
+TP::=outVSP SP ::=pjseq:GP GP ::=c!SP
+Thus, a teleo-reactive program consists of a set of output variables, V, and a simple program. A simple program may
+either be a primitive action (given by a preﬁx-closed interval predicate) or a sequence of guarded simple programs. We
+follow the convention of using Pfor a teleo-reactive program, Mfor a simple program and Sfor a (possibly empty)
+sequence of guarded programs. We deﬁne functions in;out2TP!PVar that return the sets of input and output
+variables of the given program, respectively. Given that a sequence can be explicitly deﬁned using brackets ‘ h’ and
+‘i’, and ‘a’ is the sequence concatenation operator, we deﬁne the following functions. We assume vars:pandvars:c
+denote the sets of free variables of interval predicate pand state predicate c, respectively.
+in:(outVM)Ò=cin:V:M out:(outVM)Ò=V
+where
+cin:V:pÒ=vars:pnV
+cin:V:hiÒ=fg
+cin:V:(hc!MiaS)Ò=vars:c[cin:V:M[cin:V:S
+10 B. Dongol, I. J. Hayes and P. J. Robinson
+We assume that inputs and outputs are disjoint by requiring in:P\out:P=fgfor any teleo-reactive program P. In
+particular, this ensures that vars:c\out:T=fgholds for any guard cwithin program P.
+Deﬁnition 4.2. The behaviour of a program with respect to a stream and interval is given by function beh, which is
+deﬁned recursively as follows, where TÒ=hc!MiaS.
+beh:pÒ=p (14)
+beh:hiÒ=true (15)
+beh:TÒ=NZ:c)((c^beh:M) : (  :c^beh:T))_((:c^beh:S) : (  c^beh:T)) (16)
+beh:(outVM)Ò=beh:M (17)
+By (??), the behaviour of a primitive action pis given by the interval predicate pitself. The behaviour of an empty
+sequence of programs, ( ??), is chaotic, i.e., it allows any behaviour. The behaviour of a sequence of guarded programs
+(??) is deﬁned recursively and requires that the state predicate cis non-Zeno in order to avoid chaotic behaviour.
+Because the guard cinvolves inputs to the teleo-reactive program, the condition that cis non-Zeno becomes an
+assumption about the environment in which the program runs. There are two disjuncts corresponding to either cor
+:cholding initially on the interval. If cholds initially, either c^beh:Mholds for the whole interval or the interval
+may be split into an initial interval in which c^beh:Mholds, followed by an interval in which :cholds initially
+andbeh:Tholds (recursively) for the second interval. The other disjunct is similar. Note that each chopped interval
+must be a maximal interval over which cor:cholds. For the programs that are developed in this paper, we avoid
+chaotic behaviour by assuming that all guards are non-Zeno and require that the disjunction of all guards in a sequence
+holds. The simplest way to achieve the latter is by using true as the last guard in any sequence of guarded programs.
+Provided thathc!MiaSexecutes within and that calternates in a non-Zeno partition zof, one can deduce
+that for each interval z:iofz, either (c^beh:M):(z:i)or(:c^beh:S):(z:i)holds. This is formalised by the
+following lemma.
+Lemma 4.1. IfTÒ=hc!MiaSthen for any interval and stream s,
+8z2NZ:alt:c:z:s^beh:T::s)8i2dom:z(c^beh:M):(z:i):s_(:c^beh:S):(z:i):s:(18)
+Because primitive actions must be preﬁx closed, and the deﬁnition of the behaviour of a sequence of actions
+preserves preﬁx closure if its constituent programs are preﬁx closed, we have the following lemma.
+Lemma 4.2. For any program Por simple program Mits behaviour is preﬁx closed .
+Informally speaking, preﬁx closure states that if a program Pbehaves as speciﬁed by beh:Pover an interval , then
+it must execute as speciﬁed by beh:Pin any preﬁx of . It turns out that any sensible program speciﬁcation is preﬁx
+closed, i.e., programs that are not preﬁx closed tend to specify unimplementable behaviour. However, if (beh:P):
+holds, then it is generally not necessary for (beh:P):0to hold for every subinterval 0. That is, there are
+perfectly sensible programs for which (beh:P):does not imply (beh:P):0where 0. For example, suppose
+Pis a program that causes a component to accelerate to some operating speed. Then (beh:P):does not necessarily
+imply (beh:P):0for any arbitrary 0, however, if 02prex:, then (beh:P):does imply (beh:P):0.
+Ifcholds in the interval over which hc!MiaSexecutes, the program must be behaving as Mover the interval.
+Similarly, if :cholds, then the program must be behaving as S. This is formalised by the following lemma.
+Lemma 4.3 (Program reduction).
+cV(beh:(hc!MiaS) =beh:M) (19)
+:cV(beh:(hc!MiaS) =beh:S) (20)
+Proof. The proofs of both cases follow trivially by deﬁnition ( ??) ofbeh:(hc!MiaS).
+5. Rely/guarantee
+We assume that teleo-reactive programs execute within a continually evolving environment. For example, the envi-
+ronment of the robot in Fig. ??may add or remove cans from both the table and the robot’s grasp. In particular, the
+environment may act maliciously, e.g., by always removing cans from the robot’s grasp so that the robot is never able
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 11
+to deposit cans into the depot. Thus, in order to build robust systems that take the environment into account, we use
+rely/guarantee-style reasoning [ ?]. Here the relycondition describes properties of the environment and the guarantee
+condition describes how the program will behave under the assumption that the rely condition holds. The program
+does not ensure the guarantee condition outside of the rely condition. In this paper, rely and guarantee conditions are
+interval predicates. Thus, we may reason about safety, progress and real-time properties of the system within a single
+formalism.
+A teleo-reactive program may not depend on its own output, and hence, the rely condition of a program may not
+refer to the output variables of the program. A guarantee condition may be a relationship between the inputs and
+outputs. Within program PÒ=outVM, the simple program Mand all programs within Mexecute in the output
+context V. To ensure that the rely conditions we develop for the programs within M(including Mitself) is a valid rely
+condition of P, we require that Vand the set of the (free) variables of rare disjoint.
+Deﬁnition 5.1. For a teleo-reactive program outVM, the output context of each simple program in M(including
+Mitself) is the set of variables V.
+Deﬁnition 5.2. For any simple program Mwith output context V, an interval predicate ris arely condition ofMif
+vars:r\V=fg.
+Rely/guarantee reasoning is deﬁned for both teleo-reactive and simple programs. Thus, we use a more generic P
+for a program, which may be a teleo-reactive or simple program. Our notation is similar to Hoare-triples for axiomatic
+proofs of sequential programs [ ?].
+Deﬁnition 5.3. Suppose Pis a program with rely condition randqis an interval predicate representing the guarantee
+ofP. We deﬁne:
+frgPfqgÒ=r^beh:PVq
+Hence,frgPfqgis only well-deﬁned if rdoes not refer to any output variables of P. By expanding Vtwice, we
+have
+frgPfqg=82Interval8s2Stream(r^beh:P)::s)q::s
+i.e., for any interval and any stream s, if the rely condition rholds and the program behaves as speciﬁed by beh:P
+overins, then the guarantee holds over ins.
+Lemma 5.1 (Weaken rely, strengthen guarantee). IfrVr0andfr0gPfq0gandq0Vq, thenfrgPfqg.
+Lemma 5.2 (Rely disjunction, guarantee conjunction). Both of the following hold:
+(fr1gPfqg)^(fr2gPfqg),fr1_r2gPfqg (21)
+(frgPfq1g)^(frgPfq2g),frgPfq1^q2g (22)
+6. Progress
+For a goal-directed teleo-reactive program, our aim is to show that the program will achieve its goal within a speciﬁed
+time assuming that the environment does not negatively impact on the program. The assumptions about the environ-
+ment become part of the rely condition. More speciﬁcally we aim to prove results of the form
+fr^`LgTf  d^h)g_gg (23)
+where ris a rely condition, L0is a time, state predicate gis the goal of the program, state predicate dis some
+initial condition and state predicate his a condition that, in the main result, will turn out to be an accumulation of
+context from the higher-levels of a hierarchically nested teleo-reactive program. Informally, this formula states that,
+for a long enough interval, either the goal becomes true in the interval or it will become true immediately after the
+interval. We simplify such formulae by eliminating the need for the operator using the following equivalence.
+h)(g_g)
+h)(:g)g)
+h^:g)g
+h^:g)g
+(h^:g))g
+12 B. Dongol, I. J. Hayes and P. J. Robinson
+We therefore aim to prove results of the form
+fr^`LgTf  d^(h^:g))gg (24)
+The next lemma considers a program of the form TÒ=hc!MiaSin the case where cis initially true. If
+Machieves the goal gwhile cis maintained and, while executing M, the environment either achieves the goal or
+maintains cthen executing Twill achieve the goal.
+Lemma 6.1 (Progress). Suppose TÒ=hc!MiaSis a simple program with rely condition rsuch that rVNZ:c
+andris preﬁx-closed. For state predicates handg, and time Lsuch that L0, if both of the following hold
+fr^(`L)gMf(h^c^:g))gg (25)
+frgMf(h^c^:g))((h^c)_g)g (26)
+then
+fr^(`L)gTf  c^(h^:g))gg (27)
+Proof. We assume r^(`L)^beh:T^  c^(h^:g)and prove g.
+r^(`L)^beh:T^  c^(h^:g)
+V deﬁnition of behusing  candrVNZ:c
+r^(`L)^((c^beh:M) : (  :c^beh:T))^(h^:g)
+ deﬁnition of weak chop
+(r^(`L)^c^beh:M^(h^:g))_
+(r^(`L)^((c^beh:M) ; (  :c^beh:T))^(h^:g))
+V (??) and logic
+g_(r^((c^beh:M) ; (  :c^beh:T))^(h^:g))
+V ris preﬁx closed and ( ??),(h^:g)splits and ( ??)
+g_((r^(h^c^:g)^beh:M) ; ((h^:g)^  :c))
+V (??)
+g_(((h^c)_g) ; ((h^:g)^  :c))
+V (??) and logic
+g_(true;     c^:c)
+ logic
+g
+The next lemma states that if a program T, executing on a sufﬁciently long interval, can achieve cthen intervals on
+which:cis maintained when executing Tare bounded.
+Lemma 6.2 (Achieve). Suppose Tis a simple program with rely condition rsuch that ris preﬁx-closed. For state
+predicates d,handc, and time L>0, if the following holds
+fr^(`>L)gTf  d^(h^:c))cg (28)
+then
+frgTf  d^(h^:c))`6Lg (29)
+Proof. We assume r^  d^beh:T^(h^:c)and prove`6L
+r^  d^beh:T^(h^:c)
+V (`6L)_(`>L)
+(`6L)_(r^(`>L)^  d^beh:T^(h^:c))
+V`>LV(`>L) ;true
+(`6L)_(r^((`>L) ;true)^beh:T^  d^(h^:c))
+V randbeh:Tare preﬁx closed, ( ??) and ( ??) twice
+(`6L)_((r^(`>L)^beh:T^  d^(h^:c)) ;(h^:c))
+V (??)
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 13
+(`6L)_(c;(h^:c))
+ (??)
+(`6L)_(true; (  c^(h^:c)))
+  c^:cfalse
+(`6L)
+The following theorem allows progress properties (i.e. progression towards a goal) to be decomposed to the level of
+actions automatically. Note that formula ( ??) could be simpliﬁed by removing the second occurrence of hbut is left
+in this form so that this formula matches the pattern of formula ( ??). Furthermore,   true can be added to formula ( ??)
+so it also matches the pattern of formula ( ??). Thus the theorem can be repeatedly applied to both SandM.
+Theorem 6.1 (Progression). Suppose TÒ=hc!MiaSis a simple program with rely condition rsuch that
+rVNZ:candrsplits and hence is preﬁx-closed. For state predicates d,handg, and times L1andL2such that
+0L1and0<L2, then
+fr^(`L1+L2)gTf  d^(h^:g))gg (30)
+holds provided
+fr^(`L1)gSf  d^(h^:((h^c)_g)))((h^c)_g)g (31)
+fr^(`L2)gMf(h^c^:g))gg (32)
+frgMf(h^c^:g))((h^c)_g)g (33)
+Proof. We assume r^(`L1+L2)^beh:T^  d^(h^:g)and prove gby performing the following case
+analysis:
+Case  c. We have the following calculation:
+r^(`L1+L2)^beh:T^    d^c^(h^:g)
+ Lemma ??with ( ??) and ( ??)
+g
+Case  :c. We have the following calculation:
+r^(`L1+L2)^beh:T^     d^:c^(h^:g)
+ deﬁnition of behusing  :candrVNZ:c
+r^(`L1+L2)^((:c^beh:S) : (  c^beh:T))^     d^:c^(h^:g)
+V rsplits, ( ??), (??), noting (h^:g)^:c(h^:((h^c)_g))
+(`L1+L2)^(r^beh:S^  d^(h^:((h^c)_g))) : ( r^  c^beh:T^(h^:g)))
+V Lemma ??and ( ??)
+instantiating the Tof Lemma ??toSand the cof Lemma ??to(h^c)_g
+(`L1+L2)^((`6L1) : (r^  c^beh:T^(h^:g))
+V (??) using L2>0
+((`6L1) ; (r^(`>L2)^  c^beh:T^(h^:g))
+V Lemma ??with ( ??) and ( ??)
+(`6L1) ;g
+V (??)
+g
+The following lemma can be used to expand ( ??).
+Lemma 6.3. Suppose TÒ=hc!MiaSis a simple program with rely condition rsuch that rVNZ:candrsplits
+and hence is preﬁx-closed. For state predicates c1,c2andg, then
+frgTf(c1^:c2^:g))(c1_g)g (34)
+holds provided
+frgMf(c^c1^:c2^:g))((c1^c2)_(c1^c)_g)g (35)
+frgSf(:c^c1^:c2^:g))(c1_g)g (36)
+14 B. Dongol, I. J. Hayes and P. J. Robinson
+Proof. We assume r^beh:T^(c1^:c2^:g)and prove (c1_g)by performing the following case analysis:
+Case  c. We have the following calculation:
+  c^r^beh:T^(c1^:c2^:g)
+ deﬁnition of behusing  candrsplits
+(r^beh:M^(c1^c^:c2^:g)) : (  :c^r^beh:T^(c1^:c2^:g))
+V (??)
+(((c1^c2)_(c1^c)_g)) : (  :c^r^beh:T^(c1^:c2^:g))
+ (??)
+((c1^c2)_(c1^c)_g)
+V
+(c1_g)
+Case  :c. We have the following calculation:
+  :c^r^beh:T^(c1^:c2^:g)
+ deﬁnition of behusing  :candrsplits
+(r^beh:S^(c1^:c^:c2^:g)) : (  c^r^beh:T^(c1^:c2^:g))
+ deﬁnition of weak chop
+(r^beh:S^(c1^:c^:c2^:g))_
+((r^beh:S^(c1^:c^:c2^:g)) ; (  c^r^beh:T^(c1^:c2^:g)))
+V ‘;’ is monotonic, ( ??) and the case above
+(c1_g)_(true;(c1_g))
+ (??) and logic
+(c1_g)
+Example 6.1. Now consider the teleo-reactive program hc!hf!NiaUiaSwhere N,UandSare simple
+teleo-reactive programs. We can use Theorem ??(progression) repeatedly to replace
+fr^`L1+L2+L3ghc!hf!NiaUiaSf  d^:g)gg (37)
+with the following triples where NUÒ=hf!NiaU.
+fr^`L1gSf  d^:(c_g))(c_g)g (38)
+fr^`L2gUf(c^:(f_g)))((c^f)_g)g (39)
+fr^`L3gNf(c^f^:g))gg (40)
+frgNUf(c^:g))(c_g)g (41)
+frgNf(c^f^:g))((c^f)_g)g (42)
+By applying Lemma ??above, ( ??) holds if both of the following hold.
+frgNf(c^f^:g))((c^f)_g)g (43)
+frgUf(c^:(f_g)))(c_g)g (44)
+Notice that ( ??) and ( ??) are equivalent. In fact, it turns out that, if Theorem ??(progression) is used to completely
+unfold all subprograms that are not primitive actions, the rely/guarantee triples involving primitive actions that come
+from ( ??) are the same triples as those obtained from non-primitive actions in ( ??) via repeated unfolding using
+Lemma ??.
+Another way to achieve this rewrite is by
+1. ﬂattening a hierarchical teleo-reactive program and making all guards explicit so that every subprogram of the
+top-level program is a primitive action, then
+2. repeatedly applying Theorem ??(progression) on this ﬂattened program.
+The rely/guarantee triples on actions generated by this process are the same as the fully unfolded triples generated from
+the original hierarchical teleo-reactive program. Hence, when fully unfolding triples for a hierarchical teleo-reactive
+program using Theorem ??(progression), one can safely ignore the triples obtained from ( ??) on non-primitive actions.
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 15
+prog rule(rg(R^`L1+L2;[C>MjS];  D^(H^:G))G);
+[rg(R^`L1;S;  D^(H^:((H^C)_G)))(H^C_G);
+rg(R^`L2;M;(H^C^:G))G)];
+rg(R;M;((H^C^:G))(H^C_G)):
+prog rule(rg(R^`L1+L2;[C>MjS];(H^:G))G);
+[rg(R^`L1;S;(H^:((H^C)_G)))(H^C_G);
+rg(R^`L2;M;(H^C^:G))G)];
+rg(R;M;((H^C^:G))(H^C_G)):
+genrgformulae (Program;Rely;Length;D;H;G;Simp Rules;Simp MU): 
+expand ([rg(Rely^`Length;Program;  D^(H^:G))G)];Rules;MU);
+simplify rgs(Rules;Simp Rules );
+simplify rgs(MU;Simp MU):
+Fig. 6. Prolog program for generating proof obligations on the actions
+7. Mechanisation
+Mechanisation clearly is necessary for large-scale proofs because human-based management of proof obligations
+quickly becomes infeasible. Theorem ??facilitates recursive decomposition of proof obligations for proving progress
+and has been tailored to suit to mechanisation.
+To develop the mechanisation, we have a choice of encoding our logic into a theorem prover and developing tactics
+based on our theorems. However, the proof obligations for Theorem ??may be generated via a straightforward pattern-
+matching program that may be implemented in Prolog. The pattern-matching program (see Appendix ??) decomposes
+the proof to the level of the primitive actions, and thus avoids many of the errors encountered during a manual proof
+because a user is only required to instantiate the rely conditions at the level of the primitive actions. A pretty-printed
+version of the Prolog code is given in Fig. ??and provides a prototype for the development of the full mechanisation.
+We note that in the Prolog implementation ‘ ^’ has a higher precedence than ‘ _’.
+The two prog rulepredicates instantiate Theorem ??. The ﬁrst prog rulematches guarantees expanded using ( ??)
+(that include a conjunct  d) and the second matches guarantees expanded using ( ??) (in which conjunct  d=true).
+Within the ﬁrst prog rule, the ﬁrst argument corresponds to ( ??), the second argument corresponds to a list containing
+proof obligations ( ??) and ( ??), and the third argument corresponds to ( ??).
+To run the Prolog program, we call genrgformulae , which takes a program Program , rely condition Rely, over-
+all time bound Length , initial condition D, accumulation of high-level guards Hand goal G. The expand predicate
+repeatedly applies prog rule whereby we obtain a list of rely/guarantee triples on the actions, Rules , and a list of
+rely/guarantee triples with ‘maintain unless’ predicates, MU. We simplify the rely/guarantee triples that we obtain
+using predicate simplify rgs, which reduces predicates such as true^ptop. We may also assert known properties of
+the program (not shown), which are taken into account during the simpliﬁcation, e.g., in the robot example, we have
+may hold can)seecan, which may be used to simplify seecan^may hold canto just may hold can.
+8. Can clearing robot
+In this section, we apply the theory in Section ??to the can clearing robot example. We describe the relationships
+between inputs and outputs and specify the requirements of the example in Section ??. In Section ??, we describe the
+outputs of our mechanisation for the robot example. Then, in Section ??, we describe how the rely condition may be
+instantiated so that the generated proof obligations are discharged.
+8.1. Speciﬁcation
+Guard speciﬁcation. We use the following deﬁnitions to determine whether or not the robot sees or holds the given
+object. We assume rot:robot denotes the angle of rotation of the robot, and pos:robotpos:canholds iff the touching
+16 B. Dongol, I. J. Hayes and P. J. Robinson
+sensor activates, which occurs iff the robot is sufﬁciently close to canto be touching it. We deﬁne:
+sees:objÒ= (pos:obj pos:robot ):angle mod2=rot:robot mod2
+may hold:canÒ=sees:can^(pos:robotpos:can)
+holds:canÒ=may hold:can^(gdist =can width )
+where can width is a constant for the width of the can. Thus, the robot can see objiff the angle of the vector from
+the position of the robot to the position of objis equal to the rotational angle of the robot, the robot may hold caniff
+their positions are within and it sees can, and the robot holds caniff it may hold can(i.e., sees and touches can)
+and the distance between the grippers is can width . To ensure the robot is able to grasp a can, we require that
+0<can width<max gd (45)
+i.e., the grippers are able to open past can width . The relationships between the guards in Fig. ??and the state of the
+system is given by the following properties, where pos:depot is constant and TCis the set of all cans on the table.
+sensorsÒ=(depot empty = (8can2TCpos:can6=pos:depot ))^
+(seecan=9can2TCsees:can)^
+(seedepot =sees:depot )^
+(may hold can=9can2TCmay hold:can)^
+(holding =9can2TCholds:can)^
+(atdepot =seedepot^(pos:robotpos:depot ))^
+(open = (gdist =max gd))
+Thus, for example, seecanholds iff there is a can on the table such that the robot can see the can.
+Requirement speciﬁcation. We deﬁne
+can existsÒ=TC6=fg
+which states that there is at least one can on the table. Our progress requirement is that the following must hold for
+some (yet to be derived) interval predicates R, and time L. Condition Ris necessary because it is typically not possible
+to prove ( ??) in an arbitrary environment. For example, the environment may remove all the cans from the table, which
+falsiﬁes can exists without establishing progress.
+fR^(`L)grobotf        can exists)(:depot empty^(:atdepot_open))g (46)
+We implicitly assume idealised inputs by assuming:
+RVsensors (47)
+8.2. Proof of progress
+The repeated expansions of sequences of guarded actions that are necessary to prove proof ( ??) are automated us-
+ing the Prolog program in Fig. ??. To this end, the robot program is encoded as a Prolog list within the predicate
+robot program in Fig. ??where all nested simple programs have been expanded to the level of the actions.
+We run the Prolog program to generate the proof obligations by executing
+j? robot program (Program );
+genrgformulae
+(Program;R;L;can exists;true;:depot empty^(:atdepot_open);Rules;MU):
+The ﬁrst output Rules of the program is provided in Fig. ??, which lists the progress conditions required of the
+individual actions. We also obtain:
+L=A+B+C+D+E+F+G
+which represents a bound on the time taken to achieve the overall goal. That is, the maximum time taken to deliver
+the can is the sum of the maximum times taken to achieve the subgoals. The second output MU of the program is
+given in Fig. ??, which lists the proof obligations for a state predicate to be maintained. Note that there is no condition
+corresponding to rotate within collect because the guard to be maintained is just true.
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 17
+j? robot program ([:depot empty^(:atdepot_open)>nil,
+:depot empty>ungrasp ,
+holding>[seedepot>forward;
+true>rotate ],
+true>[seecan>[may hold can>grasp;
+open>forward ,
+true>ungrasp ],
+true>rotate ]]).
+Fig. 7. Program for mechanisation
+Condition ( ??) corresponds to rotate within collect ; (??), (??) and ( ??) correspond to ungrasp ,forward andgrasp
+within fetch ; (??) and ( ??) correspond to rotate andforward within godepot ; and ( ??) toungrasp within robot .
+Rules =
+[rg(R^`A;rotate;        can exists^(:seecan^depot empty ))
+(seecan_:depot empty ));(48)
+rg(R^`B;ungrasp;(:open^:may hold can^seecan^depot empty ))
+((open^seecan)_may hold can_:depot empty ));(49)
+rg(R^`C;forward;(seecan^open^:may hold can^depot empty ))
+(may hold can_:depot empty ));(50)
+rg(R^`D;grasp;(may hold can^:holding^depot empty ))
+(holding_:depot empty ));(51)
+rg(R^`E;rotate;(holding^:seedepot^depot empty ))
+((holding^seedepot )_:depot empty ));(52)
+rg(R^`F;forward;(holding^seedepot^depot empty ))
+:depot empty );(53)
+rg(R^`G;ungrasp;(atdepot^:open^:depot empty ))
+((:atdepot_open)^:depot empty ))](54)
+Fig. 8. Proof obligations for each action to make progress
+Note that each automatically generated proof obligation in Fig. ??and Fig. ??is at the level of the primitive
+actions, and hence requires no further expansion.
+8.3. Deriving the rely condition
+In this section, we discharge the proof obligations in Figs. ??and??by instantiating a sufﬁciently strong rely condition.
+Proof obligations in Fig. ??.
+Proof of ( ??).We prove the triple below, which implies ( ??).
+fR^(`A)grotatef        can exists^:seecan)seecang (61)
+That is, if the robot is rotating for at least Atime units and Rholds over the interval, then the behaviour of rotate
+guarantees that the robot sees a can within or immediately after the given interval, provided that there is a can on the
+table at the beginning of the interval. Clearly this property cannot hold if the environment continually moves the cans
+out of view of the robot. Hence, using the fact that pos:canis right stable, we consider instantiating the rely condition
+Rso that the following holds:
+RV2(9can2TCstable:(pos:can)^right stable:(pos:can))
+18 B. Dongol, I. J. Hayes and P. J. Robinson
+MU=
+[rg(R;ungrasp;(:open^:may hold can^seecan^depot empty ))
+(seecan_:depot empty ));(55)
+rg(R;forward;(seecan^open^:may hold can^depot empty ))
+((seecan^open)_may hold can_:depot empty ));(56)
+rg(R;grasp;(may hold can^:holding^depot empty ))
+(may hold can_:depot empty ));(57)
+rg(R;rotate;(holding^:seedepot^depot empty ))
+(holding_:depot empty ));(58)
+rg(R;forward;(holding^seedepot^depot empty ))
+((holding^seedepot )_:depot empty ));(59)
+rg(R;ungrasp;(atdepot^:open^:depot empty ))
+(:depot empty ))](60)
+Fig. 9. Proof obligations for each action to maintain its guard
+i.e., in all intervals there is a can on the table whose position is stable and right stable. However, such a rely condition
+is too strong because there may not be any cans on the table to begin with. Hence, we weaken the requirement on the
+rely condition to:
+RV2(        can exists)9can2TCstable:(pos:can)^right stable:(pos:can))
+This property is still too strong because it disallows the robot from moving the can if there is only one can on the
+table and the robot is holding that can. Thus, we use :seecanin the antecedent of the guarantee of ( ??) to further
+weaken the rely condition, i.e., we obtain:
+RV2(        can exists^:seecan)9can2TCstable:(pos:can)^right stable:(pos:can)) (62)
+Thus, for any values of the robot position and rotation, if there is a can on the table at the start of the interval and the
+robot cannot see a can throughout the interval, there must be at least one can whose position is stable in the interval.
+We now complete the proof of ( ??) as follows:
+(??)
+( use ( ??)
+fR^(`A)grotate§(9can2TCstable:(pos:can)^right stable:(pos:can))^:seecan)
+seecanª
+( logic, behaviour of rotate (??), set A2
+and ( ??)
+true
+The proofs of the remaining obligations of Fig. ??all follow a shared pattern: for each proof we assume the
+corresponding proof obligation of Fig. ??and then use the properties of the action to complete the proof. We now give
+a detailed proof of ( ??).
+Proof of ( ??).We assume
+R^(`B)^beh:ungrasp^(:open^:may hold can^seecan^depot empty )
+and show ((open^seecan)_may hold can_:depot empty ). This is proved as follows:
+R^(`B)^beh:ungrasp^(:open^:may hold can^seecan^depot empty )
+V (??)
+R^(`B)^beh:ungrasp^(:open^:may hold can^seecan^depot empty )
+^(seecan_:depot empty )
+V logic, behaviour of ungrasp (??), set Bgdist
+'and ( ??)
+((open^seecan)_:depot empty )
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 19
+Proof of ( ??).We assume
+RV2(8can2TC(sees:can^:holds:can))stable:(pos:can)^right stable:(pos:can)) (63)
+Thus, if the the robot sees canbut does not hold can, (i.e., the grippers are open), then the position of can(that the robot
+sees) must be stable. We further assume ( ??) and note that, by the behaviour of forward (??) and for Cmax dist
+
+(where max dist is the maximum distance between any two points on the table), we have
+R^(`C)^beh:forward^(seecan^open)Vmay hold can
+as required.
+Proof of ( ??).We assume ( ??) and ( ??) and note that, for Dgdist
+', we have
+beh:grasp^may hold canVholding
+as required.
+Proof of ( ??).We ﬁrst assume
+RV2(stable:(pos:depot )^right stable:(pos:depot )) (64)
+We then assume ( ??) and note that, for E2
+, as required, by ( ??) we have:
+beh:rotate Vseedepot
+Proofs of ( ??) and ( ??).These are similar to the proofs of ( ??) and ( ??) noting that both of the following hold.
+holding^atdepot V:depot empty
+open^:depot empty V(:atdepot_open)^:depot empty
+Proof obligations in Fig. ??. The formula ( ??) follows from ( ??) asungrasp does not change the position or direction
+of the robot and all the cans that are seen do not move and hence seecan. The proof of ( ??) also follows from
+(??) asforward does not change the direction of the robot and hence seecan. The proof of ( ??) is similar as
+may hold can)seecan. We now assume
+RV2((holding_(atdepot^:open^may hold can)))may hold can) (65)
+The formulae ( ??), (??) and ( ??) follow directly.
+8.4. Final rely condition
+Collecting our assumptions (i.e. ( ??), (??), (??), (??), (??)), we instantiate Rto
+sensors^
+2(        can exists^:seecan)9can2TCstable:(pos:can)^right stable:(pos:can))^
+2(8can2TC(sees:can^:holds:can))stable:(pos:can)^right stable:(pos:can))^
+2(stable:(pos:depot )^right stable:(pos:depot ))^
+2((holding_(atdepot^:open^may hold can)))may hold can)
+Note that this Rsplits as required because csplits for any state predicate c,2psplits for any interval predicate p
+andp1^p2splits if both p1andp2split. The ﬁnal rely condition implies each of the following properties.
+The guards are idealised (condition ( ??)). This represents the assumption that sensor values are accurate and there
+are no delays in turning them on/off.
+If there is a can on the table and the robot does not see any can throughout the given interval, then at least one
+of the cans must not change its position throughout the interval (condition ( ??)). This ensures that the robot will
+eventually see a can if it rotates in position.
+If the robot sees a can, say can, and is not holding canthroughout the given interval, then the position of candoes
+not change within the interval (condition ( ??)). This ensures that moving forward (towards can) eventually causes
+robot to touch can. Furthermore, if the robot is already touching and sees canthen closing the grippers will cause
+the robot to hold can.
+20 B. Dongol, I. J. Hayes and P. J. Robinson
+The position of the depot does not change in any interval (condition ( ??)). This ensures that rotating in position
+causes the robot to see the depot. Furthermore, if the robot sees the depot, the moving forward causes the robot to
+reach the depot.
+If the robot is holding a can, then it continues to hold (or be able to hold) a can and if there is a can at the depot
+and the robot is at the depot with it’s grippers are not fully open then the can must remain in the depot (condition
+(??)).
+9. Conclusion
+In this paper we have developed a temporal logic on real-time intervals that extends Duration Calculus [ ?], which
+itself is an extension of Interval Temporal Logic [ ?]. We used our logic to develop a formalisation of the semantics of
+teleo-reactive programs. Correctness of a teleo-reactive program is judged by considering its behaviour with respect
+to the environment it operates within, and hence, we present rely/guarantee style speciﬁcation rules. We have also
+provided a number of theorems for proving progress in goal-directed agents.
+Teleo-reactive programs differ from state-based real-time formalisms such as continuous action systems [ ?,?],
+TLA+[?] and hybrid automata [ ?], where each action is considered instantaneous and causes a discrete state change
+in the system. Instead, teleo-reactive programs use durative actions that describe a behaviour over an interval of time.
+Furthermore, teleo-reactive programs have a hierarchical structure, in which the higher-level guards are guaranteed
+to hold throughout the execution of the component programs. We have assumed that actions are idealised (see ( ??)
+- (??)) and assumed that velocities change instantaneously. However, more sophisticated behaviour that for example
+incorporates delays and acceleration can be speciﬁed [ ?]. Furthermore, like Duration Calculus [ ?], properties that can
+be speciﬁed using straightforward mathematical analysis, which provides one with an interface to standard control
+theory.
+By incorporating durative actions and hierarchical structuring together, teleo-reactive programs can be less com-
+plicated than their action systems equivalent [ ?]. Furthermore, each guard in a sequence of guarded programs assumes
+the negation of all previous guards as an implicit conjunct, which facilitates the development of goal-directed agents
+[?]. Although teleo-reactive programs are simple and compact, the behaviours that the programs specify are complex.
+Proving properties of teleo-reactive programs is complicated by the fact that both the program and the environment
+may affect the guards, and hence, the behaviour of the program. For teleo-reactive programs that implement goal-
+directed agents, as well as showing that the program moves towards its goal, we must also show that once a program
+earlier in the sequence is enabled, the guard of the earlier program may not be disabled unless the goal is reached.
+We have presented a method that clearly separates the two concerns and generates proof obligations for both. Our
+method is able to generate the requirements on the actions and defer instantiation of the rely condition to a later point.
+Furthermore, generation of proof obligations on the actions is automated. Instantiation of an appropriate rely condition
+is simpliﬁed when considering properties at the level of the actions.
+There are several existing formalisms for reasoning about hybrid systems [ ?,?,?,?,?], several of which allow a
+high degree of automation. As we have already seen in Section ??, a teleo-reactive program can be represented by these
+existing frameworks. However, goal-directed reasoning in these frameworks is potentially difﬁcult. The translation of
+teleo-reactive programs and our progression theorems to an already existing framework in order to make use of the
+available tool support is an avenue of further research.
+We note that our robot example presents an idealised scenario where several physical constraints are simpliﬁed. For
+instance, we assume that acceleration to and from the operating speed is instantaneous (e.g., the robot stops scanning
+when the can is directly in front of the robot), forward causes the robot to move in a straight line, etc. We could
+have made our example more complicated by removing these idealised assumptions. However, the purpose of this
+veriﬁcation is to demonstrate applicability of our logic for the veriﬁcation of goal-based agents. We have developed a
+semantics for teleo-reactive programs [ ?] where the idealised timing assumptions are approximated using time bands
+[?,?] and a sampling logic [ ?,?]. This has been extended to a rely/guarantee theory that combines interval-based
+reasoning, sampling and time bands to reason about teleo-reactive programs over multiple time granularities [ ?],
+however this work does not cover reasoning about progression. Our early experiments indicate that progression in the
+context of sampling and time bands is a non-trivial task due to the inaccuracies between the observed and actual states.
+We aim to develop progression theories in such contexts as part of future work.
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 21
+Acknowledgements. We would like to thank Keith Clark and Kirsten Winter for helpful discussions on early versions
+of this paper, and our anonymous reviewers for their comments. This research is supported by Australian Research
+Council (ARC) Discovery Grant DP0987452, The University of Queensland’s New Staff Start-up Research Fund, and
+EPSRC Grant EP/J003727/1.
+22 B. Dongol, I. J. Hayes and P. J. Robinson
+A. Prolog code for decomposing rely/guarantee triples
+%
+% Prolog program to support the paper
+% Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs
+%
+% Authors: Brijesh Dongol, Ian J. Hayes and Peter J. Robinson
+%
+?-op(480, fy, ˜).
+?-op(520, xfy, and).
+?-op(530, xfy, or).
+?-op(540, xfy, =>).
+?-op(525, xfy, mu).
+?-op(600, xfy, ˜>).
+%% Theorem 6.1
+prog_rule(rg(R and len(L1+L2), [C ˜> M|S],
+ll(DD) and box(H and ˜G) => circle(G)),
+[rg(R and len(L1), S,
+ll(DD) and box(H and ˜(H and C or G)) => circle(H and C or G)),
+rg(R and len(L2), M, box((H and C) and ˜G) => circle(G))],
+rg(R, M, box((H and C) and ˜G) => circle(H and C or G))).
+prog_rule(rg(R and len(L1+L2), [C ˜> M|S], box(H and ˜G) => circle(G)),
+[rg(R and len(L1), S,
+box(H and ˜(H and C or G)) => circle(H and C or G)),
+rg(R and len(L2), M, box((H and C) and ˜G) => circle(G))],
+rg(R, M, box((H and C) and ˜G) => circle(H and C or G))).
+%% Generate all the formulae from repeated use of the above formulae
+%% Simp_Rules and Simp_MU are simplified formulae generated from Theorem 6.1
+gen_rg_formulae(Program, Rely, Length, DD, H, G, Simp_Rules, Simp_MU) :-
+expand([rg(Rely and len(Length), Program,
+ll(DD) and box(H and ˜G) => circle(G))], Rules, MU),
+simplify_rgs(Rules, Simp_Rules),
+simplify_rgs(MU, Simp_MU).
+%% expand(RG, Expand_RG, MU)
+%% expands out RG into Expand_RG and MU using Theorem 6.1 repeatedly
+expand([], [], []).
+% singleton guarded programs
+expand([Form|Forms], Expand, MU) :-
+Form = rg(R and len(D), [true ˜> A],
+ll(DD) and box(P and ˜Q) => circle(Q)),!,
+expand([rg(R and len(D), A, ll(DD) and box(P and ˜Q) => circle(Q))|Forms],
+Expand, MU1),
+MU = [rg(R, A, box(P and ˜Q) => circle(P or Q))|MU1].
+expand([Form|Forms], Expand, MU) :-
+Form = rg(R and len(D), [true ˜> A], box(P and ˜Q) => circle(Q)),!,
+expand([rg(R and len(D), A, box(P and ˜Q) => circle(Q))|Forms],
+Expand, MU1),
+MU = [rg(R, A, box(P and ˜Q) => circle(P or Q))|MU1].
+% sequence with at least 2 elemets - use Theorem 6.1
+expand([Form|Forms], Expand, MU) :-
+prog_rule(Form, Forms1,MU1),!,
+MU = [MU1|MU2],
+append(Forms1, Forms, AllForms),
+expand(AllForms, Expand, MU2).
+expand([Form|Forms], [Form|Expand], MU) :-
+expand(Forms, Expand, MU).
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 23
+% Simplify the formulae in a list of RG formulae
+simplify_rgs([], []).
+simplify_rgs([rg(R,M, box(G) => circle(Q))|Rest], Out) :-
+!,
+simplify(G, SG),
+simplify(Q, SQ),
+simplify_rgs(Rest, SRest),
+(
+(SG = false ; SQ = true)
+->
+Out = SRest
+;
+Out = [rg(R,M,box(SG) => circle(SQ))|SRest]
+).
+simplify_rgs([rg(R,M, X and box(G) => circle(Q))|Rest], Out) :-
+!,
+simplify(G, SG),
+simplify(Q, SQ),
+simplify_rgs(Rest, SRest),
+(
+(SG = false ; SQ = true)
+->
+Out = SRest
+;
+Out = [rg(R,M,X and box(SG) => circle(SQ))|SRest]
+).
+% Simplify propositional formula involving and, or, => and ˜
+simplify(Form, SimpForm) :-
+easy_simplify(Form, SForm),
+simplify_formula(SForm, [], SimpForm).
+%% Push negations in and simplify away true and false
+easy_simplify(˜(A and B), SForm) :-
+!,
+easy_simplify(˜A, AS),
+easy_simplify(˜B, BS),
+easy_simplify_step(AS or BS, SForm).
+easy_simplify(˜(A or B), SForm) :-
+!,
+easy_simplify(˜A, AS),
+easy_simplify(˜B, BS),
+easy_simplify_step(AS and BS, SForm).
+easy_simplify(˜(˜A), SForm) :-
+!,
+easy_simplify(A, SForm).
+easy_simplify(A and B, SForm) :-
+!,
+easy_simplify(A, AS),
+easy_simplify(B, BS),
+easy_simplify_step(AS and BS, SForm).
+easy_simplify(A or B, SForm) :-
+!,
+easy_simplify(A, AS),
+easy_simplify(B, BS),
+easy_simplify_step(AS or BS, SForm).
+easy_simplify(˜A, SForm) :-
+!,
+easy_simplify(A, AS),
+easy_simplify_step(˜AS, SForm).
+easy_simplify(A, A).
+easy_simplify_step(A and true, A) :- !.
+easy_simplify_step(true and A, A) :- !.
+24 B. Dongol, I. J. Hayes and P. J. Robinson
+easy_simplify_step(_A or true, true) :- !.
+easy_simplify_step(true or _A, true) :- !.
+easy_simplify_step(_A and false, false) :- !.
+easy_simplify_step(false and _A, false) :- !.
+easy_simplify_step(A or false, A) :- !.
+easy_simplify_step(false or A, A) :- !.
+easy_simplify_step(˜(false), true) :- !.
+easy_simplify_step(˜(true), false) :- !.
+easy_simplify_step(A, A).
+%% Simplify Form given a collection of Hypotheses
+simplify_formula(Form, Hyps, SimpForm) :-
+simplify_formula1(Form, Hyps, SimpForm1, Progress),
+( var(Progress) ->
+SimpForm = SimpForm1
+;
+simplify_formula(SimpForm1, Hyps, SimpForm)
+).
+%% Same as simplify_formula but Progress is instantialted to true of some
+%% simplification happened
+%% A occurs in the hyps
+simplify_formula1(A, Hyps, SimpForm, Progress) :-
+member(A, Hyps), !,
+SimpForm = true,
+Progress = true.
+%% ˜A occurs in the hyps
+simplify_formula1(A, Hyps, SimpForm, Progress) :-
+member(˜A, Hyps), !,
+SimpForm = false,
+Progress = true.
+%% Simplify A assuming B then simplify B assuming the simplification of A
+simplify_formula1(A and B, Hyps, SimpForm, Progress) :-
+!,
+simplify_formula1(A, [B|Hyps], SimpA, Progress),
+simplify_formula1(B, [SimpA|Hyps], SimpB, Progress),
+easy_simplify_step(SimpA and SimpB, SimpForm).
+%% Simplify A assuming ˜B then simplify B assuming the negation of
+%% the simplification of A
+simplify_formula1(A or B, Hyps, SimpForm, Progress) :-
+!,
+easy_simplify(˜B, NB),
+simplify_formula1(A, [NB|Hyps], SimpA, Progress),
+easy_simplify(˜SimpA, NA),
+simplify_formula1(B, [NA|Hyps], SimpB, Progress),
+easy_simplify_step(SimpA, SA),
+easy_simplify_step(SimpB, SB),
+easy_simplify_step(SA or SB, SimpForm).
+%% Otherwise simplify the hyps and the simplify A with the simplified hyps
+simplify_formula1(A, Hyps, SimpForm, Progress) :-
+simp_hyps(Hyps, SimpHyps),
+simp_with_hyps(A, SimpHyps, SimpForm, Progress).
+strip_negs(˜ ˜ A, A) :- !.
+strip_negs(A, A).
+%% Simplify the hyps
+simp_hyps(Hyps, SimpHyps) :-
+expand_conjuncts(Hyps, SimpHyps1),
+add_deductions(SimpHyps1, SimpHyps2),
+find_contrad(SimpHyps2, SimpHyps).
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 25
+%% Add all the possible deductions of hyps to the hyps
+add_deductions([], []).
+add_deductions([A|H], Hyps) :-
+findall(B, deduction(A, B), AD), AD ¯ [], !,
+append(AD, H, HypsD),
+add_deductions(HypsD, Hyps1),
+Hyps = [A|Hyps1].
+add_deductions([A|H], [A|Hyps]) :-
+add_deductions(H, Hyps).
+%% Simplify the hyps to [false] if a contradiction within the hyps exist
+find_contrad(H, SH) :-
+member(A, H),
+member(˜A, H), !,
+SH = [false].
+find_contrad(H, H).
+%% expand out conjuncts
+expand_conjuncts([], []).
+expand_conjuncts([(A and B)|Hyps], SimpHyps) :-
+!, expand_conjuncts([A,B|Hyps], SimpHyps).
+expand_conjuncts([A|Hyps], [A|SimpHyps]) :-
+expand_conjuncts(Hyps, SimpHyps).
+%% Simplify a formula using the hyps
+%% Contradiction - simplify to false
+simp_with_hyps(_, [false], false, true) :- !.
+%% A is a hyp
+simp_with_hyps(A, Hyps, SimpForm, Progress) :-
+member(A, Hyps), !,
+SimpForm = true,
+Progress = true.
+%% ˜A is a hyp
+simp_with_hyps(A, Hyps, SimpForm, Progress) :-
+member(˜A, Hyps), !,
+SimpForm = false,
+Progress = true.
+simp_with_hyps(˜A, Hyps, SimpForm, Progress) :-
+member(A, Hyps), !,
+SimpForm = false,
+Progress = true.
+%% Further simplify the hyps and try again
+simp_with_hyps(A, Hyps, SimpForm, Progress) :-
+simp_the_hyps(Hyps, [], SHyps, P), nonvar(P), !,
+simp_with_hyps(A, SHyps, SimpForm, Progress).
+%% No simplification possible
+simp_with_hyps(A, _Hyps, A, _Progress).
+%% Simplift the hyps
+simp_the_hyps([], Done, Done, _).
+simp_the_hyps([false|_Hyps], _Done, [false], true) :- !.
+simp_the_hyps([˜true|_Hyps], _Done, [false], true) :- !.
+simp_the_hyps([true|Hyps], Done, SHyps, P) :-
+!, simp_the_hyps(Hyps, Done, SHyps, P).
+simp_the_hyps([˜false|Hyps], Done, SHyps, P) :-
+!, simp_the_hyps(Hyps, Done, SHyps, P).
+%% If H can be simplified with hyps in Hyps or Done then simplify
+simp_the_hyps([H|Hyps], Done, SHyps, P) :-
+can_simplify(H, Hyps, Done), !,
+P = true,
+append(Hyps, Done, All),
+simplify_formula1(H, All, SimpH, _Progress),
+simp_the_hyps(Hyps, [SimpH|Done], SHyps, P).
+simp_the_hyps([H|Hyps], Done, SHyps, P) :-
+simp_the_hyps(Hyps, [H|Done], SHyps, P).
+26 B. Dongol, I. J. Hayes and P. J. Robinson
+%% can_simplify(A, H1, H2) is true iff A contains a subformula (or a negation
+%% of a subformula) that matches a hyp from H1 or H2
+can_simplify(A, H1, _H2) :-
+member(A, H1).
+can_simplify(A, _H1, H2) :-
+member(A, H2).
+can_simplify(˜A, H1, _H2) :-
+member(A, H1).
+can_simplify(˜A, _H1, H2) :-
+member(A, H2).
+can_simplify(A, H1, _H2) :-
+member(˜A, H1).
+can_simplify(A, _H1, H2) :-
+member(˜A, H2).
+can_simplify(A and _B, H1, H2) :-
+can_simplify(A, H1, H2).
+can_simplify(_A and B, H1, H2) :-
+can_simplify(B, H1, H2).
+can_simplify(A or _B, H1, H2) :-
+can_simplify(A, H1, H2).
+can_simplify(_A or B, H1, H2) :-
+can_simplify(B, H1, H2).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
+%% Can robot specific info
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% deductions: deduction(A, B) means we can deduce B if A is true
+deduction(may_hold_can, see_can).
+deduction(˜see_can, ˜ may_hold_can).
+deduction(holding, see_can).
+deduction(˜ see_can, ˜holding).
+deduction(holding, may_hold_can).
+deduction(˜may_hold_can, ˜holding).
+deduction(at_depot, see_depot).
+deduction(˜see_depot, ˜at_depot).
+% The can robot program as in the paper
+robot_program([˜depot_empty and (˜at_depot or open) ˜> nil,
+˜depot_empty ˜> ungrasp,
+holding ˜> [see_depot ˜> forward,
+true ˜> rotate
+],
+true ˜> [see_can ˜>
+[may_hold_can ˜> grasp,
+open ˜> forward,
+true ˜> ungrasp
+],
+true ˜> rotate
+]
+]).
+% Flat version of robot program
+flat_robot_program([˜depot_empty and (˜at_depot or open) ˜> nil,
+˜depot_empty ˜> ungrasp,
+holding and see_depot ˜> forward,
+holding ˜> rotate,
+see_can and may_hold_can ˜> grasp,
+see_can and open ˜> forward,
+see_can ˜> ungrasp,
+true ˜> rotate
+]).
+Reasoning about Goal-Directed Real-Time Teleo-Reactive Programs 27
+/*
+Generate RG formulae from can robot
+robot_program(Program),
+gen_rg_formulae(Program, R, L, can_exists, true, ˜depot_empty and (˜at_depot or open), Rules, MU).
+Generate RG formulae from can robot (flat version)
+flat_robot_program(Program),
+gen_rg_formulae(Program, R, L, can_exists, true, ˜depot_empty and (˜at_depot or open), Rules, MU).
+*/
+%% For completeness - lemma 6.3
+mu_expand(rg(R, [(C ˜> M)|S], box((C1 and ˜C2) and ˜G) => circle(C1 or G)),
+[rg(R, M, box(((C1 and C) and ˜C2) and ˜G) =>
+circle(((C1 and C2) or (C1 and C)) or G)),
+rg(R, S, box((C1 and ˜(C or C2)) and ˜G) => circle(C1 or G))]).

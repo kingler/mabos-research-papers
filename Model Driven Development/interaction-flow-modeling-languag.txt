@@ -1,0 +1,665 @@
+Extending the Interaction Flow Modeling
+Language (IFML) for Model Driven
+Development of Mobile Applications Front End
+Marco Brambilla1, Andrea Mauri1, and Eric Umuhoza1;2
+1Politecnico di Milano. Dipartimento di Elettronica, Informazione e Bioingegneria
+Piazza L. Da Vinci 32. I-20133 Milan, Italy
+fmarco.brambilla, andrea.mauri, eric.umuhoza g@polimi.it
+2AtlanMod team, Ecole des Mines de Nantes
+4, rue Alfred Kastler 44307 Nantes Cedex 3, France
+eric.umuhoza@mines-nantes.fr
+Abstract. Front-end design of mobile applications is a complex and
+multidisciplinary task, where many perspectives intersect and the user
+experience must be perfectly tailored to the application objectives. How-
+ever, development of mobile user interactions is still largely a manual
+task, which yields to high risks of errors, inconsistencies and inecien-
+cies. In this paper we propose a model-driven approach to mobile ap-
+plication development based on the IFML standard. We propose an ex-
+tension of the Interaction Flow Modeling Language tailored to mobile
+applications and we describe our implementation experience that com-
+prises the development of automatic code generators for cross-platform
+mobile applications based on HTML5, CSS and JavaScript optimized
+for the Apache Cordova framework. We show the approach at work on
+a popular mobile application, we report on the application of the ap-
+proach on an industrial application development project and we provide
+a productivity comparison with traditional approaches.
+1 Introduction
+Front-end design is a complex and multidisciplinary task, where many perspec-
+tives intersect. Front-end becomes even more crucial in mobile applications,
+where the user experience must be perfectly tailored to the application objec-
+tives. However, development of mobile user interactions is still largely a manual
+task, which yelds to high risks of errors, inconsistencies and ineciencies. Several
+researches have applied model-driven techniques to the specication of software
+application interfaces and user interaction in broad sense. Among them, we can
+cite the ones focusin on Web interfaces ( W2000 (HDM) [2], OO-HDM [16],
+WebDSL [7], OOH-Method [8], WebML [5], RUX-Model [11] and HERA [20]).
+Furthermore some approaches apply model driven techniques for multi-device UI
+modeling such as IFML [4], TERESA [3], MARIA [14], MBUE [13], UsiXML
+[19] and UCP [15].
+However, none of them specically address the needs of mobile applications
+development. Therefore, in mobile applications, front-end development continues
+to be a costly and inecient process, where manual coding is the predominant
+development approach, reuse of design artifacts is low, and cross-platform porta-
+bility remains dicult. The availability of a platform-independent user interac-
+tion modeling language can bring several benets to the development process
+of mobile application front-ends, as it improves the development process, by
+fostering the separation of concerns in the user interaction design, thus grant-
+ing the maximum eciency to all the dierent developer roles; it enables the
+communication of interface and interaction design to non-technical stakehold-
+ers, permitting early validation of requirements.
+In this paper we propose a model-driven approach to mobile application de-
+velopment based on the OMG standard language called Interaction Flow Model-
+ing Language (IFML). We propose an extension of the IFML modeling language
+tailored to mobile applications and we describe our implementation experience
+that comprises the development of automatic code generators for cross-platform
+mobile applications based on HTML5, CSS and JavaScript optimized for the
+Apache Cordova framework. We show the approach at work on a running ex-
+ample based on a popular existing application, and we report on one of our
+experiences in developing industrial mobile applications,with a short summary
+on the productivity comparison with traditional approaches.
+The paper is organized as follows: Section 2 reviews the related work; Section
+3 summarizes the core features of the IFML language; Section 4 presents our
+extensions to IFML talored to mobile application development; Section 5 shows
+a running example; Section 6 describes our implementation and our industrial
+experience (including a comparison to traditional approaches); and Section 7
+concludes.
+2 Related work
+This work is related to a large corpus of researches that address conceptual mod-
+eling of software applications. Among the ones mainly focusing on the Web we
+can cite: (i) The Web Modelling Language (WebML) [5], dened as a concep-
+tual model for data-intensive Web applications and conceived as a high level,
+implementation-independent conceptual model accompanied by the associated
+design environment, called WebRatio [1]; (ii) W2000 (formerly HDM) [2] which
+introduced a notion of model-based design, clearly separating the activities of au-
+thoring in-the-large (hypertext schema design) and authoring in-the-small (page
+and content production); (iii) OO-HDM [17], a UML-based approach for mod-
+eling and implementing Web application interfaces; (iv) Araneus [12], a mod-
+eling proposal for Web applications that allows one to represent the hypertext
+organization, with nested relations and inter-page links; (v) Web Application
+Extension for UML (WAE) [6], a UML extension for describing Web application
+interfaces and the client-server interactions; (vi) WebDSL [7], a domain-specic
+language consisting of a core language with constructs to dene entities, pages
+Album  Search <<Window>>AlbumSearch 
+Album List <<Window>>Albums 
+Album Details <<Window>>Album 
+Album List Albums Album List Albums 
+Album Deletion 
+<<ParamBindingGroup>>Title ! AlbumTitle Year ! AlbumYear    <<ParamBindingGroup>> SelectedAlbum ! AnAlbum <<Form>> <<List>> <<Details>> 
+   <<ParamBindingGroup>> SelectedAlbum ! AnAlbum Fig. 1. IFML example: product search, listing and deletion.
+and business logic, plus extensions; (vii) OO-HMETHOD [8], based on UML
+interaction diagrams; (viii) Hera [20], a model-driven design approach and spec-
+ication framework focusing on the development of context-dependent or per-
+sonalized Web information system. More traditional methods for user interface
+design use state machines (in dierent avours) as the underlying formalism,
+such as Jacob [9], Leung et al. [10] and StateWebCharts [21]. Other recent pro-
+posals in the Web Engineering eld represent the RIA foundations (e.g., Urbieta
+[18]) by extending existing Web engineering approaches. Commercial vendors
+are proposing tools for Web and mobile development, such as IBM WorkLight,
+Mendix and Outsystems.
+Some researches apply model based approaches for multi-device user inter-
+face development. Among them we can cite: (i) TERESA(Transformation Envi-
+ronment for inteRactivE Systems representations)[3], based on a so-called One
+Model, Many Interfaces approach to support model based GUI development
+for multiple devices from the same ConcurTaskTree (CTT) model; (ii) MARIA
+[14], another approach based on CTT; (iii) MBUE(Model Based Useware En-
+gineering); (iv) UsiXML (USer Interface eXtended Markup Language) [19] and
+(v) Unied Communication Platform (UCP).
+3 The Interaction Flow Modeling Language (IFML)
+The Interaction Flow Modeling Language (IFML) supports the platform inde-
+pendent description of graphical user interfaces for applications accessed or de-
+ployed on such systems as desktop computers, laptop computers, PDAs, mobile
+phones, and tablets. An IFML model supports the following design perspectives:
+(1) The view structure specication , which consists of the denition of view con-
+tainers, their nesting relationships, their visibility, and their reachability; (2) The
+view content specication , which consists of the denition of view components,
+i.e., content and data entry elements contained within view containers; (3) The
+events specication , which consists of the denition of events that may aect the
+state of the user interface. Events can be produced by the user's interaction, by
+the application, or by an external system; (4) The event transition specication ,
+which consists of the denition of the eect of an event on the user interface;
+ViewComponent
+MobileComponent Screen ToolBarViewContainerFig. 2. IFML mobile extension: Screen,ToolBar and mobileComponent.
+(5) The parameter binding specication , which consists of the denition of the
+input-output dependencies between view components and between view com-
+ponents and actions; and (6) The reference to actions triggered by the user's
+events. The eect of an event is represented by an interaction ow connection,
+which connects the event to the view container or component aected by the
+event. The interaction ow expresses a change of state of the user interface: the
+occurrence of the event causes a transition of state that produces a change in
+the user interface.
+Figure 1 shows a simple example of IFML model where the user can search for
+a product by entering some criteria in the Product Search Form. The matching
+items are shown in a list. The selection of one item causes a delete action to be
+triggered on it. When the deletion is completed, the updated list of products is
+displayed again.
+IFML concepts can be stereotyped to describe more precise behaviours. For
+instance, one could dene specic stereotypes for describing web pages (a specic
+kind of view container); forms, lists and details (specic kinds of view compo-
+nent); submission or selection events; and so on.
+4 Extending IFML for mobile apps
+Mobile applications have rich interfaces that resemble on a smaller scale those
+of full-edged desktop applications, possibly with additional complexity of the
+interaction patterns, at the purpose of exploiting at best the limited space avail-
+able. This aspect, together with mobility and availability of sensors, such as
+camera and GPS, introduce features that are best captured by providing mobile-
+specic extensions of a platform-independent modeling language like IFML.
+The proposed extensions come from extensive modeling experience on mobile
+applications using the IFML standard, which covered both modeling of several
+existing mobile applications (including CamScanner ,Instagram ,iPhone Gallery ,
+Twitter ,RedLaser and many others) and design and implementation of new
+mobile applications for industrial customers (as reported in Section 6).
+The IFML standard as described in Section 3 does not cover the mobile-
+specic aspects. In the next paragraphs, we describe the IFML extensions allow-
+ing the modeling of mobile application. Those extensions will address both the
+Fig. 3. IFML mobile extension: Example of the LongPress event.
+components of the user interface and the events. In our experiments, we iden-
+tied three categories of mobile events: (i) events generated by the interaction
+of the user such as tap and hold ,swipe , etc.; (ii) events triggered by the mobile
+device features such as sensors, battery, etc.; and (iii) nally events triggered by
+user actions related to the device components such as taking a photo, recording
+a video or using the microphone.
+4.1 IFML Mobile extension: Containers and Components
+In this section we describe the concepts added in order to model the components
+that characterized the mobile context (as shown in Figure 2). A new class called
+Screen has been dened to represent the screen of a mobile application. Since
+the screen is the main container of a mobile application, it extends the core class
+ViewContainer of the IFML standard. The class ToolBar represents a particular
+subcontainer of the screen. It may contain other containers and may have on
+its boundary a list of events. It extends the core class ViewContainer of IFML
+standard.
+A characteristic trait of mobile interfaces is the utilization of predened View-
+Containers devoted to specic functionalities(including Notications area and
+Settings panel). These system level containers provide economy of space and
+enforce a consistent usage of common features. The MobileSystem stereotype
+has been dened to distinguish these special ViewContainers. A ViewContainer
+stereotyped as MobileSystem denotes a xed region of the interface, managed by
+mobile operating system or by another interface framework in a cross-application
+way. The class MobileComponent denotes the particular mobile view compo-
+nent such as buttons, images, icons etc. A MobileComponent is subject to user
+events,described next. The MobileSystem stereotype can be applied also to View-
+Components to highlight that the interface uses the components built-in in the
+system(as shown in Figure 7).
+4.2 IFML Mobile extension: MobileContext
+The Context assumes a particular relevance in mobile applications, which must
+exploit all the available information to deliver the most ecient interface. There-
+Edit list «Touch » 
+ Delete list «Touch»  <<Modal>>Options  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ «ParamBindingGroup»  
+pressedList   list 
+Options  
+«VisualizationAttributes » 
+ icon, title, numberOfItem  «DataBinding » List 
+«ConditionalExpression»  
+self.containedIn(list)  List 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ «List» Lists  
+«VisualizationAttributes » 
+ icon, title, numberOfItem  «DataBinding » List Options «LongPress»  Fig. 4. IFML Mobile extension: Example of LongPress event used to display options
+of a pressed list.
+BatteryEvent StorageEvent ConnectionEvent NotificationEvent SensorEventMobileSystemEventSystemEvent
+Fig. 5. IFML mobile extension: Mobile system events
+fore, the context must gather all the dimensions that characterize the user's in-
+tent, the capacity of the access device and of the communication network, and
+the environment surrounding the user. A new class MobileContext extending the
+Context has been dened to express the mobile contextual features.
+4.3 IFML Mobile extension: Events
+In this section we describe the new event types that are dened within IFML for
+the mobile context. First, a new class MobileUserEvent allowing the modeling
+of the mobile user events have been dened. MobileUserEvent extends the core
+class ViewElementEvent of the IFML standard. The following classes extend
+MobileUserEvent for modeling the specic mobile user events: DragDrop ;Dou-
+bleTap ;Swipe ;Pinch ;Spread ;Touch ;LongPress ;Scroll ; and Shake . Each class
+represents an event related to the gesture which triggers it.
+The screens in Figure 3 show an example of the usage of the LongPress
+gesture allowing the user to manage the selected list. Figure 4 shows a fragment
+of IFML model for lists management. When a user performs the LongPress
+MobileActionEventActionEvent
+CameraActionEvent MicrophoneActionEventMobileActionAction
+MicrophoneAction
+(a) (b)CameraActionFig. 6. IFML mobile extension: (a) MobileAction , the extension of the IFML Action
+to address specic mobile actions. (b) MobileActionEvent , the extension of the IFML
+ActionEvent class.
+«MobileSystem » PhotoPreview
+«MobileS ystem » Photo
+ShootSnap Photo
+Photo 
+availableRetake
+Use PhotoSearch
+Product
+«MobileSystem »CameraCanvas
+Fig. 7. IFML Mobile extension: Example of usage of MobileAction( Shoot ), MobileAc-
+tionEvent( Photo available ) and MobileSystem streotype.
+gesture on one element of the list a pop up containing information of the selected
+element is shown allowing her to edit or delete the list.
+A new class MobileSystemEvent extending SystemEvent has been dened
+to express the mobile system events. The following classes extend MobileSyste-
+mEvent for specic system events.
+{BatteryEvent ,describing the events related to the state of the battery.
+{StorageEvent ,describing the events related to the archiving capacity.
+{NoticationEvent ,grouping the events related to the generic notications
+handled by the operating system.
+{ConnectionEvent ,describing the events related to the connection state of
+the device.
+{SensorEvent , dening events related to the sensors of the device. The Sen-
+sorEvent extends ExternalEvent IFML core class. The most commonly used
+sensors are proximity sensor, motion sensor, magnetometer sensor,Gyroscope
+and position sensor. The classes PositionEvent ,MotionEvent ,Acceleration-
+Event ,ProximityEvent and RotationEvent extend the SensorEvent to rep-
+resent the events related to the specic sensors.
+«dataType»
+Image
+Category
+-prod
+uctTo
+Category
+1..*
+Product
+list
+oProduct
+1..*
+-ÿid
+:
+Integer
+-name
+:
+String
+-ÿid
+:
+Integer
+-UPC
+:
+String
+-name
+:
+String
+-description
+:
+Text
+-icon
+:
+Image
+1..*
+-categoryTo
+Product
+I..1
+-productTo
+List
+Review
+ÿ
+id
+:
+Integer
+-title
+:
+String
+-body
+:
+Text
+-creationCate
+:
+date
+-a
+uth
+orN
+arme
+:
+String
+-prod
+uctTo
+Review
+1
+1
+-price
+oProduct
+1..*
+0
+t
+-reviewTo
+Product
+-productTo
+Price
+«dataType»
+Text
+List
+-ÿid
+:
+Integer
+-title
+:
+String
+-icon
+:
+Image
+-ere
+aticn
+Date
+:
+date
+Price
+-ÿid
+:
+Integer
+-price
+:
+double
+-currency
+:
+String
+-sellerName
+:
+String
+-locality
+:
+StringFig. 8. Domain model of the RedLaser mobile app
+MobileActionEvent class has been dened to model the events triggered by
+a mobile action. Among mobile actions, we have actions related to the photo
+camera such as the Shoot action and actions related to microphone as reported
+in Figure 6. Figure 7 shows example of such events. A user takes a photo with the
+device's photo camera and the application displays the product corresponding
+to the taken photo if any. Once the photo is available, a screen asking the user
+if he wants to use or retake the photo is displayed. The photo available event is
+associated to the action shoot .
+5 Case study: the RedLaser example
+To demonstrate the applicability and the expressive power of the proposed ex-
+tensions, this section exemplies their use by modeling some of the functions of
+RedLaser3, a shopping app available for iPhone, Windows Phone and Android.
+Figure 8 shows the data model of the RedLaser application. In RedLaser the
+products are organized in categories . Each product has one or more prices . A
+user can create a listof the products he likes. The application allows the user to
+review a product.
+The RedLaser user interface consists of a top level container, which is logi-
+cally divided into three alternative sub containers one containing the recent and
+popular products, the second one containing the history of the application and
+the last one allowing the user to save its favorites(as shown in Figure 9).
+The IFML model of the top screen comprises the ToolBar of the app and three
+screens in alternative. (1) Home . Is the default screen accessed when the user
+starts the app; (2) History . It contains the log of the application; and (3) Lists .
+It allows the user to save its favorite products.
+3http://redlaser.com/
+  [XOR]  RedLaser Top  
+[H] [L] Home  [L] History  
+[L] Lists  
+[L] RedLaser ToolBar  
+Scan  Search  Loyalty card  Settings  List manager  
+(a) (b) Fig. 9. Case study: (a)the home screen of RedLaser application; (b)IFML model
+showing logical organization of RedLaser application.
+Product searching. The app allows the user to search a product in four dif-
+ferent ways: (1) keyword search; (2) Photo based searching. The input of the
+searching system is a picture taken through the camera of the device; (3) Voice
+based searching; and (4) Barcode search.Figure 10 shows the screens allowing
+the searching of a product. Figure 11 shows a piece of IFML model for Keyword-
+Search and a voice based searching. The user can use the product selection event
+associated to each product on the lists of retrieved products to see its details as
+shown on the Figure 12.
+Figure13 shows a piece of IFML model of the product overview. This model
+shows also the usage of the swipe user event to navigate among the sub screens
+of overview.
+6 Implementation experience
+Besides the formal denition of the mobile extensions to the IFML language, our
+research included the implementation of a complete prototype model editor in
+Eclipse, a code generator tailored to cross-platform mobile development, a few
+exemplary models built by reverse-engineering existing mobile applications, and
+some industrial developments for actual customers.
+6.1 Modeling Tool
+A snapshot of the modeling interface is shown in Figure 15. The tool has
+been implemented using the Obeo Sirius framework ( http://www.eclipse.org/
+(a) (b)
+Fig. 10. Case study:UI for product searching. (a)Shows the user interface for keyword
+based search; (b)Shows the interface allowing the user to interact with the device's
+microphone in voice based search.
+sirius/ ) and will be released as opensource Eclipse Project, and will benet
+from the contribution of the community of MDE developers.
+6.2 Code Generator
+Regarding the mobile applications generation, our architecture is based on Apache
+Cordova (an open-source cross-platform framework for mobile development),
+specically on the Adobe PhoneGap distribution. The idea is to generate HTML5,
+CSS3 and JavaScript code out of mobile-specic IFML models, wrap it in the
+Cordova container and then send the zip folder containing the whole code to
+the Build PhoneGap online platform in order to get the Android application le
+(apk) and the iOS application le (ipa). The architecture is shown in the g-
+ure 14. The mobile application generation is available at two levels: (i) starting
+only from the domain model (a ER diagram describing the data model under-
+lying the app); or (ii) starting from the IFML model. So the generator analyses
+the input model of the application, serialized as an XML le (XMI) with all
+the information about the application data and interactionand produces all the
+JavaScript and html les needed to run the mobile application. Our attention
+has been focused on the client side, since the server side consists of a traditional
+REST service, for which code generators are already available within WebRatio
+starting from IFML diagrams. The look and feel of the generated applications
+is based on a basic CSS3 le, which includes general rules for mobile interac-
+tion patterns. Eventually, if needed, it is possible to add other custom generation
+rules. In order to implement our prototype we used Groovy (a scripting language
+consisting of a simplied Java syntax, eventually converted in actual Java) and
+[XOR] ProductSearching
+[D][L] KeywordSearch
+«Form » Search
+«SimpleField » SearchKey: string 
+Search 
+ProductClear 
+Form
+«ParamBindingGroup»
+SearchKey Keyword
+Clear Search[L] VoiceSearch
+«MobileSystem» 
+VoiceInterface
+Voice 
+Recognition 
+and Search
+«modal » NoMatches
+Voice not 
+recognizedSpeak againCancel
+ endOfRecording
+Cancel
+«ScrollableList » Results
+«DataBinding » Product
+«VisualizationAttributes » icon, name
+Details
+Fig. 11. Case study: IFML model corresponding to product searching shown in Figure
+10. The model consists of input forms allowing the user to enter the keyword, Search
+Product actions and scrollable lists displaying the retrieved products.
+ANT as generation engine. The ANT le provides all the required libraries for
+the generation, including Groovy and Dom4j for the model analysis and Jaxen,
+an open source XPath library. Moreover it provides some libraries required for
+the generated applications, like Backbone.js, Require.js, jQuery, Handlebars, Un-
+derscore.js and Spin.js. The ANT engine launches a main Groovy le, which in
+turn starts some Groovy templates in order to generate JavaScript and Html
+les.
+Within this implementation work, we have also designed the metamodel of a
+few platforms (HTML 5, Java Swing, and the new Microsoft .Net WPF) and we
+have dened the mappings from the IFML abstract concepts to the platform-
+specic concepts of the three cases mentioned above.
+6.3 Industrial Experience
+The approach has been put at work on some industrial cases already. We re-
+port here on one of those cases, for which we also have some quantitative eort
+comparison with traditional development approaches. In the discussed scenario,
+the customer is a wholesale distributor of products for mechanical work-shops
+and tire repairers, with tens of thousands of dierent products in stock, for the
+whole European market. Products span from tires, to bolts, to large mechanical
+appliances for workshops such as gantry cranes.
+The customer requested a mobile application to be deployed on tablets and
+cell phones (but to be used mainly on tablets) for its eld agents, i.e., salesman
+that are assigned some geographical areas and go to customers for selling the
+goods. Requirements included: the need of the app to run completely oine; the
+  
+  
+  
+(a) (b) (c) (d) (e) Fig. 12. (a)This screen shows the a list of the prices available online for the selected
+product. It is the default screen of product overview ;(b)The local is accessed from the
+online and related screens by using SwipeRight and SwipeLeft gestures respectively;
+(c)Shows the list of other product related to the selected one. (d)Displays the details
+of the selected product; (d)Contains a list of reviews related to the selected product.
+need of periodic or upon-request synchronization of the product catalog with
+the centralized copy of the data (including product information, photos, and
+technical sheets); dynamic calculation of prices based on the customer prole;
+and the possibility of dening custom versions of the catalog for specic types
+of customers.
+The development of the application was performed by three teams of pro-
+fessional software developers, one focusing on the sever-side implementation of
+the REST services for managing the access to the centralized catalog data; one
+implementing the client-side of the mobile application manually; and one imple-
+menting it with our approach. Each team was composed by 2 developers, highly
+skilled for the respective technical needs. Both teams addressing the client side
+targeted cross-platform development through PhoneGap, with the same client-
+side architecture, JS libraries and functional and visual requirements.
+The initial requirements specication implied 4 man-days of work (including
+discussions with the customer). The server-side development was performed us-
+ing the Web Service modeling features of the WebRatio Platform. This resulted
+in a development eort of 9 man-days. On the client side, a common eort has
+been reported on the denition of the graphical styling of the app, which had to
+be extensively discussed and agreed upon with the customer. That part of the
+work accounted for 5 man-days. Finally, the client-side software development
+eorts have been:
+{ manual development: 21 man-days , organized as: 2 man-days on graph-
+ical style implementation and application to the code, 12 man-days on app
+structure and user interaction development, 7 man-days on client-server in-
+teraction and push notication implementation;
+[XOR] Overview
+«Detail » ProductDetails
+«VisualizationAttributes » 
+icon, name, price«DataBinding » Product
+«ConditionalExpression» 
+Product= selectedProduct
+[D][L] Online [L] Local
+«ScrollableList » Online PriceList
+«DataBinding » Price
+«ConditionalExpression»
+Price.belongsTo(product) AND
+Price.locality  =  “online”
+«VisualizationAttributes » Locality, 
+currency, price«ScrollableList » LocalPriceList
+«DataBinding » Price
+«ConditionalExpression»
+Price.belongsTo(product) AND
+Price.locality = “local”
+«VisualizationAttributes »
+Locality, currency, price
+«ParamBindingGroup »
+Productproduct
+«ParamBindingGroup »
+Productproduct
+Local
+«swipeRight » 
+Online
+«swipeLeft» selectedProduct
+Fig. 13. Case study: IFML model corresponding to Online and Local tabs of product
+overview shown in gure 12. It consists of ProductDetail ViewComponent and two
+alternative lists of prices. The default one for online prices and the second displaying
+the local prices of the selected product.
+{ model-driven development: 11 man days , organized as: 1 man-day on
+graphical styling, 7 man-days on app structure design, and 3 man-days on
+client-server interaction design.
+Furthermore, both client-side teams reported a testing period of 2 weeks. Thus,
+on the core mobile app development the model driven approach allowed to save
+48% of the eort. Considering the total cost of analysis and development, this
+reduces the development cost of 21% overall.
+A thorough comparison hasn't been possible on the other industrial cases
+because of the high cost of manual development of the applications. However,
+productivity in the other cases has been at the same levels.
+7 Conclusions
+In this paper we presented a mobile extension of OMG's standard IFML (Inter-
+action Flow Modeling Language) for mobile application development. Our mod-
+eling of exemplary existing apps shows that the language is expressive enough to
+ 
+Apache Ant +  Groovy  
+ 
+Mobile Engine and 
+Template  
+ (IFML)  
+ 
+Domain model, GUI 
+and Business logic   
+Apache Cordova  
+ 
+HTML5 + CSS + JS  
+ 
+Android App  iOS App  build.phonegap.com  (1) 
+(1):   Code generation from models  (2) 
+(2):    Code wrap in Cordova container  (3.a)  (3.b)  (3.a): Android Application file (apk ) 
+(3.b): iOS Application file ( ipa) Fig. 14. Architecture for cross-platform mobile development followed in this research.
+Fig. 15. Snapshot of the opensource IFML modeling tool developed in this research.
+cover all the typical development needs on mobile. Furthermore, industrial expe-
+riences gave positive feedback on the applicability, eectiveness and eciency of
+the approach. Future works will cover the implementation of more rened code
+generators and the study of design patterns for model-driven mobile applications
+design.
+Acknowledgement. This work was partially funded by the AutoMobile EU 7th FP
+SME Research project (http://automobile.webratio.com).
+References
+1. Roberto Acerbis, Aldo Bongio, Marco Brambilla, Stefano Butti, Stefano Ceri, and
+Piero Fraternali. Web applications design and development with webml and webra-
+tio 5.0. In Richard F. Paige and Bertrand Meyer, editors, TOOLS (46) , volume 11
+ofLNBIP , pages 392{411. Springer, 2008.
+2. Luciano Baresi, Franca Garzotto, Paolo Paolini, and Paolo Paolini. From web sites
+to web applications: New issues for conceptual modeling. In ER (Workshops) , pages
+89{100, 2000.
+3. Silvia Berti, Francesco Correani, Giulio Mori, Fabio Patern o, and Carmen Santoro.
+Teresa: a transformation-based environment for designing and developing multi-
+device interfaces. In CHI Extended Abstracts , pages 793{794, 2004.
+4. Marco Brambilla, Piero Fraternali, and et al. The interaction ow modeling lan-
+guage (ifml), version 1.0. Technical report, Object Management Group (OMG),
+http://www.ifml.org, 2014.
+5. Stefano Ceri, Piero Fraternali, Aldo Bongio, Marco Brambilla, Sara Comai, and
+Maristella Matera. Designing Data-Intensive Web Applications . The Morgan Kauf-
+mann Series in Data Management Systems. Morgan Kaufmann Publishers Inc.,
+2002.
+6. J. Conallen. Building Web applications with UML . Addison Wesley, 2002.
+7. Danny M. Groenewegen, Zef Hemel, Lennart C. L. Kats, and Eelco Visser. Webdsl:
+a domain-specic language for dynamic web applications. In Gail E. Harris, editor,
+OOPSLA Companion , pages 779{780. ACM, 2008.
+8. Jaime Gmez, Cristina Cachero, Oscar Pastor, and Oscar Pastor. Conceptual mod-
+eling of device-independent web applications. pages 26{39, 2001.
+9. Robert J. K. Jacob. A Specication Language for Direct-Manipulation User Inter-
+faces. ACM Trans. Graph. , 5(4):283{317, 1986.
+10. Karl R.P.H. Leung, Lucas C.K. Hui, S.M. Hui, and Ricky W.M. Tang. Modeling
+Navigation by Statechart. In Proc. COMPSAC'00 , pages 41{47, 2000.
+11. Marino Linaje, Juan Carlos Preciado, and Fernando S anchez-Figueroa. A Method
+for Model Based Design of Rich Internet Application Interactive User Interfaces.
+InProceedings of International Conference on Web Engineering, July 16-20, 2007,
+Como, Italy , pages 226{241, 2007.
+12. Giansalvatore Mecca, Paolo Merialdo, Paolo Atzeni, Valter Crescenzi, and Val-
+ter Crescenzi. The (short) araneus guide to web-site development. In WebDB
+(Informal Proceedings) , pages 13{18, 1999.
+13. Gerrit Meixner, Kai Breiner, and Marc Seissler. Model-driven useware engineering.
+In Heinrich Hussmann, Gerrit Meixner, and Detlef Zuehlke, editors, Model-Driven
+Development of Advanced User Interfaces , volume 340 of Studies in Computational
+Intelligence , pages 1{26. Springer, Heidelberg, 2011.
+14. Fabio Patern o, Carmen Santoro, and Lucio Davide Spano. Maria: A universal,
+declarative, multiple abstraction-level language for service-oriented applications in
+ubiquitous environments. ACM Trans. Comput.-Hum. Interact. , 16(4), 2009.
+15. David Raneburger, Roman Popp, Sevan Kavaldjian, Hermann Kaindl, and J urgen
+Falb. Optimized GUI generation for small screens. In Heinrich Hussmann, Gerrit
+Meixner, and Detlef Zuehlke, editors, Model-Driven Development of Advanced User
+Interfaces , volume 340 of Studies in Computational Intelligence , pages 107{122.
+Springer Berlin / Heidelberg, 2011.
+16. Daniel Schwabe, Gustavo Rossi, and Simone D. J. Barbosa. Systematic Hyper-
+media Application Design with OOHDM. In Proc. Hypertext'96 , pages 116{128,
+1996.
+17. Daniel Schwabe, Gustavo Rossi, and Gustavo Rossi. The object-oriented hyper-
+media design model. pages 45{46, 1995.
+18. Mathias Urbieta, Gustavo Rossi, Jeronimo Ginzburg, and Daniel Schwabe. De-
+signing the Interface of Rich Internet Applications. In Proc. LA-WEB'07 , pages
+144{153, 2007.
+19. Jean Vanderdonckt. A MDA-compliant environment for developing user interfaces
+of information systems. In CAiSE , pages 16{31, 2005.
+20. Richard Vdovj ak, Flavius Fr asincar, Geert-Jan Houben, and Peter Barna. Engi-
+neering Semantic Web Information Systems in Hera. Journal of Web Engineering ,
+1(1-2):3{26, 2003.
+21. Marco Winckler and Philippe Palanque. StateWebCharts: A Formal Description
+Technique Dedicated to Navigation Modelling of Web Applications. In Proc. Intl.
+Workshop on Design, Specication and Verication of Interactive Systems , pages
+279{288, 2003.

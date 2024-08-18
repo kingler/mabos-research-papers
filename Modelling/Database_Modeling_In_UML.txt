@@ -1,0 +1,476 @@
+Introduction
+When it comes to providing reliable,
+flexible and efficient object persistencefor software systems, today's designersand architects are faced with manychoices. From the technologicalperspective, the choice is usuallybetween pure Object-Oriented, Object-Relational hybrids, pure Relational andcustom solutions based on open orproprietary file formats (eg. XML,OLE structured storage). From thevendor aspect Oracle, IBM, Microsoft,POET and others offer similar butoften-incompatible solutions.
+This article is about only one of those
+choices, that is the layering of anobject-oriented class model on top of apurely relational database. This is notto imply this is the only, best orsimplest solution, but pragmatically itis one of the most common, and onethat has the potential for the mostmisuse.
+We will begin with a quick tour of the
+two design domains we are trying tobridge: firstly the object-oriented classmodel as represented in the UML, andsecondly the relational database model.
+For each domain we look only at the
+main features that will affect our task.
+We will then look at the techniquesand issues involved in mapping fromthe class model to the database model,including object persistence, objectbehaviour, relationships betweenobjects and object identity. We willconclude with a review of the UMLData Profile (as proposed by Rational
+Software).Some familiarity with object-orienteddesign, UML and relational databasemodelling is assumed.
+The Class Model
+The Class Model in the UML is themain artefact produced to represent thelogical structure of a software system.It captures the both the datarequirements and the behaviour ofobjects within the model domain. Thetechniques for discovering andelaborating that model are outside thescope of this article, so we will assumethe existence of a well designed classmodel that requires mapping onto arelational database.
+The class is the basic logical entity in
+the UML. It defines both the data andthe behaviour of a structural unit. Aclass is a template or model fromwhich instances or objects are createdat run time. When we develop a logicalmodel such as a structural hierarchy inUML we explicitly deal with classes.
+When we work with dynamic
+diagrams, such as sequence diagramsand collaborations, we work withobjects or instances of classes and their
+inter-actions at run-time.
+The principal of data hiding or
+encapsulation is based on localisationof effect. A class has internal dataelements that it is responsible for.Access to these data elements shouldbe through the class's exposedbehaviour or interface. Adherence toDatabase Modelling in UML
+By Geoffrey Sparks, sparks@sparxsystems.com.au : http://www.sparxsystems.com.au
+Originally published in Methods & Tools e-newsletter : http://www.martinig.ch/mt/index.html
+this principal results in more
+maintainable code.
+Behaviour
+Behaviour is captured in the class
+model using the operations that aredefined for the class. Operations maybe externally visible (public), visible tochildren (protected) or hidden(private). By combining hidden datawith a publicly accessible interface andhidden or protected data manipulation,a class designer can create highlymaintainable structural units thatsupport rather than hinder change.
+Relationships and Identity
+Association is a relationship between 2
+classes indicating that at least one side
+of the relationship knows about andsomehow uses or manipulates the otherside. This relationship may byfunctional (do something for me) orstructural (be something for me). Forthis article it is the structuralrelationship that is most interesting: for
+example an Address class may beassociated with a Person class. Themapping of this relationship into therelational data space requires somecare.
+Aggregation is a form of association
+that implies the collection of one class
+of objects within another. Compositionis a stronger form of aggregation thatimplies one object is actuallycomposed of others. Like theassociation relationship, this implies acomplex class attribute that requirescareful consideration in the process ofmapping to the relational domain.
+While a class represents the template
+or model from which many objectinstances may be created, an object atrun time requires some means ofidentifying itself such that associatedobjects may act upon the correct objectinstance. In a programming languagelike C++, object pointers may bepassed around and held to allowPerson
+- Address:  CAddress
+#Name:
+St i# Age:  double
++ getAge() : int
++ setAge(n)
++getName() :
+St i+s e t N a m e ( s )Class attributes :
+the encapsulated
+data
+Class operations:
+the behaviour
+Attributes and operations define the state of an object
+trun-time and the capabilities or behaviour of the
+bj tPerson
+A simple person class
+with no state or
+behaviour shown
+Figure 1  - Classes, attributes and operations
+objects access to a unique object
+instance.Often though, an object will bedestroyed and require that it be re-created as it was during its last activeinstance. These objects require astorage mechanism to save theirinternal state and associations into andto retrieve that state as required.
+Inheritance provides the class model
+with a means of factoring out common
+behaviour into generalised classes thatthen act as the ancestors of manyvariations on a common theme.Inheritance is a means of managingboth re-use and complexity. As we willsee, the relational model has no directcounterpart of inheritance, whichcreates a dilemma for the datamodeller mapping an object modelonto a relational framework.
+Navigation from one object at run time
+to another is based on absolute
+references. One object has some formof link (a pointer or unique object ID)with which to locate or re-create the
+required object.
+The Relational Model
+The relational data model has been
+around for many years and has aproven track record of providingperformance and flexibility. It isessentially set based and has as itsfundamental unit the 'table', which iscomposed of a set of one or more'columns', each of which contains adata element.
+Tables and Columns
+A relational table is collection of one
+or more columns each of which has aunique name within the table construct.Each column is defined to be of acertain basic data type, such as anumber, text or binary data. A tabledefinition is a template from whichtable rows are created, each row beingan instance of a possible table instance.
+ParentPerson
+Child
+Association captures
+a having or using
+relationship between
+classesA class hierarchy
+showing a generalised
+person class fromwhich other classes
+are derivedFamily Aggregation captures the concept
+ofcollection or composition between classes
+The main relationships we are
+interested in are Association,
+Aggregation and Inheritance.
+Thesedescribe the ways classes interactor relate to each
+other21..n
+Figure 2  - UML Class model notation
+Public Data Access
+The relational model only offers a
+public data access model. All data isequally exposed and open to anyprocess to update, query or manipulateit. Information hiding is unknown.
+Behaviour
+The behaviour associated with a table
+is usually based on the business orlogical rules applied to that entity.
+Constraints may be applied to columns
+in the form of uniqueness
+requirements, relational integrity
+constraints to other tables/rows,
+allowable values and data types.
+Triggers provide some additional
+behaviour that can be associated with
+an entity. Typically this is used toenforce data integrity before or afterupdates, inserts and deletes.Database stored procedures provide a
+means of extending database
+functionality through proprietarylanguage extensions used to constructfunctional units (scripts). Thesefunctional procedures do not mapdirectly to entities, nor have a logicalrelationship to them.
+Navigation through relational data sets
+is based on row traversal and table
+joins. SQL is the primary languageused to select rows and locateinstances from a table set.
+Relationships and Identity
+The primary key of a table provides the
+unique identifying value for aparticular row. There are two kinds ofprimary key that we are interested in:firstly the meaningful key, made up ofdata columns which have a meaningwithin the business domain, andsecond the abstract unique identifier,such as a counter value, which have noPerson ID DocumentShare
+AddressA Person ma y
+reside at zero
+or more
+addresses
+An Address may
+have zero or
+more Persons in
+residenceA Person is composed of
+a strict set of ID
+documents (having n
+elements)A Person ma y
+own a set ofShares
+Three forms of the Aggregation relationship. The weak form isdepicted with an unfilled diamond head, the strong form(composition) with a filled head.n10..n
+0..1
+0..n0..n
+Figure 3- Aggregation Relationships
+business meaning but uniquely identify
+a row. We will discuss this and theimplications of meaningful keys later.
+A table may contain columns that map
+to the primary key of another table.This relationship between tablesdefines a foreign key and implies a
+structural relationship or associationbetween the two tables.
+Summary
+From the above overview we can seethat the object model is based ondiscrete entities having both state(attributes/data) and behaviour, withaccess to the encapsulated datagenerally through the class publicinterface only. The relational modelexposes all data equally, with limitedsupport for associating behaviour withdata elements through triggers, indexesand constraints.
+You navigate to distinct information in
+the object model by moving fromobject to object using unique objectidentifiers and established objectrelationships  (similar to a networkdata model). In the relational modelyou find rows by joining and filteringresult sets using SQL using generalisedsearch criteria.
+Identity in the object model is either a
+run-time reference or persistent uniqueID (termed an OID). In the relationalworld, primary keys define theuniqueness of a data set in the overalldata space.
+In the object model we have a rich set
+of relationships: inheritance,aggregation, association, composition,dependency and others. In therelational model we can really onlyspecify a relationship using foreignkeys.Having looked at the two domains of
+interest and compared some of theimportant features of each, we willdigress briefly to look at the notationproposed to represent relational datamodels in the UML.
+The UML Data Model Profile
+The Data Model Profile is a proposed
+UML extension  (and currently underreview - Jan 2001) to support themodelling of relational databases inUML. It includes custom extensionsfor such things as tables, data baseschema, table keys, triggers andconstraints. While this is not a ratifiedextension, it still illustrates onepossible technique for modelling arelational database in the UML.
+Tables
+Customer
+A table in the UML Data Profile is a
+class with the «Table» stereotype,displayed as above with a table icon inthe top right corner.
+Columns
+Customer
+PK OID:  int
+Name:  VARCHAR2
+Address:  VARCHAR2
+Database columns are modelled as
+attributes of the «Table» class. Forexample, the figure above shows someattributes associated with the Customer
+table. In the example, an object id has
+been defined as the primary key, as
+well as two other columns, Name and
+Address. Note that the example abovedefines the column type in terms of thenative DBMS data types.
+Behaviour
+So far we have only defines the logical
+(static) structure of the table; inaddition we should describe thebehaviour associated with columns,including indexes, keys, triggers,procedures & etc. Behaviour isrepresented as stereotyped operations.
+The figure below shows our tableabove with a primary key constraintand index, both defined as stereotypedoperations:
+Customer
+PK OID:  int
+Name:  VARCHAR2
+Address:  VARCHAR2
++ «PK» idx_customer00()+ «index» idx_customer01()
+Note that the PK flag on the column
+'OID' defines the logical primary key,while the stereotyped operation "«PK»idx_customer00" defines theconstraints and behaviour associatedwith the primary key implementation(that is, the behaviour of the primarykey).
+Adding to our example, we may now
+define additional behaviour such astriggers, constraints and storedprocedures as in the example below:
+Customer
+PK OID:  int
+Name:  VARCHAR2
+Address:  VARCHAR2
++ «PK» idx_customer00()+ «FK» idx_customer02()+ «Index» idx_customer01()+ «Trigger» trg_customer00()+ «Unique» unq_customer00()+ «Proc» spUpdateCustomer()+ «Check» chk_customer00()
+The example illustrates the following
+possible behaviour:
+1. A primary key constraint (PK);
+2. A Foreign key constraint (FK);
+3. An index constraint (Index);
+4. A trigger (Trigger);
+5. A uniqueness constraint (Unique);
+6. A stored procedure (Proc) - not
+formally part of the data profile,but an example of a possiblemodelling technique; and a
+7. Validity check (Check).
+Using the notation provided above, it is
+possible to model complex datastructures and behaviour at the DBMS
+level. In addition to this, the UML
+provides the notation to expressrelationships between logical entities.
+Relationships
+The UML data modelling profile
+defines a relationship as a dependencyof any kind between two tables. It isrepresented as a stereotypedassociation and includes a set ofprimary and foreign keys.
+The data profile goes on to require that
+a relationship always involves a parentand child, the parent defining aprimary key and the childimplementing a foreign key based onall or part of the parent primary key.
+The relationship is termed 'identifying'
+if the child foreign key includes all the
+elements of the parent primary key and
+'non-identifying' if only some elementsof the primary key are included.
+The relationship may include
+cardinality constraints and be modelledwith the relevant PK - FK pair namedas association roles. Figure 4 illustratesthis kind of relationship modellingusing UML.
+The Physical Model
+UML also provides some mechanisms
+for representing the overall physicalstructure of the database, its contentsand deployed location. To represent aphysical database in UML, use astereotyped component as in the figurebelow:
+«Database»
+MainOraDB
+A component represents a discrete and
+deployable entity within the model. Inthe physical model, a component maybe mapped on to a physical piece ofhardware (a 'node' in UML).
+To represent schema within the
+database, use the «schema» stereotypeon a package. A table may be placed ina «schema» to establish its scope andlocation within a database.
+ «schema»
+User
+Child
+Grandchild
+Grandparent
+Parent
+Person
+Mapping from the Class Model to
+the Relational Model
+Having described the two domains of
+interest and the notation to be used, wecan now turn our attention as to how tomap or translate from one domain tothe other. The strategy and sequencepresented below is meant to besuggestive rather than proscriptive -adapt the steps and procedures to yourpersonal requirements and
+Parent
+ Child
+An identifying relationship between child and parent, with role names
+based on primary to foreign key relationship.PK_PersonID
+2«identifying»FK_PersonID
+0..n
+Figure 4 - UML relationship
+environment.
+1. Model Classes
+Firstly we will assume we are
+engineering a new relational databaseschema from a class model we havecreated. This is obviously the easiestdirection as the models remain underour control and we can optimise therelational data model to the classmodel. In the real world it may be thatyou need to layer a class model on topof a legacy data model - a moredifficult situation and one that presentsits own challenges. For the currentdiscussion will focus on the firstsituation. At a minimum, your classmodel should capture associations,inheritance and aggregation betweenelements.
+2. Identify persistent objects
+Having built our class model we need
+to separate it into those elements thatrequire persistence and those that donot. For example, if we have designedour application using the Model-View-Controller design pattern, then onlyclasses in the model section wouldrequire persistent state.
+3. Assume each persistent class maps
+to one relational table
+A fairly big assumption, but one that
+works in most cases (leaving theinheritance issue aside for themoment). In the simplest model a classfrom the logical model maps to arelational table, either in whole or inpart. The logical extension of this isthat a single object (or instance of aclass) maps to a single table row.
+4. Select an inheritance strategy
+Inheritance is perhaps the most
+problematic relationship and logicalconstruct from the object-oriented
+model that requires translating into therelational model. The relational spaceis essentially flat, every entity beingcomplete in its self, while the objectmodel is often quite deep with a well-developed class hierarchy.
+The deep class model may have many
+layers of inherited attributes andbehaviour, resulting in a final, fullyfeatured object at run-time. There arethree basic ways to handle thetranslation of inheritance to a relationalmodel:
+1. Each class hierarchy has a single
+corresponding table that contains
+all the inherited attributes for allelements - this table is therefore theunion of every class in thehierarchy. For example, Person,Parent, Child and Grandchild mayall form a single class hierarchy,and elements from each will appearin the same relational table;
+2. Each class in the hierarchy has a
+corresponding table of only the
+attributes accessible by that class(including inherited attributes). Forexample, if Child is inherited fromPerson only, then the table willcontain elements of Person andChild only;
+3. Each generation in the class
+hierarchy has a table containing
+only that generation's actualattributes. For example, Child willmap to a single table with Childattributes only
+There are cases to be made for each
+approach, but I would suggest thesimplest, easiest to maintain and lesserror prone is the third option. The firstoption provides the best performanceat run-time and the second is acompromise between the first and last.
+The first option flattens the hierarchy
+and locates all attributes in one table -
+convenient for updates and retrievalsof any class in the hierarchy, butdifficult to authenticate and maintain.Business rules associated with a roware hard to implement, as each rowmay be instantiated as any object in thehierarchy. The dependencies betweencolumns can become quitecomplicated. In addition, an update toany class in the hierarchy willpotentially impact every other class inthe hierarchy, as columns are added,deleted or modified from the table.
+The second option is a compromise
+that provides better encapsulation and
+eliminates empty columns. However, achange to a parent class may need tobe replicated in many child tables.
+Even worse, the parental data in two ormore child classes may be redundantlystored in many tables; if a parent'sattributes are modified, there isconsiderable effort in locatingdependent children and updating theaffected rows.
+The third option more accurately
+reflects the object model, with eachclass in the hierarchy mapped to itsown independent table. Updates to
+parents or children are localised in thecorrect space. Maintenance is alsorelatively easier, as any modificationof an entity is restricted to a singlerelational table also. The down side isthe need to re-construct the hierarchyat run-time to accurately re-create a
+tbl_Parent
+AddressOID:  VARCHAR
+Name:  VARCHAR
+PK OID:  VARCHAR
+Sex:  VARCHARParent
+- OID:  GUID
+# Name:  String
+# Sex:  Gender
++ setName(String)+ getName() : String
++ setSex(String)+ getSex() : String
+Address
+- OID:  GUID
+# City:  String
+# Phone:  String# State:  String
+# Street:  String
++ getCity() : String+ getStreet() : String
++ setCity(String)+ setStreet(String)
+tbl_Address
+City:  VARCHAR
+PK OID:  VARCHAR
+Phone:  VARCHAR
+State:  VARCHAR
+Street:  VARCHARThe Address association from the logical model becomes 
+a foreign key relationship in the data modelA Parent class with unique ID (OID) 
+and Name and Sex attributes maps to a relational table.
+The Address class in the logical 
+model becomes a table in the 
+data model
+<<realises>>m_Address 0..n
+1<<realises>>
+Figure 5 - Class to Table mapping
+child class's state. A Child object may
+require a Person member variable torepresent their model parentage. Asboth require loading, two databasecalls are required to initialise oneobject. As the hierarchy deepens, withmore generations, the number ofdatabase calls required to initialise orupdate a single object increases.
+It is important to understand the issues
+that arise when you map inheritanceonto a relational model, so you candecide which solution is right for you.
+5.  For each class add a unique
+object identifier
+In both the relational and the object
+world, there is the need to uniquelyidentify an object or entity.
+In the object model, non-persistent
+objects at run-time are typicallyidentified by direct reference or by apointer to the object. Once an object iscreated, we can refer to it by its run-time identity. However, if we write outan object to storage, the problem ishow to retrieve the exact same instanceon demand.
+The most convenient method is to
+define an OID (object identifier) that isguaranteed to be unique in thenamespace of interest. This may be atthe class, package or system level,depending on actual requirements.
+An example of a system level OID
+might be a GUID (globally uniqueidentifier) created with Microsoft's'guidgen' tool; eg.  {A1A68E8E-CD92-420b-BDA7-118F847B71EB}. A classlevel OID might be implemented usinga simple numeric (eg. 32 bit counter).
+If an object holds references to other
+objects, it may do so using their OID.A complete run-time scenario can then
+be loaded from storage reasonablyefficiently.
+An important point about the OID
+values above is that they have noinherent meaning beyond simpleidentity. They are only logical pointersand nothing more. In the relationalmodel, the situation is often quitedifferent.
+Identity in the relational model is
+normally implemented with a primary
+key. A primary key is a set of columnsin a table that together uniquelyidentify a row. For example, name andaddress may uniquely identify a'Customer'.  Where other entities, suchas a 'Salesperson', reference the'Customer', they implement a foreignkey based on the 'Customer' primarykey.
+The problem with this approach for our
+purposes is the impact of havingbusiness information (such as customername and address) embedded in theidentifier. Imagine three or four tablesall have foreign keys based on thecustomer primary key, and a systemchange requires the customer primarykey to change (for example to include'customer type'). The work required tomodify both the 'customer' table andthe entities related by foreign key isquite large.
+On the other hand, if an OID was
+implemented as the primary key andformed the foreign key for other tables,the scope of the change is limited tothe primary table and the impact of thechange is therefore much less.
+Also, in practice, a primary key based
+on business data may be subject tochange. For example a customer maychange address or name. In this casethe changes must be propagated
+correctly to all other related entities,
+not to mention the difficulty ofchanging information that is part of theprimary key.
+An OID always refers to the same
+entity - no matter what otherinformation changes. In the aboveexample, a customer may change nameor address and the related tablesrequire no change.
+When mapping object models into
+relational tables, it is often moreconvenient to implement absoluteidentity using OID's rather thanbusiness related primary keys. TheOID as primary and foreign keyapproach will usually give better loadand update times for objects andminimise maintenance effort. Inpractice, a business related primarykey might be replaced with:
+1. A uniqueness constraint or index
+on the columns concerned;
+2. Business rules embedded in the
+class behaviour;
+3. A combination of 1 and 2.
+Again, the decision to use meaningful
+keys or OID's will depend on the exactrequirements of the system beingdeveloped.
+6.  Map attributes to columns
+In general we will map the simple data
+attributes of a class to columns in the
+relational table. For example a text andnumber field may represent a person'sname and age respectively. This sort ofdirect mapping should pose noproblem - simply select the appropriatedata type in the vendor's relationalmodel to host your class attribute.
+For complex attributes (ie. attributes
+that are other objects) use the approachdetailed below for handling
+associations and aggregation.
+7.  Map associations to foreign keys
+More complex class attributes (ie.
+those which represent other classes),are usually modelled as associations.An association is a structuralrelationship between objects. Forexample, a Person may live at anAddress. While this could be modelledas a Person has City, Street and Zipattributes, in both the object and therelational world we are inclined tostructure this information as a separateentity, an Address.
+In the object domain an address
+represents a unique physical object,possibly with a unique OID. In therelational, an address may be a row inan Address table, with other entitieshaving a foreign key to the Addressprimary key.
+In both models then, there is the
+tendency to move the addressinformation into a separate entity. Thishelps to avoid redundant data andimproves maintainability.
+So for each association in the class
+model, consider creating a foreign keyfrom the child to the parent table.
+8. Map Aggregation and
+Composition
+Aggregation and composition
+relationships are similar to theassociation relationship and map totables related by primary-foreign keypairs.  There are however, some pointsto bear in mind.
+Ordinary aggregation (the weak form)
+models relationships such as a Personresides at one or more Addresses. Inthis instance, more than one personcould live at the same address, and ifthe Person ceased to exist, theAddresses associated with them wouldstill exist. This example parallels themany-to-many relationship inrelational terminology, and is usuallyimplemented as a separate tablecontaining a mapping of primary keysfrom one table to the primary keys ofanother.
+A second example of the weak form of
+aggregation is where an entity has useor exclusive ownership of another. Forexample, a Person entity aggregates aset of shares. This implies a Personmay be associated with zero or moreshares from a Share table, but each
+Share may be associated with zero orone Person. If the Person ceases toexist, the Shares become un-owned orare passed to another Person. In therelational world, this could beimplemented as each Share having an'owner' column which stored a PersonID (or OID) .
+The strong form of aggregation,
+however, has important integrityconstraints associated with it.Composition, implies that an entity iscomposed of parts, and those partshave a dependent relationship to thewhole. For example, a Person mayhave identifying documents such as aPassport, Birth Certificate, Driver'sLicense & etc. A Person entity may becomposed of the set of such identifyingdocuments. If the Person is deletedfrom the system, then the identifyingdocuments must be deleted also, asthey are mapped to a uniqueindividual.
+If we ignore the OID issue for the
+moment, a weak aggregation could beimplemented using either anintermediate table (for the many-to-
+Customer
+PK OID:  int
+Name:  VARCHAR2
+Address:  VARCHAR2
+Salesperson:  int
++ «PK» PK_Customer()+ «FK» FK_SalesPerson()
+Salesperson
+PK OID:  int
+Name:  VARCHAR2Department:  VA RCHAR2
++ «PK» PK_Salesperson()
+Relationships are based on the PK- FK pair. This example relates a Salesperson to a
+Customer by the appropriate primary and foreign keys. The assumption is that acustomer may only be associated with one salesperson.PK_Salesperson
+1FK_Salesperson
+0..*
+Figure 6 -  Table relationships in UML
+many case) or with a foreign key in the
+aggregated class/table (one-to-manycase). In the case of the many-to-manyrelationship, if the parent is deleted,the entries in the intermediate table forthat entity must also be deleted also. Inthe case of the one-to-manyrelationship, if the parent is deleted,the foreign key entry (ie. 'owner') mustbe cleared.
+In the case of composition, the use of a
+foreign key is mandatory, with theadded constraint that on deletion of theparent the part must be deleted also.Logically there is also the implicationwith composition that the primary keyof the part forms part of the primarykey of the whole - for example, aPerson's primary key may composed oftheir identifying documents ID's. Inpractice this would be cumbersome,but the logical relationship holds true.
+9. Define relationship roles
+For each association type relationship,
+each end of the relationship may befurther specified with role information.Typically, you will include the PrimaryKey constraint name and the ForeignKey Constraint name. Figure 6illustrates this concept. This logicallydefines the relationship between thetwo classes.
+In addition, you may specify additional
+constraints (eg. {Not NULL}) on therole and cardinality constraints (eg.0..n).
+10. Model behaviour
+We now come to another difficult
+issue: whether to map some or all classbehaviour to the functional capabilitiesprovided by database vendors in theform of triggers, stored procedures,uniqueness and data constraints, and
+relational integrity.
+A non-persistent object model would
+typically implement all the behaviourrequired in one or more programminglanguages (eg. Java or C++). Eachclass will be given its requiredbehaviour and responsibilities in theform of public, protected and privatemethods.
+Relational databases from different
+vendors typically include some form ofprogrammable SQL based scriptinglanguage to implement datamanipulation. The two commonexamples are triggers and storedprocedures.
+When we mix the object and relational
+models, the decision is usually whetherto implement all the business logic inthe class model, or to move some tothe often more efficient triggers andstored procedures implemented in therelational DBMS.
+From a purely object-oriented point of
+view, the answer is obviously to avoidtriggers and stored procedures andplace all behaviour in the classes. Thislocalises behaviour, provides for acleaner design, simplifies maintenanceand provides good portability betweenDBMS vendors.
+In the real world, the bottom line may
+be scaling to 100's or 1000's oftransactions per second, somethingstored procedures and triggers arepurpose designed for.
+If purity of design, portability,
+maintenance and flexibility are themain drivers, localise all behaviour inthe object methods.
+If performance is an over-riding
+concern, consider delegating some
+behaviour to the more efficient DBMS
+scripting languages. Be aware thoughthat the extra time taken to integratethe object model with the storedprocedures in a safe way, includingissues with remote effects anddebugging, may cost more indevelopment time than simplydeploying to more capable hardware.
+As mentioned earlier, the UML Data
+Profile provides the followingextensions (stereotyped operations)with which you can model DBMSbehaviour:
+! Primary key constraint (PK);
+! Foreign key constraint (FK);
+! Index constraint (Index);
+! Trigger (Trigger);
+! Uniqueness constraint (Unique);
+! Validity check (Check).
+11. Produce a  physical modelIn UML, the physical model describes
+how something will be deployed intothe real world - the hardware platform,network connectivity, software,operating system, dll's and othercomponents. You produce a physicalmodel to complete the cycle - from aninitial use case or domain model,through the class model and datamodels and finally the deploymentmodel.
+Typically for this model you will
+create one or more nodes that will hostthe database(s) and place DBMSsoftware components on them. If thedatabase is split over more than oneDBMS instance, you can assignpackages (
+«schema ») of tables to a
+single DBMS component to indicatewhere the data will reside.
+Conclusion
+This concludes this short article on
+database modelling using the UML. As
+MainServer«schema»
+System
+sys_aliases
+sys_procs
+sys_queries
+sys_tables
+sys_users
+«schema»Us e r
+Child
+Grandchild
+Grandparent
+Par ent
+Per s on«Database»
+MainOraD B
+A Node is a physical piece of hardw are (such as a Unix server) on w hich components are deployed. The 
+database component in this example is also mapped to tw o logical «schema», each of w hich contains a 
+number of tables.
+Figure 7 - The Physical Model
+you can see, there are quite a few
+issues to consider when mapping fromthe object world to the relational. TheUML provides support for bridging thegap between both domains, andtogether with extensions such as theUML Data Profile is a good languagefor successfully integrating bothworlds.
+References
+Muller, Robert J., Database Design for
+Smarties , Morgan Kaufman, 1999.
+Rational Software, The UML and Data
+Modelling,  Rational Software
+Ambler, Scott W., Mapping Objects to
+Relational Databases , AmbySoft inc,
+1999
+About the Author
+Geoffrey Sparks is the director of
+Sparx Systems, an Australian companythat specialises in UML tools.
+The Sparx Systems web site is at:
+www.sparxsystems.com.au
+Geoffrey may be contacted atsparks@sparxsystems.com.au
+A quick summary guide to data modelling in UML
+1. Create a class model for your development domain
+2. Identify persistent classes from the model
+3. Assume each persistent class in the model will map to one relational table
+4. Select a suitable inheritance strategy for each class hierarchy
+5. For each class add a unique ID (OID) or select a suitable primary key
+6. For each class map simple data types to table columns
+7. For each class, map complex attributes (association, aggregation) to PK/ FK pairs. Take
+special note of the strong and weak forms of aggregation.
+8. For related classes, map PK, FK pairs naming the role ends according to selected key.
+9. Label relationship roles with their appropriate cardinality and stereotype: <<identifying>>
+or <<non-identifying>>
+10. Add stereotyped operations for table behaviour (keys, indexes, uniqueness, checks, and
+triggers)
+11. Divide persistent classes into logical schema
+12. Create a deployment model and link database components to physical nodes

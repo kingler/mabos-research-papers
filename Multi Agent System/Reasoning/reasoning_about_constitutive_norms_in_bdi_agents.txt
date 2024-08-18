@@ -1,0 +1,1357 @@
+See discussions, st ats, and author pr ofiles f or this public ation at : https://www .researchgate.ne t/public ation/270528612
+Reasoning about constitutive norms in BDI agents
+Article    in  Logic Journal of IGPL  · Januar y 2013
+DOI: 10.1093/ jigp al/jzt035
+CITATIONS
+9READS
+63
+4 author s, including:
+Some o f the author s of this public ation ar e also w orking on these r elat ed pr ojects:
+Priv acy and Ac cess Contr ol in Social Media  View pr oject
+RePriCo: R esolving Multip arty Priv acy Conflicts in Social Media  View pr oject
+Natalia Criado
+King' s Colle ge London
+66 PUBLICA TIONS    527 CITATIONS    
+SEE PROFILE
+Pablo Norie ga
+Spanish National R esearch Council
+132 PUBLICA TIONS    2,298  CITATIONS    
+SEE PROFILE
+V. Botti
+Univ ersitat P olitècnic a de V alència
+355 PUBLICA TIONS    3,407  CITATIONS    
+SEE PROFILE
+All c ontent f ollo wing this p age was uplo aded b y Natalia Criado  on 16 June 2015.
+The user has r equest ed enhanc ement of the do wnlo aded file.
+Logic Journal of the IGPL manuscript No.
+(will be inserted by the editor)
+Reasoning About Constitutive Norms in BDI Agents
+N. Criado E. Argente P. Noriega 
+V. Botti
+Received: date / Accepted: date
+Abstract Software agents can be members of dierent institutions along their
+life; they might even belong to dierent institutions simultaneously. For these
+reasons, agents need capabilities that allow them to determine the repercussion
+that their actions would have within the dierent institutions. This associa-
+tion between the physical word, in which agents' interactions and actions take
+place, and the institutional world is dened by means of constitutive norms.
+Currently, the problem of how agents reason about constitutive norms has
+been tackled from a theoretical perspective only. Thus, there is a lack of more
+practical proposals that allow the development of software agents capable of
+reasoning about constitutive norms. In this article we propose an informa-
+tion model, knowledge representation and an inference mechanism to enable
+Belief-Desire-Intention (BDI) agents to reason about the consequences of their
+actions on the institutions and making decisions accordingly. Specically, the
+information model, knowledge representation and inference mechanism pro-
+posed in this paper allows agents to keep track of the institutional state given
+that they have a physical presence in some real-world environment. Agents
+have a limited and not fully believable knowledge of the physical world (i.e.,
+they are placed in an uncertain environment). Therefore, our proposal also
+deals with the uncertainty of the environment.
+N. Criado
+University of Bolton, Deane Rd, Bolton, Greater Manchester BL3 5AB
+n.criado@bolton.ac.uk
+E. ArgenteV. Botti
+Departament de Sistemes Inform atics y Computaci o, Universitat Polit ecnica de Val encia,
+Camino de Vera s/n. 46022 Valencia (Spain)
+feargente,vbottig@dsic.upv.es
+P. Noriega
+Institut d'Investigaci o en Intel.lig encia Articial, Consejo Superior de Investigaciones
+Cient cas, Campus de la UAB, Bellaterra, Catalonia (Spain)
+pablo@iiia.csic.es
+2 N. Criado et al.
+Keywords Constitutive Norms InstitutionsBDI AgentsMulti-agent
+Systems
+1 Introduction
+The term norm has been traditionally used in the multi-agent system (MAS)
+area to refer to regulative norms [7] that dene patterns of behaviour aimed at
+regulating the actions of software agents and the interactions among them1.
+However, norms can be employed in MAS not only for regulation issues, but
+also for establishing social institutions that give rise to new types of facts.
+These facts are called institutional facts since they only make sense within
+institutions [32]. This type of norms is known as constitutive norms since they
+create the institutional reality; i.e., they regulate the creation of institutional
+facts. \Raising your arm in an auction counts as bidding" is a well-known
+example of constitutive norm.
+Traditionally, constitutive norms have been used as bricks for building the
+ontology of institutions [20]. These contextual ontologies dene a link between
+abstract concepts in which regulative norms are dened to the brute facts that
+take place in the application domain. Thus, constraints aimed at achieving the
+desired behaviour (i.e., the regulative norms) are specied at a higher abstract
+level (i.e., in terms of institutional facts) in order to allow dierent situations
+to be controlled through a reduced set of norms [1,35].
+We claim that constitutive norms are not only simple bricks for building
+institutional ontologies used on the denition of regulative norms, but they also
+allow agents to infer the consequences of their actions over the institutional
+state (e.g., constitutive norms allow agents to know that they cannot raise
+their arm in an auction if they do not want to make a bid). As a consequence,
+agents need to consider constitutive norms not only for translating abstract
+regulative norms into specic ones, but also for selecting the most suitable
+actions according to their goals and the institutional repercussions [20].
+For example, a virtual assistant agent that imitates the behaviour of a
+human seller must be endowed with capabilities that allow it to participate
+in dierent and, even unknown, e-markets such as eBAY2or Amazon3. Each
+e-market is an institution that has constitutive norms that dene the protocols
+and ontology that is used within this institution. For example, an actual e-
+market might have its own constitutive norms that dene the process by which
+purchase contracts are formalised, the mechanism that must be used to open
+a new auction, etc. As a consequence, the virtual assistant agent requires
+capabilities for reasoning about constitutive norms and knowing the specic
+mechanisms and protocols by which the trading operations are performed in
+1The norm concept has been ambiguously employed inside the MAS area as a synonym
+of law, guideline, criterion, social expectation, etc. For a review of the dierent denitions
+given to the norm concept see [15].
+2http://www.ebay.com
+3http://www.amazon.com
+Reasoning About Constitutive Norms in BDI Agents 3
+each market. These capabilities are also required in scenarios controlled by
+constitutive norms such as: social simulation scenarios, environments in which
+humans and agents interact in a realistic way, scenarios in which humans
+delegate tasks to personal software agents, and so on. In these scenarios, agents
+should represent constitutive norms explicitly to be able to determine if they
+are relevant and take these norms into account to make decisions accordingly.
+In the literature, several proposals have been made in order to dene agents
+endowed with capabilities for reasoning about regulative norms [10,14,26].
+However, the role of constitutive norms in agent reasoning has not been con-
+sidered in depth and there is a lack of agent decision making procedures that
+consider constitutive norms.
+This paper answers one main question: \Is it possible to develop agents that
+consider the institutional state by reasoning about constitutive norms?". This
+question entails the development of agents that are capable of reasoning about
+constitutive norms and determining the changes that occur in the institutional
+state. A suitable solution to this problem must take into account the fact that
+agents are situated in the real world. Thus, agents have uncertain knowledge
+about the current state of their environment.
+In this paper, we propose to endow BDI agents with an information model,
+knowledge representation and an inference mechanism for reasoning about con-
+stitutive norms. Thus, our proposal brings agents the possibility of reasoning
+about the possible interpretations of their actions within dierent institutions
+and making decisions accordingly. Finally, we performed some experiments to
+evaluate the usefulness of our approach when it is used to reason about con-
+stitutive norms in uncertain environments. Specically, these experiments are
+aimed at determining to what extent our proposal allows agents situated in
+uncertain environments to keep track of the institutional state.
+This paper is structured as follows: Section 2 describes some related work;
+Section 3 provides the basic denitions used in this paper; Section 4 describes
+the information model, knowledge representation and inference mechanisms
+for reasoning about constitutive norms; Section 5 describes the main agent
+types that can be dened with our proposal; Section 6 contains an example
+that illustrates how our proposal enables BDI agents to represent and reason
+about constitutive norms; Section 7 describes the dierent experiments that
+we carried out; and Section 8 concludes the paper and discusses some possible
+directions for future work.
+2 Related Work
+The notion of constitutive norm was dened by philosophy in [29]. In this
+work, Rawls introduces the notion of constitutive norms (or constitutive rules4
+4Note that constitutive norms have been also called constitutive rules. For example,
+Rawls and Searle refer to them by using the term constitutive rules. Within the MAS eld
+the term constitutive norm has been widely used [7,34,30]. Given that our proposal belongs
+to the MAS eld, we have adopted the term constitutive norm in this article.
+4 N. Criado et al.
+according to Rawls's terminology) as rules that dene the very institutions.
+However, the most well-known and referred proposal on constitutive norms
+was made by Searle in [33,31,32]. In these papers Searle proposes a classica-
+tion of norms into regulative and constitutive ones. Regulative norms regulate
+forms of behaviour that exist independently and antecedently to them. Con-
+stitutive norms create or dene these forms of behaviour controlled by regula-
+tive norms. In particular, constitutive norms dene the count-as relationship
+which denes how the institutional world (i.e., the institutional facts) is built
+in terms of actions or state of aairs occurring in the physical world (i.e., brute
+facts). Therefore, constitutive norms specify under which conditions a brute
+fact count-as an institutional fact.
+In the Articial Intelligence eld, the modelling of the count-as relationship
+has been introduced by Jones and Sergot in [24]. In this work, they propose
+the formalization of the count-as relationship in any action logic by means of
+the)soperator. In this sense, the expression X)sYmeans that \within
+the context soccurrence of Xcount-asY". In the existing literature, several
+variations of the)soperator have been proposed [21,18,20]. For example, in
+[21] Grossi and Dignum have proposed an alternative denition of the count-as
+connective for dealing with non-monotonicity. Mainly, they propose to redene
+X)sFas \in context s,Xcount-asYif it is not inconsistent". Governatori et
+al. propose in [18] to model both the count-as connective and other normative
+links by means of a unique non-monotonic conditional. In [22], Grossi et al.
+used modal logic to capture distinct meanings of the count-as relationship.
+In the MAS eld, constitutive norms are used as bricks for building the
+ontology of institutions [20]. These contextual ontologies dene a link between
+abstract concepts in which regulative norms are dened to the brute facts
+that take place in the application domain. According to this view of constitu-
+tive norms as an abstraction mechanism for allowing the denition of abstract
+regulative norms, in [35,1] proposals on the specication and implementation
+of norms inside electronic institutions are described. Thus these approaches
+face up with the implementation of constitutive norms from an institutional
+perspective. In particular, they propose that the institution should translate
+abstract regulative norms into specic ones making use of the ontology de-
+ned by constitutive norms. These specic regulative norms are expressed
+in terms of specic and precise facts that are controllable by the institution
+infrastructure. Similarly, in [2] an implementation of constitutive norms to
+relate abstract organizational specications and norms to specic situations
+that took place in the physical world was proposed.
+A noteworthy work on constitutive norms is the proposal of Boella et al.
+in [7]. In this work, they dene a formal model of Normative MAS (NMAS)
+in which the coordination and cooperation is achieved by means of consti-
+tutive and regulative norms. In addition, they use the metaphor of NMAS
+as agents, thus the NMAS have mental attitudes. In this sense, constitutive
+norms are not modelled as operative constraints of an institution but as beliefs
+of the normative agent, whereas regulative norms are the goals of the NMAS.
+In this proposal, Boella et al. use constitutive norms for describing the legal
+Reasoning About Constitutive Norms in BDI Agents 5
+consequences of actions in the normative system [8]. Thus, metanorms that de-
+ne legal procedures for the denition of the normative system (i.e. the norm
+change procedures) are also constitutive5. The work described in [6] details
+how reasoning about constitutive norms can be done from an institutional
+perspective. In particular, [6] proposes a mechanism for analysing and char-
+acterizing the notions of redundancy and equivalence of normative systems
+formed by both constitutive and regulative norms.
+The problem of how agents reason about constitutive norms has only been
+tackled from a logical and formal perspective. However, no one has yet pro-
+vided means for software agents to take constitutive norms into account in
+their practical reasoning; i.e., for inferring the consequences of their actions
+on institutions and keeping track of the institutional state. As claimed by
+Grossi et al. in [20], there is a need for proposals to allow software agents to
+consider constitutive norms. Similarly, in [2] it is pointed out that constitutive
+norms may be used by software agents to determine normative consequences
+of actions and determine their future actions according to norms. Our thesis
+is that constitutive norms are not just simple bricks for building institutional
+ontologies used on the denition of regulative norms. As a consequence, agents
+need not only to consider constitutive norms for translating abstract regulative
+norms into specic ones, but also they must have an explicit and subjective
+representation of constitutive norms. Thus, they would be able to reason about
+the consequences that their behaviour should have on the institutional state.
+3 Preliminaries
+The purpose of this paper is not to propose, compare or improve existing
+norm or agent denitions, but to make use of these denitions for proposing
+an information model, knowledge representation and inference mechanism to
+allow agents to reason about constitutive norms. The aim of this section is to
+provide the reader with the basic notions of constitutive norm and normative
+agent used in this paper.
+3.1 Normative Denitions
+We make use of a rst-order predicate language Lwhose alphabet includes:
+the logical connectives f^;_;:g; parentheses, brackets, and other punctua-
+tion symbols; an innite set of variables and predicate, constant and function
+symbols. For simplicity, variables are implicitly universally quantied6. In this
+paper variables are written as any sequence of alphanumeric characters begin-
+ning with a capital letter. Predicate, constant and function symbols will be
+5Notice that our proposal does not consider this dimension of constitutive norms as
+metanorms.
+6Note that the appropriate use of Skolem functions [27] allows all existential quantiers
+to be removed without loss of expressivity.
+6 N. Criado et al.
+written as any sequence of alphanumeric characters beginning with a lower
+case letter. Let us assume the standard denition for well-formed formulas
+(ws). We will make use of the standard notion of substitution of variables
+in a w; i.e.,is a nite and possibly empty set of pairs Y=y whereYis
+a variable and yis a term [17]. The set of predicate symbols is formed by
+action predicates ( X), which describe the actions that can be performed by
+agents; and state predicates ( P), which describe properties of the physical and
+institutional world. For example, the predicate raise (hand ) is an action pred-
+icate that represents the action of raising the hand . Similarly, the predicate
+handRaised (agent ) is an example of a state predicate that represents a prop-
+erty of the physical world: i.e., it represents that the agent has raised its hand.
+The institutional predicates ( I) are subset of the state predicates ( IP) de-
+scribing the state of the institutional state. Brute predicates ( B) are the subset
+of state predicates ( B=PnI) describing the state of the physical world. For
+example, the predicate handRaised (agent ) is a brute predicate that repre-
+sents a state of the world in which the agent has raised its hand. Similarly,
+bid(agent ) is an example of an institutional predicate that represents a state
+of the world in which the agent has bid for an object. Specically, this bid in
+the institutional world has been inferred from a state of the world in which the
+agent has raised its hand. This relationship between the physical world and
+the institutional world is dened in terms of constitutive norms as we explain
+below.
+3.1.1 Constitutive Norm
+Constitutive norms dene how actions or state of aairs taking place in the
+physical world (i.e., brute facts) modify facts on the institutional state (i.e.,
+institutional facts)7. Thus, they do not dene restrictions on the behaviours,
+but they introduce new classications of facts, called institutional facts [32].
+Institutional facts have been traditionally used for the denition of general
+regulative norms [35,1,2]. For example cheating is an institutional fact that
+can be dened by means of the following constitutive norm: looking at a book
+in an exam orlooking at others' cards in a card game count-as cheating . The
+notion of cheating can be used in order to express in a single regulative norm
+that all forms of cheating are forbidden . Thus, constitutive norms can be used
+for dening the ontology used by the institution in the expression of regulative
+norms. Besides that, constitutive norms might allow agents to know their
+capabilities for modifying the institutional state. Our proposal entails agents to
+reason about this. Next, the formal denition of constitutive norm is provided.
+Denition 1 (Constitutive Norm) A constitutive norm is a tuple hBF;IF;
+Ciwhere:
+7Constitutive norms can also dene how institutional facts bring about higher-level insti-
+tutional facts. In this paper, we will focus on constitutive norms that dene the relationship
+between brute facts and institutional facts. However, the information model, knowledge rep-
+resentation and inference mechanism proposed in this paper can also be used for reasoning
+about constitutive norms that dene relationships between institutional facts.
+Reasoning About Constitutive Norms in BDI Agents 7
+{BFis an atomic formula built from the set B, such that it represents the
+brute fact involved in the constitutive norm,
+{IFis an atomic formula built from the set I, such that it represents the
+institutional fact dened by the constitutive norm,
+{CiswofLthat determines the context or type of situation in which the
+constitutive norm is pertinent.
+For example, in most countries like Spain, to drive exceeding the speed
+limits inside the town boundaries count-as a driving oence. In Spain this limit
+is dened as 50 Km/h. This fact is represented by the following constitutive
+norm:
+hspeed (Vehicle );drivingOence (Vehicle );inTown (Town;Vehicle )^speed (Vehicle )>50i
+(Driving Oence Norm)
+Once the context of a constitutive norm holds it becomes relevant and
+must be considered by agents. In our proposal, agents use relevant constitutive
+norms to extend their mental state. To ensure that the new formulas that are
+inserted into the agents' mental state are grounded, we dene the notion of
+well formed constitutive norm as follows:
+Denition 2 (Well Formed Constitutive Norm) A constitutive norm
+hBF;IF;Ciis a well formed norm i vBF(vC[vIF) andvIF(vC[vBF);
+wherevXis the set of variables occurring in any formula X.
+Specically, in our proposal agents use constitutive norms to infer beliefs about
+the institutional state. For this reason, when an agent believes that a constitu-
+tive normhBF;IF;Ciis relevant (i.e., when there is a substitution such that
+(C) holds in the agent's beliefs), then a belief about the physical world (i.e., a
+belief about (BF)) must be used to infer a belief about the institutional world
+(i.e. a belief about (IF)). For this reason, we dene that vIF(vC[vBF).
+Moreover, we propose that agents use constitutive norms and abstract desires
+(i.e., desires about the institutional world) to infer concrete desires (i.e., desires
+about the physical world). For this reason, we dene that vBF(vC[vIF).
+3.2 Normative Agent Denition
+A normative agent in this paper is dened as a practical reasoning agent [9]
+whose actions are directed towards its goals. Specically, this paper focuses on
+how an agent considers constitutive norms in its decisions; i.e., how an agent
+considers the institutional repercussions of its acts. To make such kind of rea-
+soning an agent considers its current circumstances (i.e., the beliefs about the
+world in which it is placed); and its objectives or situations that the agent
+would like to accomplish or bring about (i.e., its desires); and the norms that
+are in force in its environment. Besides that, we want that our agents can per-
+form practical reasoning in a dynamic and uncertain world. For these reasons,
+8 N. Criado et al.
+the Graded BDI architecture, which has been proposed and described in de-
+tail in [11], is used in this paper. Specically, this architecture has an explicit
+representation of graded mental attitudes, such as graded beliefs and desires,
+and ts perfectly the purpose of our paper.
+Denition 3 (Normative BDI Agent) A Normative BDI agent is dened
+as a tuplehB;D;I;Ni, where:
+{B;D;I are the sets of graded beliefs, desires and intentions of the agent.
+These sets are composed of M(;) expressions, where: M2fbelief;des -
+ire;intentiongis a graded modality used for representing graded beliefs,
+desires or intentions, respectively; is a grounded formula of L; and2
+[0;1] represents the degree associated with this mental proposition. rep-
+resents a certainty degree in case of belief, a desirability degree in case of
+desires8, and an intentionality degree in case of intentions9.
+{Nis a set formed by norm (n) expressions, where nis a constitutive norm.
+Thus, the sets B;D; andIcontain the cognitive elements, whereas the set N
+contains the normative elements. We have decided to represent norms sepa-
+rately from beliefs, desires and intentions due to two main reasons. Firstly,
+we consider that representing norms independently of other mental attitudes
+allows us to explain the norm reasoning process with more clarity: i.e., we are
+able to dene explicitly the relationships among norms and beliefs and desires.
+Secondly, norms are dierent from beliefs. Norms have their own dynamics,
+semantics and are considered in dierent steps of the agent reasoning.
+Denition 3 describes the information model of the Normative BDI agent
+used in this paper. Figure 1 explains how this model is used in the agent's life-
+cycle. This workow is a simplication of the workow we proposed in [13].
+For the purpose of this paper it is only necessary to know that in Normative
+BDI agents the information ows from perception to action according to three
+main steps. Firstly, the agent perceives the environment and updates its beliefs
+and norms10(see Figure 1(a)). Secondly, in the deliberation step, the desire
+set is revised (see Figure 1(b)). For example, new desires may be created from
+the agent requirements. Similarly, desires that have been achieved must be
+dropped. At this step the agent considers the set of norms that are relevant
+and considers them to extend the cognitive elements (this reasoning process
+is labelled as norm reasoning in Figure 1(b)). Finally, in the decision making
+step, desires help the agent to select the most suitable plan to be intended
+8As dened in [11], the desirability of a proposition represents to what extent an agent
+wants to achieve a situation in which holds.
+9According to [11], in our proposal intentions are not considered as a basic attitude.
+Thus, the intentions of Normative BDI agents are generated on-line from the agents' beliefs
+and desires. The intentionality degree of a proposition is the consequence of nding a best
+feasible plan that permits a state of the world where holds to be achieved.
+10Norm acquisition rules are part of the perception step since they are responsible for
+organizing, identifying and interpreting perceptions to represent and understand the norms
+that regulate the agent environment.
+Reasoning About Constitutive Norms in BDI Agents 9
+(see Figure 1(c)). Algorithm 1 illustrates the pseudo-code of the workow
+performed by Normative BDI agents, showing how the components of the
+information model are updated.
+Belief Update
+ RulesEnvironment
+Norm Acquisition
+Rules
+B N
+(a) Perception
+Norm Reasoning
+RulesDesire Update
+Rules
+DI B N (b) Deliberation
+Intention Generation
+Rules
+EnvironmentAction Selection
+RulesB
+IDPlan
+Library (c) Decision Making
+Fig. 1 Reasoning Phases in a Normative BDI Agent. The sets that contain the cognitive
+and normative elements (i.e., the sets B;D;I;N ) are represented as circles. The reasoning
+processes are represented as boxes where: the input links represent the information used
+by the reasoning process, and the output links represent the information updated by the
+reasoning process.
+Algorithm 1 Pseudocode of algorithm executed by Normative BDI agents
+function Reasoning (B;D;I ))
+while truedo
+p perceiveEnvironmentRules () .Perception Phase
+B BeliefUpdateRules (B;p)
+N NormAcquisitionRules (N;p)
+D DesireUpdateRules (D;B;I ) .Deliberation Phase
+B;D NormReasoningRules (B;D;N )
+I IntentionGenerationRules (B;D;I;PlanLibrary ).Decision Making Phase
+a ActionSelectionRules (I)
+execute (a)
+end while
+end function
+In this paper we only focus on how a Normative BDI agent takes constitu-
+tive norms into account. Other problems such as the generation of intentions
+from graded mental propositions [11], or the acquisition of norms [3] have been
+addressed in other proposals.
+10 N. Criado et al.
+4 Reasoning About Constitutive Norms: Norm Reasoning Rules
+In our proposal, constitutive norms are used to extend the agent beliefs and
+desires11. Specically, this extension is carried out by a set of norm reason-
+ingrules. Figure 2 illustrates the norm reasoning process that we propose.
+Thereby, agents are able to determine the eect that their actions would have
+on the institutional state. Algorithm 2 illustrates the pseudo-code of the norm
+reasoning rules executed by Normative BDI agents.
+D B
+NBelief Generation Rules
+Desire Generation Rules Norm 
+Reasoning
+Rules
+Fig. 2 Reasoning About Constitutive Norms in Normative BDI agents. The sets that con-
+tain the cognitive and normative elements (i.e., the sets B;D;N ) are represented as circles.
+The reasoning processes are represented as boxes where: the input links represent the in-
+formation used by the reasoning process, and the output links represent the information
+updated by the reasoning process.
+Algorithm 2 Pseudocode of NormReasoning algorithm
+function NormReasoningRules (B;D;N )
+B BeliefGenerationRules (B;N )
+D DesireGenerationRules (D;N )
+return (B;D )
+end function
+Next, the specic norm reasoning rules for creating beliefs and desires
+from constitutive norms are provided. These rules are operational rules [28]
+that dene a transition relation between congurations of Normative BDI
+agents. In our proposal a conguration of a Normative BDI agent is a tuple
+Conf =hB;D;I;Ni, where:B;D;I are the sets of graded beliefs, desires,
+and intentions; and Nis the set of norms (see Denition 3). Thus, our norm
+reasoning rules dene transitions between congurations as follows:
+preCond
+Conf!Conf0
+11Beliefs and desires generated from constitutive norms are added to the belief and desire
+sets of agents. These two sets are later used by agents to generate and drop intentions
+on-line. Thus, there is not a direct link between constitutive norms and intentions. As a
+consequence, intentions are not considered in our proposal.
+Reasoning About Constitutive Norms in BDI Agents 11
+where the top of the rule | represented by the expression preCond | is
+a boolean expression that represents the precondition of the rule, and the
+bottom of the rule | represented by the expression Conf!Conf0| denes
+the transitions between congurations: i.e., how the initial conguration |
+represented by the expression Conf | changes once the rule is applied |
+represented by the expression Conf0.
+4.1 Belief Generation Operational Rules
+As aforementioned, constitutive norms are used by agents for inferring beliefs
+about the institutional world. Next, we describe the specic rules that are used
+by agents to infer beliefs from constitutive norms.
+Believing institutional facts being true. Informally, a constitutive norm is a
+rule that determines in which circumstances a brute fact counts-as institu-
+tional fact. Thus, when an agent believes that a constitutive norm is relevant
+to its current situation and the brute fact involved in the norm is true, then it
+should believe that the institutional fact is also true. We propose that agents
+must also have an explicit and subjective knowledge (i.e., beliefs) about insti-
+tutional facts. To this aim, we propose in this paper the following rule that
+models this reasoning process as follows:
+9norm (hBF;IF;Ci)2N^9: (belief ((C);(C))2B^belief ((BF);(BF))2B)
+hB;D;I;Ni!hB0;D;I;Ni
+whereB0=fRealism (B;belief ((IF);fExpansion ((BF);(C))))
+(Believing institutional facts being true)
+This rule can be applied when (i) there is a constitutive norm | i.e., exists a
+normnorm (hBF;IF;Ci) inN| ; (ii) the agent believes that this constitutive
+norm is relevant | i.e., there is a substitution such that the expression
+(belief ((C);(C)) is inB; where(C) denotes the result of applying to
+C, and(C)is a real number within the [0 ;1] representing the certainty about
+the context of the constitutive norm (i.e., the relevance or pertinence of the
+norm to the current situation) |; and (iii) the basic fact involved in the
+constitutive norm holds | i.e., the expression belief ((BF);(BF)) is inB;
+where(BF)is a real number within the [0 ;1] that represents the certainty
+about the brute fact. When the three preconditions are true, then a new belief
+will be inferred corresponding to the new institutional fact | i.e., a belief as
+belief ((IF);fExpansion ((BF);(C))) is inferred.
+The certainty degree assigned to the new belief represents the certainty
+about the institutional fact. It is dened by the fExpansion function, which
+combines the relevance of the norm | i.e., the value of (C)| and the cer-
+tainty in which the brute fact holds | i.e., the value of (BF)| as a real
+value within the [0 ;1] interval. Both conditions, the relevance of the norm and
+the brute fact, are required for creating a new belief. For example, if a norm
+is not relevant and it has no longer eect (i.e., (C)is 0), then the certainty
+12 N. Criado et al.
+of any institutional fact inferred from this norm must be 0 regardless of the
+certainty of the brute fact. Moreover, the higher the relevance or the certainty
+of the brute facts is, the higher the certainty of the institutional fact must
+be. Therefore, fExpansion is dened as a numerical fusion operator12that can
+be given dierent denitions depending on the properties that are required in
+each concrete application. In this article, we consider that the conditions that
+are necessary to create a belief about an institutional fact (i.e., the existence of
+a relevant constitutive norm and the existence of a belief about the brute fact
+involved in this constitutive norm) are independent (e.g., the consideration of
+a constitutive norm as relevant does not imply that the agent believes that
+the brute fact involved in the norm holds). As a consequence, the combina-
+tion among the uncertain values that cause the creation of a belief about an
+institutional fact is dened as follows:
+fExpansion ((BF);(C)) =(BF)(C)
+fRealism is a function that takes as input a set of beliefs and a new belief
+inferred from a constitutive norm and combines them. The way in which the
+belief set and the new belief are combined determines the agent personality.
+In the next section, we describe some of the main agent types according to the
+denition given to this function.
+Believing institutional facts being false. When an agent believes that a con-
+stitutive norm is relevant to its current situation and the brute fact involved
+in the norm is false, then it should believe that the institutional fact is also
+false13. To model this reasoning process, we propose in this paper the following
+rule:
+9norm (hBF;IF;Ci)2N^9: (belief ((C);(C))2B^belief (:(BF);(BF))2B)
+hB;D;I;Ni!hB0;D;I;Ni
+whereB0=fRealism (B;belief (:(IF);fExpansion ((BF);(C))))
+(Believing institutional facts being false)
+If an agent believes that a constitutive norm is relevant | i.e., belief ((C);
+(C)) is inB| and the basic fact involved in the constitutive norm does
+not hold | i.e., belief (:(BF);(BF)) belongs to B|, then a new belief
+will be inferred corresponding to the negation of the institutional fact | i.e.,
+belief (:(IF);fExpansion ((BF);(C))) is generated.
+4.2 Desire Generation Operational Rules
+Constitutive norms are also used for inferring desires. Specically, constitutive
+norms are used to infer desires to bring about states of aairs in which brute
+12For a review and classication of data fusion operators see [5].
+13Note that our agents do not use a close world assumption where everything unknown is
+false. In contrast, our agents assume that everything unknown is uncertain.
+Reasoning About Constitutive Norms in BDI Agents 13
+facts hold or not. Agents' motivations are the basis for determining which
+actions will be carried out. Since agents have no capabilities for altering the
+institutional state directly, then constitutive norms dene how abstract desires
+(which are related to institutional facts) can be redened in terms of brute
+facts that can be modied by agents.
+Desiring to bring about brute facts. When an agent believes that a constitutive
+norm is relevant to its current situation and it desires to achieve a state of
+aairs in which the institutional fact dened by the norm holds, then the agent
+should also desire to achieve a state of aairs in which the related brute fact
+holds. To model this reasoning process, we propose in this paper the following
+rule:
+9norm (hBF;IF;Ci)2N^9: (belief ((C);(C))2B^desire ((IF);(IF))2D)
+hB;D;I;Ni!hB;D0;I;Ni
+whereD0=fOrientation (D;desire ((BF);fExpansion ((IF);(C))))
+(Desiring to bring about brute facts)
+This rule can be applied when (i) there is a constitutive norm | i.e., if
+exists a norm norm (hBF;IF;Ci) inN| ; (ii) the agent believes that this
+constitutive norm is relevant | i.e., if there is a substitution such that the
+expression ( belief ((C);(C)) is inB| ; and the agent desires to bring
+about a state of aairs in which the institutional fact dened by the norm
+holds | i.e., desire ((IF);(IF)) is inD. When the three preconditions are
+true, then a new desire will be inferred corresponding to the brute fact | i.e.,
+desire ((BF);fExpansion ((IF);(C))) is inferred.
+As before, the desirability degree assigned to the new desire is dened by
+thefExpansion functions:
+fExpansion ((IF);(C)) =(IF)(C)
+fOrientation is a function that takes as input a set of desires and a new desire
+inferred from a constitutive norm and combines them. In the next section, we
+describe some of the main agent types according to the denition given to this
+function.
+Desiring not to bring about brute facts. When an agent believes that a con-
+stitutive norm is relevant to its current situation and it desires to achieve a
+state of aairs in which the institutional fact dened by the norm does not
+hold, then the agent should also desire to achieve a state of aairs in which
+the brute fact does not hold. To model this reasoning process, we propose in
+this paper the following rule:
+9norm (hBF;IF;Ci)2N^9: (belief ((C);(C))2B^desire (:(IF);(IF))2D)
+hB;D;I;Ni!hB;D0;I;Ni
+whereD0=fOrientation (D;desire (:(BF);fExpansion ((IF);(C))))
+(Desiring not to bring about brute facts)
+14 N. Criado et al.
+The main dierence between the implementation of constitutive and reg-
+ulative norms is that regulative norms are motivational [12] (i.e., they create
+new desires to comply with them) whereas constitutive norms are a special
+kind of inference rules for extending the belief and desire theories. However,
+constitutive norms do not aect directly the agents' behaviour. Constitutive
+norms do not create desires to bring about states of aairs dierent from the
+ones already desired. Actually, constitutive norms create new desires about
+the physical world that allow existing desires about the institutional world
+to be achieved. For this reason, our agents have no motivations for rejecting
+the desires inferred from constitutive norms. As a consequence, the rules de-
+scribed in this section do not include any condition that checks whether the
+agent accepts the formulas that are inferred from constitutive norms.
+5 Agent Types with Respect to Constitutive Norms
+Classically, agent types are characterized by stating conict resolution types
+in terms of orders between mental attitudes [10]. For example, an agent is
+social when obligations are stronger than the other motivational components
+[19], etc.
+According to the norm reasoning rules dened in Section 4, constitutive
+norms are taken into account by agents to extend their belief and desire set.
+It is possible that the formulas generated by the norm reasoning rules are
+inconsistent14with the existing beliefs or desires of the agent. For example, an
+agent may observe some evidence that sustains a belief about an institutional
+fact while being able to infer a belief about the same institutional fact with a
+dierent degree.
+In this paper, we propose that the fRealism function (vs. the fOrientation
+function) denes a prevalence order among the existing set of beliefs (vs. de-
+sires) and the new belief (vs. desire) inferred from a constitutive norm. Specif-
+ically, thefRealism function (vs. the fOrientation function) determines which
+must be the degree of a belief about an institutional fact (vs. a desire about a
+brute fact)15. Therefore, we can dene dierent agent types according to the
+priority that they give to the formulas inferred from norms and the existing
+beliefs and desires.
+14In this paper, we dene that two formulas M(;) andM0(0;0) are inconsistent when
+M=M0,=0, and6=0; i.e., when the two graded formulas agree on their logical
+content but not in the degrees.
+15Notice that this question is dierent from the problem of maintaining consistency (e.g.,
+taking control about replicated or inconsistent formulas) in the mental sets ( B;D;I ). This
+problem is out of the scope of this paper and has been addressed by other proposals. For
+example, in [25] Joseph proposes a coherence-based mechanism for solving inconsistencies
+in graded BDI agents.
+Reasoning About Constitutive Norms in BDI Agents 15
+5.1 Realism Function: Priority Among Beliefs
+According to the priority relationship that can be dened between the existing
+beliefs16and the beliefs that can be inferred from constitutive norms at some
+point, we classify agents into:
+{Observation-Realistic agents are those ones that in case of inconsistency
+between a belief that is inferred from a constitutive norm and an existing
+belief determine that the existing belief prevails. This means that if an
+observation-realistic agent is able to observe an institutional fact (e.g.,
+it is informed by a third party that its civil status is married), then this
+belief is more plausible than the inferences that it can make, at this specic
+moment, according to the constitutive norms that it knows. More formally,
+in an observation-realistic agent the fRealism function is dened as follows:
+fRealism (B;belief (BF; )) =(
+B[fbelief (BF; )gif690:belief (BF;0)2B
+B if90:belief (BF;0)2B
+{Norm-Realistic agents are those ones that in case of inconsistency between
+a belief that is inferred from a constitutive norm and an existing belief de-
+termine that the belief inferred from the constitutive norm prevails. This
+means that if a norm-realistic agent is able to infer an institutional fact
+(e.g., it knows it has formalised a marriage contract and it is able to infer
+that it is married), then this conclusion is more plausible than the infor-
+mation that it already believes. More formally, in a norm-realistic agent
+thefRealism function is dened as follows:
+fRealism (B;belief (BF; )) =(
+B[fbelief (BF; )g if690:belief (BF;0)2B
+Bnfbelief (BF;0)g[fbelief (BF; )gif90:belief (BF;0)2B
+5.2 Orientation Function: Priority Among Desires
+According to the priority relationship that can be dened between the existing
+desires17and the desires that can be inferred from constitutive norms at some
+point, we classify agents into:
+{Desire-Oriented agents are those ones that in case of inconsistency between
+a desire that is inferred from a constitutive norm and an existing desire
+determine that the existing desire prevails. This means that if a desire-
+oriented agent determines that it desires to achieve a state of aairs in
+which a brute fact holds (e.g., it does not want to exceed 50 Km/h to
+minimize petrol consumption), then this consequence is more important
+16Note that the existing beliefs might contain also beliefs that have been inferred from
+constitutive norms at some point in the past.
+17Note that the existing desires might contain also desires that have been inferred from
+constitutive norms at some point in the past.
+16 N. Criado et al.
+than the inferences he can make, at this specic moment, according to the
+constitutive norms that it knows. More formally, in a desire-oriented agent
+thefOrientation function is dened as follows:
+fOrientation (D;desire (IF; )) =(
+D[fdesire (IF; )gif690:desire (IF;0)2D
+D if90:desire (IF;0)2D
+{Norm-Oriented agents are those ones that in case of inconsistency between
+a desire that is inferred from a constitutive norm and an existing desire,
+the desire inferred from the constitutive norm prevails. This means that if a
+norm-oriented agent is able to derive an desire to achieve a brute fact (e.g.,
+it desires to avoid driving oences and it desires not to exceed 50 Km/h
+since this counts-as a driving oence inside a town), then this conclusion
+is more important than the desires that it already has. More formally, in
+a norm-oriented agent the fOrientation function is dened as follows:
+fOrientation (D;desire (IF; )) =(
+D[fdesire (IF; )g if690:desire (IF;0)2D
+Dnfdesire (IF;0)g[fdesire (IF; )gif90:desire (IF;0)2D
+In this section we have provided an agent typology and a descriptive char-
+acterization of each agent type. Section 7 describes a set of experiments that
+have been carried out to evaluate the performance of our proposal for reason-
+ing about constitutive norms and providing an experimental characterization
+of the dierent agent types. The next section illustrates how a Normative BDI
+agent reasons about constitutive norms with our proposal.
+6 Illustrative Example
+This example shows how an agent employs our proposal for reasoning about
+constitutive norms. Specically, this example shows how an agent uses con-
+stitutive norms for extending its mental theory and how constitutive norms
+aect the decision making process.
+6.1 Initial Situation
+Let us suppose that there are two agents aandbwhich are \a couple". In this
+example, we will focus our attention in agent a, which is a Normative BDI
+agent that makes use of our proposal for reasoning about constitutive norms.
+Agentaconsiders that a couple are two agents that are in love and that live
+together. According to these conditions, agents aandbare a couple. Thus,
+ahas a belief corresponding to being a couple with bwith a certainty degree
+equal to 1 | i.e., belief (couple (a;b);1) belongs to B. Regarding motivations
+of agenta, let us suppose that it wants to be married with agent bwith the
+Reasoning About Constitutive Norms in BDI Agents 17
+highest intensity | i.e., desire (married (a;b);1) belongs to D. Moreover, it
+also wants to gain a mortgage with agent bwith the highest intensity | i.e.,
+desire (mortgage (a;b);1) belongs to D. Figure 3 shows how the dierent for-
+mulas are generated in the normative and cognitive elements of the Normative
+BDI agent18. Next, the dierent reasoning phases of this agent are described.
+Agent a
+B
+belief(couple(a,b),1)D N
+desire(married(a,b), 1)
+desire(mortgage(a,b), 1) Initial S ituatio n
+<formalised(marriage,X,Y),
+married(X,Y), couple(X,Y) >
+<formalised(deed,X,Y),
+mortgage(X,Y),married(X,Y) > Norm A cquisi tion
+desire(formalised(marriage,
+a,b),1) Norm R eason ing
+Decisio n Mak ing
+belief(formalised(marriage,a,b),
+1) Belief U pdate
+belief(married(a,b),1)Norm R eason ingdesire(formalised(deed,
+a,b),1)
+Fig. 3 Belief, Desire and Normative sets of agent a. These sets are represented as rectan-
+gles. The horizontal dashed lines determine the formulas that are inserted in the dierent
+reasoning phases.
+6.2 Reasoning Process
+Agentaexecutes Algorithm 1. Thus, it starts the reasoning cycle by perceiving
+the environment and updating the beliefs and norms. In the following we
+illustrate how formulas are generated by each reasoning process19.
+Perception Phase: Norm Acquisition Rules. Marriage is an institutional fact
+that is dened by a constitutive norm that claims that if any pair of agents
+X,Y, which are a couple20| represented by the expression couple (X;Y )|,
+formalise a marriage contract | represented by the expression formalised
+(marriage;X;Y ), then it counts-as as they are married | represented by the
+18The generation of intentions from desires is not relevant to this case study and, as a
+consequence, the intentions have not been included in Figure 3.
+19For simplicity we do not include the explanation of the reasoning processes when they
+do not alter the mental state of agent a; i.e., when the set of formulas remains unchanged.
+20Here, we assume that marriages of convenience or arranged marriages between strangers
+are not accepted. Therefore, agents that do not maintain a relationship (i.e., are not a couple)
+cannot be married even if they formalize a marriage contract.
+18 N. Criado et al.
+expressionmarried (X;Y ). This norm is formally dened as follows:
+hformalised (marriage;X;Y );married (X;Y );couple (X;Y )i
+Similarly, gaining a mortgage is an institutional fact that is dened by a con-
+stitutive norm that claims that if any pair of agents X,Y, which are married21
+| represented by the expression married (X;Y )|, formalise a deed contract
+| represented by the expression formalised (deed;X;Y )|, then it counts-as
+as they gain a mortgage | represented by the expression mortgage (X;Y ).
+This norm is formally dened as follows:
+hformalised (deed;X;Y );mortgage (X;Y );married (X;Y )i
+Let us assume that agent aacquires these constitutive norms by consulting
+a public norm repository (e.g., the OMS in the THOMAS framework [16]) or
+artifact (e.g., the NormativeBoard in the ORA4MAS framework [23]). Thus,
+agentaupdates its normative set accordingly.
+Deliberation Phase: Norm Reasoning Rules. The marriage norm is used by
+the agent to determine how the desire of being married can be translated in
+terms of properties of the environment that can be modied by the agent.
+Specically, the \Desiring to bring about brute facts" rule is executed and a
+new desire to formalise a marriage contract is created as follows:
+9norm (hBF;IF;Ci)2N^9:desire ((IF);(IF))2D^belief ((C);(C))2B
+hB;D;I;Ni!hB;D0;I;Ni
+whereBF=formalised (marriage;X;Y );IF=married (X;Y );C=couple (X;Y );
+=fX=a;Y=bg;married (a;b)= 1;couple (a;b)= 1;
+D0=fOrientation (D;desire (formalised (marriage;a;b );fExpansion (1;1))
+Considering the proposed denition of fExpansion (see Equation 4.2):
+fExpansion (1;1) = 11 = 1
+Since the agent has not any desire about the expression formalised (marriage;a;b ),
+then the new desire inferred from the constitutive norm is inserted into the
+desire set22. Thus, a new desire is generated inside the desire set | i.e., a
+desire such as desire (formalised (marriage;a;b );1) is inserted into D. This
+implies that the agent has been able to create a more specic desire about for-
+malising a contract that will allow it to achieve a more abstract desire about
+being married.
+21Here, we assume agents need to be married to gain a mortgage. Of course, in real-life,
+people are not required to be married for signing mortgages.
+22Note that there is not an inconsistency between the existing desires and the desire
+inferred from the constitutive norm and, in this case, both norm-oriented and desire-oriented
+agents behave equally.
+Reasoning About Constitutive Norms in BDI Agents 19
+Decision Making Phase. Now rules for making a decision about the next ac-
+tion to be performed are considered. Mainly, this process consists of generating
+plans for reaching the desired state given that the agent knows the existence
+of actions that could achieve it. For example, agent aknows that a contract
+among two agents is formalised when both agents sign this contract and the
+contract is registered. Thus, the agent generates an intention to execute a plan
+for signing and registering the contract. Then, this plan is executed.
+Perception Phase: Belief Update Rules. As a consequence of the execution
+of the plan, agent aformalises a marriage contract and updates its beliefs
+accordingly | i.e., belief (formalised (marriage;a;b );1) is inserted into B.
+Deliberation Phase: Norm Reasoning Rules. Since the agent believes that the
+marriage constitutive norm is relevant (i.e., agent abeliefs that agent aandb
+are a couple) and it believes that a marriage contract has been formalised, then
+the \Believing institutional facts being true" rule is applied. As a consequence,
+a new belief that represents that the agents aandbare married is created as
+follows:
+9norm (hBF;IF;Ci)2N^9:belief ((BF);(BF))2B^belief ((C);(C))2B
+hB;D;I;Ni!hB0;D;I;Ni
+whereBF=formalised (marriage;X;Y );IF=married (X;Y );C=couple (X;Y );
+=fX=a;Y=bg;formalised (marriage;a;b )= 1;couple (a;b)= 1;
+B0=fRealism (B;belief (married (a;b);fExpansion (1;1)))
+Again,fExpansion (1;1) = 1 and the belief set is updated | i.e., belief (married (a;b;
+);1) is inserted into B. Thanks to this belief, the abstract desire of being mar-
+ried can be retracted, since it has been achieved. This process is carried out by
+thedesire update rules on Algorithm 1 that are responsible for creating new
+desires and dropping those ones that have been achieved.
+Moreover, the new belief about the marriage institutional fact allows agent
+ato determine how the desire of gaining a mortgage can be translated in
+terms of states of aairs that can be achieved by it. Specically, the mortgage
+constitutive norm is a second order norm: i.e., a constitutive norm whose
+context is expressed in terms of institutional facts. In this case the\Desiring
+to bring about brute facts" rule is executed and a new desire to formalise a
+deed contract is created as follows:
+9norm (hBF;IF;Ci)2N^9:desire ((IF);(IF))2D^belief ((C);(C))2B
+hB;D;I;Ni!hB;D0;I;Ni
+whereBF=formalised (deed;X;Y );IF=mortgage (X;Y );C=married (X;Y );
+=fX=a;Y=bg;mortgage (a;b)= 1;married (a;b)= 1;
+D0=fOrientation (D;desire (formalised (deed;a;b );fExpansion (1;1))
+As a result, a new desire is generated inside the desire set | i.e., a desire
+such asdesire (formalised (deed;a;b );1) is inserted into D. This implies that
+the agent has been able to create a more specic desire about formalising
+a deed that will allow it to achieve a more abstract desire about gaining a
+mortgage.
+20 N. Criado et al.
+The marriage example is a metaphor for how agents are able to perform
+those actions (e.g., following the specic protocols and sequences of actions)
+that entail the modication of the institutional state (e.g., the performance of
+trading operations).
+7 Experimental Results
+This section evaluates the performance of our proposal when agents reason
+about constitutive norms. We have carried out several experiments to evaluate
+if our approach allows agents to keep track of the institutional state precisely23.
+Specically, we demonstrate that: (i) our proposal allows agents to keep track
+of the institutional state with more precision than agents that simply observe
+the institutional state; (ii) even if agents are able to perceive the institutional
+facts, it is better to complement this information with the information that
+is derived from reasoning about constitutive norms; and (iii) agents that use
+their perceptions to reason about constitutive norms and making inferences
+about the institutional state are not more sensitive to the precision of these
+perceptions than agents that simply observe the institutional state. Moreover,
+these experiments allow us to provide a characterization of the dierent agent
+types.
+7.1 Experiment Description
+We have considered a scenario in which there is a set of agents that belong
+to the same institution (e.g., an e-market). In this institution a set of con-
+stitutive norms has been registered in a repository. All agents have access to
+the norm repository. Constitutive norms regulate the creation of institutional
+facts (e.g., constitutive norms may dene the specic actions that count-as
+trading operations). Agents may perform dierent actions during their execu-
+tion causing changes in the environment (e.g., sold items may be delivered)
+and in the institutional state (e.g., a purchase contract is executed). Agents
+are able to observe their environment. Moreover, agents are able to observe
+a part of the institutional state (e.g., there may be a facilitator agent in the
+e-market that informs about the execution of the purchase contracts signed
+by a specic agent). The rest of institutional facts are not visible by agents
+and their truth-value can only be determined by means of constitutive norms
+(e.g., an agent that observes that the actions that count-as executing a pur-
+chase contract have been performed by another agent can determine that the
+purchase contract has been executed).
+23For simplicity, we will only focus on detecting the institutional changes; i.e., this exper-
+iment only takes into account how agents extend their belief base. As a consequence, the
+results described in this section only take into account the generation of beliefs from consti-
+tutive norms. However, similar results were obtained when we also considered the generation
+of desires.
+Reasoning About Constitutive Norms in BDI Agents 21
+Parameter Value
+# of agents 3
+# of constitutive norms 10
+# of steps 400
+# of repetitions 1000
+# of institutional facts 10
+Visibility of institutional facts 0:25
+# of atomic formulas 20
+Agent accuracy [0;1]
+Opacity Coecient 0:5
+Table 1 Parameters used in the norm recognition experiment
+We have built a simulator of this scenario with the parameters that we
+sum up in Table 1. Algorithm 3 contains the pseudo code of this simulator.
+According to this algorithm, in our simulator there is a set of agents that be-
+long to an institution in which there are 10 constitutive norms24. Agents have
+access to a repository that contains the information about these constitutive
+norms (this corresponds to the instruction named Norm Acquisition on Algo-
+rithm 3). Once the agents have read the repository of constitutive norms, they
+observe the environment to keep track of the institutional state. Specically,
+in each step of the experiment they observe the changes in the environment
+and in the institutional state. With this information they update their beliefs
+and the norms. Then, they carry out the deliberation phase and the decision
+making phase. The experiment is executed during 400 steps. Moreover, each
+experiment has been repeated 1000 times to support the ndings.
+Each agent acts as a binomial classier that determines which of the insti-
+tutional facts hold and which ones not. In each step, we inspect the belief set
+of agents and compare the estimation made by agents against the institutional
+state. Specically, in each iteration we update: the number of true positives
+(TP), which is the number of times that an agent considers that an institu-
+tional fact is true and it is actually true; the number of true negatives ( TN),
+which is the number of times that an agent considers that an institutional fact
+is not true and it is actually false; the number of false positives ( FP), which
+is the number of times that an agent considers that an institutional fact is
+true and it is not true; and the number of false negatives ( FN), which is the
+number of times that an agent considers that an institutional fact is false and
+it is actually true.
+Matthews Correlation Coecient. The Matthews Correlation Coecient (MCC)
+[4] is used as a measure of the quality of binary classications. It takes into
+account true and false positives and negatives and is generally regarded as a
+balanced measure which can be used even if the classes are of very dierent
+24Note that we assume that the set of constitutive norms is not changed during an exper-
+iment.
+22 N. Criado et al.
+Algorithm 3 Pseudocode of algorithm executed by our simulator
+function Simulator
+N randomNormCreation () .Norm Denition
+IF;BF randomEnvironmentCreation () .Environment Denition
+A createAgents () .Agent Creation
+fora2Ado
+a:N NormAcquisitionRules (N) .Norm Acquisition
+end for
+while the simulator has not been executed all the steps do
+Actions ;
+VIF VisibleInstitutionalFacts (IF;visibility ).Visibility of Institutional Facts
+fora2Ado
+p PerceiveEnvironmentRules (VIF;BF;a:accuracy;opacity ).Perception
+a:B BeliefUpdateRules (a:B;p )
+a:D DesireUpdateRules (a:D;a:B;a:I ) .Deliberation
+ifa is a normative agent then
+a:B;a:D NormReasoningRules (a:B;a:D;a:N )
+end if
+R UpdateResults (R;a:B;IF ) .Inspection
+I IntentionGenerationRules (a:B;a:D;a:I;PlanLibrary ).Decision
+Making
+Actions Actions[ActionSelectionRules (a:I)
+end for
+IF;BF evolveEnvironement (IF;BF;N;Actions ).Environment Evolution
+end while
+returnCalculateMCC (R)
+end function
+sizes. The MCC can be calculated using the formula:
+MCC =TPTN FPFNp
+(TP+FP)(TP+FN)(TN+FP)(TN+FN)
+The MCC is in essence a correlation coecient between the observed and pre-
+dicted binary classications; it returns a value between -1 and +1. A coecient
+of +1 represents a perfect prediction, 0 an average random prediction and -1
+an inverse prediction. While there is no perfect way of describing the confu-
+sion matrix of true and false positives and negatives by a single number, the
+Matthews correlation coecient is generally regarded as being one of the best
+measures.
+7.1.1 Norm Denition
+In each experiment, 10 constitutive norms are randomly created (this cor-
+responds to the instruction named Norm Denition on Algorithm 3). These
+norms regulate the creation of 10 institutional facts. As previously mentioned,
+the institutional state is not fully visible and the truth-value of some of the
+institutional facts cannot be observed. To simulate this, we consider that the
+truth-value of any institutional fact is observable with a probability of 0.25
+(this corresponds to the instruction named Visibility of Institutional Facts on
+Algorithm 3). When it is not observable, agents have to use constitutive norms
+Reasoning About Constitutive Norms in BDI Agents 23
+to infer the truth-value. Specically, agents have to observe their environment
+to determine whether the brute fact ( BF) and the context ( C) of a constitu-
+tive norm hold or not. We assume that for each constitutive norm hBF;IF;Ci
+the elements BFandCare dened as an atomic formula that represents a
+state of aairs. Specically, we consider a set of 20 dierent atomic formulas.
+Thus, for each constitutive norm the brute fact and the context of each are
+randomly assigned to a proposition of this set.
+7.1.2 Environment Denition
+As previously mentioned, in this experiment we assume that the physical en-
+vironment is described in terms of 20 dierent atomic formulas. Each one of
+these formulas represents a state of aairs (i.e., a brute fact) of the physical
+environment. At the beginning of each experiment, these states of aairs are
+randomly dened as holding or not; i.e., the truth-value of the 20 atomic for-
+mulas is randomly dened as true or false (this corresponds to the instruction
+named Environment Denition on Algorithm 3). We also assume that the in-
+stitutional environment is described by 10 institutional facts. At the beginning
+of each experiment, the institutional facts are dened as holding or not. In this
+case, the initial truth-value of the institutional facts is dened considering the
+constitutive norms. Therefore, only those institutional facts that can be in-
+ferred from the initial state of the environment and the constitutive norms are
+true. The rest of institutional facts are initially false.
+As the agents execute actions during the experiment, both the physical
+and the institutional environment evolve (this corresponds to the instruction
+named Environment Evolution on Algorithm 3). Therefore, the truth-values
+of the 20 atomic formulas that represent the physical environment change
+according to the actions performed by agents. Similarly, the truth-value of the
+10 institutional facts change as a consequence of the changes in the physical
+environment25.
+In our simulator we dene the opacity of the environment as a feature
+that determines the diculty to observe the environment. Specically, the
+opacity coecient is a real value that determines the magnitude or the error
+made by all agents when they observe the environment. The more opaque the
+environment is, the more dicult is for agents to observe it. Thus, the error
+made by agents when they observe the environment would increases as the
+opacity increases. In the experiments we xed the opacity coecient to 0.5.
+7.1.3 Agent Implementation
+As previously mentioned, at the beginning of each experiment agents read
+the norm repository and, as a consequence, all of them know the same 10
+25Recall that, the truth-values of institutional facts are always consistent with the state
+of the environment and the constitutive norms.
+24 N. Criado et al.
+constitutive norms dened in each experiment26. The initial belief and desire
+bases of each agent are randomly dened at the beginning of the experiment
+(this corresponds to the instruction named Agent Creation on Algorithm 3).
+Specically, agents initialise the certainty of the brute and institutional facts
+as random real values within the [0 ;1] interval. Recall that these initial beliefs
+will be updated during the agent execution by the perception and deliberation
+phases (see Algorithm 3). Agents also pursue a set of goals that represent de-
+sired (vs. undesired) situations that the agent wants to achieve (vs. avoid). For
+simplicity, we assume that agents pursue dierent desires that are randomly
+generated during the experiment27.
+According to Algorithm 3, in each step of the experiment agents execute
+three dierent phases (see Figure 1).
+1.Perception. Agents are able to observe their environment. Specically, they
+are able to observe the truth-value of the atomic formulas that describe
+the physical and the institutional state. However, the agents have limited
+capabilities for observing their environment. The accuracy of each agent
+to observe its environment is randomly assigned to a real value within the
+[0;1] interval. The highest the accuracy, the more exact the observations
+are. Hence, the observations of agents are aected by a random normally-
+distributed noise28. We consider a normally-distributed noise with mean
+0.0 and a varying standard deviation depending on the agent accuracy
+and the diculty to observe the environment (i.e., the opacity coecient).
+Specically, we consider the distribution:
+N (0;(1 accuracy )opacity )
+where the value of opacity coecient is shared by all agents.
+Thus, in each step agents observe their environment and apply belief up-
+date rules for translating their observations into beliefs. In this experiment
+we have dened the following belief update rules:
+observation (;)^690:belief (;0)2B
+hB;D;I;Ni!hB0;D;I;Ni
+whereB0=B[fbelief (;)g
+observation (;)^90:belief (;0)2B
+hB;D;I;Ni!hB0;D;I;Ni
+whereB0=Bnfbelief (;0)g[fbelief (;)g
+whereis an atomic formula representing a state of the environment or
+the institution, and is the certainty of this observation.
+26Note that our goal is to evaluate the rules that we propose for reasoning about consti-
+tutive norms. Thus, we want that the only dierence among the agents is the way in which
+they consider constitutive norms, not the specic norms that they know.
+27Note that we assume that agents always have at least one desire that can be pursued.
+28Notice that we denote the falsity value as 0 and the true value as 1.
+Reasoning About Constitutive Norms in BDI Agents 25
+2.Deliberation. Agents revise their desires in the deliberation phase. Speci-
+cally, in this phase agents remove their desires from the desire set as soon
+as they achieve them.
+Moreover, in the deliberation phase agents apply the norm reasoning rules
+for keeping track of the institutional state. In this experiment, we create
+agents that have dierent capabilities for reasoning about norms:
+Non-Normative . These agents are BDI agents that do not use our methods
+for reasoning about constitutive norms and they are not able to take
+constitutive norms into account.
+Norm-Realistic These agents are Normative BDI agents that use our
+methods for reasoning about constitutive norms and they are able to
+take constitutive norms into account. Therefore, they can determine the
+truth-value of institutional facts according to their observations and the
+inferences that they made by means of constitutive norms. These agents
+arenorm-realistic and give more priority to the information that they
+infer, when they are able to both observe and infer the truth-value of
+an institutional fact.
+Observation-Realistic These agents are quite similar to norm-realistic
+ones. However, they give more priority to the information that they
+observe, when they are able to both observe and infer the truth-value
+of an institutional fact.
+In each experiment we create one agent of each type, thus a total of three
+agents.
+After the deliberation phase, we inspect the agent beliefs to determine
+which of the institutional facts are believed to be true or false accord-
+ing to the information that each agent has (this corresponds to the in-
+struction named Inspection on Algorithm 3). As aforementioned, the BDI
+agents used in this paper use graded logics to represent mental proposi-
+tions. Thus, they have graded beliefs that represent their knowledge about
+the institutional state. In general, when a belief about a proposition has
+a low certainty, then the agent considers that the proposition is false. In
+this experiment, we assume that institutional facts are false when their
+certainty is lower than an internalization threshold ( internalization ).
+Since the dierent types of agents carry out a dierent reasoning pro-
+cess, we have to determine the most suitable values for the internalization
+threshold (internalization ) for each agent type. To this aim, we have per-
+formed a set of previous experiments varying the value of the threshold. In
+each of the previous experiments, a set of three agents (one agent of each
+type) are informed about 20 constitutive norms. In each iteration, agents
+perceive their environment and determine (i.e., conjecture) which institu-
+tional facts hold and which ones not. The conjecture made by agents is
+compared against the institutional state and the number of TP;TN;FP
+andFN is updated accordingly. The experiment is executed during 400
+steps. Once the experiment ends we calculate the MCC achieved by each
+agent type. For each value of the threshold we have performed 1000 exper-
+26 N. Criado et al.
+0	  0.1	  0.2	  0.3	  0.4	  0.5	  0.6	  0.7	  
+0.05	  0.15	  0.25	  0.35	  0.45	  0.55	  0.65	  0.75	  0.85	  0.95	  NON-­‐NORMATIVE	  NORM-­‐REALISTIC	  OBSERVATION-­‐REALISTIC	  
+Fig. 4 MCC (Y axis) with respect to the internalization threshold (X axis).
+iments. Figure 4 shows the MCC obtained on average in the 100 experi-
+ments by each agent type with respect to the value of internalization . As
+illustrated by Figure 4, the best results of non-normative agents are ob-
+tained when internalization is 0.5, the best results of norm-realistic agents
+are obtained when internalization is 0.4, and the best results of observation-
+realistic agents are obtained when internalization is 0.45. In the rest of the
+experiment types, we have xed the internalization threshold to the values
+that allow each agent type to obtain its best results.
+3.Decision Making. In this phase, agents generate intentions to execute one
+plan that achieves one or more desires. For simplicity, agents select ran-
+domly one action to be executed in each step of the experiment29.
+7.2 Results
+We have performed 3 dierent experiment types to illustrate the performance
+of our methods for reasoning about constitutive norms with respect to: (i)
+number of steps that the experiment is executed, (ii) the visibility of the
+institutional state, and (iii) the opacity of the environment. The results of
+these experiment types are described below.
+7.2.1 Number of Steps
+This experiment is aimed at determining the number of steps that the simula-
+tor must be executed to obtain stable results (i.e., results in which the MCC
+29Note that this experiment is aimed at evaluating the performance of our proposal for
+reasoning about constitutive norms when agents keep track of the institutional state. Thus,
+the functionality in charge of updating the agent desires and carrying out the decision
+making phase has been simplied in the simulator (i.e., agents select the next action to be
+executed randomly).
+Reasoning About Constitutive Norms in BDI Agents 27
+does not vary much). Moreover, this experiment demonstrates that in a typical
+situation30our proposal allows agents to keep track of the institutional state
+with more precision.
+Figure 5 illustrates the MCC achieved per each agent type on average
+with respect to the number of steps that the experiment is executed. The
+error bars represent the 95% condence interval for the MCC obtained in
+the experiments. Non-normative agents keep track of the institutional state
+with less precision. On average, the MCC obtained by non-normative agents
+is 0:23. This is explained by the fact that they can only determine the truth-
+value of institutional facts when they are able to observe it. On the contrary,
+agents that use our proposal for reasoning about constitutive norms are able
+to keep track of the institutional state with more precision. Specically, the
+MCC obtained by norm-realistic and observation-realistic agents is 0 :49 and
+0:59, respectively. The improvement on the MCC achieved by norm-realistic
+and observation-realistic is 112 :38%31and 154:91%, respectively. In light of
+these results, we can conclude that agents that use our methods for reasoning
+about constitutive norms attain a signicant improvement in this experiment.
+From 400 steps, the results achieved, in terms of the average MCC and the
+95% condence intervals for the MCC, remain quite stable. For this reason,
+we have xed the number of steps to 400 in the following experiment types32.
+0	  0.1	  0.2	  0.3	  0.4	  0.5	  0.6	  0.7	  0.8	  0.9	  1	  
+0	  100	  200	  300	  400	  500	  600	  700	  800	  900	  1000	  NON-­‐NORMATIVE	  NORM-­‐REALISTIC	  OBSERVATION-­‐REALISTIC	  
+Fig. 5 MCC (Y axis) achieved per agent type with respect to the number of steps that
+the experiment is executed (X axis). The error bars (Y axis) represent the 95% condence
+interval for the MCC obtained in the experiments.
+30A typical situation is when most of the institutional facts are not visible (i.e. when
+visibility = 0:25) and the variance of the noise that aects agent observations is half of the
+agent accuracy (i.e., when opacity = 0:5)
+31The improvement on the MCC is calculated as (0 :49 0:23)=0:23100 = 112:38%
+32Note that in the following experiment types the 95% condence intervals for the MCC
+are quite small and we have preferred not to draw them.
+28 N. Criado et al.
+7.2.2 Visibility of Institutional State
+With this experiment we aim to demonstrate that agents that consider the in-
+formation that is inferred from reasoning about constitutive norms keep track
+of the institutional state with more precision, even if agents can perceive the
+institutional facts. Specically, this experiment illustrates the performance of
+the dierent agent types when the visibility of the institutional state changes.
+Moreover, we have determined which type of normative agent is more suitable
+according to the visibility of the institutional state.
+As explained before, the visibility of the institutional sate is simulated by
+the probability in which the truth-value of any institutional fact is observed.
+In this experiment we analyse the MCC achieved by each agent when the
+probability of observing institutional facts varies within the [0 ;1] interval.
+Figure 6 illustrates the MCC achieved per each agent type on average
+with respect to the probability that the truth-value of any institutional fact is
+observable. In this picture we can observe that the MCC achieved by norm-
+realistic agents is not aected by the visibility of the institutional facts. This
+is due to the fact that norm-realistic agents consider that the information that
+is inferred has more priority than the information that is already believed. In
+our simulator there is one constitutive norm per each institutional fact, then
+norm-realistic agents are able to infer from constitutive norms the truth-value
+of all institutional facts. As a result the performance of norm-realistic agents
+is not aected by the visibility of institutional facts. In contrast, the MCC
+achieved by observation-realistic and non-normative agents increases linearly
+with the visibility. Since non-normative agents only can determine the truth-
+value of institutional facts on the basis of their observations, and thus they are
+the most aected by the visibility of institutional facts (i.e., the slope of the
+line that represents the MCC achieved by non-normative agents is higher).
+When the probability is very low (i.e., visibility0:1), then observation-
+realistic and norm-realistic agents achieve the best results. In this case, agents
+are not able to observe the truth-value of almost any institutional fact and
+they only have the information that they can infer from constitutive norms.
+Therefore, observation-realistic and norm-realistic behave similarly. As the
+probability increases, then more institutional facts can be observed and the
+performance of both observation-realistic and non-normative agents gets bet-
+ter. Specically, observation-realistic agents achieve the best results, when the
+probability is within the interval [0 :05;0:95]. When the truth-value of all the
+institutional facts can be observed (i.e., when the probability is 1), then non-
+normative and observation-realistic agents achieve the best results. In this
+case, observation-realistic agents behave as non-normative agents. In this sit-
+uation, our methods for reasoning about constitutive norms are not necessary
+since agents are able to observe the institutional state completely and there is
+no need for reasoning about constitutive norms.
+In light of these results, we can conclude that observation-realistic agents
+are the most suitable ones. They behave as norm-realistic when their institu-
+tional state is not visible and they rely on the inferences that they made from
+Reasoning About Constitutive Norms in BDI Agents 29
+constitutive norms. However, when the institutional state is visible, observation-
+realistic agents behave as non-normative agents and rely on their observations.
+When the institutional state is partially visible, observation-realistic agents
+combine both information that is inferred from norms and information that is
+observed and they achieve the best results. Thus, we demonstrate that agents
+that make use of our proposal for reasoning about constitutive norms obtain
+the best results whatever the visibility of institutional facts is.
+0	  0.1	  0.2	  0.3	  0.4	  0.5	  0.6	  0.7	  0.8	  0.9	  1	  
+0	  0.1	  0.2	  0.3	  0.4	  0.5	  0.6	  0.7	  0.8	  0.9	  1	  NON-­‐NORMATIVE	  NORM-­‐REALISTIC	  OBSERVATION-­‐REALISTIC	  
+Fig. 6 MCC (Y axis) achieved per agent type with respect to the visibility of institutional
+facts (X axis).
+7.2.3 Opacity of the Environment
+In our proposal, agents make use of their perceptions to: (i) update their
+beliefs; and (ii) reason about constitutive norms and infer beliefs and desires
+about the institutional state. Given that in our proposal agents make a further
+use of their perceptions, it may be argued that our proposal makes agents
+more sensitive to the precision of these perceptions. In this experiment we
+aim to demonstrate that agents that consider the information that is inferred
+from constitutive norms are similarly aected by the precision of perceptions.
+Specically, this experiment illustrates the performance of the dierent agent
+types as the opacity of the environment increases and the environment becomes
+more and more dicult to discern.
+As explained before, the opacity of the environment determines the di-
+culty to observe the environment. It has been modelled by the opacity coe-
+cient that is shared by all agents and determines the magnitude of the error
+made by all agents when they observe the environment33.
+33Note that the observation of the environment includes the observation of the brute
+facts and those institutional facts that are visible. The more opaque the environment is, the
+30 N. Criado et al.
+Figure 7 illustrates the MCC achieved per each agent type on average with
+respect to opacity of the environment. In all agent types the MCC decreases
+as the opacity of the environment increases. In light of these results, we can
+conclude that the opacity of the environment aects all agent types in a similar
+way. Thus, observation-realistic agents obtain the best results regardless of
+the opacity of the environment. This is explained by the fact that the opacity
+determines the precision of observations about institutional and brute facts.
+The observations about institutional facts are used by all agents to determine
+the truth-value of institutional facts. The observations about brute facts are
+used by norm-realistic and observation-realistic agents when they reason about
+constitutive norms to determine the truth-value of institutional facts. Thus, all
+agent types use observations to keep track of the institutional state somehow
+or other. As a consequence, all agent types are aected by the opacity of the
+environment.
+0	  0.1	  0.2	  0.3	  0.4	  0.5	  0.6	  0.7	  0.8	  0.9	  1	  
+0	  2	  4	  6	  8	  10	  12	  14	  16	  18	  20	  NON-­‐NORMATIVE	  NORM-­‐REALISTIC	  OBSERVATION-­‐REALISTIC	  
+Fig. 7 MCC (Y axis) achieved per agent type with respect to the opacity of the environment
+(X axis).
+7.3 Discussion
+As shown in the results provided in this section, the methods for reasoning
+about constitutive norms proposed in this paper allows agents to keep track
+of the institutional state with more precision. Besides that, we have demon-
+strated that observation-realistic agents are the ones that keep track of the
+institutional state with the highest precision. This is explained by the fact
+less precise the observations about brute and institutional facts are. Because of this, both
+non-normative and normative agents are aected in the same way by the opacity of the
+environment.
+Reasoning About Constitutive Norms in BDI Agents 31
+that observation-realistic agents are able to adapt their behaviour; i.e., they
+behave as norm-realistic agents when the institutional state is not visible,
+they behave as non-normative when the institutional state is visible, and they
+combine the information that they observe and infer from constitutive norms
+when the institutional state is partially visible. Finally, we demonstrate that
+our agents are the ones that keep track of the institutional state with the
+highest precision regardless of the opacity of the environment.
+8 Conclusions
+As mentioned before, the role of constitutive norms on agent reasoning pro-
+cesses is an open problem that has been identied by previous proposals, but
+that has not been faced yet. To address this problem, in this paper we propose
+an information model, knowledge representation and an inference mechanism
+for reasoning about constitutive norms in BDI agents. Our proposal considers
+that agents have a physical presence in some real-world environment. Agents
+have a partial and uncertain knowledge of it. The main aim of our proposal is
+to endow agents with capabilities for reasoning about constitutive norms and
+being able to know the institutional repercussions of their actions. We have
+provided a classication of the dierent agent types that can be developed
+with our proposal. Moreover, we have also shown how our proposal works in
+a case study. Finally, we have carried out an experimental evaluation of the
+performance of our methods for reasoning about constitutive norms and the
+results are shown in this article.
+The set of constitutive norms considered by an agent might be in conict,
+since agents belong to dierent institutions simultaneously. Thus, the devel-
+opment of mechanisms for resolving conicts and inconsistencies among con-
+stitutive norms is an interesting issue that will be addressed in future work.
+Another interesting line of future work is the interpretation of constitutive
+norms. In this article we assume that norms are unambiguously interpreted
+by agents. However, in environments that are populated by heterogeneous
+agents, agents might give dierent interpretations to constitutive norms and,
+as a consequence, inconsistencies and conicts may arise (e.g., agents may
+consider that a constitutive norm is relevant in dierent contexts).
+References
+1. H. Aldewereld. Autonomy vs. conformity: an institutional perspective on norms and
+protocols. The Knowledge Engineering Review , 24(4):410{411, 2009.
+2. H. Aldewereld, S. Alvarez-Napagao, F. Dignum, and J. V azquez-Salceda. Making norms
+concrete. In Proceedings of International Conference on Autonomous Agents and Mul-
+tiagent Systems , pages 807{814. International Foundation for Autonomous Agents and
+Multiagent Systems, 2010.
+3. G. Andrighetto, D. Villatoro, and R. Conte. Norm internalization in articial societies.
+AI Communications , 23(4):325{339, 2010.
+4. P. Baldi, S. Brunak, Y. Chauvin, C. Andersen, and H. Nielsen. Assessing the accuracy
+of prediction algorithms for classication: an overview. Bioinformatics , 16(5):412, 2000.
+32 N. Criado et al.
+5. I. Bloch. Information combination operators for data fusion: A comparative review
+with classication. Systems, Man and Cybernetics, Part A: Systems and Humans,
+IEEE Transactions on , 26(1):52{67, 1996.
+6. G. Boella, J. Broersen, and L. van der Torre. Reasoning about constitutive norms,
+counts-as conditionals, institutions, deadlines and violations. In Intelligent Agents and
+Multi-Agent Systems , pages 86{97. Springer, 2008.
+7. G. Boella and L. Van Der Torre. Regulative and constitutive norms in normative multi-
+agent systems. Proceedings of the International Conference on Principles of Knowledge
+Representation and Reasoning , pages 255{265, 2004.
+8. G. Boella and L. van der Torre. Constitutive norms in the design of normative multia-
+gent systems. In Proceedings of the International Conference on Computational Logic
+in Multi-Agent Systems , pages 303{319, 2005.
+9. P. Bourdieu. Practical reason: On the theory of action . Stanford Univ Pr, 1998.
+10. J. Broersen, M. Dastani, J. Hulstijn, Z. Huang, and L. van der Torre. The BOID
+architecture: conicts between beliefs, obligations, intentions and desires. In Proceedings
+of International Conference on Autonomous Agents and Multiagent Systems , pages 9{
+16, 2001.
+11. A. Casali, L. Godo, and C. Sierra. A graded bdi agent model to represent and reason
+about preferences. Articial Intelligence , 175:1468{1478, 2011.
+12. R. Conte, C. Castelfranchi, and F. Dignum. Autonomous norm acceptance. Intelligent
+Agents V: Agents Theories, Architectures, and Languages , pages 99{112, 1999.
+13. N. Criado. Using Norms To Control Open Multi-Agent Systems . PhD thesis, Universitat
+Polit ecnica de Val encia, 2012.
+14. N. Criado, E. Argente, and V. Botti. A BDI architecture for normative decision mak-
+ing. In Proceedings of International Conference on Autonomous Agents and Multiagent
+Systems , pages 1383{1384, 2010.
+15. N. Criado, E. Argente, and V. Botti. Open Issues for Normative Multi-Agent Systems.
+AI Communications , 24(3):233{264, 2011.
+16. N. Criado, V. Julian, V. Botti, and E. Argente. A Norm-based Organization Man-
+agement System. In Coordination, Organizations, Institutions, and Norms in Agent
+Systems V , volume 6069, pages 19{35. Springer, 2010.
+17. M. Fitting. First-order logic and automated theorem proving . Springer Verlag, 1996.
+18. G. Governatori, J. Gelati, A. Rotolo, and G. Sartor. Actions, institutions, powers:
+Preliminary notes. In Proceedings of the Interntional Workshop on Regulated Agent-
+Based Social Systems: Theories and Applications , volume 318, pages 131{147, 2002.
+19. G. Governatori and A. Rotolo. Bio logical agents: Norms, beliefs, intentions in defeasible
+logic. Autonomous Agents and Multi-Agent Systems , 17(1):36{69, 2008.
+20. D. Grossi, H. Aldewereld, J. V azquez-Salceda, and F. Dignum. Ontological aspects of
+the implementation of norms in agent-based electronic institutions. Computational &
+Mathematical Organization Theory , 12(2):251{275, 2006.
+21. D. Grossi and F. Dignum. From abstract to concrete norms in agent institutions. Formal
+Approaches to Agent-Based Systems , pages 12{29, 2005.
+22. D. Grossi, J. Meyer, and F. Dignum. Counts-as: Classication or constitution? An
+answer using modal logic. Deontic Logic and Articial Normative Systems , pages 115{
+130, 2006.
+23. J. H ubner, O. Boissier, R. Kitio, and A. Ricci. Instrumenting multi-agent organisations
+with organisational artifacts and agents. Autonomous Agents and Multi-Agent Systems ,
+20(3):369{400, 2010.
+24. A. Jones and M. Sergot. A formal characterisation of institutionalised power. Logic
+Journal of IGPL , 4(3):427, 1996.
+25. S. Joseph. Coherence-Based Computational Agency . Phd thesis, Universitat Aut onoma
+de Barcelona, Barcelona, 2010.
+26. M. Kollingbaum and T. Norman. NoA-a normative agent architecture. In Proceedings of
+the International Joint Conferences on Articial Intelligence , volume 18, pages 1465{
+1466, 2003.
+27. A. Nonnengart and C. Weidenbach. Computing small clause normal forms. Handbook
+of automated reasoning , 1:335{367, 2001.
+28. G. Plotkin. A structural approach to operational semantics. 1981.
+Reasoning About Constitutive Norms in BDI Agents 33
+29. J. Rawls. Two concepts of rules. The Philosophical Review , 64(1):3{32, 1955.
+30. R. Rubino, A. Omicini, and E. Denti. Computational institutions for modelling norm-
+regulated mas: An approach based on coordination artifacts. In Coordination, Organi-
+zations, Institutions, and Norms in Multi-Agent Systems , volume 3913 of Lecture Notes
+in Computer Science , pages 127{141. 2006.
+31. J. Searle. Speech acts: An essay in the philosophy of language . Cambridge university
+press, 1970.
+32. J. Searle. Making the social world: The structure of human civilization . Oxford Uni-
+versity Press, USA, 2010.
+33. J. R. Searle. The Construction of Social Reality . Free Press, 1997.
+34. V. Silva. From the specication to the implementation of norms: an automatic approach
+to generate rules from norms to govern the behavior of agents. Autonomous Agents and
+Multi-Agent Systems , 17:113{155, 2008.
+35. J. V azquez-Salceda. The role of Norms and Electronic Institutions in Multi-Agent Sys-
+tems applied to complex domains. The HARMONIA framework. AI Communications ,
+16(3):209{212, 2003.
+View publication statsView publication stats

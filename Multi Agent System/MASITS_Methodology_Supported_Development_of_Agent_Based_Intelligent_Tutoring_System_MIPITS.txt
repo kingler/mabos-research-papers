@@ -1,0 +1,559 @@
+See discussions, st ats, and author pr ofiles f or this public ation at : https://www .researchgate.ne t/public ation/226707399
+MASITS Methodology Su pported Development of Agent Based Intelligent
+Tutoring System MIPITS
+Conf erence Paper    in  Communic ations in Comput er and Inf ormation Scienc e · Januar y 2011
+DOI: 10.1007/978-3-642-19890-8_9
+CITATIONS
+9READS
+79
+2 author s:
+Some o f the author s of this public ation ar e also w orking on these r elat ed pr ojects:
+Model f or Identific ation of P olitic ally Exposed P ersons  View pr oject
+Egons Lav endelis
+Riga Technic al Univ ersity
+34 PUBLICA TIONS    148 CITATIONS    
+SEE PROFILE
+Janis Grundspenkis
+Riga Technic al Univ ersity
+136 PUBLICA TIONS    867 CITATIONS    
+SEE PROFILE
+All c ontent f ollo wing this p age was uplo aded b y Egons Lav endelis  on 04 June 2014.
+The user has r equest ed enhanc ement of the do wnlo aded file.
+MASITS Methodology Supported Development of Agent 
+Based Intelligent Tutoring System MIPITS 
+Egons Lavendelis and Janis Grundspenkis 
+Department of Systems Theory and Design, Riga Techni cal University, 1 Kalku street, Riga, 
+Latvia 
+egons.lavendelis@rtu.lv, janis.grundspenkis@cs.rtu. lv 
+Abstract.  Many Intelligent Tutoring Systems (ITS) have been developed to add 
+adaptivity and intelligence to e-learning systems. Intelligent agents are widely 
+used in ITSs due to their characteristics such as m odularity and facilitation of 
+intelligent mechanism implementation. At the same t ime development of agent 
+based ITS is complicated and methodological support  is needed to enable 
+industrial adoption of agent based ITSs. The paper describes a specific agent 
+based ITS development methodology, named MASITS, an d MIPITS system 
+developed with the methodology. The system is creat ed for the course 
+“Fundamentals of Artificial Intelligence”. It offer s learning materials, provides 
+practical problems and gives feedback to the learne r about his/her solution 
+evaluating his/her knowledge. The main focus of the  system is on problem 
+solving. The problems are adapted to the learner’s knowledge level and 
+preferences about difficulty, size and practicality  of problems. The system 
+offers three types of problems: tests, state space search problems and two 
+person games algorithm problems. 
+1   Introduction 
+Nowadays, the availability of education, including lifelong learning, must be 
+increased to successfully develop knowledge society . There is a need for easy 
+available and individualised tutoring process that adapts to every learner. Different 
+e-learning technologies are used to teach large num bers of students, facilitate 
+availability of education and lifelong learning. Le arning management systems like 
+Blackboard (http://www.blackboard.com/) and Moodle (http://moodle.org/) are 
+among the most popular ones. These systems are avai lable from any place with an 
+Internet connection and at any time. Thus learners can choose when and where to 
+study the course. 
+Unfortunately, e-learning as well as traditional tu toring process which is done in 
+the classroom is not effective if many learners wit h different knowledge levels and 
+learning styles are taught simultaneously. E-learni ng systems mainly offer learning 
+materials and different kinds of tests to evaluate learners’ knowledge. The majority of 
+them use the same materials and tests for all learn ers. Thus, traditional e-learning 
+systems can not realize individualized tutoring by adapting to any specific 
+characteristics of the learner. Moreover, e-learnin g systems usually are not capable to 
+2      Egons Lavendelis and Janis Grundspenkis  
+generate any learning material or test using domain  knowledge. The teacher must 
+create all learning materials and tests that are us ed in the course. 
+To eliminate the abovementioned drawbacks of e-lear ning systems, Intelligent 
+Tutoring Systems (ITS) are developed. They simulate  the teacher realizing 
+individualized tutoring, using domain and pedagogic al knowledge as well as 
+knowledge about the learner. ITSs to a certain exte nt can adapt learning materials, 
+generate tasks and problems from domain knowledge, evaluate learner’s knowledge 
+and provide informative feedback. So ITSs add adapt ivity to above-mentioned 
+benefits of e-learning systems [1]. During the last  40 years since the first ITS named 
+SCHOLAR which taught geography [2], many ITSs have been developed. Well-
+known examples of ITSs are FLUTE [3], ABITS [4], Sl ide Tutor [5] and Ines [6]. 
+ITSs mainly are built as modular systems consisting  of four traditional modules: 
+the tutoring module, the expert module, the student  diagnosis module and the 
+communication module. During the last decade many I TSs have been built using 
+intelligent agents to implement these modules (for an overview see [7]). Well-known 
+examples of agent based ITSs are ITS for enhancing e-learning [8], ABITS [4] and 
+Ines [6]. Despite the fact that agents increase mod ularity of the system and facilitate 
+implementation of intelligent mechanisms needed in ITSs [9], development of agent 
+based ITSs is still complicated and appropriate dev elopment methodologies are 
+needed to bring agent based ITSs into industry. Unf ortunately, general purpose agent 
+oriented software engineering (AOSE) methodologies [10] do not take into 
+consideration all ITS characteristics and do not al low to plug in knowledge from ITS 
+research [7]. 
+The paper gives a brief overview of an agent based ITS development methodology 
+MASITS and describes an ITS for the course “Fundame ntals of Artificial 
+Intelligence” (MIPITS). The MIPITS system offers le arning materials and problems 
+to a learner, evaluates learner’s knowledge in each  topic and provides feedback to a 
+learner. The system adapts problems to the learner’ s knowledge level and preferences. 
+The remainder of the paper is organized as follows.  A brief description of the 
+MASITS methodology is given in the Section 2. The S ection 3 contains general 
+description of the developed system. The architectu re of the system is given in the 
+Section 4. The tutoring scenario implemented in the  system is described in the Section 
+5. The Section 6 shows how to extend the system wit h new types of problems. The 
+Section 7 concludes the paper and gives brief outli ne of the future work. 
+2   The MASITS Methodology 
+To facilitate adoption of agent-oriented software b y software developers a large 
+number of general purpose AOSE methodologies have b een developed during the last 
+years. The well known examples of AOSE methodologie s are Gaia [11], Prometheus 
+[12] and MaSE [13]. However general purpose AOSE me thodologies are developed 
+to support as many different agent systems as possi ble by providing high level 
+techniques that are suitable for different agents. Thus these methodologies do not 
+allow to adjust the development process to the char acteristics of specific systems. On 
+the other hand, ITSs are specific systems with the specific characteristics that limit 
+MASITS Methodology Supported Development of Agent Ba sed ITS      3 
+effective usage of general purpose methodologies, f or details see [9]. Additionally, 
+ITSs have many important results gained in specific  research that can facilitate the 
+development process. The main results of ITS resear ch are the following: 
+identification of types of knowledge used in ITS, m odular architecture, set of agents 
+used to implement modules and tasks done by these a gents as well as different agent 
+architectures for ITS implementation [7], [9]. 
+In the absence of general purpose methodologies and  corresponding tools allowing 
+to plug in domain specific knowledge and adjust the  development process to the 
+characteristics of specific systems, a specific age nt based ITS development 
+methodology, named MASITS methodology, and the corr esponding tool have been 
+developed [9], [14]. 
+The MASITS methodology is a full life cycle methodo logy for agent based ITS 
+development. The methodology includes the most impo rtant results of ITS research 
+and reusable techniques of AOSE methodologies, whic h allow to integrate specific 
+knowledge for the ITS development. Additionally, ne w techniques are introduced in 
+steps where known techniques do not allow integrati on of ITS knowledge. 
+The methodology and tool support development of age nt based ITSs using the 
+open holonic architecture described in Section 4. T he methodology is connected with 
+the JADE platform (http://jade.tilab.com/) – the lo wer level design is done in concepts 
+used in the JADE platform to enable direct code gen eration from the design. 
+The development process of the MASITS methodology c onsists of the following 
+phases: analysis, design (divided into two stages: external and internal design of 
+agents), implementation, testing, deployment and ma intenance. The analysis phase  
+consists of two steps. Hierarchy of goals is create d during the goal modelling step. 
+Use cases corresponding to the lower level goals ar e defined during the use case 
+modelling step. The external design of agents answers  the question what agents have 
+to do. During this stage tasks are defined accordin g to steps of use case scenarios and 
+allocated to agents from the set of higher level ag ents of the architecture. 
+Additionally, interactions among agents are designe d in use case maps and the 
+interaction diagram. Ontology is created to define predicates used in agent 
+communications. The internal design of agents  answers the question how agents 
+achieve their behaviour specified during the extern al design of agents. Agents are 
+designed in terms of events perceived, messages sen t and received as well as 
+behaviours carried out. The internal design of agen ts in the MASITS methodology is 
+done according to the open holonic architecture for  ITS development [15]. Choice of 
+the architecture is justified in [9]. In the holoni c architecture each agent can be 
+implemented as a holon and consist of several small er agents. For agents that are 
+implemented as holons, design of the holon is done using techniques of both external 
+and internal design of agents. Additionally, the MA SITS methodology includes 
+crosschecks among diagrams during the whole develop ment process, to ensure that all 
+elements from one diagram have corresponding elemen ts in other diagrams [9]. 
+Usage of open holonic architecture allows reusing s ome agents from previous 
+projects during the implementation phase . Classes for agents that can not be reused 
+and their behaviours as well as ontology classes ar e generated by the MASITS tool 
+from the diagrams created during the design [16]. A gent and behaviour classes are 
+manually completed after generation. Testing phase  of the MASITS methodology is 
+carried out in the following order, separate agents  are tested first, holons as a whole 
+4      Egons Lavendelis and Janis Grundspenkis  
+are tested second and finally testing of the whole system is done. Deployment  of the 
+system is specified in the deployment diagram, whic h is used by the tool to generate 
+configuration of the system. The MASITS methodology  supports maintenance phase  
+by providing mechanisms to implement some types of changes into the system. The 
+way how to extend system with new tasks is shown in  Section 6. For further details of 
+the development process with the MASITS methodology  and tool, see [9][14]. 
+ 
+Fig. 1.  Phases of the development process and steps done d uring each phase. 
+3   The MIPITS System 
+The MIPITS system is developed for the course “Fund amentals of Artificial 
+Intelligence” simultaneously taught to more than 20 0 students at Riga Technical 
+University. The course contains topics about differ ent algorithms used in artificial 
+intelligence like search algorithms and algorithms for two person games. Important 
+part of learning such algorithms is practice. Howev er, any guidance and feedback 
+during the practice is limited due to the large num ber of students. Additionally, it is 
+almost impossible to prepare unique problems and ta sks for all students manually. 
+The aim of the MIPITS system is to solve the issues  of problem generation, limited 
+guidance and feedback during the practice with diff erent algorithms taught in the 
+course. Moreover, students attending the course hav e very different knowledge levels 
+and learning styles. Thus another goal of the syste m is to improve the tutoring process 
+by adapting to the learner’s knowledge level and le arning style. 
+The MIPITS system is intended as an addition to the  traditional classroom tutoring. 
+Firstly, the learner attends lectures in the classr oom. Later he/she has an opportunity 
+to repeat the topics taught in the classroom and pr actice in the problem solving using 
+the system. However, it is possible to use the syst em without attending the classes, 
+MASITS Methodology Supported Development of Agent Ba sed ITS      5 
+because it covers all necessary activities to learn  the basics of the corresponding 
+topics. In each topic the MIPITS system offers the learning material, and the problem 
+to be solved by the learner. In the MIPITS system t he problem is any task, test or 
+assignment used to evaluate the learner’s knowledge . After the learner has finished 
+the problem the system evaluates his/her solution a nd gives appropriate feedback. 
+The main focus of the MIPITS system is on problem s olving. The system provides 
+unique problems that are appropriate to the knowled ge level and preferences of the 
+individual learner. Initial version of the system i s developed for first three modules of 
+the course - „Introduction”, „Uninformed Search” an d „Informed Search” [17]. Thus, 
+the system is capable to offer the corresponding ty pes of problems: 
+• Different types of tests: single choice tests, mult iple choice tests and tests, where a 
+learner has to write the answer by him/herself. Fig ures and state spaces can be 
+added to the question. 
+• Search algorithm problems, where a learner has to d o a state space search using the 
+specified algorithm and lists OPEN and CLOSED [17].  
+• Two person game problems, where a learner has to ap ply the MINIMAX algorithm 
+or Alpha-Beta pruning to the given state space [17] . 
+Other types of problems can be added to the system (for details see Section 6). 
+When the learner requests a task the system finds t he most appropriate problem to the 
+learner’s knowledge level and preferences among pro blems of all types that fit the 
+topic and delivers it to the learner. 
+4   The Architecture of the MIPITS System 
+According to the MASITS methodology, the MIPITS sys tem is developed using open 
+holonic multi agent architecture for ITS developmen t described in [15]. The 
+architecture consists of the higher level agents th at implement the traditional modules 
+of ITSs. All higher level agents can be implemented  as holons [18]. Each holon 
+consists of one head agent and a number of body age nts. The head of the holon 
+communicates outside the holon and coordinates all body agents. Open and closed 
+holons are distinguished. Open holons consist of th e head and a certain type of body 
+agents, however, the number and exact instances of body agents are not known during 
+the design of the system and can be changed during the maintenance and runtime of 
+the system so modifying the system’s functionality.  The body agents have to register 
+their services at the directory facilitator agent. Heads of open holons use the directory 
+facilitator agent to find actual body agents in the  holon. Agent instances in closed 
+holons are specified during the design and can not be changed afterwards. 
+Definition of specific agents used to implement the  system is started during the 
+external design of agents. Tasks are defined and al located to the agents in this stage. 
+During the internal design of agents a decision is made, whether to implement each 
+higher level agent as a holon or as a single agent.  The final architecture of the system 
+is shown in Figure 2. Heads of open holons are deno ted by gray colour. The 
+developed system consists of the following higher l evel agents. The communication 
+module is implemented as an interface agent  that carries out all interactions with the 
+learner. It is responsible for the following tasks:  (1) Registration. (2) Log in. (3) 
+6      Egons Lavendelis and Janis Grundspenkis  
+Perceiving learner’s requests and starting the proc esses in the system by forwarding 
+learner’s requests, actions and data to respective agents. (4) Giving all information to 
+a learner, including learning materials, problems a nd feedback. The interface agent is 
+the only agent interacting with a learner. Thus, it  is the head of the higher level holon. 
+ 
+Fig. 2.  Architecture of the MIPITS system. 
+The tutoring module is implemented as the teaching strategy agent, the problem 
+generation agent, the curriculum agent and the feed back generation agent. The 
+teaching strategy agent  is responsible for provision of the learning mater ial in each 
+topic. The curriculum agent  is responsible for creation of the curriculum duri ng the 
+registration of a learner in the system. The problem generation agent  is responsible 
+for generation of all types of problems used in the  system and adaptation of these 
+problems to the knowledge level and preferences of the learner. 
+The expert module is implemented as the expert agent, which is responsible for 
+solving all types of problems. 
+The student diagnosis module is implemented as the student modelling agent and 
+the knowledge evaluation agent. The student modelling agent  is responsible for 
+creating, updating and providing the student model upon request of any other agent. 
+The initial student model is created during the reg istration process. It is modified by 
+reacting on the different actions reported by other  agents. The student model contains: 
+• Personal data of a learner that are collected durin g the registration process. 
+• The learner’s preferences that are collected during  the registration process: the 
+preferred (initial) difficulty of problems, the pre ferred practicality of problems and 
+the preferred size of problems described below. 
+• The curriculum that is created for a learner during  the registration process. 
+Additionally, each topic has its status denoting wh at activities a learner has 
+completed in the topic. The status has the followin g possible values: “initial”, 
+“started”, “finished theoretical part”, and “finish ed”. 
+• All problems given to a learner and the results of all knowledge evaluations based 
+on his/her solutions of the given problems. 
+The knowledge evaluation agent  has to find the learner’s mistakes in his/her 
+solution by comparing it to the expert’s solution. It must be able to evaluate solutions 
+of all types of problems. 
+MASITS Methodology Supported Development of Agent Ba sed ITS      7 
+According to the MASITS methodology, to implement d ifferent types of problems 
+and allow adding new problems, all higher level age nts dealing with problems, 
+namely the problem generation agent, the expert age nt, the knowledge evaluation 
+agent and the interface agent, are implemented as o pen holons. The problem 
+generation holon consists of body agents that gener ate one type of problems: the test 
+generation agent, the search problem generation age nt and the two person games 
+problem generation agent. Similarly, body agents of  the expert holon are capable to 
+solve problems of certain type. Knowledge evaluatio n body agents compare system’s 
+and learner’s solutions of the given problem. Each interface body agent is capable to 
+manage user interface of one type of problems. The heads of open holons are only 
+capable to find the appropriate body agent and forw ard results received from them. 
+5   The Tutoring Scenario of the MIPITS System 
+The first activity a learner has to do is to register in the system , because a learner must 
+be identified to adapt problems to his/her characte ristics. For this purpose a learner 
+fills a form containing his/her personal data and h is/her preferences. After a learner 
+has submitted the registration form, the interface agent collects and checks data from 
+the form, inserts user data into database and sends  data to the student modelling agent. 
+The student modelling agent creates the initial stu dent model based on learner’s 
+preferences and requests the curriculum agent to cr eate the curriculum for a learner. 
+After receiving the curriculum from the curriculum agent the student modelling agent 
+completes the initial student model by adding the c urriculum and sends it to the 
+interface agent, who opens the main window with the  curriculum and information 
+about the first module. Interactions among agents a re implemented using simple 
+messages. Predicates from the domain ontology are u sed to express message contents. 
+Messages sent during the registration process are s hown in Figure 3. 
+Each time a registered learner logs into the system  the learning process is restarted 
+at the topic that was open when a learner quit the system last time. To do it, first, the 
+interface agent validates learner’s data and sends the data to the student modelling 
+agent. Second, the student modelling agent reads th e student model from the database 
+and sends it to the user interface agent. Third, th e interface agent requests the teaching 
+strategy agent to provide the material in the curre nt topic. Finally, when the interface 
+agent receives the material, the main window of the  system containing the curriculum 
+and the learning material in current topic is opene d. Interactions done during the login 
+process are shown in Figure 4. 
+ 
+  
+Fig. 3.  Interactions done during the registration.  Fig. 4.  Interactions done during the login. 
+8      Egons Lavendelis and Janis Grundspenkis  
+The curriculum of the course consists of modules th at, in their turn, consist of 
+topics. To teach a topic the MIPITS system performs  the scenario consisting of three 
+steps. When a learner starts a topic, the system st arts the theoretical step . During this 
+step a learner studies a theoretical material. Afte r finishing it a learner requests a test. 
+The system switches to the problem solving step . During this step a learner has to 
+solve some problems in the topic. After finishing, a learner submits his/her solutions. 
+The system moves to the knowledge evaluation step . As a result of this step a learner 
+receives an evaluation of his/her knowledge in the current topic and constructive 
+feedback about mistakes made in each problem. When the knowledge evaluation step 
+is over, a learner can start a new topic. After fin ishing all topics of the module a 
+learner has to pass the final test of the module th at may contain problems from all 
+topics included in this module. During the final te sting of the module all actions of the 
+problem solving and knowledge evaluation steps are done. 
+5.1   The Theoretical Step 
+The goal of the theoretical step is to hand out a l earning material to a learner allowing 
+him/her to repeat theory of the topic that has been  given in the classroom. The step is 
+carried out using the following scenario. When a le arner chooses the topic to start 
+learning, the interface agent requests the teaching  strategy agent to generate a learning 
+material in the chosen topic. The teaching strategy  agent finds appropriate learning 
+material and sends it to the interface agent. The i nterface agent shows a learning 
+material in the user interface of the system. Addit ionally, the teaching strategy agent 
+notifies the student modelling agent that a learnin g material in the current topic has 
+been given to a learner. The student modelling agen t modifies the student model by 
+changing the status of the topic from “initial” to “started”. Messages sent among 
+agents during the theoretical step are shown in Fig ure 5. 
+ 
+Fig. 5.  Interactions done during the theoretical step. 
+5.2   The Problem Solving Step 
+The goal of the problem solving step is to provide a learner an opportunity to practice 
+in different types of problems. The knowledge evalu ation step is based on learner’s 
+solutions in the problem solving step. The problem solving step starts when a learner 
+submits that he has studied a material. The interfa ce agent requests the problem 
+generation agent to generate the problem in the cur rent topic. The request is processed 
+by the head of the problem generation holon, using the following algorithm (see 
+Figure 6). Firstly, the head queries the student mo delling agent to get full student 
+model and the directory facilitator to find the bod y agents of the problem generation 
+holon. If there are no problem generation body agen ts registered to the directory 
+MASITS Methodology Supported Development of Agent Ba sed ITS      9 
+facilitator, the system error is generated. Otherwi se, after receiving replies from the 
+student modelling agent and the directory facilitat or all body agents are queried to 
+generate a problem in the current topic that is app ropriate to learner’s characteristics. 
+Each problem generation body agent either generates  the most appropriate problem to 
+learner’s characteristics and sends it to the head of the holon or sends failure to the 
+head of the holon if it can not generate a problem in the current topic, because the 
+type of the problem does not match the topic. 
+ 
+Fig. 6.  Algorithm for the head of the problem generation h olon. 
+After receiving problems from body agents the head chooses the most appropriate 
+problem by using the following criteria, whose pref erred values are calculated first: 
+• The degree of difficulty of the problem. The proble m must match the preferred 
+level of difficulty as close as possible, because i t should not be too complex 
+(unsolvable) nor too easy (not challenging) for a l earner. During the registration 
+process learner evaluates his/her knowledge level a s an initial degree of difficulty 
+in the scale from 1 (the lowest) to 5 (the highest) . This is only a subjective his/her 
+estimation that may be inaccurate. Thus, the system  calculates the preferred degree 
+of difficulty using the initial degree of difficult y and learner’s results in previous 
+knowledge evaluations. Moreover, the more problems a learner has solved, the 
+more valuable is knowledge evaluation by the system  and the less valuable is the 
+value given by a learner. The preferred degree of d ifficulty is calculated as follows: 
+init 
+pref  init*dif +max*l dif = init+max , where (1) 
+init – coefficient denoting how much points for pro blem solving are equivalent 
+to the initial degree of difficulty. Its value is d etermined empirically and is 
+50. For comparison, one test question is 2 to 4 poi nts worth. 
+dif init  – initial degree of difficulty. 
+max – maximal number of points that can be scored f or problems solved so far. 
+l – level of difficulty corresponding to results th at a learner has achieved in 
+problem solving. To calculate the level, firstly, l earner’s result is calculated 
+in percents of maximal number of points that can be  scored for the problems 
+solved by him/her. Secondly, the level is determine d using the following 
+empirical function: 0-34% go in level 1, 35-49% go in level 2, 50-64% go in 
+level 3, 65-80% go in level 4, results over 80% go in level 5. 
+• The size of the problem. During the registration le arner may choose whether 
+his/her knowledge evaluation will be carried out wi th small and concrete problems 
+or large and time consuming problems. 
+10      Egons Lavendelis and Janis Grundspenkis  
+• The practicality of the problem. During the registr ation learner may choose 
+between more practical and more theoretical problem s to match preferences of 
+more practically and more theoretically oriented le arners. 
+• Frequency of the type of problem. Different combina tions of the learner’s 
+characteristics may lead to the situation, that onl y one type of problems is used and 
+knowledge evaluation process becomes monotony. Thus , the frequency of the type 
+of problems should be minimized. The frequency is 0  if a learner has not solved 
+any problem yet, otherwise it is calculated by divi ding the number of problems of 
+certain type given to the learner by total number o f problems given to him/her. 
+Each problem received from the problem generation a gent contains the values of 
+all criteria. So, after calculating the preferred v alues of criteria the difference between 
+preferred and real values is minimized. The appropr iateness is calculated as follows: 
+pref r d pref r s pref r p t f A ( dif -dif *c  + s s *c  + pr -pr *c  + f *c ), whe re =− −  (2) 
+dif pref  – the preferred difficulty of the 
+task;  
+dif r – the real difficulty of the task; 
+cd – the weight of the difficulty; 
+spref  – the preferred size of the problem; 
+sr – the real size of the problem; cs – the weight of the size; 
+pr pref  – the preferred practicality; 
+pr r – the real practicality of the problem; 
+cp – the weight of the practicality; 
+ft – the frequency of problem’s type; 
+cf – the weight of the frequency. 
+Weights are determined empirically and are the foll owing: c d=2, c s=3, c p=3, c f=6. 
+With these weights all criteria have significant im pact on the appropriateness. 
+After finding the problem with the highest appropri ateness it is sent to three agents: 
+• To the interface agent, that is responsible for han ding out the problem to a learner. 
+• To the expert agent, that has to find the correct s olution of the problem. 
+• To the student modelling agent that changes the sta tus of the topic from “started” 
+to “finished theoretical part” in the student model . 
+Heads of the interface holon and the expert holon a re not capable to accomplish the 
+tasks that they are responsible for. Thus, they hav e to use body agents of their holons. 
+After receiving the problem the heads of the holons  use algorithm, similar to one 
+shown in Figure 6. The head of the holon uses the d irectory facilitator to find the 
+appropriate body agent. If such agent is found, the  problem is forwarded to the body 
+agent, otherwise system error is generated. The bod y agent does its job (respectively, 
+passes the problem to a learner or solves it). The body agent of the expert holon sends 
+the solution to the head of the holon that forwards  it to the head of the knowledge 
+evaluation holon, which saves the solution to use i t during the knowledge evaluation. 
+All messages sent among agents during this step are  shown in Figure 7. 
+As a result of the problem solving step, the proble m is handed out to a learner 
+using the main window of the system (see Figure 8).  The interface of the system is in 
+Latvian, which is the language of the course. The w indow consists of two main parts: 
+the curriculum denoted with 1 and the main panel de noted with 2. The main panel 
+changes its contents depending on the step. It cont ains materials in the theoretical step 
+and problems in problem solving and knowledge evalu ation steps. The screenshot of 
+the system shown in Figure 8 contains the state spa ce search problem. The panel of 
+the problem consists of three parts: the statement of the problem, the state space 
+denoted with 3 and tools needed to do the search de noted with 4. 
+MASITS Methodology Supported Development of Agent Ba sed ITS      11 
+ 
+Fig. 7.  Interactions done during the problem solving. 
+ 
+Fig. 8.  The interface of the MIPITS system during the prob lem solving step. 
+5.3   The Knowledge Evaluation Step 
+The goal of the knowledge evaluation step is to eva luate learner’s solution created in 
+the previous step and provide him/her the feedback about the solution. A learner starts 
+the step by submitting his/her solution of the prob lem. The interface agent sends 
+learner’s solution to the knowledge evaluation agen t. The head of the knowledge 
+evaluation agent uses the same algorithm as the hea ds of the expert and interface 
+holons. The body agent compares the system’s and th e learner’s solutions finding the 
+learner’s mistakes and evaluating the solution. The  head of the knowledge evaluation 
+holon forwards the evaluation to the student modell ing agent and the feedback agent. 
+The student modelling agent records the knowledge e valuation in the student model 
+12      Egons Lavendelis and Janis Grundspenkis  
+and changes the status of the topic to “finished”. The feedback agent creates the 
+textual feedback about the result, like “You scored  19 points from 20! Great result!”. 
+Additionally, it creates textual information about the learner’s mistakes, like “You 
+made a mistake determining the search goal during t he last step of the algorithm”. 
+After the feedback is prepared it is sent to the in terface agent, which passes it to a 
+learner. Interactions among agents done in this ste p are shown in Figure 9. 
+ 
+Fig. 9.  Interactions done during the knowledge evaluation.  
+6   Extending the System with New Types of Problems  
+The open architecture of the MIPITS system makes it  extendable for teaching new 
+topics of the course or even some other courses by including new types of problems 
+and appropriate materials. To enable extension of t he system, all steps of the tutoring 
+scenario are implemented in the way that any new ty pe of problems can be added to 
+the system without modifying the code of already ex isting agents. It can be done by 
+adding new agents to the open holons. A single body  agent has to be added to all four 
+open holons (heads of open holons are denoted with gray colour in Figure 2): the 
+problem generation holon, the expert holon, the kno wledge evaluation holon and the 
+interface holon. 
+To illustrate the extendibility of the MIPITS syste m a topic about propositional 
+logic and inference is added to the system. To prac tice in the basic concepts of 
+inference, a problem about usage of the Modus Ponen s is added to the system. The 
+learner receives initial working memory with one fa ct and the knowledge base 
+consisting of a number of implication rules. He/she  then has to show how the rules are 
+fired and the working memory changed. 
+To implement this task the following changes have b een made in the system: 
+• Four new body agents are added. Modus Ponens proble m generation agent is added 
+to the problem generation holon, Modus Ponens visua lisation agent is added to the 
+interface holon, Modus Ponens knowledge evaluation agent is added to the 
+knowledge evaluation holon and Modus Ponens expert agent is added to the expert 
+holon. Newly added body agents register themselves to the directory facilitator 
+agent in order the heads of the holons be able to f ind them. 
+• The ontology is extended with class of problem abou t Modus Ponens and its 
+solution. 
+• Information about new type of problems is added to the corresponding table in the 
+database to link up new type of problem with corres ponding topics. 
+MASITS Methodology Supported Development of Agent Ba sed ITS      13 
+7   Conclusions and Future Work 
+The system is an example how an ITS for individuali zed tutoring can be created with 
+the MASITS methodology and a tool. The system prove s that the MASITS 
+methodology and tool are suitable for development o f open agent based ITS with 
+holonic architecture. The MASITS methodology facili tates the development process 
+by enabling usage of the main results of ITS resear ch, like architecture, set of agents 
+and tasks done by these agents. The usage of holoni c agents allow to increase the 
+modularity of the ITS, where agents are responsible  for concrete and separate tasks. 
+Moreover, the system can be modified by adding or r emoving types of problems used 
+in the system without changing existing code. 
+An agent based ITS adapting the problems to the lea rner’s knowledge level and 
+preferences is proposed. The adaptation of the prob lems is done by minimizing the 
+difference between the preferred and real values of  problem’s difficulty, practicality 
+and size. Experiments with the system showed that l earners received problems that 
+matched their preferences closer than any problem t hat could be given to all learners.  
+There are two main directions of the future work in  the MIPITS system. The first 
+one is to add more types of problems corresponding to other topics. The second one is 
+to use open holons to implement other types of open ness, for example, usage of 
+different types of learning materials is possible b y implementing the teaching strategy 
+agent as an open holon. Moreover, new types of adap tation (for different kinds of 
+adaptation in ITS see [1]) can be implemented in th e system. The main direction of 
+the future work in the MASITS methodology is to cre ate library of reusable agents 
+and a basic reusable ITS ontology to facilitate reu se in ITS development.  
+Acknowledgements  
+This work has been supported by the European Social  Fund within the project 
+„Support for the implementation of doctoral studies  at Riga Technical University”. 
+References 
+1.  Brusilovsky, P., Peylo, C.: Adaptive and intelligen t Web-based educational 
+systems. In: International Journal of Artificial In telligence in Education 13 (2-4), 
+pp. 159-172 (2003). 
+2.  Carbonell, J.R.: AI in CAI: An Artificial Intellige nce Approach to Computer-
+Assisted Instruction. In: IEEE Transactions on Man- Machine Systems, Vol. 11, 
+No. 4, pp. 190-202 (1970). 
+3.  Devedzic, V., Debenham, J., Popovic, D.: Teaching F ormal Languages by an 
+Intelligent Tutoring System. In: Educational Techno logy & Society, Vol. 3, No. 2, 
+pp. 36-49 (2000). 
+4.  Capuano, N., De Santo, M., Marsella, M., Molinara, M., Salerno, S.: A Multi-
+Agent Architecture for Intelligent Tutoring. Procee dings of the International 
+14      Egons Lavendelis and Janis Grundspenkis  
+Conference on Advances in Infrastructure for Electr onic Business, Science, and 
+Education on the Internet (SSGRR 2000), Rome, Italy , 2000. 
+5.  Crowley, R.S., Medvedeva, O.: An Intelligent Tutori ng System for Visual 
+Classification Problem Solving. In: Artificial Inte lligence in Medicine, August, 
+2005- 2006:36(1), pp. 85-117 (2005). 
+6.  Hospers M., Kroezen E., Nijholt, A., op den Akker, R., Heylen, D.: An Agent-
+based Intelligent Tutoring System for Nurse Educati on. In: Applications of 
+Intelligent Agents in Health Care (eds. J. Nealon, A. Moreno). Birkhauser 
+Publishing Ltd, Basel, Switzerland, pp. 141-157 (20 03). 
+7.  Grundspenkis, J., Anohina, A.: Agents in Intelligen t Tutoring Systems: State of 
+the Art. In: Scientific Proceedings of Riga Technic al University „Computer 
+Science. Applied Computer Systems”, 5th series, Vol .22, Riga, pp.110-121 
+(2005). 
+8.  Gascuena, J.M., Fernández-Caballero, A.: An Agent-b ased Intelligent Tutoring 
+System for Enhancing E-learning/E-teaching. In: Int ernational Journal of 
+Instructional Technology and Distance Learning, Vol . 2, No.11, pp. 11-24 (2005). 
+9.  Lavendelis, E., Grundspenkis, J.: MASITS – A Multi- Agent Based Intelligent 
+Tutoring System Development Methodology. In: Procee dings of IADIS 
+International Conference „Intelligent Systems and A gents 2009”, 21-23 June 
+2009, Algarve, Portugal, pp. 116-124 (2009). 
+10.  Henderson-Sellers, B., Giorgini, P.: Agent-Oriented  Methodologies. Idea Group 
+Publishing, London, p. 414 (2005). 
+11.  Zambonelli, F., Jennings, N. R., Wooldridge, M.: Mu lti-Agent Systems as 
+Computational Organisations: The Gaia Methodology. In: Agent-Oriented 
+Methodologies, Idea Group Publishing, London, pp. 1 36-171 (2005). 
+12.  Winikoff, M., Padgham, L.: The Prometheus Methodolo gy. In: Methodologies and 
+Software Engineering for Agent Systems. The Agent-O riented Software 
+Engineering Handbook, pp. 217-236 (2004). 
+13.  DeLoach, S.: Analysis and Design Using MaSE and age ntTool. In: Proceedings of 
+the 12th Midwest Artificial Intelligence and Cognit ive Science Conference, 
+Oxford OH, March 31 - April 1 2001. pp. 1-7 (2001).  
+14.  Lavendelis, E., Grundspenkis, J.: MASITS - A Tool f or Multi-Agent Based 
+Intelligent Tutoring System Development. In: Procee dings of 7th International 
+Conference on Practical Applications of Agents and Multi-Agent Systems 
+(PAAMS 2009), Salamanca, Spain, 25-27 March 2009, p p. 490-500 (2009). 
+15.  Lavendelis, E., Grundspenkis, J.: Open Holonic Mult i-Agent Architecture for 
+Intelligent Tutoring System Development. In: Procee dings of IADIS International 
+Conference „Intelligent Systems and Agents 2008”, A msterdam, The Netherlands, 
+22 - 24 July 2008, pp. 100-108 (2008). 
+16.  Lavendelis, E., Grundspenkis, J.: Multi-Agent Based  Intelligent Tutoring System 
+Source Code Generation Using MASITS Tool. Scientifi c Journal of Riga 
+Technical University (In Press) (2010). 
+17.  .Luger, G.F.: Artificial Intelligence: Structures a nd Strategies for Complex 
+Problem Solving, Addison-Wesley, Harlow, England, 9 03 p (2005). 
+18.  Fischer, K., Schillo, M., Siekmann, J.: Holonic Mul tiagent Systems: A Foundation 
+for the Organisation of Multiagent Systems. In: LNC S 2744, Springer, pp. 71-80 
+(2003). 
+View publication statsView publication stats

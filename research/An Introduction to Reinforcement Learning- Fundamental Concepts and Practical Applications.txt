@@ -1,0 +1,1101 @@
+An Introduction to Reinforcement Learning: Fundamental
+Concepts and Practical Applications
+Majid Ghasemi
+Wilfrid Laurier University
+mghasemi@wlu.caAmir Hossein Moosavi
+Concordia University
+s.amirhosein.mn@gmail.com
+Ibrahim Sorkhoh
+Wilfrid Laurier University
+ibrahim.sorkhoh@me.comAnjali Agarwal
+Concordia University
+anjali.agarwal@concordia.ca
+Fadi Alzhouri
+Concordia University
+fadi.alzhouri@concordia.caDariush Ebrahimi
+Wilfrid Laurier University
+debrahimi@wlu.ca
+Abstract
+Reinforcement Learning (RL) is a branch of Artificial Intelligence (AI) which focuses on training
+agents to make decisions by interacting with their environment to maximize cumulative rewards. An
+overview of RL is provided in this paper, which discusses its core concepts, methodologies, recent trends,
+and resources for learning. We provide a detailed explanation of key components of RL such as states,
+actions, policies, and reward signals so that the reader can build a foundational understanding. The paper
+also provides examples of various RL algorithms, including model-free and model-based methods. In
+addition, RL algorithms are introduced and resources for learning and implementing them are provided,
+such as books, courses, and online communities. This paper demystifies a comprehensive yet simple
+introduction for beginners by offering a structured and clear pathway for acquiring and implementing
+real-time techniques.
+1 Introduction
+Reinforcement Learning (RL) is another type of learning in AI that focuses on training by interacting
+with the environment. In contrast to supervised learning, where an agent learns from labeled examples, or
+unsupervised learning, which is based on detecting patterns in the data, RL deals with an autonomous agent
+that must make intuitive decisions and consequently learn from its actions. The key idea is to learn how
+the world works (e.g., what action gets a reward and which does not) to maximize cumulative rewards over
+time through trial-and-error exploration [1]. This paper will serve as a crash course in RL, with the aim
+that readers should be geared up for solving real-world problems using it. This paper considers the readers
+to have basic knowledge of Machine Learning (ML) algorithms like Supervised and Unsupervised Learning.
+RL revolves around several key concepts: States, Actions, Policies, and Rewards. Each of these compo-
+nents plays a crucial role in defining the agent’s interaction with its environment and the overall learning
+process.
+A State (s) represents a specific condition or configuration of the environment at a given time as perceived
+by the agent. A state sets the scene for the agent to make choices and select actions. This is the state space,
+which describes all states from which an agent can choose for each action that occurs. For example, in
+chess, a state might be one specific layout of pieces on the board. Actions (a) are the set of possible moves
+or decisions an agent can make while interacting with the environment. A selected action is part of the
+strategy followed by an agent to reach its desired goals according to its current states and policy. In the
+chess example, moving a piece from one square to another is an action. A policy ( π) guides the behavior
+of a learning agent by mapping perceived states of the environment into actions. This could be a simple
+1arXiv:2408.07712v1  [cs.AI]  13 Aug 2024
+function, a lookup table, or a complex computation. Policies can also be stochastic, defining the likelihood
+of taking certain actions. A deterministic policy assigns a specific action to each state, while a stochastic
+policy assigns probabilities for all potential actions in any given state. The Rewards (r) are a critical factor
+in RL because it provides the agent with an objective at each time step, defining both local and global
+goals that the agent aims to achieve over time. Rewards differentiate positive from negative events and help
+update policies according to the outcomes of actions. Rewards depend on the state of the environment and
+the actions taken. For instance, in a game scenario, winning points might be the reward, while losing points
+could be the penalty. Environment Model is an approximation or prediction of the environment, mapping out
+what will be available (the next state and reward) given a particular input from the state and action. These
+models help with planning by identifying what actions should be taken based on possible future events. RL
+approaches that use models are called model-based methods, whereas those relying solely on trial-and-error
+learning are model-free methods.
+To cement these concepts, let us consider an RL agent navigating a maze. The state represents the
+agent’s current position within the maze. The actions could be moving north, south, east, or west. The
+policy dictates which direction the agent should move based on its current state. The reward signal might
+give a positive reward when the agent reaches the end of the maze and negative rewards for hitting walls or
+making incorrect move.
+Figure 1 illustrates the interaction between an RL agent and its environment. The agent observes the
+current state ( St), selects an action ( At) based on its policy, and receives a reward ( Rt) along with the
+next state ( St+1). This feedback loop is critical for the agent to learn and update its policy to maximize
+cumulative rewards.
+Figure 1: Overview model of Reinforcement Learning, influenced by [1]
+Several critical challenges must be addressed in order to understand and implement RL. A key challenge
+is balancing exploration with exploitation. As part of exploration, the agent tries new actions in order
+to determine their effects and gather more information about the environment. To learn and improve the
+agent’s understanding of the potential rewards of different actions, this information is essential. Alterna-
+tively, exploitative behavior involves the agent using its current knowledge to make decisions that maximize
+immediate rewards. In order to achieve the highest possible reward, the agent utilizes the best-known actions
+in accordance with its learned policy [2]. Traditionally, the Epsilon-Greedy method is used to resolve this
+trade-off. An agent chooses a random action with a probability of ϵ(exploration) and the best-known action
+with a probability of 1 −ϵ(exploitation). The value of ϵmay be fixed or may decay over time [3, 1].
+To solve problems with RL, we have to formulate them by Markov decision processes (MDPs). Using an
+MDP, one can model decision-making where outcomes are partly determined by chance and partly controlled
+by the decision-maker. As a result, the core idea is to capture the fundamental challenges faced by an agent
+interacting with its environment in order to achieve its goals. It is essential that the agent perceives the
+environment’s state, takes actions which affect it, and has objectives related to the environment’s states
+2
+that are embodied in the reward signal. The process of forming a problem in MDP often poses a variety of
+challenges, which can be viewed as the second challenge[1].
+The rest of the paper is organized as follows: Section 2 introduces multi-bandits, that are helpful in
+understanding the nature of RL problems by starting with an easy example. A thorough introduction to
+Markov Decision Processes is given in section 3, a fundamental step in learning RL. A complete introduction
+to policies and value functions, core ideas of every RL algorithms, is given in section 4. Section 5 examines
+the limitation of policy iteration by introducing a new concept called Value Iteration. Understanding various
+methods in RL is pivotal to learning and implementing RL. Hence, section 6 gives complete descriptions
+about each method. In section 7, we outline the advancements in RL from its early foundations to recent
+trends, giving readers a comprehensive understanding of the field’s development. Additionally, Also, must-
+know widely-used algorithms are provided in section 8. Finally, useful resources for learning RL are provided
+to avoid perplexion.
+The following section explore simple problems involving finite states and actions, followed by a discussion
+of the main problem framework, finite Markov decision processes. This includes key concepts like Bellman
+equations and value functions essential for decision-making problems.
+2 K-Armed Bandits
+In this section, we examine a simple RL form with a single state called bandit problems to broaden our
+understanding of RL in a simple environment to cement the mentioned points in the former section.
+Firstly, we need to understand what is the difference between types of feedback, as the reward signal
+is a form of a feedback received by agents. In Figure 2, an agent interacts with the environment, takes
+observations ( Ot) at each timestep, and based on these observations, performs actions. There are four
+possible actions: A1, A2, A3,andA4. Assume the best action a∗isA2, but the agent chose A4.
+Figure 2: Agent interaction in a simple environment of four-armed bandit
+Instructive feedback indicates the chosen action is wrong and the best action is A2, typical in supervised
+learning tasks. Evaluative feedback only indicates the chosen action is not good, typical in RL tasks, and
+evaluative feedback depends entirely on the actions taken. The stated example shows the difference of the
+feedback received in RL environment.
+In the following sections, evaluating action-values will be examined in a simple form of RL, which is
+Immediate Reinforcement Learning (IRL).
+In order to understand the K-armed bandit problem or IRL, assume that you are required to select
+from a number of options (actions) repeatedly. You receive a numerical reward (or punishment) after
+each choice based on a stationary probability distribution. The concept of ”stationarity” refers to the fact
+that probability distributions for rewards and transitions remain unchanged over time. For the purpose
+of simplifying learning, RL algorithms rely on stationarity and model-free methods such as Q-learning.
+However, this assumption does not always hold in real-world applications, so algorithms for non-stationary
+environments are required [4].
+For each of the kactions available, there is an expected average reward, referred to as the value of the
+action [1]. Let us denote the action chosen at time step tasAtand the reward received as Rt. Define q∗(a)
+as the value of an arbitrary action a.
+The value of an action q∗(a) is defined as the expected reward when the agent takes action aat any given
+time step t. Mathematically, this is represented as:
+3
+q∗(a) =E[Rt|At=a] (1)
+Here, we are defining q∗(a) as the expected reward for taking action a. This forms the basis for evaluating
+actions in the k-armed bandit problem.
+If we knew the best action to take, solving the problem would be trivial as we would always choose the
+best action. Without this knowledge, we must estimate each action’s value, denoted as Qt(a) at time step t,
+which should approximate q∗(a).
+After estimating action values, there is at least one action with the highest estimated value at each time
+step. These are called greedy actions. Selecting a greedy action exploits current knowledge for immediate
+reward, while selecting non-greedy actions explores to improve estimates. Balancing exploration and ex-
+ploitation is crucial in RL. As mentioned earlier, opting for exploitation maximizes immediate reward, while
+exploration can yield higher overall reward depending on various factors [1, 2].
+Estimating action values through sampling averages is efficient for stationary bandit problems. In real-
+world RL problems with non-stationary environments, it makes sense to weight recent rewards more. Using
+a constant step-size parameter is popular. Rewriting the sample-average equation as:
+To update the action value, we use the following update rule:
+Qn+1≡Qn+α[Rn−Qn] (2)
+Here:
+•Qn+1: The updated action value after the n-th reward.
+•Qn: The current action value before the n-th reward.
+•α: The learning rate, a parameter that determines the extent to which new information overrides the
+old information.
+•Rn: The reward received after taking an action at step n.
+This update rule incrementally adjusts the action value based on the difference between the received
+reward and the current estimate, weighted by the learning rate α. This iterative process allows the agent to
+refine its value estimates and improve decision-making over time.
+To estimate action-values in K-armed bandit problems, we use the following equation, which represents
+the action value Qt(a) as the average of the rewards received from that action up to time step t.
+We explore techniques for assessing action value and making choices based on these estimates, known
+as action-value methods. The true value of an action corresponds to its average reward upon selection,
+estimated by averaging received rewards, as written in equation below:
+Qt(a) =sum of rewards when the action ais taken prior to time step t
+number of times the action ais taken prior to time step t(3)
+Qt(a) can be mathematically expressed as:
+Qt(a) =Pt−1
+i=1Ri·1{Ai=a}Pt−1
+i=11{Ai=a}(4)
+where 1{Ai=a}is the indicator function. The indicator function 1{Ai=a}is used to count the number of
+times action ahas been taken up to time step t.
+1{Ai=a}=(
+1if action ais taken at time step i
+0otherwise(5)
+If the denominator is zero, Qt(a) is defined as a default value (e.g., 0). It is noted to be that as the
+denominator approaches infinity, Qt(a) converges to q∗(a) by the law of large numbers [5].
+An estimated action value is calculated based on an average of reward samples using the sample-average
+method. This method may not be the most effective, but it can be used as a starting point for selecting
+actions based on the estimates [1].
+4
+At≡arg max
+aQt(a) (6)
+Here, Atrepresents the action selected at time step t, which is the action with the highest estimated
+value Qt(a).
+Greedy selection exploits current knowledge to maximize immediate reward. However, it can be prob-
+lematic as it requires exploring all actions to know their rewards. A simple yet efficient alternative is being
+greedy most of the time but selecting randomly from all actions with a small probability, ϵ. This method,
+called the ϵ-greedy method, balances exploration and exploitation.
+These methods ensure all actions are sampled enough to estimate their true value accurately, making the
+selection of the best action almost certain over time. However, these are theoretical long-term benefits and
+may not directly indicate practical effectiveness [6].
+Estimating action values by sampling averages is inefficient for large numbers of samples ( K > n ). A
+more efficient approach derives Qnas:
+Now, the action value using the following formula for the sample average is defined in a following way:
+Qn≡R1+R2+···+Rn−1
+n−1(7)
+We can express the update rule for action value recursively as follows:
+Qn+1=Qn+1
+n[Rn−Qn] (8)
+This recursive equation requires memory only for Qnandn, with minimal computation for each reward.
+The general form of the update rule for action value is:
+NewEstimate ←OldEstimate + StepSize[Target −OldEstimate] (9)
+The target suggests a preferred direction for adjustment, despite noise. In the example, the target is the
+nth reward [7].
+Sample averages apply to stationary bandit problems. In non-stationary environments, recent rewards
+are more relevant. Using a constant step-size parameter, the equation can be rewritten as:
+Qn+1≡Qn+α[Rn−Qn] (10)
+The initial estimates of action values, Q1(a), play a crucial role in the learning process. These initial
+guesses influence the early decisions made by the agent. While sample-average methods can reduce this
+initial bias after each action is chosen at least once, methods using a constant step-size parameter, α,
+tend to mitigate this bias more gradually over time. Setting optimistic initial values can be particularly
+advantageous. By assigning higher initial estimates (e.g., +5), the agent is encouraged to explore more
+actions early on. This is because the initial optimism makes untried actions appear more attractive, thus
+promoting exploration even when the agent uses a greedy strategy. This approach helps ensure that the
+agent thoroughly investigates the action space before converging to a final policy.
+However, this strategy requires careful consideration in defining the initial values, which are often set
+to zero in standard practice. The choice of initial values should reflect an informed guess about the poten-
+tial rewards, and overly optimistic values can prevent the agent from converging efficiently if not properly
+managed.
+Overall, optimistic initial values can be a useful technique to balance exploration and exploitation in RL,
+encouraging broader exploration and potentially leading to more optimal long-term policies [8].
+As a result of the uncertainty associated with the estimation of action values, exploration is essential.
+In the /epsilon -greedy method, non-greedy actions are explored indiscriminately. It is preferable to explore
+non-greedy actions selectively based on their potential optimality and uncertainty. Based on the Upper
+Confidence Bound (UCB) method, actions are selected based on the following criteria:
+At≡arg max
+a"
+Qt(a) +cs
+lnt
+Nt(a)#
+(11)
+5
+Here, ln tdenotes the natural logarithm of t,c >0 controls exploration, and Nt(a) is the number of times
+action ahas been taken prior to time step t. IfNt(a) = 0, ais considered a maximizing action.
+As part of its value estimation, UCB incorporates uncertainty into its calculation of an action’s upper
+limit. Confidence levels are adjusted by the constant c. By choosing action a, the uncertainty associated
+with adecreases as Nt(a) increases, whereas by choosing other actions, the uncertainty associated with
+aincreases as tincreases. Using the natural logarithm, all actions are eventually explored as uncertainty
+adjustments decrease over time. The frequency with which actions with low estimates or frequent selections
+are chosen decreases over time [9].
+3 Finite Markov Decision Process
+This section describes the formal problem of finite Markov decision processes (MDPs). An MDP provides
+a framework for sequential decision-making in which actions affect immediate rewards as well as future
+outcomes. In MDPs, immediate rewards are balanced with delayed rewards. In contrast to bandit problems
+in which the goal is to determine the value of each action a, MDPs aim to measure the value of taking action
+ain state s, or the value of being in state sassuming optimal actions are taken. A correct assessment of
+the long-term effects of interventions requires the estimation of these state-specific values [1]. Finite MDPs
+consist of states, actions, and rewards ( S, A, R ). Discrete probability distributions are assigned to the random
+variables RtandStbased on the preceding state and action. Using the probabilities of occurrence of the
+random variables RtandSt, derive equations for these variables. A system is considered Markovian when the
+outcome of an action is independent of past actions and states, relying solely on the current state [10]. The
+Markov property requires the state to encapsulate significant details of the entire past interaction influencing
+future outcomes [11]. This definition is the basis of MDPs being used in RL. To describe the dynamics of
+an MDP, we use the state-transition probability function p(s′, r|s, a), which is defined as follows:
+p(s′, r|s, a)≡Pr{St=s′, Rt=r|St−1=s, At−1=a} (12)
+where the function pdefines the MDP dynamics.
+The following state-transition probabilities, state-action and state-action-next-state triple rewards can
+be derived from the four-argument dynamic function p. We can derive the state-transition probabilities,
+the expected reward for state-action pairs, and the expected rewards for state-action-next-state triples as
+follows:
+p(s′|s, a)≡Pr{St=s′|St−1=s, At−1=a}=X
+r∈Rp(s′, r|s, a) (13)
+r(s, a)≡E{Rt|St−1=s, At−1=a}=X
+r∈RrX
+r∈Rp(s′, r|s, a) (14)
+r(s, a, s′)≡E{Rt|St−1=s, At−1=a, St=s′}=X
+r∈Rrp(s′, r|s, a)
+p(s′|s, a)(15)
+The concept of actions encompasses any decisions relating to learning, and the concept of states encom-
+passes any information that is available in order to inform those decisions. As part of the MDP framework,
+goal-directed behavior is abstracted through interaction. Any learning problem can be reduced to three
+signals between an agent and its environment: actions, states, and rewards. A wide range of applications
+have been demonstrated for this framework [1].
+We are now able to formally define and solve RL problems. We have defined rewards, objectives, prob-
+ability distributions, the environment, and the agent. Some concepts, however, were defined informally.
+According to our statement, the agent seeks to maximize future rewards, but how can this be mathemati-
+cally expressed?
+The return, denoted Gt, is the cumulative sum of rewards received from time step tonwards. For episodic
+tasks, it is defined as follows:
+Let the sequence of rewards received after time step tbe:
+6
+Gt≡Rt+1+Rt+2+. . .+RT (16)
+Here, Gtis a specific function of the reward sequence.
+In what way does terminating the sequence at Tserve a purpose? As the name suggests, episodic problems
+are those in which the interactions between agents and their environment occur naturally in sequence, known
+as episodes, and tasks are termed episodic tasks. The game hangman is a good example of this. At the end
+of each episode, a standard starting state is restored. The term ”new games” refers to the next state after
+the terminal state, which is the final state leading to the end of an episode.
+It is common for ongoing tasks to involve interactions that persist continuously throughout the duration
+of the task, such as process control or applications that utilize robots with prolonged lifespans. The term
+”continuing tasks” refers to these activities. As there are no terminal states in continuing tasks ( T=/infty ),
+the return for continuing tasks should be defined differently. It is possible that the return could be infinite
+if the agent consistently receives a reward. For continuing tasks, define the return as follows:
+For continuing tasks, where there is no terminal state, the return Gtis defined as the discounted sum of
+future rewards:
+Gt≡Rt+1+γRt+2+γ2Rt+3+. . .=∞X
+k=0γkRt+k+1 (17)
+where γis the discount rate (0 ≤γ≤1).
+The discount rate affects the current worth of future rewards. When γ <1, the infinite sum converges
+to a finite value. With γ= 0, the agent maximizes immediate rewards. As γapproaches 1, future rewards
+carry more weight. Define return recursively as:
+We can also express the return Gtrecursively as:
+Gt≡Rt+1+γGt+1 (18)
+The return is finite if the reward is nonzero and constant, and γ <1. Use one formula for both episodic
+and continuing tasks:
+For both episodic and continuing tasks, the return Gtcan be defined as:
+Gt≡TX
+k=t+1γk−t−1Rk (19)
+This formula works for both episodic and continuing tasks if T=∞orγ= 1, respectively.
+Now, we can discuss the two most important RL concepts: Policies and Value functions.
+4 Policies and Value Functions: Zero to Hero
+The value function estimates the expected return of the agent being in a certain state (or performing an
+action in a particular state). Depending on the actions selected, these factors will vary. There is a link
+between value functions and policies, which are linked to probabilities of action based on states. Value
+functions can be divided into two broad categories as follows:
+State Value Functions: The value function of a state sunder policy π,vπ(s), is the expected return
+starting in sand following πthereafter.
+Action Value Functions: The value of taking action ain state sunder policy π,qπ(s, a), is the
+expected return starting from s, taking action a, and following πthereafter.
+For MDPs, vandqare defined as:
+The state value function vπ(s) represents the expected return starting from state sand following policy
+π. It is mathematically defined as follows:
+vπ(s)≡Eπ"∞X
+k=0γkRt+k+1|St=s#
+,for all s∈S (20)
+7
+The action value function qπ(s, a) represents the expected return starting from state s, taking action a,
+and then following policy π. It is defined as follows:
+qπ(s, a)≡Eπ[Gt|St=s, At=a] =Eπ"∞X
+k=0γkRt+k+1|St=s, At=a#
+(21)
+It is important to note the difference between vandq, namely that qdepends on the actions taken in
+each state. With ten states and eight actions per state, qrequires 80 functions, while vrequires only 10
+functions.
+Following policy π, if an agent averages returns from each state, the average converges to vπ(s). Averaging
+returns from each action converges to qπ(s, a) [1].
+In Monte Carlo methods, many random samples of returns are averaged. This method does not provide
+sample efficiency, requiring separate averages to be calculated for each state. Estimates can be improved
+through the use of parameterized functions that have fewer parameters. vshould be written recursively as
+follows:
+vπ(s)≡Eπ[Gt|St=s] =Eπ[Rt+1+γGt+1|St=s] =X
+aπ(a|s)X
+s′X
+rp(s′, r|s, a)[r+γvπ(s′)] (22)
+This is the Bellman equation for vπ. The Bellman equation relates the value of a state to its potential
+successor states’ values. The diagram illustrates the anticipation from a state to its successors. The value of
+the initial state equals the discounted value of the expected next state plus the anticipated reward [12, 1].
+4.1 When to Use What?
+State-value functions vπ(s) and action-value functions qπ(s, a) serve different purposes in RL.
+In the evaluation of deterministic policies or when understanding the value of being in a particular state
+is required, state-value functions are used. In policy evaluation and policy iteration methods, where a
+policy is explicitly defined and it is necessary to evaluate the performance of being in a particular state
+under the policy, these methods are highly useful. The use of state-value functions is beneficial when there
+are many actions, since they reduce complexity by requiring only an evaluation of state values.
+Action-value functions are used to evaluate and compare the potential for different actions when they
+are taking place in the same state. They are crucial for the selection of actions, such as in Q-learning
+and SARSA, where the goal is to determine the most appropriate action for each situation. As action-
+value functions take into account the expected return of different actions, they are particularly useful in
+environments with stochastic policies. Moreover, when dealing with continuous action spaces, action-value
+functions can provide a more detailed understanding of the impact of actions, aiding in the fine-tuning of
+policy implementation.
+Consider a gambling scenario where a player starts with $10 and faces decisions regarding the amount
+to bet. This game illustrates state and action value functions in RL.
+State Value function ( vπ(s)):The state value function vπ(s) quantifies expected cumulative future
+rewards for a state s, given policy π. Suppose the player has $5:
+•With a consistent $1 bet, vπ(5) = 0 .5 indicates an expected gain of $0.5.
+•With a consistent $2 bet, vπ(5) =−1 indicates an expected loss of $1.
+Action Value function ( qπ(s, a)):The action value function qπ(s, a) assesses expected cumulative
+future rewards for action ain state s. For instance:
+•qπ(5,1) = 1 suggests a $1 bet from $5 results in a cumulative reward of $1.
+•qπ(5,2) =−0.5 indicates a loss of $0.5 for a $2 bet from $5.
+This gambling game scenario highlights the role of state and action value functions in RL, guiding optimal
+decision-making in dynamic environments.
+Solving an RL task involves identifying a policy that maximizes long-term rewards. For finite MDPs, an
+optimal policy is defined in the next subsection.
+8
+4.2 Optimal Policies and Optimal Value Functions
+Value functions create a partial ordering over policies, allowing comparison and ranking based on expected
+cumulative rewards. A policy πis better than or equal to π0ifvπ(s)≥vπ0(s) for all states s. An optimal
+policy is better than or equal to all other policies, denoted by π∗, sharing the same optimal state-value
+function v∗:
+The optimal state value function v∗(s) is defined as the maximum value function over all possible policies:
+v∗(s)≡max
+πvπ(s) for all s∈S (23)
+Optimal policies also share the same optimal action-value function q∗:
+The optimal action value function q∗(s, a) is defined as the maximum action value function over all
+possible policies:
+q∗(s, a)≡max
+πqπ(s, a) for all s∈S (24)
+The relationship between the optimal action value function q∗(s, a) and the optimal state value function
+v∗(s) is given by the following equation:
+q∗(s, a) =E[Rt+1+γv∗(St+1)|St=s, At=a] (25)
+The equation expresses expected cumulative return for state-action pairs in terms of immediate rewards
+and discounted future states’ values.
+Optimal value functions and policies represent an ideal state in RL. It is however rare to find truly optimal
+policies in computationally demanding tasks due to practical challenges. RL agents strive to approximate
+optimal policies. Dynamic Programming (DP) helps identify optimal values, assuming a perfect model of
+the environment.
+The fundamental idea of DP and RL is using value functions to organize the search for good policies. For
+finite MDPs, the environment’s dynamics are given by probabilities p(s′, r|s, a). DP finds exact solutions
+in special cases, like finding the shortest path in a graph.
+The Bellman optimality equations for the optimal state value function v∗(s) and the optimal action value
+function q∗(s, a) are given as follows:
+v∗(s) = max
+aE[Rt+1+γv∗(St+1)|St=s, At=a] = max
+aX
+s′,rp(s′, r|s, a)[r+γv∗(s′)] (26)
+q∗(s, a) =E[Rt+1+ max
+a′q∗(St+1, a′)|St=s, At=a] =X
+s′,rp(s′, r|s, a)[r+γmax
+a′q∗(s′, a′)] (27)
+DP algorithms are derived by transforming Bellman equations into update rules.
+4.3 Policy Evaluation (Prediction)
+Policy evaluation, also known as prediction, involves computing the state-value function vπfor a given
+policy π. This process assesses the expected return when following policy πfrom each state. The state-value
+function vπ(s) is defined as the expected return starting from state sand following policy π:
+vπ(s)≡Eπ[Rt+1+γGt+1|St=s] (28)
+This can be recursively expressed as:
+vπ(s) =Eπ[Rt+1+γvπ(St+1)|St=s] =X
+aπ(a|s)X
+s′,rp(s′, r|s, a)[r+γvπ(s′)] (29)
+In these equations, π(a|s) denotes the probability of taking action ain state sunder policy π. The
+existence and uniqueness of vπare guaranteed if γ <1 or if all states eventually terminate under π. Dynamic
+Programming (DP) algorithm updates are termed ”expected updates” because they rely on the expectation
+over all potential next states, rather than just a sample [1].
+9
+4.4 Policy Improvement
+The purpose of calculating the value function for a policy is to identify improved policies. Assume vπfor
+a deterministic policy π. For a state s, should we alter the policy to select action a̸=π(s)? We know the
+effectiveness of adhering to the existing policy from state s(vπ(s)), but would transition to a new policy
+yield a superior outcome? We can answer this by selecting action ainsand then following π:
+To determine if a policy can be improved, we compare the value of taking a different action ain state s
+with the current policy. This is done using the action value function qπ(s, a):
+qπ(s, a)≡E[Rt+1+γvπ(St+1)|St=s, At=a] =X
+s′,rp(s′, r|s, a)[r+γvπ(s′)] (30)
+The key criterion is whether this value exceeds vπ(s). Ifqπ(s, a)> vπ(s), consistently choosing action a
+insis more advantageous than following π, leading to an improved policy π′.
+4.5 Policy Improvement Theorem
+The policy improvement theorem states that if qπ(s, π′(s))≥vπ(s) for all states s, then the new policy π′is
+at least as good as the original policy π. Formally, it is expressed as follows:
+Letπandπ′be deterministic policies such that for all s∈S:
+qπ(s, π′(s))≥vπ(s) (31)
+Ifπ′achieves greater or equal expected return from all states s∈S:
+vπ′(s)≥vπ(s) (32)
+If there is strict inequality at any state, π′is superior to π. Extend this to all states and actions, selecting
+the action that maximizes qπ(s, a):
+The new policy π′is obtained by selecting the action that maximizes the action value function qπ(s, a):
+π′(s)≡arg max
+aqπ(s, a) = arg max
+aE[Rt+1+γvπ(St+1)|St=s, At=a] = arg max
+aX
+s′,rp(s′, r|s, a)[r+γvπ(s′)]
+(33)
+Policy improvement creates a new policy that enhances an initial policy by adopting a greedy approach
+based on the value function.
+Assume π′is equally effective as πbut not superior. Then vπ=vπ′, ensuring for all states s∈S:
+The relationship between the optimal state value function v∗(s) and the optimal action value function
+q∗(s, a) is given by the following equation:
+vπ′(s) = max
+aE[Rt+1+γvπ′(St+1)|St=s, At=a] = max
+aX
+s′,rp(s′, r|s, a)[r+γvπ′(s′)] (34)
+This is the Bellman optimality equation, implying vπ′=v∗and both πandπare optimal policies. Policy
+improvement yields a superior policy unless the initial policy is already optimal.
+This concept extends to stochastic policies. Stochastic policies introduce a set of probabilities for actions,
+with the action most aligned with the greedy policy assigned the highest probability.
+4.6 Policy Iteration
+After enhancing a policy πusing vπto derive an improved policy π′, compute vπ′and further refine it to
+obtain a superior policy π′′. This process generates a sequence of improving policies and corresponding value
+functions:
+The process of policy iteration involves alternating between policy evaluation and policy improvement to
+obtain a sequence of improving policies and value functions:
+10
+π0Evaluation− − − − − − − → vπ0Improvement− − − − − − − − → π1Evaluation− − − − − − − → vπ1Improvement− − − − − − − − → π2Evaluation− − − − − − − → . . .Improvement− − − − − − − − → π∗Evaluation− − − − − − − → v∗
+(35)
+Each policy in this sequence is a marked improvement over its predecessor unless the preceding one is
+already optimal. Given a finite MDP, this iterative process converges to an optimal policy and value function
+in a finite number of iterations. This method is called policy iteration.
+5 Value Iteration
+One limitation of policy iteration is that each iteration requires policy evaluation, often necessitating multiple
+passes through the entire state set [13]. To address this, policy evaluation can be abbreviated without losing
+convergence guarantees. This method, known as value iteration, terminates policy evaluation after a single
+sweep. It combines policy improvement with a truncated form of policy evaluation. Value iteration merges
+one pass of policy evaluation with policy improvement in each iteration, ensuring convergence to an optimal
+policy for discounted finite MDPs [14].
+The update rule for value iteration is given by:
+vk+1(s)≡max
+aE[Rt+1+γvk(St+1)|St=s, At=a] = max
+aX
+s′,rp(s′, r|s, a)[r+γvk(s′)] (36)
+Value iteration combines one sweep of policy evaluation and policy improvement in each iteration. It
+converges to an optimal policy for discounted finite MDPs [14].
+Policy iteration involves two processes: policy evaluation aligns the value function with the current policy,
+and policy improvement makes the policy greedier based on the value function. These processes iteratively
+reinforce each other until an optimal policy is obtained.
+In value iteration, the key advantage is its efficiency, as it reduces the computational burden by merging
+policy evaluation and improvement into a single update step. This method is particularly useful for large
+state spaces where full policy evaluation at each step of policy iteration is computationally prohibitive [1].
+Additionally, value iteration can be implemented using a synchronous update approach, where all state values
+are updated simultaneously, or an asynchronous update approach, where state values are updated one at a
+time, potentially allowing for faster convergence in practice [13].
+Another notable aspect of value iteration is its robustness to initial conditions. Starting from an arbitrary
+value function, value iteration iteratively refines the value estimates until convergence, making it a reliable
+method for finding optimal policies even when the initial policy is far from optimal [15].
+Furthermore, value iteration provides a foundation for more advanced algorithms, such as Q-learning
+and other reinforcement learning techniques, by illustrating the principle of bootstrapping, where the value
+of a state is updated based on the estimated values of successor states. This principle is central to many
+modern reinforcement learning algorithms that seek to balance exploration and exploitation in dynamic and
+uncertain environments [16].
+6 Terminology
+Understanding the various methodologies and concepts within RL is essential for the effective design and
+implementation of RL algorithms. Methods in RL can be classified as either off-policy or on-policy, as well
+as model-free and model-based. These categories offer different approaches and techniques for learning from
+interactions with the environment.
+6.1 Model-Free Methods
+Model-free methods determine the optimal policy or value function directly without constructing a model
+of the environment. There is no requirement for them to know transition probabilities and rewards, as they
+learn entirely from observed states, actions, and rewards. Compared with model-based methods, model-free
+methods are simpler to implement, relying on experience-based learning. There are two primary types:
+11
+Value-based methods focus on learning the action-value function to derive an optimal policy. For instance,
+Q-learning (discussed in section 8) is an off-policy algorithm that learns the value of the optimal policy
+independently of the agent’s actions by using a max operator in its update rule. SARSA (also discussed
+in section 8), on the other hand, is an on-policy algorithm that updates its Q-values based on the actions
+actually taken by the policy. Both methods update their action-value estimates based on the Bellman
+equation until convergence. In contrast, policy-based methods, like REINFORCE (discussed in section 8),
+work by directly learning the policy without explicitly learning a value function. These methods adjust the
+policy parameters directly by following the gradient of the expected reward. This approach is particularly
+useful in environments with high-dimensional action spaces where value-based methods may not be effective.
+Policy-based methods are also capable of handling stochastic policies, providing a natural framework for
+dealing with uncertainty in action selection.
+In addition to these primary types, there are also hybrid approaches that combine value-based and policy-
+based methods, such as Actor-Critic algorithms (which will be discussed in section 8). These methods consist
+of two components: an actor that updates the policy parameters in a direction suggested by the critic, and
+a critic that evaluates the action-value function. Combining both types of learning is intended to provide
+more stable and efficient learning [17].
+The best way to understand hybrid approaches is to imagine a robot vacuum cleaner navigating a living
+room and cleaning it efficiently. It is imperative that the robot decides the best course of action in order to
+cover the entire area while avoiding obstacles and maximizing its battery life.
+As part of the value-based component, the robot estimates the value of being in each location in the
+living room based on a value-based method. The robot learns a state-value function that indicates how
+much dirt should be removed if it starts at a specific location and follows a specific strategy. Through this
+component, the robot understands the long-term benefits of being in different locations. Simultaneously, the
+robot uses a policy-based method to determine the right action to take (for example, moving forward, turning
+left, turning right). As a result of the policy, the robot adjusts parameters to improve its decision-making
+process. For example, if moving forward usually results in more dirt being cleaned, the robot is more likely
+to choose this action in the future when it encounters similar circumstances.
+When these two components are combined, the robot is able to navigate and clean the living room more
+effectively. A value-based approach provides a broader understanding of which areas are most valuable to
+visit, while a policy-based approach focuses on making the best decisions for the present based on the current
+situation. The hybrid approach ensures that the robot not only plans its long-term strategy effectively, but
+also reacts appropriately to immediate circumstances, resulting in an overall more efficient cleaning process.
+Another significant advancement in model-free methods is the development of Deep RL (DRL) By inte-
+grating deep neural networks with traditional RL algorithms, methods such as Deep Q-Networks (DQN) [18]
+and Proximal Policy Optimization (PPO) [19] have achieved remarkable success in complex, high-dimensional
+environments, including games and robotic control tasks. The advancement of these technologies has opened
+up new possibilities for the application of RL to real-world problems, enabling the demonstration of robust
+performance in domains which were previously intractable. It is beyond the scope of this paper to discuss
+these algorithms, and wee refer you to [20, 3, 21, 22] to understand DRL deeply and effectively.
+6.2 Model-Based Methods
+It is possible to predict the outcomes of actions using model-based methods, which facilitate strategic plan-
+ning and decision-making. The use of these methods enhances learning efficiency by providing opportunities
+for virtual experimentation, despite the complexity of developing and refining accurate models [7].
+Autonomous driving systems are an example of how model-based methods can be applied in the real
+world. As autonomous vehicles navigate in dynamic environments, obstacle avoidance, and optimal routing
+must be made in real time.
+Autonomous vehicles create detailed models of their environment. These models include static elements,
+such as roads and buildings, as well as dynamic elements, such as other vehicles and pedestrians. Sensor data,
+including cameras, LIDAR, and radar, are used to build this model. Through the use of the environmental
+model, the vehicle is capable of predicting the outcome of various actions. For instance, when a vehicle
+considers changing lanes, it uses its model to predict the behavior of surrounding vehicles to determine
+the safest and most efficient way to make the change. The model assists the vehicle in planning its route
+12
+and making strategic decisions. To minimize travel time, avoid congestion, and enhance safety, it evaluates
+different routes and actions. Simulation allows the vehicle to select the best course of action by simulating
+various scenarios before implementation in the real world. The vehicle, for example, may use the model to
+simulate different actions in the event of a busy intersection, such as waiting for a gap in traffic or taking
+an alternate route. Considering the potential outcomes of each action, the vehicle can make an informed
+decision that balances efficiency with safety. In addition to improving the ability of autonomous vehicles
+to navigate safely and efficiently in real-world conditions, this model-based approach enables them to make
+complex decisions with a high level of accuracy. As a result of continuously refining the model based on new
+data, the vehicle is able to enhance its decision-making capabilities over time, thereby improving performance
+and enhancing safety on the road.
+There are several advantages to using model-based methods over methods that do not use models.
+By simulating future states and rewards, they can plan and evaluate different action sequences without
+interacting directly with the environment. It is believed that this capability may lead to a faster convergence
+to an optimal policy, since learning can be accelerated by leveraging the model’s predictions. A model-
+based approach can also adapt more quickly to changes in the environment, since it enables the model to
+be updated and re-planned accordingly. Although model-based methods have many advantages, they also
+face a number of challenges, primarily in regards to accuracy and computational cost. In order to create an
+accurate model of the environment, a high-fidelity model needs to be created. Moreover, the planning process
+may be computationally expensive, especially in environments with a large number of states and actions.
+However, advances in computing power and algorithms continue to improve the feasibility and performance
+of model-based methods, making them a valuable approach in RL [23].
+6.3 Off-Policy and On-Policy Methods
+On-policy and off-policy learning are methodologies within model-free learning approaches, not relying on
+environment transition probabilities. They are classified based on the relationship between the behavior
+policy and the updated policy [1].
+6.3.1 On-Policy Methods
+On-policy methods evaluate and improve the policy used to make decisions, intertwining exploration and
+learning. These methods update the policy based on the actions taken and the rewards received while
+following the current policy. This ensures that the policy being optimized is the one actually used to interact
+with the environment, allowing for a coherent learning process where exploration and policy improvement
+are naturally integrated.
+Example: Consider a customer service chatbot that learns to provide better responses to user queries.
+The chatbot follows a specific policy to decide which responses to give. In on-policy learning, the chatbot
+updates its policy based on the actual responses it uses and the feedback received from users (e.g., user
+satisfaction ratings). This ensures that the policy being learned is directly tied to the actions taken in real
+interactions, leading to stable and consistent improvement.
+6.3.2 Off-Policy Methods
+Off-policy methods involve learning the value of the optimal policy independently of the agent’s actions. In
+these methods, we distinguish between two types of policies: the behavior policy and the target policy that
+are discussed later in this chapter. The behavior policy explores the environment, while the target policy
+aims to improve performance based on the gathered experience. This allows for a more exploratory behavior
+policy while learning an optimal target policy. A significant advantage of off-policy methods is that they
+can learn from data generated by any policy, not just the one currently being followed, making them highly
+flexible and sample-efficient.
+Example: Consider a recommendation system for an online streaming service like Netflix. The behavior
+policy in this system could be a strategy that recommends a wide variety of content to users, ensuring that
+the system explores different genres, new releases, and less popular titles. This exploration helps gather
+diverse data about user preferences and content performance. Simultaneously, the target policy aims to
+optimize recommendations to maximize user engagement and satisfaction. It learns from the data generated
+13
+by the behavior policy, identifying patterns and preferences to recommend content that users are most likely
+to enjoy. By separating the behavior policy from the target policy, Netflix can experiment with different
+recommendation strategies without compromising the quality of the final recommendations. This approach
+allows the recommendation system to be both exploratory in gathering new data and exploitative in providing
+the best possible content to users.
+The decoupling of the behavior and target policies allows off-policy methods to reuse experiences more
+effectively. For instance, experiences collected using a behavior policy that explores the environment broadly
+can be used to improve the target policy, which aims to maximize rewards. This characteristic makes off-
+policy methods particularly powerful in dynamic and complex environments where extensive exploration is
+required [24, 25].
+6.3.3 Distinguishing On-Policy vs. Off-Policy Methods
+The relationship between the update policy and the behavior policy determines if a method is on-policy or
+off-policy. Identical policies indicate on-policy, while differing policies indicate off-policy. Implementation
+details and objectives also influence classification. To better distinguish these methods, we have to first learn
+what are the different policies.
+Behavior Policy is a strategy used by an agent to determine which actions to take at each time step.
+The behavior policy might, for example, include recommending a variety of movies in order to explore user
+preferences in the recommendation system example.
+Update policy governs how the agent updates its value estimates in response to observed outcomes.
+Depending on the feedback received from the recommended movies, the update policy of the recommendation
+system may update the estimated user preferences.A thorough understanding of the interactions between
+these policies is essential for the implementation of effective learning systems. An agent’s behavior policy
+determines how it explores an environment, balancing exploration with exploitation to gather useful infor-
+mation. Alternatively, the update policy determines how the agent learns from these experiences in order to
+improve its estimates of value.
+When using on-policy methods, the behavior policy and the update policy are the same, meaning that
+the actions taken to interact with the environment are also used to update the value estimates. The result
+is stable learning, but it can be less efficient because the policy may not sufficiently explore the state space
+[26].
+There is a difference between the behavior policy and the update policy in off-policy methods. As
+opposed to the behavior policy, the update policy focuses on optimizing the value estimates by taking the
+most appropriate action. Despite the fact that this separation can make learning more efficient, it can also
+introduce instability if the behavior policy diverges too far from the optimal policy [16, 25]. Furthermore,
+advanced methods, such as Actor-Critic algorithms, separate the behavior policy (actor) and the update
+policy (critic). Actors make decisions according to current policies, while critics evaluate these decisions and
+provide feedback to improve policies, thus combining the stability of on-policy methods with the efficiency
+of off-policy methods [27, 28].
+7 A Timeline of Reinforcement Learning Evolution
+In recent decades, reinforcement learning has undergone significant changes. The timeline below highlights
+key milestones and advancements in the field, beginning with the earliest contributions and moving on to
+the most recent trends. In addition, the timeline provides readers with an opportunity to gain insight into
+the developments and potential directions for research.
+•1950s-1960s: Early Foundations
+– 1954: Marvin Minsky’s SNARC, an early neural network-based machine, was one of the first to
+use reinforcement principles [29].
+– 1954: Richard Bellman’s work on dynamic programming laid the foundation for modern rein-
+forcement learning [30].
+14
+– 1965: Bellman and Kalaba introduced the Bellman equation, fundamental to many RL algorithms
+[31].
+•1970s-1980s: Theoretical Development
+– 1972: Klopf’s work on drive-reduction theory in neural networks contributed to the theoretical
+underpinnings of RL [32].
+– 1984: Barto, Sutton, and Anderson developed the concept of temporal difference (TD) learning,
+a cornerstone of RL [33].
+– 1989: Watkins introduced Q-learning, a pivotal off-policy RL algorithm [34].
+– 1989: Sutton and Barto’s book, ”Reinforcement Learning: An Introduction,” became a founda-
+tional text in the field [35].
+•1990s: Early Applications and Further Theory
+– 1992: Watkins and Dayan formalized Q-learning and provided theoretical convergence guarantees
+[24].
+– 1994: Rummery and Niranjan developed SARSA, an on-policy RL algorithm [26].
+– 1996: Chris Watkins’ Dyna-Q algorithm combined model-free and model-based approaches [36].
+•1999 - 2000s: Advances in Algorithms and Applications
+– 1999: Konda and Tsitsiklis introduced actor-critic methods, blending value and policy-based
+approaches [27].
+– 1999: Ng, Harada, and Russell’s work on apprenticeship learning advanced RL applications in
+robotics [37].
+– 2001: Tsitsiklis and Van Roy developed the theory of least-squares temporal difference (LSTD)
+learning [38].
+•2010s: Deep Reinforcement Learning and Breakthroughs
+– 2013: Mnih et al. introduced Deep Q-Networks (DQN), integrating deep learning with RL, and
+demonstrated success on Atari games [18].
+– 2016: Silver et al. developed AlphaGo, combining deep RL and Monte Carlo Tree Search,
+achieving significant success in the game of Go [39].
+– 2017: Schulman et al. proposed Proximal Policy Optimization (PPO), a robust policy gradient
+method for RL [19].
+– 2018: Hessel et al. presented Rainbow, combining several DQN improvements into a single
+algorithm [25].
+•Current Trends and Future Directions
+– 2017: Jaderberg et al. introduced ”Population Based Training,” enhancing the efficiency of RL
+training processes [40].
+– 2018 Espeholt et al. proposed ”IMPALA” (Importance Weighted Actor-Learner Architectures),
+addressing scalability in RL [41].
+– 2019: OpenAI’s Dactyl demonstrated RL’s potential in robotic manipulation by solving a Rubik’s
+cube with a robotic hand [42].
+–The recent trends are focusing more on Interpretability under the umbrella of Interpretable and
+Explainable RL, Hierarchical and Multi-Agent RL, and Integrations with recent advancements
+such as Transformers, Large Language Models (LLMs), Human-in-the-loop RL, Social Reinforce-
+ment Learning, Transfer Learning, Lifelong Learning, and Continual Learning. It can be seen in
+details in Table 1.
+15
+8 Essential Algorithms: An Overview
+The purpose of this section is to provide a brief overview of essential algorithms based on the material
+discussed so far. In addition, reference papers are provided for each algorithm to facilitate the search for
+the original source and facilitate the learning process. In addition to providing a brief description of each
+algorithm, real-world examples are provided as well. In order to obtain detailed information about each
+algorithm, readers should refer to the reference papers. Table 2 summarizes all the information.
+8.1 TD Learning
+Temporal Difference (TD) Learning is a fundamental method in reinforcement learning where updates are
+made based on the difference between predicted and actual rewards. This approach combines ideas from
+Monte Carlo methods and dynamic programming [35].
+The update rule for TD Learning is:
+V(s)←V(s) +α[Rt+1+γV(St+1)−V(s)] (37)
+where V(s) is the value of state s,αis the learning rate, Rt+1is the reward received after taking an action,
+γis the discount factor, and St+1is the next state.
+In stock trading, TD Learning can be used to predict future stock prices based on past price movements.
+By continuously updating the predicted value of each state (price), traders can make more informed decisions
+on buying or selling stocks.
+8.2 Q-Learning
+Q-Learning is an off-policy algorithm that learns the value of an optimal policy independently of the agent’s
+actions. It aims to find the best action to take in each state to maximize the total reward [24].
+The update rule for Q-Learning is:
+Q(s, a)←Q(s, a) +αh
+r+γmax
+a′Q(s′, a′)−Q(s, a)i
+(38)
+where Q(s, a) is the value of taking action ain state s,αis the learning rate, ris the reward received, γis
+the discount factor, s′is the next state, and a′is the next action.
+In robotics, Q-Learning can be used to train a robot to navigate through a maze. The robot learns
+the optimal path to the exit by updating the values of actions taken in each state, even when it explores
+suboptimal paths during training.
+8.3 State-Action-Reward-State-Action (SARSA)
+SARSA is an on-policy algorithm where the policy is updated based on the action taken by the current
+policy. It stands for the sequence of states and actions used to update the Q-values [26].
+The update rule for SARSA is:
+Q(s, a)←Q(s, a) +α[r+γQ(s′, a′)−Q(s, a)] (39)
+where Q(s, a) is the value of taking action ain state s,αis the learning rate, ris the reward received, γis
+the discount factor, s′is the next state, and a′is the next action taken according to the policy.
+In video games, SARSA can be used to train game agents to make decisions based on the current game
+state and the actions actually taken, ensuring that the learning process aligns with the agent’s behavior,
+leading to stable and consistent performance.
+8.4 REINFORCE
+REINFORCE is an on-policy algorithm that uses Monte Carlo methods to update the policy. It directly
+optimizes the policy by following the gradient of expected rewards [59].
+16
+Trends Reference Paper(s)
+Interpretability and Explainable
+RL[43], [44]
+Hierarchical RL [45], [46]
+Multi-Agent RL [47], [48]
+Integrations with Transformers
+and LLMs[49], [50]
+Human-in-the-loop RL [51], [52]
+Social Reinforcement Learning [53], [54]
+Transfer Learning [55], [56]
+Lifelong Learning and Continual
+Learning[57], [58]
+Table 1: Recent trends in reinforcement learning and key reference papers
+Algorithm Description Type Policy Reference
+TD Learning A fundamental method where updates
+are made based on the difference
+between predicted and actual rewards.Model-free On-policy [35]
+Q-Learning An off-policy algorithm that learns the
+value of an optimal policy
+independently of the agent’s actions.Model-free Off-policy [24]
+SARSA An on-policy algorithm where the
+policy is updated based on the action
+taken by the current policy.Model-free On-policy [26]
+REINFORCE An on-policy algorithm that uses
+Monte Carlo methods to update the
+policy.Model-free On-policy [59]
+Actor-Critic Combines value function (critic) and
+policy (actor) updates.Model-free On-
+policy/Off-
+policy[27]
+Dyna-Q Combines model-free and model-based
+methods by integrating planning,
+acting, and learning.Model-based Off-policy [36]
+DQN Combines Q-learning with deep neural
+networks to handle high-dimensional
+state spaces.Model-free Off-policy [16]
+TRPO Ensures large updates do not destroy
+the learned policy by enforcing a trust
+region.Model-free On-policy [60]
+PPO Improves on TRPO by simplifying the
+algorithm while retaining its
+performance.Model-free On-policy [19]
+SAC An off-policy actor-critic algorithm
+that maximizes both expected reward
+and entropy.Model-free Off-policy [61]
+Table 2: Essential Reinforcement Learning Algorithms
+17
+The update rule for REINFORCE is:
+θ←θ+α∇θlogπθ(a|s)Gt (40)
+where θare the policy parameters, αis the learning rate, πθ(a|s) is the policy probability of taking action
+ain state s, and Gtis the return (total accumulated reward).
+In personalized marketing, REINFORCE can be used to adjust marketing strategies based on user inter-
+actions and feedback. By optimizing the policy to maximize customer engagement, businesses can improve
+their marketing effectiveness.
+8.5 Actor-Critic
+Actor-Critic methods combine value function (critic) and policy (actor) updates. The actor updates the
+policy parameters in the direction suggested by the critic, which evaluates the action-value function [27].
+The update rules for Actor-Critic are:
+δt=Rt+1+γV(St+1)−V(St) (41)
+θ←θ+αδt∇θlogπθ(At|St) (42)
+where δtis the temporal difference error, θare the policy parameters, αis the learning rate, πθ(At|St) is the
+policy probability, and V(St) is the value function.
+In autonomous driving, Actor-Critic methods can be used to improve the driving policy by having the
+actor suggest actions and the critic evaluate the consequences. This leads to safer and more efficient driving
+behaviors.
+8.6 Soft Actor-Critic
+Soft Actor-Critic (SAC) is an off-policy actor-critic algorithm that maximizes both expected reward and
+entropy. It aims to encourage exploration by adding an entropy term to the objective [61].
+The update rules for SAC are:
+L(θ) =E(s,a)∼D[−Q(s, a) +αlogπθ(a|s)] (43)
+where αis the temperature parameter controlling the trade-off between exploration and exploitation.
+In energy management systems, SAC can be used to optimize energy consumption by balancing the
+trade-off between energy savings and operational efficiency, ensuring robust and adaptable policies.
+8.7 Dyna-Q
+Dyna-Q combines model-free and model-based methods by integrating planning, acting, and learning. It
+uses a learned model of the environment to simulate experiences and update the policy [36].
+The update rule for Dyna-Q is:
+Q(s, a)←Q(s, a) +αh
+r+γmax
+a′Q(s′, a′)−Q(s, a)i
+(44)
+and additionally, simulated experiences are used to update the Q-values.
+In logistics, Dyna-Q can be used to optimize delivery routes by simulating different scenarios and learning
+from both real and simulated experiences. This improves route planning and efficiency.
+8.8 Deep Q-Network
+Deep Q-Network (DQN) combines Q-learning with deep neural networks to handle high-dimensional state
+spaces. It uses a neural network to approximate the Q-values [16].
+The update rule for DQN is similar to Q-learning, but the Q-values are approximated using a neural
+network:
+Q(s, a;θ)←Q(s, a;θ) +αh
+r+γmax
+a′Q(s′, a′;θ′)−Q(s, a;θ)i
+(45)
+18
+where θare the neural network parameters.
+In playing complex video games like Atari, DQN can be used to train agents to play the games at
+superhuman levels by learning directly from pixel inputs and using neural networks to approximate the
+optimal policies.
+8.9 Trust Region Policy Optimization
+Trust Region Policy Optimization (TRPO) ensures large updates do not destroy the learned policy by
+enforcing a trust region. It uses a constraint to limit the step size of policy updates [60].
+The update rule for TRPO is:
+max
+θEs∼ρπ,a∼πθπθ(a|s)
+πθold(a|s)Aπθold(s, a)
+(46)
+subject to:
+Es∼ρπ[DKL(πθold(·|s)||πθ(·|s))]≤δ (47)
+where DKLis the Kullback-Leibler divergence and δis a small positive number.
+In robotic control, TRPO can be used to optimize the movements of robotic arms, ensuring stable and
+efficient learning of complex tasks without drastic policy changes.
+8.10 Proximal Policy Optimization
+Proximal Policy Optimization (PPO) improves on TRPO by simplifying the algorithm while retaining its
+performance. It uses a clipped objective to limit policy updates [19].
+The update rule for PPO is:
+LCLIP(θ) =Eth
+min
+rt(θ)ˆAt,clip (rt(θ),1−ϵ,1 +ϵ)ˆAti
+(48)
+where rt(θ) =πθ(at|st)
+πθold(at|st),ˆAtis the advantage estimate, and ϵis a small positive number.
+In virtual personal assistants, PPO can be used to train the assistant to handle various tasks efficiently
+while ensuring stable improvements in performance.
+9 Resources to Learn Reinforcement Learning
+It is a complex set of problems and applications within RL that require a greater level of research resources.
+By making these resources available, it is not only possible to gain a deeper understanding of theoretical
+concepts and practical tools, but it will also contribute to the advancement of state-of-the-art research
+through the support of the community. The importance of comprehensive resources for successful real-life
+research is highlighted in this chapter, and we provide a list of some of the most helpful books, courses,
+videos, and online communities to assist readers in getting started with their real-life research without being
+overwhelmed.
+9.1 Books
+We provide a list of highly recommended books which provide foundational knowledge and practical insight
+into reinforcement learning. A comprehensive overview of basic concepts, advanced algorithms, and practical
+examples is provided in these books, which will provide you with an understanding of the field on a deeper
+level.
+1.”Reinforcement Learning: An Introduction” by Richard S. Sutton and Andrew G. Barto
+•The foundational book on reinforcement learning, covering basic concepts, algorithms, and theo-
+retical foundations.
+2.”Deep Reinforcement Learning Hands-On” by Maxim Lapan
+19
+•Practical guide to deep reinforcement learning using Python and PyTorch, with hands-on exam-
+ples.
+3.”Grokking Deep Reinforcement Learning” by Miguel Morales
+•A beginner-friendly introduction to deep reinforcement learning with intuitive explanations and
+hands-on exercises.
+4.”Algorithms for Reinforcement Learning” by Csaba Szepesv´ ari
+•A concise and clear introduction to reinforcement learning algorithms.
+9.2 Online Courses
+The following is a list of online courses that offer comprehensive reinforcement learning experiences. There
+is a range of courses available, from introductory to advanced levels, covering fundamental concepts and
+practical implementations along with real-life applications.
+1.Coursera: Reinforcement Learning Specialization by University of Alberta
+•A comprehensive series of courses covering fundamental concepts, algorithms, and applications of
+reinforcement learning.
+2.Udacity: Deep Reinforcement Learning Nanodegree
+•Focuses on deep reinforcement learning using PyTorch, including projects and practical imple-
+mentations.
+3.edX: Fundamentals of Reinforcement Learning by University of Alberta
+•An introduction to the fundamentals of reinforcement learning, including key algorithms and
+techniques.
+4.Reinforcement Learning Winter 2019
+•Lecture videos and materials from Stanford’s advanced reinforcement learning course.
+9.3 Video Lectures
+The following are links to video lecture series produced by leading researchers and institutions. A variety
+of topics in RL are covered in these lectures, providing valuable insights and knowledge from experts in the
+field.
+1.DeepMind x UCL — Reinforcement Learning Lectures Series
+•A series of lectures by leading researchers in reinforcement learning, covering fundamental and
+advanced topics.
+•Link: YouTube Playlist
+2.David Silver’s Reinforcement Learning Course
+•Lectures by David Silver, a principal researcher at DeepMind, providing an in-depth introduction
+to reinforcement learning.
+•Link: YouTube Playlist
+3.Pascal Poupart’s Reinforcement Learning Course - CS885
+•Lectures by Pascal Poupart, an esteemed professor at the University of Waterloo, providing an
+in-depth introduction to reinforcement learning.
+•Link: YouTube Playlist
+20
+4.Sarath Chandar’s Reinforcement Learning Course
+•Lectures by Sarath Chandar, principal investigator of the Chandar Research Lab (CRL) in the
+Department of Computer and Software Engineering at Polytechnique Montreal.
+•Link: YouTube Playlist
+9.4 Tutorials and Articles
+These resources include educational materials, tutorials, and articles that provide practical guidance on
+implementing RL algorithms. Code examples are provided as well as theoretical background and step-by-
+step instructions for various RL techniques in these resources.
+1.OpenAI Spinning Up in Deep RL
+•An educational resource from OpenAI that provides an introduction to deep reinforcement learn-
+ing, including code examples and theoretical background.
+•Link: Spinning Up
+2.Deep Reinforcement Learning Course by PyTorch
+•A free online course provided by PyTorch, focusing on practical implementations of deep rein-
+forcement learning.
+•Link: Deep RL Course
+3.RL Adventure by Denny Britz
+•A series of Jupyter notebooks covering various reinforcement learning algorithms with detailed
+explanations and implementations.
+•Link: RL Adventure
+9.5 Online Communities and Forums
+Here, you will find online communities and forums where you can discuss real-life scenarios with other
+practitioners, ask questions, exchange insights, and stay up-to-date with the latest developments in the field.
+In addition to providing valuable support, these platforms provide networking opportunities for both learners
+and professionals.
+1.Reddit: r/reinforcementlearning
+•A subreddit dedicated to discussions and resources on reinforcement learning.
+•Link: r/reinforcementlearning
+2.Stack Overflow
+•A community where you can ask questions and get answers from experienced practitioners in
+reinforcement learning.
+•Link: Stack Overflow
+3.AI Alignment Forum
+•A forum for discussions on AI alignment, including topics related to reinforcement learning.
+•Link: AI Alignment Forum
+21
+10 Conclusion
+In this paper, we have introduced the fundamental concepts and methodologies of Reinforcement Learning
+(RL) in an accessible manner for beginners. We have established a foundation for understanding how RL
+agents learn and make decisions by providing a detailed description of the core elements of RL, such as
+states, actions, policies, and reward signals. The purpose of this paper is to provide an overview of various
+RL algorithms, including both model-free and model-based approaches, in order to illustrate the diversity of
+approaches within the field of RL. To facilitate deeper learning and practical application of RL, this guide
+aims to provide new learners with the necessary knowledge and confidence to embark on their RL journey. As
+part of future research, we will analyze RL in the literature in order to identify its strengths and weaknesses,
+providing a valuable resource for researchers. In addition, a benchmark dataset of RL algorithms will be
+developed from various sources, providing detailed information on RL papers and their applications.
+References
+[1] Richard S Sutton and Andrew G Barto. Reinforcement learning: An introduction . MIT press, 2018.
+[2] Sebastian B Thrun. Efficient exploration in reinforcement learning . Carnegie Mellon University, 1992.
+[3] Kai Arulkumaran et al. “A brief survey of deep reinforcement learning”. In: arXiv preprint arXiv:1708.05866
+(2017).
+[4] Mengbing Li et al. “Testing stationarity and change point detection in reinforcement learning”. In:
+arXiv preprint arXiv:2203.01707 (2022).
+[5] Paul Erd. “On a new law of large numbers”. In: J. Anal. Muth 22 (1970), pp. 103–l.
+[6] Pawel Ladosz et al. “Exploration in deep reinforcement learning: A survey”. In: Information Fusion
+85 (2022), pp. 1–22.
+[7] Fan-Ming Luo et al. “A survey on model-based reinforcement learning”. In: Science China Information
+Sciences 67.2 (2024), p. 121101.
+[8] Marco A Wiering and Martijn Van Otterlo. “Reinforcement learning”. In: Adaptation, learning, and
+optimization 12.3 (2012), p. 729.
+[9] Aur´ elien Garivier and Eric Moulines. “On upper-confidence bound policies for switching bandit prob-
+lems”. In: International conference on algorithmic learning theory . Springer. 2011, pp. 174–188.
+[10] Martijn Van Otterlo and Marco Wiering. “Reinforcement learning and markov decision processes”. In:
+Reinforcement learning: State-of-the-art . Springer, 2012, pp. 3–42.
+[11] Leslie Pack Kaelbling, Michael L Littman, and Andrew W Moore. “Reinforcement learning: A survey”.
+In:Journal of artificial intelligence research 4 (1996), pp. 237–285.
+[12] Brendan O’Donoghue et al. “The uncertainty bellman equation and exploration”. In: International
+conference on machine learning . 2018, pp. 3836–3845.
+[13] Dimitri P Bertsekas. “Approximate policy iteration: A survey and some new methods”. In: Journal of
+Control Theory and Applications 9.3 (2011), pp. 310–335.
+[14] Michael Lutter et al. “Value iteration in continuous actions, states and time”. In: arXiv preprint
+arXiv:2105.04682 (2021).
+[15] Dimitri Bertsekas. Dynamic programming and optimal control: Volume I . Vol. 4. Athena scientific,
+2012.
+[16] Volodymyr Mnih et al. “Human-level control through deep reinforcement learning”. In: nature 518.7540
+(2015), pp. 529–533.
+[17] Ivo Grondman et al. “A survey of actor-critic reinforcement learning: Standard and natural policy
+gradients”. In: IEEE Transactions on Systems, Man, and Cybernetics, part C (applications and reviews)
+42.6 (2012), pp. 1291–1307.
+[18] Volodymyr Mnih et al. “Playing atari with deep reinforcement learning”. In: arXiv preprint arXiv:1312.5602
+(2013).
+22
+[19] John Schulman et al. “Proximal policy optimization algorithms”. In: arXiv preprint arXiv:1707.06347
+(2017).
+[20] Yuxi Li. “Deep reinforcement learning: An overview”. In: arXiv preprint arXiv:1701.07274 (2017).
+[21] Vincent Fran¸ cois-Lavet et al. “An introduction to deep reinforcement learning”. In: Foundations and
+Trends®in Machine Learning 11.3-4 (2018), pp. 219–354.
+[22] Shengbo Eben Li. “Deep reinforcement learning”. In: Reinforcement learning for sequential decision
+and optimal control . Springer, 2023, pp. 365–402.
+[23] Thomas M Moerland et al. “Model-based reinforcement learning: A survey”. In: Foundations and
+Trends®in Machine Learning 16.1 (2023), pp. 1–118.
+[24] Peter Dayan and CJCH Watkins. “Q-learning”. In: Machine learning 8.3 (1992), pp. 279–292.
+[25] Matteo Hessel et al. “Rainbow: Combining improvements in deep reinforcement learning”. In: Proceed-
+ings of the AAAI conference on artificial intelligence . Vol. 32. 1. 2018.
+[26] Gavin A Rummery and Mahesan Niranjan. On-line Q-learning using connectionist systems . Vol. 37.
+University of Cambridge, Department of Engineering Cambridge, UK, 1994.
+[27] Vijay Konda and John Tsitsiklis. “Actor-critic algorithms”. In: Advances in neural information pro-
+cessing systems 12 (1999).
+[28] Timothy P Lillicrap et al. “Continuous control with deep reinforcement learning”. In: arXiv preprint
+arXiv:1509.02971 (2015).
+[29] Marvin Lee Minsky. Theory of neural-analog reinforcement systems and its application to the brain-
+model problem . Princeton University, 1954.
+[30] Richard Bellman. “The theory of dynamic programming”. In: Bulletin of the American Mathematical
+Society 60.6 (1954), pp. 503–515.
+[31] Richard Bellman, Robert E Kalaba, et al. Dynamic programming and modern control theory . Vol. 81.
+Citeseer, 1965.
+[32] A Harry Klopf. Brain function and adaptive systems: a heterostatic theory . 133. Air Force Cambridge
+Research Laboratories, Air Force Systems Command, United . . ., 1972.
+[33] Richard Stuart Sutton. Temporal credit assignment in reinforcement learning . University of Mas-
+sachusetts Amherst, 1984.
+[34] Christopher John Cornish Hellaby Watkins. “Learning from delayed rewards”. In: (1989).
+[35] Richard S Sutton. “Learning to predict by the methods of temporal differences”. In: Machine learning
+3 (1988), pp. 9–44.
+[36] Richard S Sutton. “Integrated architectures for learning, planning, and reacting based on approximat-
+ing dynamic programming”. In: Machine learning proceedings 1990 . Elsevier, 1990, pp. 216–224.
+[37] Andrew Y Ng, Daishi Harada, and Stuart Russell. “Policy invariance under reward transformations:
+Theory and application to reward shaping”. In: Icml. Vol. 99. 1999, pp. 278–287.
+[38] John N Tsitsiklis and Benjamin Van Roy. “Regression methods for pricing complex American-style
+options”. In: IEEE Transactions on Neural Networks 12.4 (2001), pp. 694–703.
+[39] David Silver et al. “Mastering the game of Go with deep neural networks and tree search”. In: nature
+529.7587 (2016), pp. 484–489.
+[40] Max Jaderberg et al. “Population based training of neural networks”. In: arXiv preprint arXiv:1711.09846
+(2017).
+[41] Lasse Espeholt et al. “Impala: Scalable distributed deep-rl with importance weighted actor-learner
+architectures”. In: International conference on machine learning . PMLR. 2018, pp. 1407–1416.
+[42] Ilge Akkaya et al. “Solving rubik’s cube with a robot hand”. In: arXiv preprint arXiv:1910.07113
+(2019).
+[43] Prashan Madumal et al. “Explainable reinforcement learning through a causal lens”. In: Proceedings
+of the AAAI conference on artificial intelligence . Vol. 34. 03. 2020, pp. 2493–2500.
+23
+[44] Alexander Mott et al. “Towards interpretable reinforcement learning using attention augmented agents”.
+In:Advances in neural information processing systems 32 (2019).
+[45] Pierre-Luc Bacon, Jean Harb, and Doina Precup. “The option-critic architecture”. In: Proceedings of
+the AAAI conference on artificial intelligence . Vol. 31. 1. 2017.
+[46] Alexander Sasha Vezhnevets et al. “Feudal networks for hierarchical reinforcement learning”. In: In-
+ternational conference on machine learning . PMLR. 2017, pp. 3540–3549.
+[47] Ryan Lowe et al. “Multi-agent actor-critic for mixed cooperative-competitive environments”. In: Ad-
+vances in neural information processing systems 30 (2017).
+[48] Jakob Foerster et al. “Learning to communicate with deep multi-agent reinforcement learning”. In:
+Advances in neural information processing systems 29 (2016).
+[49] Kevin Lu et al. “Frozen pretrained transformers as universal computation engines”. In: Proceedings of
+the AAAI conference on artificial intelligence . Vol. 36. 7. 2022, pp. 7628–7636.
+[50] Wenlong Huang et al. “Language models as zero-shot planners: Extracting actionable knowledge for
+embodied agents”. In: International conference on machine learning . PMLR. 2022, pp. 9118–9147.
+[51] Paul F Christiano et al. “Deep reinforcement learning from human preferences”. In: Advances in neural
+information processing systems 30 (2017).
+[52] James MacGlashan et al. “Interactive learning from policy-dependent human feedback”. In: Interna-
+tional conference on machine learning . PMLR. 2017, pp. 2285–2294.
+[53] Micah Carroll et al. “On the utility of learning about humans for human-ai coordination”. In: Advances
+in neural information processing systems 32 (2019).
+[54] Edouard Leurent and Jean Mercat. “Social attention for autonomous decision-making in dense traffic”.
+In:arXiv preprint arXiv:1911.12250 (2019).
+[55] Andrei A Rusu et al. “Progressive neural networks”. In: arXiv preprint arXiv:1606.04671 (2016).
+[56] Jane X Wang et al. “Learning to reinforcement learn”. In: arXiv preprint arXiv:1611.05763 (2016).
+[57] Khimya Khetarpal et al. “Towards continual reinforcement learning: A review and perspectives”. In:
+Journal of Artificial Intelligence Research 75 (2022), pp. 1401–1476.
+[58] Jaehong Yoon et al. “Lifelong learning with dynamically expandable networks”. In: arXiv preprint
+arXiv:1708.01547 (2017).
+[59] Ronald J Williams. “Simple statistical gradient-following algorithms for connectionist reinforcement
+learning”. In: Machine learning 8 (1992), pp. 229–256.
+[60] John Schulman et al. “Trust region policy optimization”. In: International conference on machine
+learning . PMLR. 2015, pp. 1889–1897.
+[61] Tuomas Haarnoja et al. “Soft actor-critic: Off-policy maximum entropy deep reinforcement learning
+with a stochastic actor”. In: International conference on machine learning . PMLR. 2018, pp. 1861–
+1870.
+24

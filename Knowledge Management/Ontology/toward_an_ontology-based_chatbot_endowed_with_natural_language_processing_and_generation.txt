@@ -1,0 +1,249 @@
+HAL Id: hal-01089102
+https://hal.inria.fr/hal-01089102
+Submitted on 1 Dec 2014
+HAL is a multi-disciplinary open access
+archive for the deposit and dissemination of sci-
+entific research documents, whether they are pub-
+lished or not. The documents may come from
+teaching and research institutions in F rance or
+abroad, or from public or private research centers.L’archive ouverte pluridisciplinaire HAL , est
+destinée au dépôt et à la diffusion de documents
+scientifiques de niveau recherche, publiés ou non,
+émanant des établissements d’enseignement et de
+recherche français ou étrangers, des laboratoires
+publics ou privés.
+T oward an Ontology-Based Chatbot Endowed with
+Natural Language Processing and Generation
+Amine Hallili
+T o cite this version:
+Amine Hallili. T oward an Ontology-Based Chatbot Endowed with Natural Language Processing and
+Generation. 26th European Summer School in Logic, Language & Information, Aug 2014, Tübingen,
+Germany . ￿hal-01089102￿
+T o w ard an On tology-Based Chatb ot Endo w ed
+with Natural Language Pro cessing and
+Generation
+Amine Hallili
+Univ. Nice Sophia An tip olis, CNRS, I3S, UMR 7271, 06900 Sophia An tip olis, F rance
+hallili@i3s.unice.fr
+Abstract. With the last ev olution of the w eb, sev eral new means of
+comm unication ha v e sho w ed up. In the commercial domain, c hatb ot tec h-
+nologies are no w considered as essen tial for pro viding a wide range of ser-
+vices (e.g. searc h, F A Q, assistance) to the end-user, and to mak e a clien t
+a faithful customer. In this pap er, w e prop ose an on-going w ork on the
+denition and implemen tation of Sync hroBot, an on tology-based c hat-
+b ot that relies on Seman tic W eb and NLP mo dels and tec hnologies to
+supp ort user-mac hine dialogical in teraction in the e-commerce domain.
+Keyw ords: Chatb ot, Articial In telligence, Natural Language Pro cess-
+ing, Natural Language Generation, Seman tic W eb
+1 In tro duction
+During the last decades, our w a y of consuming information has totally c hanged
+with the emergence of new means of comm unication (e.g. forums, F A Q, so cial
+net w orks, seman tic searc h engines, mobile applications, and text to sp eec h sys-
+tems) whic h pro vide us with dieren t p ossibilities of handling and dealing with
+information on the w eb. A t the same time, researc hers in Natural Language
+Pro cessing (NLP) and Seman tic W eb domains ha v e prop osed new approac hes to
+mo del and implemen t more and more complex systems capable of in terpreting
+natural language, of reasoning, and of assisting end-users (e.g. Chatb ots [1], Ex-
+p ert Systems [10] , m ulti agen t systems [15], and Question Answ ering systems
+[9]). Besides co v ering b oth op en and close domains (e.g. so cial, commercial, sci-
+en tic), suc h systems aim to b e autonomous, self-learning and they can replace
+h umans in p erforming sev eral tasks. My PhD researc h prop osal, whose prelimi-
+nary w orks I presen t in this pap er, fo cuses on c hatb ot systems, whic h w e classify
+in t w o dieren t categories: Question Answ ering Systems (QA) and Dialog Sys-
+tems (DS). On the one hand, Question Answ ering systems aim at nding answ ers
+to factual queries in either a Kno wledge Base (KB) or ra w text and to return
+them to the user. The answ er can b e just a textual string (e.g. [4]) or it can
+b e enric hed b y other meta-information or w ell-formed sen tences, obtained b y
+applying Natural Language Generation (NLG) tec hniques (e.g. [2,5]). In spite
+of their eciency in retrieving the information, suc h systems lac k the capabil-
+it y of handling the links b et w een sequen tial questions as in a con v ersation. On
+the other hand, Dialog Systems aim at k eeping in memory the links b et w een
+consecutiv e questions in order to ensure a logical con v ersation mo de with the
+user (e.g. [13,7]). Nev ertheless, most of these systems do not rely on robust and
+exible KBs allo wing them to extract information from m ultiple sources and to
+reason o v er the data. The goal of our w ork is to com bine the strengh ts of the t w o
+categories of systems discussed ab o v e, and to prop ose a dialog system that relies
+on i) a ric h KB for data extraction and reasoning, ii) NLP to ols to in terpret
+user ' s question, and iii) NLG tec hniques to generate w ell-formed sen tences. The
+system will ensure the follo wing t yp e of con v ersation:
+<User> Give me the pric e of a Nexus 5!
+<System> the pric e of Nexus 5 is 400$
+<User> and who sel ls it?
+<System> sever al sel lers wer e found. The main one is Go o gle!
+Do you want to se e other sel lers?
+<User> No, show me the white version, sold by Go o gle and
+lo c ate d in F r anc e!
+<System> her e ar e the images of Nexus 5 white version, sold by
+Go o gle and lo c ate d in F r anc e...
+The remainder of this pap er is organized as follo w: Section 2 presen ts our
+preliminary approac h and implemen tation. In Section 3 w e describ e our ongoing
+w orks along with our p ersp ectiv es for future w orks.
+2 Sync hroBot : A Preliminary Approac h
+The approac h w e prop ose relies on the Seman tic W eb1paradigm, whic h co v ers
+structuring, linking, sharing and reusing data through applications, en terprises
+and comm unities. F or that, it pro vides a n um b er of information mo deling frame-
+w orks e.g. Resource Description F ramew ork (RDF) and RDF Sc hema (RDFS).
+The preliminary approac h w e prop ose here to w ard an on tology-based c hatb ot
+co v ers three asp ects, namely i) Kno wledge based System ii) Question In terpre-
+tation iii) Natural Language Generation. Curren tly w e fo cus on mo deling and
+implemen ting an ecien t and robust QA system that will b e the corner stone
+for our future Dialog System.
+2.1 A Kno wledge Based System
+Our approac h relies on the use of exiting to ols, resources and information (e.g.
+F A Q, API, system logs) in order to create a KB in RDF, whic h means that the
+data will b e represen ted as triples: <Subject, property, Value> . F or exam-
+ple, the follo wing sen tence Go ogle sells Nexus 5 can b e expressed in RDF as
+<sbr:Google, sbo:sells, sbr:Nexus_5> . W e ha v e created an on tology that
+1www.w3.org/2001/sw/
+describ es the classes (e.g. Pro duct, Category , Seller, etc.) and prop erties (e.g.
+sells, price, lo catedIn, etc.) of the KB in the e-commerce domain (the fo cus of
+Sync hrob ot). F or instance Go ogle t yp e is sbo:Seller and has the sbo:sells
+prop ert y . Lik ewise, Nexus_5 ' s t yp e is
+sbo:Product and has the sbo:locatedIn prop ert y . Also, with our on tology w e
+infer, among others, that Nexus 5 is sold b y Go ogle ( <sbr:Nexus_5 , sbo:soldBy ,
+sbr:Google> ). F urthermore, ev ery prop ert y is annotated in b oth F renc h and En-
+glish, b y a n um b er of lab els that ha v e the same meaning (e.g. sbo:sells will
+ha v e sell, trade, v end, commercialize, mark et, etc. as lab els), whic h will
+b e used to matc h the terms in the question, in order to iden tify the queried prop-
+ert y . The curren t v ersion of the KB is comp osed of 500000 pro duct descriptions
+that w e retriev ed b y using eBa y APIs to transform eBa y data to RDF.
+2.2 Question In terpretation
+As regards the natural language question in terpretation, our approac h fo cuses
+on textual information as input and relies on the w ork describ ed in [3] whic h
+requires iden tifying three asp ects i) the Exp ected Answ er T yp e (EA T), whic h is
+the t yp e of the resource that w e are lo oking for, ii) the prop ert y , represen ting
+the relation linking the en tit y on whic h the question is ask ed to its answ er, and
+iii) the Named En tit y (NE) represen ting the sub ject of the giv en question. In
+this example Who sells Nexus 5?, the EA T is sbo:Seller , the prop ert y is
+sbo:sells and the NE is sbr:Nexus_5 .
+Named En tit y Recognition : T o iden tify the NE, w e aim at using natural
+language pro cessing tec hniques (e.g. Named En tit y detection and linking) to
+retriev e all p ossible NEs from the KB b y matc hing the user ' question to KB
+prop ert y v alues (e.g. name, description, etc.). Then, relev an t NEs will b e used in
+querying the KB according to the assigned retrieving score whic h w e determine
+b y using the folo wing strategy :
+In order to assign a score to the qualit y of the searc h, our strategy relies
+on sev eral asp ects : First, all KB prop erties used for the searc h are ordered de-
+p ending on their relev ance. F or instance, matc hing the user ' s question to the
+sbo:hasLegalName prop ert y will b e more accurate than matc hing it to the
+sbo:hasDescription prop ert y and so on. Based on that, a relev ance co e-
+cien t is assigned to eac h prop ert y and used in b oth the score computing and the
+determination of relev an t NEs. Second, a score is assigned to the accuracy of
+the matc hing of the user's question and the resources found in the KB. In other
+w ord, the bigger the matc hed w ords, the higher score will b e (an exact matc h will
+result of a p erfect score and the found resource will b e directly used). Finally ,
+w e fo cus on the n um b er of the retriev ed resources to determine the precision of
+our result. This means that the few er resources w e nd, the higher the precision
+of the searc h.
+Prop ert y Detection : W e detect the prop ert y b y matc hing its annotated
+lab els with the user ' s question [6] and follo wing a scoring strategy w e pic k up
+the relev an t prop ert y .
+W e are also able to recognize questions with t w o relations as sho wn b elo w in
+gure 1. F or instance, the follo wing example Giv e me the address of the Nexus
+5 ' s sellers! con tains t w o prop erties (i.e. sbo:address , sbo:sells ) meaning that
+the question can b e divided in t w o sub-questions: Giv e me the Nexus 5 ' s sell-
+ers! and Giv e me their addresses!. This can b e done thanks to the fact that the
+prop erties in our on tology ha v e domain and range that allo w the detection of 2-
+relation (n-relations in general). Concretely w e aim at constructing a relational
+graph represen ting the user ' s question that con tains the iden tied prop erties
+along with the found resources (e.g. Named En tities), while comparing b oth the
+NE t yp e and the iden tied prop ert y domain. In the giv en example, the prop ert y
+sbo:address , with domain sbo:Seller , will ha v e the b est score along with the
+NE sbr:Nexus_5 that ha v e t yp e sbo:Product whic h diers from sbo:Seller ,
+this leads to the creatation of a relational graph with t w o no des whic h are t w o
+prop erties namely sbo:address and sbo:soldBy and means that the question
+has more than one relation. These elemen ts (NE, prop ert y and EA T) will b e
+used to generate a SP AR QL query that retriev es results from the KB.
+Note that the system will select the prop ert y sbo:soldBy instead of sbo:sells
+during the pro cess time. This is due to the fact that the system will use inference
+to pic k up more prop erties to b e able to construct a relational graph that rep-
+resen ts the user ' s questio. In our example, only the sbo:soldBy prop ert y whic h
+is the in v ersed prop ert y of the selected one sbo:sells will giv e results when
+creating the relational graph.
+Fig. 1. Relational graph for 2 relations
+Exp ected Answ er T yp e (EA T) Detection : After detecting relev an t
+prop erties, w e aim at using their resp ectiv e Domain t yp es. F or instance, as
+sho wn in gure 1, the follo wing prop erties' Domains ( sbo:Product , sbo:Seller ,
+sbo:Address ) will b e used along with the score assigned to their resp ectiv e
+prop ert y . This allo ws us to sort all the detected EA T s b efore adding them in the
+generated query that the system use to retriev e results from the KB.
+2.3 Natural Language Generation
+In order to answ er questions with a generated sen tence, w e prop ose that eac h
+prop ert y in our on tology will b e mapp ed with a list of generic resp onse pat-
+terns. Our c hallenge is to b e able to replace dynamically some particular parts
+of the pattern to return w ell-formed answ ers. F or instance, w e tak e the example
+Giv e me the price of a Nexus 5! and considering that the iden tied prop ert y
+sbo:price matc hes the pattern [ The pric e of {Pr o duct} is {V alue} ] , so after
+replacing the {Pro duct} and {V alue} parts w e can answ er that The price of
+Nexus 5 is 400$. W e also use the sbo:mediaType prop ert y to sho w more in ter-
+esting information to the user after giving the w ell-formed answ er (e.g. image,
+video, map, etc.). F or instance, when a user asks Sho w me the white v ersion of
+Nexus 5!, the system infers that the user is more in terested in viewing images
+rather than just textual information, and as a result, images will b e displa y ed
+in this case.
+3 Ongoing and F uture W ork
+This pap er sk etc hes out the PhD researc h pro ject I ha v e recen tly started, and
+describ es the preliminary steps represen ting the bases of a n um b er of directions
+that w e consider for future w ork:
+As ongoing and short term w orks w e are planning to impro v e the NE recogni-
+tion b y using w ell-kno wn and ecien t algorithms (e.g. KNN, Similarit y , N-Gram
+and TF-IDF scoring) in order to gain more precision, to sp ot complex and am-
+biguous resources, and to b e able to div ersify giv en answ ers. W e ha v e also b egun
+to reuse other famous on tologies that exist in the literature and co v er the com-
+mercial domain. w e ha v e started to use the sc hema.org [11] on tology but due to
+its parial co v erage, w e ha v e decided to use more sp ecic on tology (Go o dRela-
+tions [8] on tology) whic h fully co v ers the commercial domain.
+F urthermore, w e consider answ ering n-Relation questions b y the construction of
+a Relational Graph represen ting the question ' s NEs and prop erties. F or that,
+w e will study the p ossibilit y to generalize the 2-relation question answ ering ap-
+proac h explained in the previous section, to n-Relation questions. Moreo v er, w e
+in tend to in tegrate the relational pattern matc hing mo dule of QAKiS system [4]
+that exploits Wikip edia pages to extract lexicalisations of on tological relations.
+More sp ecically , w e will use w ebsite APIs, w eb services [14] and pro duct pages
+to automatically extract and create generic prop ert y and resp onse patterns. This
+will ensure more precision in detecting prop erties expressed in the user's question
+and it will allo w to answ er questions in dieren t w a ys.
+As middle term impro v emen ts, w e in tend to fo cus our w ork on the dialog
+mo de part that w e will in tegrate on top of our prop osed approac h, so that
+w e can prop ose an approac h that ensures our targeted scenario. F or that, w e
+will in v estigate the comm unicativ e b eha vior approac hes (e.g. pause, resume, and
+to switc h b et w een in teractiv e tasks [13]), dialog managemen t systems (e.g. [7])
+and in particular, the on tology-based dialog systems (e.g. [12] whic h corresp ond
+p erfectly to the kind of system that w e w an t to implemen t.
+References
+1. J. F. Allen, D. K. Byron, M. Dzik o vsk a, G. F erguson, L. Galescu, and A. Sten t.
+T o w ard con v ersational h uman-computer in teraction. AI Magazine , 22(4):2738,
+2001.
+2. A. Augello, G. Pilato, G. V assallo, and S. Gaglio. A seman tic la y er on semi-
+structured data sources for in tuitiv e c hatb ots. In CISIS , pages 760765, 2009.
+3. E. Cabrio, J. Co jan, A. P . Aprosio, B. Magnini, A. La v elli, and F. Gandon. Qakis:
+an op en domain qa system based on relational patterns. In International Semantic
+W eb Confer enc e (Posters & Demos) , 2012.
+4. E. Cabrio, J. Co jan, A. P almero Aprosio, and F. Gandon. Natural language in-
+teraction with the w eb of data b y mining its textual side. Intel ligenza A rticiale ,
+6(2):121133, 2012.
+5. J. Chai, V. Horv ath, N. Nicolo v, M. St ys, A. Kam bhatla, W. Zadrozn y , and
+P . Melville. Natural language assistan t: A dialog system for online pro duct recom-
+mendation. AI Magazine , 23:6375, 2002.
+6. D. Damljano vic, M. Agatono vic, and H. Cunningham. Natural language in terfaces
+to on tologies: Com bining syn tactic analysis and on tology-based lo okup through the
+user in teraction. In ESW C (1) , pages 106120, 2010.
+7. T. Heinroth and D. Denic h. Sp ok en in teraction within the computed w orld: Ev al-
+uation of a m ultitasking adaptiv e sp ok en dialogue system. In COMPSA C , pages
+134143, 2011.
+8. M. Hepp. Go o drelations: An on tology for describing pro ducts and services oers
+on the w eb. In EKA W , pages 329346, 2008.
+9. L. Hirsc hman and R. J. Gaizausk as. Natural language question answ ering: the
+view from here. Natur al L anguage Engine ering , 7(4):275300, 2001.
+10. S.-H. Liao. Exp ert system metho dologies and applications - a decade review from
+1995 to 2004. Exp ert Syst. Appl. , 28(1):93103, 2005.
+11. P . Mik a and T. P otter. Metadata statistics for a large w eb corpus. In LDO W ,
+2012.
+12. D. Milw ard and et al. On tology-based dialogue systems, 2003.
+13. B. P akucs. T o w ards dynamic m ulti-domain dialogue pro cessing. In INTER-
+SPEECH , 2003.
+14. D. Sonn tag, R. Engel, G. Herzog, A. Pfalzgraf, N. Peger, M. Romanelli, and N. Re-
+ithinger. Smart w eb handheld - m ultimo dal in teraction with on tological kno wledge
+bases and seman tic w eb services. In A rtic al Intel ligenc e for Human Computing ,
+pages 272295, 2007.
+15. M. J. W o oldridge. A n Intr o duction to MultiA gent Systems (2. e d.) . Wiley , 2009.

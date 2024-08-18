@@ -1,0 +1,659 @@
+      
+AFRL-IF-RS-TR-2004-25 
+Final Technical Report  
+February 2004 
+      
+MAPLE:  MULTI-AGENT PLANNING, LEARNING, AND EXECUTION   
+Carnegie Mellon University    Sponsored by Defense Advanced Research Projects Agency DARPA Order No.  J388 
+  
+ 
+ 
+APPROVED FOR PUBLIC RELEASE; DISTRIBUTION UNLIMITED.  
+ 
+  
+ 
+ 
+The views and conclusions contained in this document are those of the authors and should not be 
+interpreted as necessarily representing the official  policies, either expressed or implied, of the 
+Defense Advanced Research Projects Agency or the U.S. Government.  
+ 
+  
+ 
+  
+ 
+  
+ 
+  
+ 
+AIR FORCE RESEARCH LABORATORY 
+INFORMATION DIRECTORATE 
+ROME RESEARCH SITE 
+ROME, NEW YORK 
+  
+
+      
+ 
+STINFO FINAL REPORT 
+ 
+ 
+ This report has been reviewed by the Air Force Research Laboratory, Information 
+Directorate, Public Affairs Office (IFOIPA) a nd is releasable to the National Technical 
+Information Service (NTIS).  At NTIS it wi ll be releasable to the general public, 
+including foreign nations.    AFRL-IF-RS-TR-2004-25 has been review ed and is approved for publication. 
+       APPROVED:   /s/    FRANK H. BORN    Project Engineer      
+ 
+  FOR THE DIRECTOR:  /s/      JAMES A. COLLINS, Acting Chief      Information Technology Division      Information Directorate        
+      
+ REPORT DOCUMENTATION PAGE Form Approved 
+OMB No. 074-0188 
+Public reporting burden for this collection of information is estimated to average 1 hour per response, including the time for reviewing instructions, searching existing data sources, gathering and 
+maintaining the data needed, and completing and reviewing this collection of information.  Send comments regarding this burden estimate or any other aspect of this collection of information, including 
+suggestions for reducing this burden to Washington Headquarters Services, Directorate for Information Operations and Reports, 1 215 Jefferson Davis Highway, Suite 1204, Arlington, VA  22202-4302, 
+and to the Office of Management and Budget, Paperwork Reduction Project (0704-0188), Washington, DC 20503 
+1. AGENCY USE ONLY (Leave blank)  
+ 2. REPORT DATE
+FEBRUARY 20043. REPORT TYPE AND DATES COVERED 
+FINAL                  Apr 98 – Apr 03 
+4. TITLE AND SUBTITLE  
+ 
+MAPLE:  MULTI-AGENT PLANNING, LEARNING, AND EXECUTION 
+6. AUTHOR(S)  
+ Sebastian Thrun   5.  FUNDING NUMBERS 
+G     - F30602-98-2-0137 PE   -  63760E 
+PR   -  AGEN 
+TA   -  T0 WU  -  04 
+ 
+7. PERFORMING ORGANIZATION NAME(S) AND ADDRESS(ES)  
+ 
+Carnegie Mellon University 5000 Forbes Avenue 
+Pittsburgh PA 15213 8. PERFORMING ORGANIZATION 
+    REPORT NUMBER  
+ 
+N/A 
+ 
+9.  SPONSORING / MONITORING AGENCY NAME(S) AND ADDRESS(ES)  
+ Defense Advanced Research Projects Agency            AFRL/IFTB 
+3701 North Fairfax Drive                                               525 Brooks Road 
+Arlington VA 22203-1714                                              Rome NY 13441-4505 10. SPONSORING / MONITORING 
+      AGENCY REPORT NUMBER  
+ 
+AFRL-IF-RS-TR-2004-25  
+11. SUPPLEMENTARY NOTES  
+ AFRL Project Engineer:   Frank H. Born/IFTB/(315) 330-4726              Frank.Born@rl.af.mil 
+12a. DISTRIBUTION / AVAILABILITY STATEMENT  
+ 
+APPROVED FOR PUBLIC RELEASE; DISTRIBUTION UNLIMITED.  12b. DISTRIBUTION CODE  
+ 
+ 
+13. ABSTRACT  (Maximum 200 Words)  
+The fundamental problems addressed in this report pertained to the coordination of multi-agent software systems acting 
+in dynamic, physical environments.  The Multi-Agent  Planning MAPLE project focused on the development and 
+evaluation of new algorithms for integrating information and fo r coordinating the actions of large multi-agent teams.  
+Three different aspects of multi-agent systems are in this r eport.  First, this project developed a prototype of a secure 
+decentralized database, which made it possible to disperse in formation among multiple agents in a secure and scalable 
+way.  Second, the project developed a multi-agent system for acquiring and integrating information in large dynamic 
+environments.  Third was a planning and multi-agent coor dination technique for enabling large teams of autonomous 
+agents to perform missions in highly dynamic  and partially observable environments. 
+ 
+The resulting algorithms were implemented and evaluated pr edominately using a simulator called “MapleSim”, which 
+simulated the country of Honduras after the devastation caused by Hurricane Mitch in 1998. 
+ 
+15. NUMBER OF PAGES 14. SUBJECT TERMS  
+Agent Based Software, Multi-agent system , planning, scheduling, coordination, 
+autonomous software 16. PRICE CODE
+17. SECURITY CLASSIFICATION 
+     OF REPORT 
+ 
+UNCLASSIFIED  18. SECURITY CLASSIFICATION      OF THIS PAGE 
+ 
+UNCLASSIFIED 19. SECURITY CLASSIFICATION      OF ABSTRACT 
+ 
+UNCLASSIFIED 20. LIMITATION OF ABSTRACT 
+ 
+UL 
+NSN 7540-01-280-5500    Standard Form 298 (Rev. 2-89)  
+Prescribed by ANSI Std. Z39-18 
+298-102  19
+Table of Contents
+1 Executive Summary of Research and Findings                                                            1
+2 Main Accomplishments                                                                                                  2
+3 Publications                                                                                                                     4
+4 Detailed Project Report                                                                                                  8
+4.1 BORG: Secure Scalable Database . . . . . . . . . . . . . . . . . . . . . .        8
+4.2 Multi-Agent Planning And Coordination . . . . . . . . . . . . . . . . . . .        8 
+4.2.1 POMDP Techniques For Information Gathering With Many Agents         8
+4.2.2 Coordinating Multi-Agent Exploration . . . . . . . . . . . . . . .        9 
+4.2.3 Auction Algorithms . . . . . . . . . . . . . . . . . . . . . . . . . 10
+4.2.4 Motion Planning for Large Numbers of Ground Vehicles . . . . . . 10
+4.3 Multi-Agent Information Integration . . . . . . . . . . . . . . . . . . . . . 11
+4.3.1 Mapping Unknown Environments . . . . . . . . . . . . . . . . . . 11
+4.3.2 Modeling Dynamic Environments . . . . . . . . . . . . . . . . . . 12
+4.3.3 Tracking Moving Entities With Many Agents . . . . . . . . . . . . 13
+4.3.4 Advanced Probabilistic Tracking Techniques For Single-Agent Sys-
+tems . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+4.4 MapleSim: A Simulator of Ground and Air Vehicles in Honduras . . . . . .      14
+4.5 Porting and Interfacing with CoABS Grid . . . . . . . . . . . . . . . . . . 15
+4.6 CoABS Grid Visualization Tools . . . . . . . . . . . . . . . . . . . . . . . .    15
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                                                                       i
+1 Executive Summary of Research and Findings
+ThereportsummarizestheachievementsandaccomplishmentsoftheprojectMAPLE(Multi-
+AgentPlanning,Learning,andExecution),sponsoredbyDARPAundercontractF30602-98-
+2-0137. Overall, the work carried out under this contract has led to 36 publications and a
+software prototype connected to the Control of Agent Based Systems (CoABS) Grid.
+Thefundamentalproblemaddressedinthisprojectpertainedtothecoordinationofmulti-
+agent system acting in dynamic, physical environments. An example of such a setting is a
+set of unmanned ground vehicles, which cooperatively engage in humanitarian missions in
+theaftermathofanaturaldisaster(e.g.,ahurricane). TheMAPLEprojectfocusedonthede-
+velopmentandevaluationofnewalgorithmsforintegratinginformationandforcoordinating
+the actions of large multi-agent teams.
+Ourscientiﬁceffortfocusedonthreedifferentaspectsofmulti-agentsystems,whichare
+outlined in the detailed approach section of this report. First, under the initial project name
+“BORG,”wedevelopedaprototypeofasecuredecentralizeddatabase,whichmadeitpossi-
+bletodisperseinformationamongmultipleagentsinasecureandscalableway. Second,we
+developed a multi-agent system for acquiring and integrating information in large dynamic
+environments. Third, we developed planning and multi-agent coordination techniques for
+enabling large teams of autonomous agents to perform missions in highly dynamic and par-
+tiallyobservableenvironments. Whileourinitialresearchfocusedonthedevelopmentofthe
+BORG system, the majority of resources were spent developing algorithms for the last two
+items: techniques for multi-agent information integration, and techniques for coordinating
+many physical agents.
+The resulting algorithms were implemented and evaluated predominately in the context
+of the Mixed Initiative Agent Team Administration (MIATA) Technology Integration
+Experiment (TIE), which was carried out jointly by a number of CoABS contractors. We
+developedthebackbonesoftwaresystemforthisTIE,asimulatorcalled“MapleSim,”which
+simulatedthecountryofHondurasafterthedevastationcausedbyHurricaneMitchin1998.
+MapleSim has been connected to the CoABS Grid, and a number of contractors controlled
+air and ground operations through the infrastructure provided by the Grid and MapleSim. A
+secondcontributiontothisdemonstrationwasthecontroloftrucksontheground. Thisprob-
+lemwaschallenginginthattheconditionsonthegroundwerelargelyunknown;furthermore,
+the environment was highly dynamic.
+Other evaluations were carried out in the context of multi-robot systems. We have ex-
+panded this research to embrace the coordination of multiple ground vehicles when explor-
+ingunknownphysicalenvironments,andthecoordinationofmultipleunmannedairvehicles
+when acquiring information in dynamic battleﬁeld situations (e.g., ﬁnding SAM sites). The
+resultsofthisprojecthavesuccessfullybeentransitionedintorelatedDARPAprojects,such
+as the DARPA TMR project and the DARPA MICA project.
+ 
+ 
+                                                                      1
+2 Main Accomplishments
+The main accomplishments of the MAPLE project are as follows:
+•Acc-1:We developed a prototype of a secure scalable database, known as BORG.
+Throughthispreliminaryprototype,wehavedemonstratedscalabilityandsecurityfor
+this decentralized database.
+•Acc-2:We developed scalable algorithms for multi-agent planning and coordination
+in dynamic and partially observable environments. In particular, we developed:
+– Acc-2a: Partially observable Markov decision process techniques for coordinat-
+ing many agents in the process of information gathering [15, 25].
+– Acc-2b: Scalable greedy algorithms for coordinating multi-agent systems when
+exploring unknown environments and acquiring detailed models thereof [9, 27].
+– Acc-2c: Auction algorithms for optimal coordination of multiple agents operat-
+ing in adversarial environments [6].
+– Acc-2d: Motion planning algorithms for deconﬂicting large number of moving
+entities (e.g., ground vehicles) that share the same environment, each pursuing
+different goals [4, 5].
+•Acc-3:We developed scalable multi-agent information integration algorithms.
+– Acc-3a: We developed a number of algorithms for exploring and mapping un-
+known environments with teams of mobile agents [18, 19, 20, 16, 33, 34, 28].
+The paper [28] won the best conference paper award at the 2000 ICRA Confer-
+ence (selected as the sole winner from over 1,100 submissions).
+– Acc-3b: We developed a number of specialized algorithms for exploring and
+acquiring models of partially known - partially unknown environments, such as
+the country Honduras after the devastation caused by Hurricane Mitch [1, 10].
+Ouralgorithmsspeciﬁcallyaddressdynamicenvironments,inwhichaspectsmay
+change over time as the data is acquired [10, 36].
+– Acc-3c: We developed techniques for tracking moving entities in dynamic en-
+vironments with teams of mobile robots [23, 22]. The paper [23] won the best
+Student Conference paper award at AAMAS, the international multi-agent con-
+ference.
+– Acc-3d: We developed a number of advanced probabilistic tracking techniques
+for single-agent systems [30, 35].
+•Acc-4:We developed MapleSim, a discrete event simulator of the country Honduras
+after the Hurricane Mitch devastated large parts of the country [15].                                                                               2
+•Acc-5:WeinterfacedMapleSimandourmulti-agentcoordinationsystemtotheCoABS
+Grid, and provided full support to various DARPA demonstrations and TIEs.
+•Acc-6:Finally,wedevelopedavisualizationtoolfortheCoABSgridwhichwasused
+in a number of DARPA demonstrations and experiments throughout the CoABS pro-
+gram.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                                                                      3
+3 Publications
+The following publications directly arose out of the MAPLE project and were fully or par-
+tially funded under the contact F30602-98-2-0137. The DARPA support has been acknowl-
+edged.
+[1] D.Avots,E.Lim,R.Thibaux,andS.Thrun. Aprobabilistictechniqueforsimultaneous
+localization and door state estimation with mobile robots in dynamic environments. In
+Proceedings of the Conference on Intelligent Robots and Systems (IROS) , Lausanne,
+Switzerland, 2002.
+[2] M. Bennewitz, W. Burgard, and S. Thrun. Constraint-based optimization of priority
+schemes for decoupled path planning techniques. In Proceedings of the Joint German
+Austrian Conference on Artiﬁcial Intelligence . Springer Verlag, 2001.
+[3] M. Bennewitz, W. Burgard, and S. Thrun. Optimizing priority schemes for decoupled
+path planning techniques. In Proceedings of the Conference on Intelligent Robots and
+Systems (IROS’2001) , Hawaii, 2001.
+[4] M. Bennewitz, W. Burgard, and S. Thrun. Optimizing schedules for prioritized path
+planning of multi-robot systems. In IEEE International Conference on Robotics and
+Automation (ICRA) , Seoul, Korea, 2001. ICRA.
+[5] M.Bennewitz,W.Burgard,andS.Thrun. Adaptingnavigationstrategiesusingmotions
+patterns of people. In Proceedings of the IEEE International Conference on Robotics
+and Automation (ICRA) , 2003.
+[6] C. Bererton, G. Gordon, and S. Thrun. Auction mechanism design for multi-robot
+coordination. Submitted for publication, 2003.
+[7] M. Berna, B. Lisien, B. Sellner, G. Gordon, F. Pfenning, and S. Thrun. A learning
+algorithm for localizing people based on wireless signal strength that uses labeled and
+unlabeled data. In Proceedings of the Sixteenth International Joint Conference on Ar-
+tiﬁcial Intelligence (IJCAI) , Acapulco, Mexico, 2003. IJCAI.
+[8] R.Biswas,B.Limketkai,S.Sanner,andS.Thrun. Towardsobjectmappingindynamic
+environments with mobile robots. In Proceedings of the Conference on Intelligent
+Robots and Systems (IROS) , Lausanne, Switzerland, 2002.
+[9] W. Burgard, D. Fox, M. Moors, R. Simmons, and S. Thrun. Collaborative multi-robot
+exploration. In Proceedings of the IEEE International Conference on Robotics and
+Automation (ICRA) , San Francisco, CA, 2000. IEEE.
+  
+                                                                       4
+[10] W. Burgard, D. H ¨ahnel, R. Triebel, and S. Thrun. Mapping with mobile robots in
+dynamic environments. In Proceedings of the Snowbird Workshop ”Machines That
+Learn”, Snowbird, UT, 2003. NIPS Foundation. Extended abstract.
+[11] D. H ¨ahnel, W. Burgard, B. Wegbreit, and S. Thrun. Towards lazy data association
+in SLAM. In Proceedings of the 11th International Symposium of Robotics Research
+(ISRR’03) , Sienna, Italy, 2003. Springer.
+[12] D.H ¨ahnel,D.Fox,W.Burgard,andS.Thrun. AhighlyefﬁcientFastSLAMalgorithm
+for generating cyclic maps of large-scale environments from raw laser range measure-
+ments. In Proceedings of the Conference on Intelligent Robots and Systems (IROS) ,
+2003.
+[13] D. H ¨ahnel, R. Triebel, W. Burgard, and S. Thrun. Map building with mobile robots
+in dynamic environments. In Proceedings of the IEEE International Conference on
+Robotics and Automation (ICRA) , 2003.
+[14] B. Limketkai, R. Biswas, and S. Thrun. Learning occupancy grids of non-stationary
+objectswithmobilerobots. In ProceedingsoftheInternationalSymposiumonExperi-
+mental Robotics (ISER) , Sant’Angelo d’Ischia, Italy, 2002.
+[15] L. Lita, J. Schulte, and S. Thrun. A multi-agent system for agent coordination in un-
+certain environments (short paper). In Proceedings of Agents , Montreal, CA, 2001.
+[16] Y.LiuandS.Thrun. Resultsforoutdoor-SLAMusingsparseextendedinformationﬁl-
+ters. InProceedingsoftheIEEEInternationalConferenceonRoboticsandAutomation
+(ICRA), 2003.
+[17] M. Montemerlo and S. Thrun. Simultaneous localization and mapping with unknown
+data association using FastSLAM. In Proceedings of the IEEE International Confer-
+ence on Robotics and Automation (ICRA) , 2003.
+[18] M.Montemerlo,S.Thrun,D.Koller,andB.Wegbreit. FastSLAM:Afactoredsolution
+to the simultaneous localization and mapping problem. In Proceedings of the AAAI
+National Conference on Artiﬁcial Intelligence , Edmonton, Canada, 2002. AAAI.
+[19] M. Montemerlo, S. Thrun, D. Koller, and B. Wegbreit. FastSLAM 2.0: An improved
+particle ﬁltering algorithm for simultaneous localization and mapping that provably
+converges. In ProceedingsoftheSixteenthInternationalJointConferenceonArtiﬁcial
+Intelligence (IJCAI) , Acapulco, Mexico, 2003. IJCAI.
+[20] E.Nettleton,S.Thrun,andH.Durrant-Whyte. Decentralisedslamwithlow-bandwidth
+communication for teams of airborne vehicles. In Proceedings of the International
+Conference on Field and Service Robotics , Lake Yamanaka, Japan, 2003.
+ 
+                                                                         5
+[21] J. Nieto, J. Guivant, E. Nebot, and S. Thrun. Real time data association for Fast-
+SLAM. In Proceedings of the IEEE International Conference on Robotics and Au-
+tomation (ICRA) , 2003.
+[22] M.Rosencrantz,G.Gordon,andS.Thrun. Decentralizedsensorfusionwithdistributed
+particleﬁlters. In ProceedingsoftheConferenceonUncertaintyinAI(UAI) ,Acapulco,
+Mexico, 2003.
+[23] M.Rosencrantz,G.Gordon,andS.Thrun. Locatingmovingentitiesindynamicindoor
+environments with teams of mobile robots. In Proceedings of Autonomous Agents and
+Multi-Agent Systems , Melbourne, Australia, 2003.
+[24] N. Roy and S. Thrun. Motion planning through policy search. In Proceedings of the
+Conference on Intelligent Robots and Systems (IROS) , Lausanne, Switzerland, 2002.
+[25] J. Schulte and S. Thrun. A heuristic search algorithm for acting optimally in markov
+decision processes with deterministic hidden state. Internal Report, 2001.
+[26] R. Simmons, D. Apfelbaum, W. Burgard, M. Fox, D. an Moors, S. Thrun, and
+H. Younes. Coordination for multi-robot exploration and mapping. In Proceedings
+of the AAAI National Conference on Artiﬁcial Intelligence , Austin, TX, 2000. AAAI.
+[27] R. Simmons, D. Apfelbaum, D. Fox, R.P. Goldmann, K.Z. Haigh, D.J. Musliner,
+M. Pelican, and S. Thrun. Coordinated deployment of multiple heterogeneous robots.
+InProceedings of the IEEE/RSJ International Conference on Intelligent Robots and
+Systems (IROS) , 2000.
+[28] S. Thrun. Towards programming tools for robots that integrate probabilistic computa-
+tion and learning. In Proceedings of the IEEE International Conference on Robotics
+and Automation (ICRA) , San Francisco, CA, 2000. IEEE.
+[29] S. Thrun. A probabilistic online mapping algorithm for teams of mobile robots. Inter-
+national Journal of Robotics Research , 20(5):335–363, 2001.
+[30] S. Thrun, Langford. J., and V. Verma. Risk sensitive particle ﬁlters. In Advances in
+Neural Information Processing Systems 14 . MIT Press, 2002.
+[31] S. Thrun, D. Koller, Z. Ghahramani, H. Durrant-Whyte, and A.Y. Ng. Simultaneous
+mappingandlocalizationwithsparseextendedinformationﬁlters. InJ.-D.Boissonnat,
+J. Burdick, K. Goldberg, and S. Hutchinson, editors, Proceedings of the Fifth Interna-
+tional Workshop on Algorithmic Foundations of Robotics , Nice, France, 2002.
+ 
+ 
+                                                                          6
+[32] S. Thrun, D. Koller, Z. Ghahramani, H. Durrant-Whyte, and A.Y. Ng. Simultaneous
+mapping and localization with sparse extended information ﬁlters:theory and initial
+results. Technical Report CMU-CS-02-112, Carnegie Mellon University, Computer
+Science Department, Pittsburgh, PA, 2002.
+[33] S. Thrun and Y. Liu. Multi-robot SLAM with sparse extended information ﬁlers. In
+Proceedings of the 11th International Symposium of Robotics Research (ISRR’03) , Si-
+enna, Italy, 2003. Springer.
+[34] S. Thrun, Y. Liu, D. Koller, A.Y. Ng, Z. Ghahramani, and H. Durrant-Whyte. Simul-
+taneous localization and mapping with sparse extended information ﬁlters. Submitted
+for journal publication, April 2003.
+[35] V. Verma, R. Simmons, and S. Thrun. Variable resolution particle ﬁlter. In Proceed-
+ings of the Sixteenth International Joint Conference on Artiﬁcial Intelligence (IJCAI) ,
+Acapulco, Mexico, 2003. IJCAI.
+[36] C.-C. Wang, C. Thorpe, and S. Thrun. Online simultaneous localization and mapping
+withdetectionandtrackingofmovingobjects: Theoryandresultsfromagroundvehi-
+cle in crowded urban areas. In Proceedings of the IEEE International Conference on
+Robotics and Automation (ICRA) , 2003.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                                                                      7
+4 Detailed Project Report
+4.1 BORG: Secure Scalable Database
+Intheinitial12Projectmonths,theMAPLEprojectfocusedonthedevelopmentofasecure
+and scalable database system. The idea of the BORG prototype is as follows: Imagine you
+want to secure a piece of information against a possible enemy. Then cut this piece of in-
+formation into pieces and duplicate these pieces among multiple agents. The key insight of
+the BORG prototype is that this dispersion can be done such that an opponent has to com-
+promiseatleast MoutofNagentstorecoverevenasinglebitoftheprotectedinformation,
+for arbitrary M≤N. Compromising M−1is not sufﬁcient; in fact, no information can be
+recoveredwhatsoeverbycompromisingfewerthan Magents(notevenpartialinformation).
+Bymaking Malargenumber,thesystembecomesvirtuallyimpenetrable. Itbecomeshighly
+secure against information warfare attacks.
+In the initial twelve project months, we developed a prototype of this system. Issues
+addressed during this period pertained to the manipulation of information (e.g., adding two
+values, executing simple programs) without jeopardizing the information itself. The work
+on BORG was discontinued based on feedback by the PM (Jim Hendler), who changed the
+focus of the MAPLE project to real-world planning and multi-agent coordination, and the
+CoABS Grid.
+4.2 Multi-Agent Planning And Coordination
+ThecoreoftheMAPLEprojectfocusedonthedevelopmentofmulti-agentplanningandco-
+ordinationtechniques,forcoordinatinglargenumbersofphysicalagentsoperatinginhighly
+unpredictable and uncertain environments. The fact that those agents act in physical spaces
+leads to constraints in which the physical whereabouts play a major role in agent coordi-
+nation. Further, the fact that the environment is partially unknown and dynamic mandates
+representations that can account for the inherent uncertainty in such environment. As a re-
+sult, the agents must incorporate knowledge of their own ignorance into decision making,
+andnotjustbasethedecisionontheirbestguessofthecurrentstateoftheworld(asiscom-
+monpractice). Ourapproach,thus,differsfundamentallyfrompreviousworkonmulti-agent
+coordination,whichhasinadequatelyaddressedtheissueofuncertaintyandlackofcomplete
+world knowledge. All our algorithms are built on this insight, and all of them address the
+inherent uncertainty in the word.
+4.2.1 POMDP Techniques For Information Gathering With Many Agents
+A ﬁrst set of algorithms described in [15, 25] relies on a basic insight known as partially
+observable Markov decision process, or POMDP. POMDPs are best explained as follows:
+Since the world is stochastic, it is best modeled as Markov process, which is a stochastic
+chain where the state of the world at time tdepends stochastically on its state at time t−1.
+                                                                         8
+However, not all of the state is observable. Instead the agents have sensors that provide
+themwithincompleteandnoisyprojectionsofthe(unobservable)state. Markovchainswith
+partially observable state spaces are known as partially observable Markov chains. Lastly,
+the agents have to make control decisions (e.g., where to move), hence the term “decision
+process” in POMDPs.
+Our ﬁrst set of techniques, which formed the core of our approach in the MIATA TIE, is
+based on the assumption that the unknown state is discrete: For example, roads in Honduras
+mightbepassableornotafterHurricaneMitchdestroyedmuchofthecounty’sinfrastructure;
+bridges might have collapsed. The challenge then is to reach a number of goal locations
+(e.g., population centers) under this initial uncertainty about the situation in the POMDPs.
+In[25],wedevelopedefﬁcientsearchalgorithmsforﬁndingoptimalexploration-exploitation
+plans, which not only provided a single best route to a set of goals, but also a full set of
+contingenciesonwhattodoshouldapathbeblocked. Ontopofthis,wedevelopedamulti-
+agentarbitrationschemeforassigningindividualagentstoindividualgoals. Thisalgorithm
+evaluated the contingency plans provided by the individual agents, and assigned agents to
+goals based on the expected time of arrival (in fact, based on the entire probabilistic proﬁle
+astowhenanagentcouldbeassumedtoarriveatagoal). In[15],weincreasedtheefﬁciency
+of this approach by several orders of magnitude through the introduction of abstraction,
+in which entire subparts of a large POMDP were solved ﬁrst and represented by a single
+complex arc in an abstract model of the world. All of these approach were brought to bear
+in the MIATA TIE, and they were thoroughly evaluated [25].
+4.2.2 Coordinating Multi-Agent Exploration
+In [9, 27], we further developed multi-agent exploration techniques which we subsequently
+implementedonphysicalrobots. Thefollowingimageshowsoneofourrobotsystems(Fig-
+ure 1):
+Figure 1: Robots (left) and map with exploration path (right).
+The problem addressed in this research is a restricted version of the POMDP above. In
+particular, the environment is static and the robot can greedily explore it. However, what
+ 
+                                                                         9
+makes this case difﬁcult is the extremely large number of unknowns: The environment is
+represented by a grid consisting of tens of thousands of grid cells. Here the agents have to
+relyintheirsensorstoinferthecomplexstructureoftheenvironmentastheygo. Thesensor
+interpretation and data fusion has to take place in real-time.
+We have developed scalable techniques for doing all this. In particular, our approach
+coordinates multiple robots during exploration and mapping. It interprets sensor data and
+enables the robots to acquire a single, combined map. As described in detail in [9, 27], our
+approach involves an auction-style algorithm in which agents “bid” for individual places to
+explore. A high-level agent then assigns agents to places. This assignment is constantly
+revised to accommodate the ever-changing state of knowledge of the robot system. Empiri-
+cal comparisons in [9, 27] show that our approach is superior to uncoordinated exploration
+techniques, commonly found in previous literature.
+4.2.3 Auction Algorithms
+Carrying this work a step further, we have recently developed auction-style multi-agent co-
+ordinationalgorithmsthataremorepowerful[6]. Inparticular,inpastworkbyusandothers
+(including the work above), the coordination was based on a ﬁxed set of prices for shared
+commodities (e.g., a ﬁxed reward for exploring an unknown location). However, in cases
+where multi-agent systems share complex commodities (e.g., multiple trucks in Honduras
+have to share a limited supply of fuel), the costs for using such resources in auction-style
+algorithms is usually not known. In fact, one can argue that setting appropriate action costs
+amounts to solving the harder part of the problem. Once such costs have been determined,
+the problem is easily decomposed into single-agent planning and execution problems.
+Our approach in [6] gets at the core of this issue: It alternates a conventional individual-
+agent planning phase with a phase in which an auctioneer determines the optimal costs to
+assign to individual commodities and constraints that arise between multiple agents. In this
+way, a much broader class of problems is made amenable to multi-agent auction-style algo-
+rithms, and the overall performance of the system is improved. We have demonstrated this
+in the contact of a number of simulated multi-agent problems described in [6].
+4.2.4 Motion Planning for Large Numbers of Ground Vehicles
+In[4,5],wehavespeciﬁcallyaddressedtheproblemofmultiplephysicalagentssharingthe
+same physical environment. Here we model ground vehicles that have to deconﬂict their
+motion through the environments. Such problems are well-known to all of us; Just consider
+theproblemoftensofthousandsofpeoplecommutingtoworkthroughalimitednetworkof
+streets and intersections.
+We have developed a randomized set of algorithms that improves over the previous state
+oftheart. Ourapproachusesprioritizedplanningtechniquestodevelopaninitialmulti-agent
+plan, which is subsequently reﬁned by improving the order at which individual vehicles
+10
+can determine their local routes. The approach was tested in a complex network of roads
+and intersections reminiscent (but not identical) to the scenario used in the MIATA TIE.
+We have shown that our approach is signiﬁcantly more successful in deconﬂicting vehicle
+motionthanclassicalmulti-agentpathplanningalgorithms. However,ourapproachassumes
+a deterministic world, which makes it less powerful than the POMDP algorithms described
+above (in fact, it really addresses a different problem). Detailed descriptions of the results
+can be found in [4, 5].
+4.3 Multi-Agent Information Integration
+In addition to multi-agent planning and coordination algorithms, we developed a suite of
+scalablemulti-agentinformationintegrationalgorithm. Theproblemunderlyingallthiswork
+iseasilyformulated: If Nagentsoperateinadynamicanduncertainworld,howcantheyef-
+ﬁcientlyintegratetheirlocalobservationsintoasingle,consistentworldknowledge. Oneob-
+vioussolutionwouldbetodesignacentralinformationagent(a“masteragent”)withwhich
+all agents communicate. However, such a system would be characterized by a single point
+of failure; moreover, it would be subject to scaling limitations due to the communication
+overhead involved for the master agent. Our work is strictly decentralized: Communication
+occurs only between neighboring agents, and the global model emerges through local com-
+munication. The resulting algorithms scale to any number of agents and are highly reliable
+against failure of individual network components. We view this work as an important step
+towards the vision of network-centric computing. Further, this work is a cornerstone of the
+multi-agent systems developed in the MAPLE program.
+4.3.1 Mapping Unknown Environments
+In a number of publications [18, 19, 20, 16, 33, 34, 28], we have developed algorithms for
+information integration in the context of map acquisition of unknown environments. This
+problem is one of the hardest in robot perception: It involves vehicles that measure nearby
+entitiesastheymoveabouttheirenvironments,seekingtomodelitinaconsistentmanner. It
+hasanimportantlimitingassumption,namelythattheenvironmentisstatic. Thisassumption
+is common in the literature on mapping; below we will discuss our approaches for dynamic
+environments.
+Possibly the most important result of the MAPLE project, documented in [20, 16, 31,
+33, 34], is a technique for information integration that is truly scalable to any number of
+agents. The idea is to represent the model probabilistically, by the posterior over all maps
+given the measured data. Further, these approaches represent this probabilistic estimate in
+itsinformationform,whichtechnicallyamountstoalog-likelihood. Informationisadditive.
+Nearbyagents,thus,canaddtheirinformation,andpassthesumontootherneighbors. This
+large network of information-adding entities can accommodate any number of agents.
+Our work has speciﬁcally focused on keeping the message sizes small even if the poste-
+11
+rior is complex. In problems where the sensors move (e.g., trucks move through Honduras),
+the exact updates grow over time. This is because uncertainty in vehicle motion can affect
+increasingly large fractions of the map. We have developed approximate algorithms that
+communicate the gist of new information immediately, but delay the communication per-
+taining to remote locations. In doing so, the message size is kept small; in fact, its size
+is independent of the size of the world and the total sensor history. However, one of the
+key questions is whether the resulting posterior is still consistent with the one that would be
+obtained by costly communication algorithms with large message sizes. We have shown—
+theoretically and empirically—that this is still the case. Further, we have achieved excellent
+empirical results when compared to the non-approximate (but costly) solution of communi-
+cating all sensor data back to a master agent. The papers [34, 31] develop this approach for
+a single agent system. Work in [33, 16] extends this approach to multi-agent system, under
+various ﬂavors of uncertain knowledge. The paper [20] describes our efﬁcient communica-
+tion technique. This work was carried out in cooperation with researchers at the University
+of Sydney, and since has been implemented for teams of unmapped air vehicles.
+4.3.2 Modeling Dynamic Environments
+In [1, 10, 36], we have developed a number of algorithms particularly suited for modeling
+dynamic environments. The key idea here is that some of the environment is static (e.g., the
+layout of a place), whereas other quantities can change over time. This work overcomes a
+critical assumption made in the information integration work described thus far, in that it
+allows for non-static aspects of the environment to exist.
+The work in [1] applies a so-called Rao-Blackwellized particle ﬁlter to the problem of
+modeling the state of certain dynamic objects. It is cast as the problem of learning the sta-
+tus of doors in an indoor environment with a mobile robot, but it is equally applicable to
+the problem of learning the state of bridges and roads in the MIATA TIE. More relevant is
+the work in [10, 36], which addresses the problem of acquiring maps of environments with
+static and dynamic aspects. The paper [10] applies the expectation maximization algorithm
+(EM) to separate static from dynamic aspects, and then simply applies a conventional map-
+ping algorithm for modeling the static aspects of the environment. In [36], we model both,
+static and dynamic aspects. The technique detects and tracks moving objects in the environ-
+ment, and makes those track part of the overall model. We have demonstrated all three of
+thosealgorithmsinthecontextofphysicalrobotimplementations,usingindoorandoutdoor
+robots. In our experiments, we found that models of unprecedented complexity could be
+acquired—infact,weknowofnootherworkthatwouldaddressmodelingissuesindynamic
+environments of similar complexity.
+12
+4.3.3 Tracking Moving Entities With Many Agents
+In[23,22],weaddresstheproblemoftrackingmovingobjectsundermassiveocclusion,with
+large numbers of moving agents. The motivating scenario was one by which an intruder
+seeks to move through an environment undetected. Mobile robots have to move through
+the environment in ways that guarantee that such an intruder be found. This is yet another
+exampleofinformationintegrationinadynamicenvironment. Staticinformationintegration
+techniques are inapplicable.
+Our approach relies on a carefully designed communication protocol between neighbor-
+ing agents. Agents analyze their local beliefs. They query neighbors with hypotheses (e.g.,
+intruder took path X) that they deem to be likely given their observations. Neighbors then
+respond with conﬁrming or contradicting evidence is such evidence is available; otherwise
+they communicate the query to their own neighbors. The resulting algorithm was found to
+be highly efﬁcient in integrating information in such dynamic environments. Physical tests
+with 4 robots were complimented with simulations of up to 100 robots. We found that the
+communicationoverheadcouldbecutdownbyseveralordersofmagnitudewhencompared
+to a centralized system, where each agent communicates all observations to a central high-
+level agent. Further, this algorithm is a ﬁrst scalable algorithm to tracking moving entities
+with vast amounts of occlusion, with virtually any number of agents.
+4.3.4 Advanced Probabilistic Tracking Techniques For Single-Agent Systems
+Finally, we have developed a number of algorithms for tracking belief states in POMDPs
+that advance the state of the art in speciﬁc directions [30, 35]. In [30], we developed a
+particle ﬁlter tracking algorithm that considers the performance task at hand: Instead of just
+maximizingtheaccuracyofthetrackedbeliefstate,itdoessorelativetotheexpectedcostof
+tracking errors. The result is quite different from traditional tracking algorithms: By taking
+the costs into account, the computational resources are mostly focused to parts of the space
+where failures and errors matter the most. We are not aware of previous work that would
+fold costs into the basic tracking system.
+In [35], we further extended this idea to incorporate hierarchical representations. The
+problemaddressedhereistrackinginthecontextofcomplexdiagnosticsystems,inwhicha
+systemcanhaveahugenumberofpossiblefailurestates. Trackingallofthemisprohibitively
+expensive. Theapproachin[35]reliesonabstractiontotrackgroupsofpossiblefailures,and
+reﬁnesthosetracksdynamicallyasadditionalinformationarises. Thisapproachhassuccess-
+fully been applied to online diagnostics of the Hyperion robot, a robot recently deployed in
+a desert in Chile.
+13
+4.4 MapleSim: A Simulator of Ground and Air Vehicles in Honduras
+The MAPLE team played a major role in the support of the MIATA TIE. In addition to the
+algorithms described above, we developed a discrete event simulation platform known as
+MapleSim [15]. A view of this system is shown in Figure 2:
+Figure 2: Screenshots of the MapleSim simulation environment (Honduras).
+In essence, this simulator can model any geographic region based on data widely avail-
+able trough the USGS and other services. The simulator models air and ground vehicles.
+It also models storms and their effect on the environment’s infrastructure. In particular, it
+modelsdestruction ofnavigationinfrastructureandhumanitarianrequirementsarisingoutof
+problems such as ground water contamination. The MapleSim system formed the backbone
+of the MIATA TIE, in which it was used to model the situation in Honduras after Hurricane
+Mitch destroyed up to 90% of the infrastructure. It has, however, been used for a number of
+other geographic regions, by a number of contractors in the DARPA CoABS program.
+The development and support of MapleSim consumed about a third of the overall re-
+sources provided under this contract. The simulation platform consists of a core, which can
+berunundertheWindowsorLinuxoperatingsystem. Thecoreconnectstoagraphicalvisu-
+alizationtoolcalled“SimSpy,”whichmakesitpossibletovisualizethesituationandaffectit
+(e.g.,bymanuallydestroyingbridgesinHonduras). ThesystemalsopossessesafullAPIfor
+controlling individual vehicles, and receiving sensor data collected by these vehicles. The
+types of vehiclesmodeledinourapproachincludegroundvehicles(trucks),ﬁxedwingaircraft
+and rotorcrafts. The simulator can model up to 100 such vehicles at a time, at user-selected
+timescales. Inaddition,MapleSimoffersalimitedmodelofnaturaldisastereffects,andthe
+resulting damage to the road structure. This facility sets MapleSim aside from a number of
+alternative simulation tools, which tend to model the environment as more static (and there-
+14
+Figure 3: Architecture of the MIATA TIE.
+foremorepredictable). TheMapleSimsoftwarehasbeenmadeavailableviaourprojectWeb
+sitehttp://www.cs.cmu.edu/ ∼maple.
+4.5 Porting and Interfacing with CoABS Grid
+Major effort was spent on porting software to the CoABS Grid.  We developed a C/C++
+interface that formed the core of another contractor’s work on porting software to the
+Grid.  Based on this interface, we made a number of services available for use by others:
+the MapleSim simulator, and our agent-based control system for coordinating large number
+of ground vehicles. The system played a major role in the MIATA TIE, in which multiple
+contractors cooperatively studied the use of the Grid and agent-based technology in highly
+dynamicandunpredictableenvironments. Theportingefforts,however,werenotfullycom-
+pleted for our most recent software developments.
+4.6 CoABS Grid Visualization Tools
+Finally, we developed a graphical visualization tool to monitor and analyze the message
+ﬂow in the Grid. This tool applied a number of graph visualization algorithms to visualize
+the complex and dynamic network of interacting entities in the CoABS Grid. This tool was
+used in a number of TIEs throughout the CoABS Program.
+15

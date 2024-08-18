@@ -1,0 +1,470 @@
+ScienceDirect
+Available online at www.sciencedirect.com
+Procedia Computer Science 159 (2019)  87–96
+1877-0509 © 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.
+10.1016/j.procs.2019.09.163
+10.1016/j.procs.2019.09.163 1877-0509© 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com  
+ScienceDirect  
+Procedia Computer Science 00 (2019) 000–000 
+www.elsevier.com/locate/procedia 
+1877-0509 © 2019 The Author(s). Published by Elsevier B.V.  
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International.   23rd International Conference on K nowledge-Based and Intelligen t Information & Engineering 
+Systems  
+Towards automated joining element design 
+Derk Hendrik Dominick Egginka,b*, Marco Wilhelm Grolla,b, Daniel F. Perez-Ramirezb, 
+Johannes Biedertb, Christoph Knödlerb, Patrick Papentinb  
+aDepartment of Design Production and Manageme nt, University of Twente, Drienerlol aan 5, Enschede, 7522 NB, The Netherlands 
+bDaimler AG, Mercedesstraße 137,  Stuttgart, 70327, Germany  
+Abstract 
+Product variety and it s induced manufacturing complexity remain s to increase and therefore grea tens challenges for design of 
+joining elements. Historically,  joining element design was a pa per-based process with incomplet e variety documentation and is 
+digitalized only by replacing paper for 3D space. Currently, jo ining element design remains  an ambiguous manual task with 
+limited automation, resulting in l ong iterative, error prone development trajectories and cost ly reworks. Thus, processes in 
+practice conflict with required capabilities. Artificial intell igence helps to solve such conflicts by taking over repetitive tasks, 
+preventing human errors, optimiz ing designs and enabling design ers to focus on their core compe tencies. This paper proposes a 
+novel artificial intell igence method toolbox as a foundation to  automate joining el ement design in manufacturing industries. T he 
+methodology aims to incorporate multiple lifecycle requirements  including large product variety. 
+ 
+© 2019 The Author(s). Publis hed by Elsevier B.V.   
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International.  
+Keywords:  Artificial Intelligence; Machine  Learning; Automation; Design for Assembly; Joining Elemen ts; Product Variety; Design; 
+Engineering; Commonality; Modular  Design; Process selection; Jo ining Locations; Complexity; 
+1. Introduction 
+Product variety (PV) is a growing trend of offering highly conf igurable products [1] and enables market 
+competitiveness of companies. PV occurs in all types of product s [1], but the numbers of variants in automotive 
+ 
+ 
+* Corresponding author. Tel.: +49-176-3095-9411; ORCID: https:/ /orcid.org/0000-0002-7617-4213. 
+E-mail address:  niek.eggink@daimler.com Available online at www.sciencedirect.com  
+ScienceDirect  
+Procedia Computer Science 00 (2019) 000–000 
+www.elsevier.com/locate/procedia 
+1877-0509 © 2019 The Author(s). Published by Elsevier B.V.  
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International.   23rd International Conference on K nowledge-Based and Intelligen t Information & Engineering 
+Systems  
+Towards automated joining element design 
+Derk Hendrik Dominick Egginka,b*, Marco Wilhelm Grolla,b, Daniel F. Perez-Ramirezb, 
+Johannes Biedertb, Christoph Knödlerb, Patrick Papentinb  
+aDepartment of Design Production and Manageme nt, University of Twente, Drienerlol aan 5, Enschede, 7522 NB, The Netherlands 
+bDaimler AG, Mercedesstraße 137,  Stuttgart, 70327, Germany  
+Abstract 
+Product variety and it s induced manufacturing complexity remain s to increase and therefore grea tens challenges for design of 
+joining elements. Historically,  joining element design was a pa per-based process with incomplet e variety documentation and is 
+digitalized only by replacing paper for 3D space. Currently, jo ining element design remains  an ambiguous manual task with 
+limited automation, resulting in l ong iterative, error prone development trajectories and cost ly reworks. Thus, processes in 
+practice conflict with required capabilities. Artificial intell igence helps to solve such conflicts by taking over repetitive tasks, 
+preventing human errors, optimiz ing designs and enabling design ers to focus on their core compe tencies. This paper proposes a 
+novel artificial intell igence method toolbox as a foundation to  automate joining el ement design in manufacturing industries. T he 
+methodology aims to incorporate multiple lifecycle requirements  including large product variety. 
+ 
+© 2019 The Author(s). Publis hed by Elsevier B.V.   
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International. 
+ 
+Keywords:  Artificial Intelligence; Machine  Learning; Automation; Design for Assembly; Joining Elemen ts; Product Variety; Design; 
+Engineering; Commonality; Modular  Design; Process selection; Jo ining Locations; Complexity; 
+1. Introduction 
+Product variety (PV) is a growing trend of offering highly conf igurable products [1] and enables market 
+competitiveness of companies. PV occurs in all types of product s [1], but the numbers of variants in automotive 
+ 
+ 
+* Corresponding author. Tel.: +49-176-3095-9411; ORCID: https:/ /orcid.org/0000-0002-7617-4213. 
+E-mail address:  niek.eggink@daimler.com 
+88 Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96
+ D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ industry can be immense, e.g. there are up to 1024 possible Mercedes-Benz E-Class configurations [2]. PV induces 
+complexity in design and manufacturing and is likely to cause h igher costs, lower quality, and delays over the entire 
+product life cycle [1]. Joining is a key process in manufacturing by providing function to a product as a whole and 
+increasing the manufacturability h ereof [3]. It enables assembl ing of smaller cheaper parts into complex components 
+and products [4]. Products easil y contain thousands of joining elements (JE) in case of the a utomotive industry [5]. Due 
+to the transition from a paper-based approach to computer-aided-design (CAD), JE design became an iterative manual time-consuming multi-disciplinary process involving many confli cting requirements. Therefore, JE design is mainly 
+the result of design experience a nd trial-and-error approaches [6]. 
+An extensive state of the art and research analysis is conducte d in still unpublished work of the authors. It stresses 
+the necessity of automated JE design in manufacturing industrie s considering PV and proposes Artificial Intelligence 
+(AI) methods to be a promising solution path. Literature propos es partial solutions to aspects of JE design, such as 
+joining technology selection [7, 8], topology optimization [9–1 1] or joining parameter determination [12], but barely 
+considers PV [13]. Modular product design (MPD) is often used t o manage PV [2, 14], however such approaches do 
+not consider JE design holistically.  
+Therefore, this paper presents a novel AI method toolbox for au tomated JE design in manufacturing industry 
+considering PV requirements. The method toolbox aims to solve i ssues and requirements from practice based on a 
+target JE design process. To the best of our knowledge, this is  the first study that addresses holistic JE design by the use 
+of AI methods.  
+The paper will address state of the art in section 2, including  JE design issues, requirements for automation, state of 
+literature and AI methods in manufacturing industry. Section 3 presents the method toolbox for automated JE design. 
+Section 4 evaluates the toolbox and addresses implementation ch allenges. Lastly, section 5 contains the conclusion and 
+addresses future work. 
+2. State of the art 
+2.1.Practiced process and issues of joining element design 
+JE design in practice is observed to be a repetitive, ambiguous  and complex discipline. The process includes in-
+depth analyses of variant scenarios and multi-discipline requir ement verification. Moreover, authoring results are 
+practical, as the designer is concerned with finding a solution , not the solution. Proper designed JEs require three 
+aspects: 1) technology (e.g. welding or adhesive bonding), 2) l ocations (e.g. shape or coordinates) and 3) parameters 
+(e.g. diameter, material or object type). Together, these enabl e downstream processes to continue product development. 
+It is found that designers roughly implement one of three appro aches to design an aspect: 1) analysis and application of 
+similar use cases, 2) intuition based design, or 3) minimal des ign while adhering to standards. Summing it up: 
+ Time consumption . A lot of time on is spend on analysis of joining scenarios du e to PV. Moreover, the actual 
+authoring is a rather repetitive task. It leaves little time to  spend on challenging tasks that require holistic and 
+creative thinking. Moreover, un accounted lifecycle requirements , human errors and adaptat ion to new variants cause 
+unnecessary design iterations. 
+ Practical solutions . As designers have no possibility to find global (business) op tima. They design in local space, 
+where it is difficult to consider holistic requirements and des ign consequences. There are no design tools available 
+nor is there active anticipation of MPD. 
+2.2.Target process and requirements 
+The bolded box captions in fig. 1 depict the target process for  JE design. The process only requires a starting trigger 
+and result acceptance from a designer. A pre-processing stage d etermines characteristics of each joining scenario in a 
+joining scene, such as contact regions, constructability and fe ature classes.  
+ Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96 89 D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ A joining scenario is the input state containing geometries, pr oduct manufacturing information (PMI), product 
+architecture and assembly information. Joining classes are clus ters and defined by feature identification stage. Predicted 
+JEs automatically contain confidence values enabling evaluation  and verification. A variety prediction stage aims to 
+optimize JE design by clustering, modularization and considerin g reuse of joining modules. The determined 
+requirements for automation of JE design are as follows:  
+ JE aspects. Automation outputs completion of product design phase, thus j oining technology, joining locations and 
+joining parameters.  
+ Input data . Automation bases upon generic industry data structures and fo rmats: tessellated geometry, product 
+manufacturing information (PMI), utilization and assembly infor mation. Thereby, the target process is independent 
+of both company and industry. 
+ Product life cycle . Predictions must return a confidence factor enabling selectio n and verification. Holistic 
+requirements are considered for JEs. 
+ Generic knowledge . Ability to distill PV into joining scenarios for analysis and prediction. Thereto, predictions are 
+compliant to company and industr y standards. The  methods adapt to trends and changes in design requirements. 
+ Containment of complexity. Ability to modularize JEs for downstream processes to adhere to MPD and reduce 
+complexity. The methods evaluate reusability of JEs. In additio n, predictions are transparent to enable evaluation by 
+designers. 
+2.3.State of literature 
+Current research tackles partial problems of JE design. Firstly , Design for Assembly (DFA) is a general approach to 
+aid designers with guidelines, s tandards and assessments. Howev er, DFA processes are often not concrete [15] and 
+require formalization and quality data to enable optimization [ 16]. 
+Hereby, research focuses on joining technology selection, that aims to find an optimal assembly process considering 
+design, production and other product lifecycle requirements [7,  8, 17]. However, none of these actively consider PV. 
+Moreover, the approaches depend on input and preferences of eng ineers. By definition these will not output an 
+optimum solution and possibly errors [18].  
+Studies proposing finite-element (FE) based methods aim to find  optimal joining locations considering performance 
+metrics such as crashworthiness, noise-vibration-harshness, sti ffness [9, 10], or structural layout [11]. However, 
+mathematical optimization functi ons require high data quality. In addition, meshes for FE require models of a 
+completely defined product. Thereto, these approaches are computationally expensive, require explicit engineering 
+knowledge in development and leave room for interpretation.  
+CAD systems contain various tools that enable JE design [19] an d can assess these, e.g. the welding capability [15]. 
+CAD systems are limited to a small scope of PV and designs tend  not to be optimal for the product as a whole. 
+Moreover, CAD systems are computationally heavy programs and aim to assist designers not to automate design. 
+MPD is intended to manage PV internally in companies, while cre ating affordable products for customers [2]. 
+Nowadays, research focusses on finding optimal modularity for e .g. product architectures [20] or product family design 
+[21] by implementing Design Structure Matrices. Also, MPD consi ders production requirements as assembly systems 
+[14] and complexity [22]. However, these approaches modularize by clustering components, thereby not recognizing 
+modularization potential of JE design alone. Thereto, MPD must be sustainable as uncontrolled module generation still 
+increases complexity [23]. Often, a  complexity cost calculation  [22, 23] assesses potential of module reuse.  
+2.4.AI in manufacturing industry 
+Roughly, AI methods implemented in manufacturing industry can b e divided into four areas: Rule based reasoning 
+(RBR), Case based reasoning (CBR), Search and Optimization (S&O ) and Machine learning (ML). In the state of the 
+art, human equivalence in JE design tasks are observed for all these fields and the equivalence is addressed further in 
+the method toolbox. 
+ 
+90 Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96
+ D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ Fig. 1. The target process of th e toolbox with AI methods for a utomation of joini ng element design. 
+RBR is a method to create designs following a systemic path of human-engineered constraints and conditions. It 
+outputs feasible solutions, yet these tend to be sub-optimal du e to high dependence on input use cases. RBR is used in 
+JE design to predict joining locations [19] and screen for feas ible joining technologies [17]. CBR is a field that analyzes 
+and retrieves past problems and applies their solutions to prob lems of unseen use cases. It requires a large database and 
+memory to search through cases. The output remains often sub-op timal as it retrieves the solution of the most similar 
+problem. Hence, CBR is analogue to a JE design approach of anal yzing past solutions. Similarly, knowledge based 
+frameworks can aid in joining technology selection [13]. S&O me thods aim to find optimal solutions, however require 
+such as handcrafted boundary cond itions and constraints to ensure convergence when solution spaces become large. 
+The methods include finding mathematical extremes in optimizati on functions [9, 17] and evaluating structured 
+permutations of solutions [7]. S&O can predict joining aspects as technologies [7, 17], loca tions [9–11] and parameters 
+
+ Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96 91 D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ [12]. ML aims to find patterns in datasets to predict solutions  for unseen cases. The quality of ML methods directly 
+correlates with the dataset size and dimensionality, which make s the training of models computationally costly. 
+However, ML can find generic solutions with much less expert en gineering of models. Roughly, ML contains three 
+branches: supervised learning (SML), unsupervised learning (UML ) and reinforcement learning (RL). SML methods 
+learn by comparing input and output states to extract a mapping  between those [24]. UML methods identify implicit 
+patterns in data [25]; they can cluster data and find anomalies  herein. RL is an artificial trial-and-error approach, where 
+the model takes actions in an environment and analyzes the cons equences hereof using a reward function [26]. ML has 
+not seen implementation in JE design specifically, yet found SM L use in predicting manufacturing processes [24].  
+3. Method toolbox 
+3.1.Initialization 
+The AI method toolbox considers several stages of automated JE design. Fig. 1 shows the applicability of AI 
+methods in various stages of the target process. A joining scen e initializes based on a design request. Here, data and 
+requirements are collected, formatted and structured for furthe r processing. A joining scene contains arbitrary product 
+architectures and product variety at various hierarchical level s. Generally, CAD files contain very complete definitions 
+of parts and thus unnecessary information for predicting JEs. T herefore, this stage extracts tessellated geometries and 
+PMIs from CAD files. Discretizing geometries enable AI to learn  features of components and their relations. 
+3.2.Preprocessing 
+A preprocessing state decomposes the joining scene into joining  scenarios. A joining scenario results from the 
+distillation of PV into component combinations. Thereby, it tes ts joining scenarios for constructability with RBR that 
+evaluates Boolean algebra code ru les [27]. The contact regions are areas of components’ surfaces where components 
+can be joined together. Both SML [28] and UML [25] can predict contact surfaces using a shape segmentation 
+approach. Here, SML can specifically to find joining regions, w hich are contact regions with defined JEs. RBR can 
+determine contact surfaces by a set of criteria [19], however r equires a CAD system. A contour is the boundary edge 
+enclosing each contact region and is relatively simple to deter mine with RBR. Together, contact regions and contours 
+enable to screen for joining technologies and determine boundar y limits for joining locations. Thereto, they contain 
+characteristics specific to joini ng scenarios. UML can segment geometry to identify potential joining regions (e.g. 
+surfaces, holes, flanges, etc.) to reduce solution spaces. Furt hermore, SML and CBR can classify properties of joining 
+scenarios determined in the feature identification stage.  
+3.3.Feature identification 
+Features extracted from joining scenarios in a product data man agement (PDM) system enable scenario 
+classification and dimensionality reduction in successor stages . Manufacturing industries with large PV often have 
+reoccurring joining scenarios varying only little in properties . For example, joining classes contain a set of component 
+versions and variants that have similar characteristics. Geomet rical clustering of components, joining regions, and 
+joining shapes, as well as defeat uring, enable dimensionality r eduction for approaches in stages where no specific 
+geometry is required. Moreover, feature identification enables to predict joining properties even in early product 
+development by predicting joining classes on still vague scenar ios. Thereto, features enable to map high-level 
+requirements to individual joining scenarios. In addition, clus ter methods identify outliers that divert from standard 
+design practices to prevent these affecting other predictions. Moreover, they help to identify JE modules and enable 
+reuse for sustainability of MPD. Typically, UML can solve all a forementioned applications [25]. However, feature 
+clusters are identified once, thus the results can influence cl assification and functionality of other approaches 
+significantly. RBR also is able to create clusters, however requires significant development effort due to the high 
+dimensional and heterogenic data. 
+92 Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96
+ D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ 3.4.Joining technology 
+Classification is a typical task for SML [24], where a model pr edicts the most suited joining technology for a given 
+joining scenario. Also, S&O approaches solve this problem rathe r well [7, 17], but depend largely on data consistency, 
+development effort, designer inputs and do not consider PV. RBR  can screen for feasible technologies before S&O 
+algorithms perform optimization tasks [17]. Implementation of C BR [13] enables reducing production variety as 
+similar joining scenarios and technologies tend to be clustered . A joining scenario becomes more detailed as a product 
+matures. Hence, predictions rece ive higher confidence values. T he most confident joining technologies continue to 
+location prediction.  
+3.5.Joining locations 
+Based on practiced JE design, various approaches are conceptual ized to predict joining locations. Thereby, some 
+approaches combine multiple AI methods. Joining technology impl icitly contains information about geometry, such as 
+points, curves and areas. In a ddition, the technology directly imposes location requirements through standards [29]. 
+Algorithmic fitting ; JEs populate contact regions considering boundary limits due to standards and guidelines, such 
+as minimum mutual JE and edge distances. Defining the boundary limits is a typical problem for RBR [19]. Besides 
+defining boundary limits, algorithmic fitting can pick and plac e joining modules onto contact regions. These joining 
+modules can consist of engineered and clustered features. Utili zation of modules is analogue to stacking LEGO-blocks 
+onto a structure. The definition of joining modules requires a balance between flexibility and complexity [30]. As in 
+PV management, Boolean algebra adds and subtracts JE modules to  contact regions. Picking and placing modules is 
+possible using RBR, however loc ation results w ill be suboptimal  [19]. An S&O algorithm evaluates various module 
+combinations and translations, however requires further constra ints due to the immense solution space. Supplementary 
+features predicted by a SML aid to define constraints, such as joining scenario class and the number of required JEs.  
+Teaching ; Each input (joining scenario) has one ground-truth output (jo ining scenario with JEs). High 
+dimensionality of 3D geometry makes implementing SML difficult (elaborated in section 4.1). SML segments 
+geometry by classifying whether a discretized unit is empty, ma terial or a JE. This is analog to SML segmentation 
+approaches in computer vision [28]. Another approach is a stack of SML expert systems to predict the amount, shape 
+and distance of JEs. Prediction of the amount of JEs implicitly  considers function, l oads and structural performance [9]. 
+The shape represents a guideline along which JEs are placed. La stly, the distance between JEs considers the available 
+contact region. Here, RBR or S&O finalizes joining locations ac cording to the SML predictions. Other approaches can 
+utilize the predictions of the e xpert systems as additional inp ut features. 
+Heat map ; Designers and workers instinctively determine where to join upon seeing a contact region. They induce 
+joining regions based on their experience. Similarly, an UML mo del builds heat maps on contact regions that enables 
+convergence of joining locations by increasing local probabilit ies. For example, mixture models can represent the 
+subpopulations (JEs) in a population (heat map) and assign subp opulation attributes to joining scenarios. Thereby, the 
+model creates a probability map by concentrating spread out probabilities into peaks. Identified features, such as classifying the amount of JEs, aid the heat map approach by ind icating the required number of peaks. However, it can 
+be expected that the heat map approach can output fuzzy results  in case of too little training data [31]. Thereby, JE 
+locations become difficult to point down.  
+Similarity search ; CBR can mimic designers search ing similar use cases in a PDM system. However, CBR requires 
+coherent knowledge representations  of joining scenarios. Thereb y, searching for complete component geometries can 
+give noisy results due to potentially large impacts of small fe atures. Hence, feature recognition is favored instead but 
+requires additional development e ffort. However, a simple simil arity search is not sufficient to predict joining locations 
+as similar problems still can contain JEs that do not fit the j oining scenario at hand. Therefore, CBR requires 
+interpretation and application of search results by complementa ry methods such as RBR or S&O. Moreover, other 
+location prediction approaches, such as algorithmic fitting and  heat maps, can complement similarity searching as well. 
+In addition, CBR can enrich other location prediction approache s by retrieving features such as quantity, shape or 
+mutual JE distance. 
+Learning by doing; Students understand that contact regions can contain JEs. Usi ng trial-and-error techniques, a 
+ Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96 93 D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ mentor gives to feedback to the student’s JEs creations enablin g the student to adapt and learn. Equivalently, a RL 
+model learns to predict JEs by doing. Then, an adversary approv es or disapproves predictions. However, if the 
+adversary is a designer, it requires much effort to evaluate ev ery single joining scenario in the training phase. FE 
+analyses simulate various performance metrics of a product from  which RL models can learn [26]. This enables quick 
+evaluation of many predictions at once and thus faster training . Nevertheless, FE analyses h ave high computational cost 
+and require large development effort in meshing, modeling and s imulating. Thereto, these analyses require a complete 
+product variant, into which the joining scenarios must be confi gured. Moreover, the specific product variant influences 
+the joining locations. Therefore, the scenarios are modeled and  evaluated in multiple variants for multiple performance 
+metrics. Lastly, FE analyses are  evaluated and the results are aggregated into a reward for the RL to learn from. Better 
+joining locations result in higher values for performance metrics and therefore a greater reward for the RL model. SML 
+[32] and UML [33] can predict structural topologies. Theoretica lly, they can learn workings of FE methods [9–11] to 
+predict optimal joining locations. Although, their effectivenes s is not verified for large and complex structures or JE 
+design. 
+3.6.Joining parameters 
+This includes the dimensioning and selection of JEs by predicti ng parameters as length, height and width, type of 
+object and additive material. The parameters are highly standar dized by consideration of DFA, hence they are typically 
+documented in catalogues. Then, j oining parameter prediction is  a classification task aligning with a typical SML 
+approach. However, the definition of separate SML expert models for each joining technology is an exhaustive and 
+ambiguous task. Reducing the amount of SML models enables robus tness to new joining technologies and parameters. 
+Joining parameters and their locations are intertwined. Larger dimensioned JEs can increase performance and enable 
+reduction of the amount thereof. High standardization enables R BR and CBR as viable approaches due to discrete 
+solution spaces. Naturally, S&O a ims to find optimal parameters  [12], yet requires an optimiz ation objective and thus is 
+data quality dependent.  
+3.7.Predict variety 
+Modular product development in the context of this paper is mai nly regarded as a grouping of JE predictions and not 
+as a grouping incorporating components per se (e.g. to build su b-assemblies). A less mature product has a larger 
+modularization potential due to fewer predefined joining module s and fewer fixed design requirements. The aim of 
+variety prediction is to reduce the amount of individual predic ted JEs over product variants. It identifies JEs that differ 
+only in the components they join, but are otherwise identical. Hence, these JEs can be shared and utilized in multiple 
+joining scenarios. JE clustering contains two steps: location c lustering and communalization.  
+Location clustering  assumes that variants of components have the property that the ir contact regions tend to be 
+defined on the same geometrical surface. For a joining scenario , the specific shape of the contact region can differ 
+depending on variants, yet apart from that the surface remains the same. Therefore, an UML can cluster JE locations on 
+the contact surfaces to identify  those that can be shared over product variants. Thereby, each cluster contains one 
+location per joining scenario. The cluster centroid defines the  joining location for JE sharing. The algorithm considers 
+boundary limits and the amount of JEs for each scenario. Howeve r, clustering is not definitive as JEs can represent 
+different technologies. It sets the basis for the communalizati on step. Besides UML, S&O and RBR can combine points 
+in close proximity and aggregate results. Nevertheless, such me thods require high development effort to consider all 
+use cases.  
+Communalization  aims to define sharable JEs on clustered locations with multip le joining technologies and 
+parameters. Smaller joining property variation induces savings with respect to verification, planning, assembly, 
+capabilities and equipment. Comm unalization evaluates a JE’s te chnology and parameters to whether they are equal to 
+other JEs on the same location. Thereby, aiming to define one J E to utilize in the affected joining scenarios. RBR 
+enables checking commonalities of JEs and groups.  
+Modularization  enables further complexity reduction [22]. The aim is to utili ze the same JE module in various 
+product variants. Increasing the amount of JEs per module reduc es development costs and complexity. However, this 
+94 Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96
+ D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ also reduces flexibility and thus utilization potential in new product variants. A performance metric couples the module 
+to lifecycle costs and incorporates parameters as change probab ility, complexity and utilization rate. The change 
+probability describes the chance of redesigning a module such a s splitting. The utilization rate aims to increase the 
+amount of JEs in a module if they are expected to occur in sold  product variants frequently. The approach creates 
+candidate modules by combining and multiplying predicted aspect s of JEs. The metric enables S&O to find the optimal 
+modularity by calculating the costs of every candidate module. This enables a global communalization and reduction in 
+production variety. A clustering approach with UML can identify  modules as well. The model considers learned 
+patterns of the feature identification stage. However, implemen ting variables as change probability and utilization rate 
+into UML is difficult. Additionally, the output of UML is not t ransparent, such that the designer cannot trace the 
+reasoning for the output, which is something that a cost metric  can provide. A RBR method is feasible, however 
+inappropriate due to its high development and maintenance effort as every solution variant for every use case must be 
+programmed.  
+Reutilization  considers reuse of successfully designed JE modules to maintai n complexity and prevent unnecessary 
+development effort [23]. This step prevents redundant and ambig uous JE development by considering their 
+implementations in other products, versions or variants. Natura lly, CBR retrieves similar designed joining modules and 
+evaluates these for reuse. Thereby, the quality of joining modu le clustering or engineering is key by calculating the 
+return on investment of predicted JE modules. In addition, reut ilization evaluates the optimality of the reuse module. 
+Equivalent to the modularization stage, S&O and a cost metric e nable decision-making between reusing and 
+developing new joining modules. Evaluation of the reuse module requires considering all affected joining scenarios. 
+Hence, an evaluation for which joining scenario the reuse modul e is to be utilized. Then, a decision for module 
+reutilization requires the placement of the reused module on th e affected joining scenarios, which can be done with the 
+aforementioned algorithmic fitting approach. 
+3.8.Prediction quality 
+A designer can accept predictions or aspects of it, such as onl y the technology. Thereby, designers can conduct 
+various assessments [8, 15, 23] or send predictions to downstre am processes for verification, such as simulation, 
+production planning and suppliers. Here, SML enables the toolbo x’ methods to continue learning while adapting to 
+new design cases, requirements and trends. The final prediction  is a list with highest cumulative confidence predictions 
+ensuring transparency for the des igner. Each final prediction i s a set of modules with joining technologies, locations, 
+parameters for a given joining scenario. The designer can selec t the most appropriate or decl ine all predictions giving 
+feedback to the system.  4. Discussion 
+The proposed method toolbox incorporates addressed issues in JE  design by mimicking various human design 
+practices with AI methods. It aims to improve efficiency by aut omating analysis of joining scenarios, authoring of JEs 
+and potential reduction of design iterations. Thereto, ML model s learn design experience and are expected to predict 
+better business optimal JEs and  modules to contain PV-driven co mplexity.  
+However, this is a novel research area and more study is requir ed to utilize automated JE design. Applicability of AI 
+methods can differ between comp anies and industries. In addition, expected trends in industry, such as lightweight 
+design, require new joining technologies and component designs.  These scenarios are hard to model, fall outside AI 
+model boundaries and therefore requi re human designers. However , the method toolbox tackles repetitive time-
+consuming tasks and enables designers to concentrate on their c ore competencies. The methodology requires the 
+existence of successful product variants as it requires trainin g data. However, studies are  required to validate the 
+methods in various companies and industries to determine its ge nericity.  
+4.1.Challenges  
+Generally, ML approaches require discretized data and often req uire fixed number of inputs and outputs. However, 
+ Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96 95 D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ a joining scenario can consist of a varying amount of component s, for example, in case of two or three sheet welding. 
+Moreover, geometries vary in size and complexity inducing mappi ng issues and high dimensional data. Various studies 
+are conducted to determine the best methods for discretized geo metry representations [34] such as point clouds, voxels 
+or screenshots, or analyze implem enting feature based geometrie s [35]. The reduction of dimensionality tends to lead to 
+information loss for large and complex components and unnecessa ry dimensionality increase for small and simple 
+components. Moreover after dimens ionality reduction, predicted joining locations must be mapped back to a global 
+coordinate system.  
+However, an implementation of 2D instead of 3D geometry reduces  dimensionality significantly. Yet, joining 
+regions can be curved in 3D space and components can be joined by multiple contact regions. In the latter case, it 
+introduces another mapping problem as component data has to be divided over various contact regions. These inputs 
+have to be brought together to predict for a joining scenario. Thereto, neural networks require that input data samples 
+are independent of one another. In addition, not all contact re gions need to be filled with JEs. Some might be too small 
+for any joining technology, some do not require any JEs and som e require multiple joining technologies. The joining 
+region’s form highly influences selection of joining technology . This includes characteristics as size, shape and type, 
+which is deduced from the orientation of the components to one another, such as T- and butt-joints. For example, MIG 
+welding used in a long stretched corner of T-joint, where resis tance spot welding require s overlapping surfaces. The 
+toolbox has to recognize such various technical infeasibilities  throughout the JE design stages.  
+The method toolbox chains various predictions. Hence, the resul ting cumulative confidence values have to be 
+analyzed such as the prediction robustness to both sabotage and  data quality sensitivity. Thereto, designers require 
+transparency of predictions in th e verification stage to make i nformed decisions, as they themselves remain to judge 
+with their experience. 
+5. Conclusion and future work 
+This study discusses the applicability of AI methods for the de sign of JEs in manufacturing industries considering 
+large PV. PV and its induced complexity is expected to grow [1] , yet no approach has considered holistic JE design in 
+their solution. An analysis reveals issues of JE design in prac tice and concludes that the state of the art only contains 
+partial solutions. A target process for JE design is proposed t ogether with requirements for implementation. A novel 
+method toolbox is proposed for automating holistic JE design wh ereby the applicability of AI methods are identified 
+and discussed. The toolbox can predict joining technology, join ing locations, joining parameters and can modularize 
+these aiming to contain complexity and costs.  
+Future research focusses on the implementation of the AI method s for various stages of the toolbox. Approaches 
+will be evaluated against the st ate of the art. Thereto, studie s will be conducted that evaluate AI methods within each 
+stage. The performance of the toolbox as a whole will be studie d. Lastly, studies will be conducted to resolve the 
+discussed challenges for implementation of AI methods.  References 
+[1] ElMaraghy, H., Schuh, G., ElMaraghy, W., and Piller, F.  et al.  (2013) "Product variety management" CIRP Annals  62 (2): 629–652. 
+[2] Parry, G. and Graves, Andrew (eds) (2008) "Build To Order: The Road to the 5-Day Car", London, Springer-Verlag. 
+[3] Martinsen, K., Hu, S. J., and Carlson, B. E. (2015) "Joinin g of dissimilar materials" CIRP Annals  64 (2): 679–699. 
+[4] Hu, S. J. (2014) "Assembly",  in Luc Laperriè re and Gunther Reinhart (eds) CIRP Encyclopedia of Production Engineering , Berlin, Heidelberg, 
+Springer Berlin Heidelberg. 
+[5] Alba Alvarez, R. O. de, Ferguson, N. S., and Mace, B. R. (2 014) "A robust spot weld model fo r structural vibration analysi s" Finite Elements in 
+Analysis and Design  89 1–7. 
+[6] Tasalloti, H., Eskelinen, H., Kah, P., and Martikainen, J. (2016) "An integrated DFMA–PDM m odel for the design and analysi s of challenging 
+similar and dissimilar welds" Materials & Design  89 421–431. 
+[7] Geda, M. W., and Kwong, C. K . (2018) "Simultaneous consider ation of assemblability and disa ssemblability for fastening met hod selection", in 
+Proceedings of the International Conference on Industrial Engineering and Operations Management , IEOM Society International. 
+[8] Choudry, Saphir A., Müller,  Steffen, Alber , Uwe, and Riedel , Frank  et al.  (2018) "A Multidimensional Assessment and Selection Methodolog y: 
+Optimized Decision-making of Joi ning Technologies in Automobile  Body Development" Procedia Manufacturing  21 281–288. 
+96 Derk Hendrik Dominick Eggink  et al. / Procedia Computer Science 159 (2019) 87–96
+ D.H.D. Eggink et al. / Procedia Computer Science 00 (2019) 000–000  
+ [9] Yang, Shu, Yan, Lei, and Qi , Chang (2018) "An adaptive mult i-step varying-domain topology optimization method for spot wel d design of 
+automotive structures" Structural and Multidis ciplinary Optimization  5 129. 
+[10] Long, Haiqiang, Hu, Yumei , Jin, Xiaoqing, and Yu, Huili  et al.  (2016) "An optimization procedure for spot-welded structures b ased on SIMP 
+method" Computational Materials Science  117 602–607. 
+[11] Vlad Florea, Vishrut Shah, Stephen R oper, Garrett Vierhout , Il Yong Kim (2018) "Coupled Multi -Material and Joint Topology  Optimization: 
+A Proof of Concept", in Proceedings of the ASME 2018 International Design Engineering Technical Conferences and Computers and 
+Information in Engineering Conference . 
+[12] Friedrich, C., Hubbertz, H., Roser, H., and Walker, P. (20 14) "Towards Automated Design of F astening Systems for Accelera ted Product 
+Development", in Volume 2B: Advanced Manufacturing , ASME. 
+[13] Das, S. K., and Swain, A. K . (2016) "Knowledge-Based Appli cation of Liaison for Variant Design", in Ramy Harik, Louis Riv est, Alain 
+Bernard, Benoit Eynard and  Abdelaziz Bouras (eds) Product Lifecycle Manage ment for Digital Transfo rmation of Industries , Cham, Springer 
+International Publishing. 
+[14] Ren, Weibo, Wen, Jingqian, Guan, Yu, and Hu, Yaoguang (201 8) "Research on assembly module partition for flexible producti on in mass 
+customization" Procedia CIRP  72 744–749. 
+[15] Madrid, Julia, Forslund, Ande rs, Söderberg, Rikard, and Wärmefjord, Kristina  et al.  (2018) "A Welding Capability Assessment Method 
+(WCAM) to support multidisciplinary design of aircraft structur es" International Journal on Interactive Design and Manufacturing (IJIDeM)  12 
+(3): 833–851. 
+[16] Groche, Peter, Bruder, Enrico, and Gramlich, Sebastian (20 17) "Manufacturing In tegrated Design" . 
+[17] Ghazilla, Raja Ariffin Raja , Taha, Zahari, Yusoff, Sumiani , and Rashid, Salwa Hanim Abdul  et al.  (2014) "Development of decision support 
+system for fastener selection in product recovery oriented design" The International Journal of Ad vanced Manufacturing Technology  70 (5-8): 
+1403–1413. 
+[18] Hu, S. J., Zhu, X., Wang, H., and Koren, Y. (2008) "Produc t variety and manufacturing complexity in assembly systems and supply chains" 
+CIRP Annals  57 (1): 45–48. 
+[19] Thompson, T.R., Salerno, A.J. "Automatic generation of joi nt locations", (WO2009158562A1). 
+[20] Kashkoush, Mohamed, and ElMaraghy, Hoda (2017) "Designing modular product architecture for optimal overall product modula rity" 
+Journal of Engineering Design  28 (5): 293–316. 
+[21] Baylis, Kyle, Zhang, Guan glu, and McAdams, Daniel A. (2018 ) "Product family platform selection using a Pareto front of ma ximum 
+commonality and stra tegic modularity" Research in Engineering Design  29 (4): 547–563. 
+[22] AlGeddawy, T., Samy, S. N., and ElMaraghy, H. (2017) "Best  design granularity to balance assembly complexity and product modularity" 
+Journal of Engineering Design  28 (7-9): 457–479. 
+[23] Weiser, Ann-Katrin, Baasner , Bernd, Hosch, Manfred, and Sc hlueter, Meike  et al.  (2016) "Complexity Assessment of Modular Product 
+Families" Procedia CIRP  50 595–600. 
+[24] Hoefer, Michael J., and Fr ank, Matthew C. (2018) "Automated Manufacturing Process Selectio n During Conceptual Design" Journal of 
+Mechanical Design  140 (3): 31701. 
+[25] Meng, Min, Xia, Jiazhi, Luo, Jun, and He, Ying (2013) "Uns upervised co-segmentation for 3D  shapes using iterative multi-l abel optimization" 
+Computer-Aided Design  45 (2): 312–320. 
+[26] Romero-Hdz, J., Saha, B., Toledo-Ramirez, G., and Lopez-Ju arez, I. (2018) "A Reinforcement Learning Based Approach for We lding 
+Sequence Optimization", in Shanben Chen, Yuming Zhang and Zhili  Feng (eds) Transactions on Intelligent Welding Manufacturing , Singapore, 
+Springer Singapore. 
+[27] Walter, Rouven, Kübart, Thore, and Küchlin, Wolfgang (2016 ) "Optimal Coverage in Automotive Configuration" 9582, Cham, Springer 
+International Publishing. 
+[28] Wang, Peng-Shuai, Liu, Yang, Guo, Yu-Xiao, and Sun, Chun-Y u et al.  (2017) "O-CNN: Octree-based Convo lutional Neural Networks for 3D 
+Shape Analysis" ACM Transactions on Graphics 36 (4): 1–11. 
+[29] International Organization for Standardization "Resistance  welding – Procedure for spot we lding of uncoated and coated lo w carbon steels 
+(ISO 14373:2015)", 2nd edn., 25.160.10 , 2015(14373). 
+[30] Kubota, Flávio Issao, Hsuan, Juliana, and Cauchick-Miguel,  Paulo Augusto (2017) "Theoretical analysis of the relationship s between 
+modularity in design and m odularity in production" The International Journal of Ad vanced Manufacturing Technology  89 (5-8): 1943–1958. 
+[31] Horger, Felix, Würfl, Tobias, Christlein, Vincent, and Maier, Andreas (2018) "Towards Arbit rary Noise Augmentation - Deep  Learning for 
+Sampling from Arbitrary Probability Distributions", , 
+[32] Zhang, Y., Chen, Airong, Peng, Bo, and Zhou, Xiaoyi  et al.   "A deep Convolutional Neural N etwork for topology optimizatio n with strong 
+generalization ability" . 
+[33] Bohn, Bastian, Garcke, Joche n, Iza-Teran, Rodrigo, and Pap rotny, Alexander  et al.  (2013) "Analysis of Car Crash Simulation Data with 
+Nonlinear Machine Learning Methods" Procedia Computer Science 18 621–630. 
+[34] Jong-Chyi Su, Matheus Gadel ha, Rui Wang, and Subhransu Maj i (2018) "A Deeper Look at 3D Shape Classifiers" . 
+[35] Zbiciak, Rafał, and Grabow ik, Cezary (2017) "Feature Recog nition Methods Review" 605–615.  
+ 

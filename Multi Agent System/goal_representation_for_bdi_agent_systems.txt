@@ -1,0 +1,456 @@
+Goal Representation for BDI Agent Systems
+Lars Braubach1, Alexander Pokahr1, Daniel Moldt2, and Winfried Lamersdorf1
+1Distributed Systems and Information Systems
+Computer Science Department, University of Hamburg
+Vogt-K¨ olln-Str. 30, 22527 Hamburg, Germany
+{braubach, pokahr, lamersd }@informatik.uni-hamburg.de
+2Theoretical Foundations of Computer Science
+Computer Science Department, University of Hamburg
+Vogt-K¨ olln-Str. 30, 22527 Hamburg, Germany
+moldt@informatik.uni-hamburg.de
+Abstract. Agent-oriented system development aims to simplify the con-
+struction of complex systems by introducing a natural abstraction layer
+on top of the object-oriented paradigm composed of autonomous inter-acting actors. One main advantage of the agent metaphor is that anagent can be described similar to the characteristics of the human mindconsisting of several interrelated concepts which constitute the internalagent structure. General consensus exists that the Belief-Desire-Intention(BDI) model is well suited for describing an agent’s mental state. Thedesires (goals) of an agent represent its motivational stance and are themain source for the agent’s actions. Therefore, the representation andhandling of goals play a central role in goal-oriented requirements analy-sis and modelling techniques. Nevertheless, currently available BDI agentplatforms mostly abstract from goals and do not represent them explic-itly. This leads to a gap between design and implementation with respectto the available concepts. In this paper a generic representation of goaltypes, properties, and lifecycles is developed in consideration of existinggoal-oriented requirements engineering and modelling techniques. Theobjective of this proposal is to bridge the gap between agent speciﬁca-tion and implementation of goals and is backed by experiences gainedfrom developing a generic agent framework.
+1 Introduction
+When designing and building agent applications the developer is confronted with
+several intricate issues, ranging from general aspects such as development pro-cesses and tools to concrete design decisions like how agents should act and inter-act to implement a certain application functionality. These issues are addressedin the Jadex research project,
+1which aims to provide technical and conceptual
+support for the development of open multi-agent systems composed of rational
+1http://vsis-www.informatik.uni-hamburg.de/projects/jadex
+R.H. Bordini et al. (Eds.): PROMAS 2004, LNAI 3346, pp. 44–65, 2005.
+c/circlecopyrtSpringer-Verlag Berlin Heidelberg 2005
+Goal Representation for BDI Agent Systems 45
+and social agents. One main topic of the project is reviewing and extending
+concepts and software frameworks for developing goal-directed agents followingthe BDI model. With respect to goals in agent systems the topic poses severalinteresting questions, which can be categorised into representational, processing,and deliberation related issues.
+2
+Representation:
+1.Which generic goal types and properties do exist?
+2.Which goal states do exist during a goal’s lifetime?
+3. Which structures can be used to represent goal relationships?
+Processing:
+4.How does an agent create new goals and when does it drop existing ones?
+5. How does an agent reason and act to achieve its goals?
+6. Which mechanisms do exist to delegate goals to other agents?
+Deliberation:
+7.What are the possible agent’s attitudes towards its goals?
+8. How can an agent deliberate on its (possibly conﬂicting) goals to decide
+which ones shall be pursued?
+Inthefollowingthemeaningofthesequestionswillbeshortlysketched.Regard-
+ingtherepresentationalaspectitisofinterestwhichclassiﬁcationsofgoalsexistand
+whichgenerictypesofgoalscanbededucedfromtheliteratureandfromimplementedsystems.Additionally,itisrelevantwhichpropertiesareexhibitedbygoalsingeneraland speciﬁc goal types in particular. The second question refers to the goal lifecycleregardingthefactthatgoalscanbeindiﬀerentstatesfromtheagent’spointofview.Ontheonehandgoalsmaydiﬀerintheagent’sattitudetowardsthem(seealsoques-tion seven). This means that an agent e.g. sees some of its goals merely as possibleoptions, which are currently not pursued in favour of other goals, and sees othersas active goals, which it currently tries to achieve. On the other hand the goals mayexpose diﬀerent processing states with respect to their type and achievement state.Thethirdpointfocusesontherelationshipsbetweengoalsthemselves,andbetweengoals and other concepts. Relationships between goals are used for goal reﬁnementpurposes and for deliberation issues by making explicit how one goal (positively ornegatively)contributestoanothergoal.Therelationshipstootherconceptsmainlyinﬂuence creation and processing of goals, as discussed by the next two questions.
+The aspect of goal processing comprises all mechanisms for goal handling
+during execution time. The initial question is how an agent comes to its goals andin what situations it may drop existing goals [11, 19, 23]. Intimately connectedwith this issue are deliberation aspects like the goal and intention commitmentstrategies, which deﬁne the degree of reconsideration an agent exposes. Extensiveconsiderations about diﬀerent intention commitment strategies can be found indescriptions of the IRMA agent architecture [6, 27]. Secondly, it is of importancewhich mechanisms an agent can use to try to achieve its goals. The process of
+2This paper focuses on the emphasised questions.
+46 L. Braubach et al.
+plan selection and execution is a key element of BDI architectures and requires
+addressing further questions: How can the applicable plans be determined? Shallapplicable plans be executed in parallel or one at a time? What mechanismsshall be used for the meta-level reasoning to select a plan for execution from theset of applicable plans? Partly, these questions are answered by proposed BDIarchitectures [6, 29] and by implemented systems [15, 16]. A complete discussionabout the problems of this topic can be found in [8]. An important point of planexecution is that the agent should be able to recover from plan failures and havethe possibility to try other means to achieve the goal it has itself committedto. Hence, a declarative goal representation would help to decouple plan fromgoal success resp. failure [37]. Another interesting point concerns goals in multi-agent systems (MAS) e.g. how an agent can delegate tasks to other agents. Goaldelegation is one possibility of how this can be achieved. The topic has to address,besides the semantic meaning of goal delegation, issues of commitment, trust,and organisational structures [2, 20, 31].
+Goal deliberation is part of the whole deliberation process, which comprises
+all meta-operations on the agent’s attitudes such as belief revision and intentionreconsideration. It is concerned with the manipulation of the goal structure of anagent, i.e. goal deliberation has the task to decide which goals an agent activelypursues, which ones it delays, and which ones it abandons. Necessary requirementfor a goal deliberation mechanism to work is that the agent’s attitudes towardsits goals are clearly deﬁned. Currently no general consensus exists how goaldeliberation can be carried out. Instead, several approaches exist that addressthe topic with diﬀerent strategies. The agent language 3APL introduces meta-rules for all of the agent’s attitudes, which are executed during the interpretercycle [10]. In contrast to this rule-based approach KAOS and Tropos allow thedirect speciﬁcation of contribution relationships between goals which form abasis for the decision process [9, 14]. In [33, 34] a mechanism based on pre- andpost conditions for plans and goals is proposed and evaluated.
+Considering these questions it is rather astonishing that available BDI multi-
+agent platforms such as JACK [15], JAM [16], or Jason [4] do not use explicitgoal representations and therefore cannot address most of the aforementionedtopics. One reason for this shortcoming is that most actual systems are naturalsuccessors of the ﬁrst generation BDI systems (PRS [17, 13] derivates), which hadto concentrate on performance issues and do without computationally expensivedeliberation processes due to scarce computational resources. Additionally, theactual systems are mostly based on formal agent languages like AgentSpeak(L)[28] which focus on the procedural aspects of goals and treat them in an event-based fashion.
+Nevertheless, the need for explicit goal representation is expressed in several
+recent publications [36, 37] and is additionally supported by the classic BDItheory, which treats desires (possibly conﬂicting goals) as one core concept [5].The importance of explicit and declarative goal representation in the modellingarea is underlined by BDI agent methodologies like Prometheus [24], Tropos[14] and requirements engineering techniques like KAOS [9, 18]. Additionally,
+Goal Representation for BDI Agent Systems 47
+Winikoﬀ et al. state in [37] ”[ ...]b y omitting the declarative aspect of goals the
+ability to reason about goals is lost”, what means that the representation of goals
+is a necessary precondition when one wants reasoning about goals to becomepossible. Therefore, we claim that the usage of explicit goals should be extendedfrom analysis- and design- to the implementation-level. Additionally, we thinkthat this representation issue can be generalised and that one main objectiveof agent-oriented software development should be to support the continuity ofconcepts during the requirements, analysis, design, and implementation phase.This allows preserving the original abstraction level as far as possible throughoutthe development phases [21].
+In this paper mainly generic goal representation issues for agent-oriented
+programming will be discussed with respect to the existing approaches comingfrom the requirements engineering and modelling area and from implementedsystems. In the next section an example scenario is presented. Thereafter ageneric model and lifecycle for goals is proposed and validated with respect tothe given scenario in section 3. The model is elaborated further on to derivemore speciﬁc goal types and representations. In section 4 the implementation ofthe proposed goal concepts for the Jadex agent system is sketched and ﬁnally,it is shown in section 5 that the concepts are well suited to be used in practicalimplementations by demonstrating how the example scenario can be realised. Asummary and an outlook conclude the paper.
+2 Example Scenario
+In this section, a derivation of the so-called ”cleaner world” scenario is described.It is based on the idea that an autonomous cleaning robot has the task to cleanup dirt in some environment. This basic idea can be reﬁned with respect tovarious aspects and already forms the foundation for several discussions aboutdiﬀerent agent and artiﬁcial intelligence topics (e.g. in [3, 12, 28, 30]).
+In our scenario of the cleaner world the main system objectives are to keep
+clean a building at day, e.g. a museum, and to guard the building at night. Tobe more concise we think of a group of cleaning robots that are located in thebuilding and try to accomplish the overall system goals by pursuing their owngoals in coordination with other individuals. Therefore, four key goals for anindividual cleaning robot were identiﬁed. First, it should clean its environmentat day by removing dirt whenever possible. The cleaning robot therefore has topick-up any garbage and carry it to a near waste bin. Secondly, it has to guardthe building at night by performing patrols that should be based on varyingroutes. Any suspicious occurrences that it recognises during its patrols should bereported to some superordinated authority. Thirdly, it should keep operational bymonitoring its internal states such as the charge state of its battery or recognisedmalfunctions. Whenever its battery state is low it has to move to the chargingstation. Fourthly, the robot should always be nice to other people that are close-by. This means that it should not collide with others and greet when this isappropriate.
+48 L. Braubach et al.
+These top-level goals of a cleaner agent can be further decomposed to more
+concrete subgoals. For example to clean up a piece of waste the robot ﬁrst has
+to move to the waste and pick it up. Then it has to ﬁnd a waste bin, move to thewaste bin’s location, and drop the waste into it. Similar reﬁnements also applyto the other top-level goals.
+3 Modelling Goals
+The importance of goal representation is reﬂected through a variety of proposalsfor goal descriptions during the requirements acquisition, analysis, and designphases. In [35] three diﬀerent kinds of goal criteria are stated that correspondto the distinctive features one would naturally deduce when considering a goalas a ﬁrst class object; namely the object’s type, the object’s attributes, and theobject’s relations to other objects.
+First characteristic is the goal type for which diﬀerent taxonomies exist,
+which emphasise miscellaneous aspects. System goals represent high-level goals
+the software system needs to achieve to fulﬁl the system requirements and canbe opposed to individual goals of single actors in the setting [9]. Another goal
+type distinction is made between so-called hardand soft goals [35]. Hard goals
+describe services the system is expected to deliver whereas soft goals refer to non-functional properties such as the expected system qualities like performance orexcellence issues.
+A very important classiﬁcation relates to the temporal behaviour of a goal and
+additionally ﬁts to the way in which humans tend to think and talk about goals.This classiﬁcation is especially important for the design and implementation ofagent based software, as it provides an abstraction for certain generic applicationbehaviour. For example, a so-called achievement goal represents the common
+natural understanding of the word ’goal’ as something to be achieved [9, 37]. Incontrast, a maintenance goal is introduced to observe and maintain some world
+state as long as the goal exists [9].
+Second characteristic of goals are their attributes that consist of properties
+relevant for all types of goals like name, description, priority, and other attributesthat are type speciﬁc such as the target state speciﬁcation for an achievementgoal. Furthermore, goals can exhibit an arbitrary number of application speciﬁcattributes that are directly related to the problem domain like the desired lo-cation as part of a movement goal. Additionally, for implementing the JadexBDI system several general goal properties were identiﬁed that are importantfor the interpretation of goals in the running system. Contrary to goals in natu-ral language, which bear on a huge amount of implicit context and backgroundknowledge, the semantics of executable goals, like the exclusion or retry modefor plan selection, has to be deﬁned exactly [25].
+Third characteristic of goals are their relationships to other objects, in ﬁrst
+consequence to other goals. Such relationships between goals are typically hi-erarchical goal structures, which highlight reﬁnement relationships with respectto the used reﬁnement strategy. A common strategy used in several modelling
+Goal Representation for BDI Agent Systems 49
+approaches are the AND/OR graphs [22]. An AND-reﬁned goal demands that
+all its subgoals become satisﬁed while an OR-reﬁned goal is fulﬁlled when atleast one of the alternative subgoals is reached. An extensive discussion aboutgoal relationships can be found in [35].
+When talking about goals as objects it becomes apparent that they do not
+only exhibit these diﬀerent characteristics, but additionally they need to becreated in a suitable moment in the context of some actor to whom they belong.Only when new goal instances are generated during an agent’s lifetime the agentwill show rational behaviour in the sense that it proactively pursues its ideas [11].And only when it exactly knows which goals actually exist and how the goals areinterrelated, some deliberation mechanism can guide the agent to decide whichgoals should be pursued. We will now go on to discuss these issues with respectto the example scenario, thereby developing an explicit goal model and lifecycle.
+3.1 Lifecycle
+In the cleaner world scenario diﬀerent goals can be identiﬁed for a cleaning agent.
+We will start our discussion with the cleanup-dirt goal, as it most closely matchesthe goal concepts commonly found in the literature. The desired behaviour of theagent is to pick up dirt whenever it sees it. This includes the statement of whatto do (pick up dirt) and when to do it (sees dirt). Once the agent has achievedthe goal, it can drop its intention towards it. To represent this goal in an agentapplication the developer should be able to specify in addition to the state toachieve, the condition (called production rule in [11]) when this goal should becreated, therefore giving an answer to the question how an agent derives newgoals.
+When it notices some dirt in the environment and cannot clean-up the waste
+at the moment, e.g. because it already carries waste to the waste bin, it shouldbe capable of memorising the new dirt positions to come back later and removethe litter. Hence, it should be able to form new still inactive clean-up goals(options) that should become active as soon as it is appropriate. Assuming thatthe environment changes during a time the agent cannot observe this area theagent might pursue a goal that is not appropriate any longer, e.g. some rubbishis blown away by the wind and the agent heads towards the memorised but
+outdated waste position. As soon as it can see the target position, it will noticethat the waste has vanished and should drop the clean-up goal. Therefore, inaddition to the conditions for goal creation, the representation of goals shouldallow the speciﬁcation of the conditions under which a goal should be dropped.
+In contrast to the cleanup-dirt goal, which is created and later dropped for
+each piece of waste, other goals (e.g. look for dirt, patrol) would be directlygiven to the agent when it is born and should persist during the lifetime of theagent. It can be noted that, although it is natural to say that the agent hasboth of these goals, only one of these goals is actively pursued depending onthe daytime. Therefore, when representing such goals, the agent developer hasto specify the context in which the goal should be pursued (e.g. day or night).Another thing that has to be captured by the goal representation is the fact that
+50 L. Braubach et al.
+when the agent sees some dirt it will form a new cleanup goal, which should be
+prioritised over the look-for-dirt goal. The agent should stop wandering aroundsearching for dirt and cleanup the dirt it has found immediately. Therefore, theagent should be able to deliberate about its current goals to decide which oneshould be actively pursued and which ones should be dropped or inactivated(made to an option).
+Fig. 1. Goal lifecycle
+In Fig. 1 a proposal for a generic goal lifecycle that meets the requirements
+mentioned above is depicted in a UML statechart like fashion. It is shown that agoal can be in the states New,Adopted orFinished . The initial state of a newly
+created goal is New, what means that the goal exists as an idea but is not yet
+considered by the agent’s deliberation mechanism. Therefore, the agent has toadopt the goal to pursue its new objective. By any means, the agent can alwaysdecide not to pursue the goal any more and drop it. The transitions betweenthe diﬀerent states can be either forced (not part of goal speciﬁcation), e.g. aplan could create a new goal or drop a subgoal, or can be monitored by so-calledconditions (speciﬁed as part of a goal). Conditions are annotated to several statetransitions in two diﬀerent ways to express either that the condition is used asa guard for the corresponding transition or that it represents the transition’strigger (see legend of Fig. 1). This means that a goal instance is created andadopted every time when the creation condition of this goal ﬁres. Accordingly,it is dropped when its drop condition triggers.
+Most interesting is the complex Adopted state which consists of the substates
+Option ,Active , and Suspended . Adopting a goal makes this goal desirable to
+achieve for the agent and adds it to the agent’s desire structure. The goal can beseen as an option that could possibly be pursued when the actual circumstancesallow this. To be actively pursued the agent’s deliberation mechanism has toactivate the goal and so initiate the goal processing. The deliberation mechanism
+Goal Representation for BDI Agent Systems 51
+can also deactivate the goal at any time by moving the goal to the option state
+again. Whenever the goal is an option or is active it can be suspended when thegoal’s context becomes invalid which is indicated by the goal’s context condition.Here, a negation sign at the connection between condition and state transitionindicates that the inverse of the condition is used as trigger for the transition.The suspension holds as long as the context stays invalid. A suspended goal isnot actively pursued similar to an option, but in contrast to an option it cannotbe activated by the deliberation mechanism due to its invalid context. When thecontext becomes valid again the goal is made an option to allow the deliberationcomponent to reactivate the goal whenever appropriate.
+3
+3.2 Types of Goals
+As already mentioned, an important classiﬁcation can be made with respect
+to the temporal behaviour of a goal. Unfortunately, there is no single exactset of suitable types of goals that can be used. Rather a multitude of diﬀerentspeciﬁcations and notions emerged from diﬀerent sources such as methodologiesor implemented systems (see Table 1).
+Table 1. Several Diﬀerent Goal Types
+KAOS GaiaJACK PRSJAMJadex
+achieve x x x xx x
+maintain x x xx x
+cease x
+avoid x
+optimise x
+test x x
+query x x
+perform x x
+preserve x x
+The KAOS goal-oriented requirements engineering framework [9, 18] includes
+the already mentioned achieve and maintain goals. Additionally, KAOS intro-
+duces the negation of the aforementioned types called cease (as opposed to
+achieve) and avoid (as opposed to maintain). These two types of goals ease
+the description of goals in a natural way and semantically they can be tracedback to the original types [35]. Furthermore, optimise goals for maximising or
+3An interesting analogy to the goal lifecycle can be found in the operating systems
+area. The substates ( option ,active ,suspended ) of the adopted state resemble the
+states ready,running ,blocked known from operating system processes [32]. Just like
+a blocked process, a suspended goal cannot be directly reactivated. In both cases ahigher-level authority (the OS scheduler resp. the agent’s deliberation mechanism)is responsible for selecting among the available options.
+52 L. Braubach et al.
+minimising some target value are proposed. The well-known Gaia methodology
+[38] does not introduce any goals at all, but uses liveness and safety properties forroles. Liveness properties describe states the agent has to bring about, whereassafety properties specify system invariants. In this way they are comparable withthe achieve and maintain goal semantics.
+The JACK agent system [15] oﬀers in addition to achieve goal semantics
+the testand preserve
+4goal types. A test goal can be used to ﬁnd out if a
+condition holds and a preserve goal is the passive version of a maintain goal inthe sense that the goal controls a state and vanishes when this state is violated.In contrast to JACK, the C-PRS system [17] supports maintain goals at theimplementation level. Besides achieve and maintain goals, the JAM interpreter
+[16] and the Jadex system [26] support query goals, which are similar to achieve
+goals. Query goals allow for an easy information retrieval from the beliefbaseand when the result is not available the BDI mechanism will invoke plans forretrieving the needed information. The fourth type of goal that JAM and Jadexsupport is the perform goal , which is not related to some desired world state but
+to an activity. It ensures that an activity will be done in some future state [16].
+In the rest of this paper we will concentrate on the perform, achieve ,query,
+and maintain goal types. From Table1 one can see that the achieve and the
+maintain goal types are especially important, because they are in widespread
+use. Cease and avoid, on the other hand, exhibit the same execution semantics as
+achieve resp. maintain . The optimise goal belongs to the class of soft goals, which
+is outside the scope of this paper [35]. The perform goal is interesting, because it
+does not refer to a world state being achieved or maintained but to activities thatshould be performed. Testand query goals serve the same purpose to describe
+information acquisition, therefore only one of them is considered. Finally, Thepreserve construct is merely called a goal. In fact, it represents just a guarded
+action [17].
+The following sections take a closer look at those interesting types of goals and
+their corresponding properties. Unlike the pure modelling approaches (KAOS,Gaia) it will be made explicit how goals following these models are processed atruntime using a BDI interpreter. One important aspect is therefore how theirexecution semantics relates to the generic goal lifecycle presented above. Thisis handled in a general way by the reﬁnement of the active state, which revealsspecial information about the type of goal for goal processing. The examplescenario is used as an evidence for the presented properties and behaviour, whereappropriate.
+Perform Goal. Aperform goal speciﬁes some activities to be done, therefore
+the outcome of the goal depends only on the fact if activities were performed
+[16]. Naturally, when no activities could be performed, e.g. because no plan wasapplicable in the actual context, the goal has Failed . Otherwise, when one or
+more plans have been executed the goal can enter the Succeeded state.
+4It adds to the confusion about goal types that in JACK the preserve behaviour is
+obtained using the @maintain keyword.
+Goal Representation for BDI Agent Systems 53
+Fig. 2. Perform goal states
+The reﬁned active state of a perform goal is shown in Fig. 2. After being acti-
+vated, the In Process state is entered, which triggers the internal plan selection
+and execution mechanism of the agent [26]. While plans are executing the goal
+stays in the In Process state. When the plan execution is done, i.e. no more
+plans are running or waiting for events, the In Process state is exited.
+In the cleaner world example the two goals patrol and do-greeting should
+be modelled as perform goals, as they do not directly refer to a desired targetstate. While the do-greeting goal is ﬁnished once the greeting is performed,
+the patrol goal should not end when a patrol round is ﬁnished. Instead, the
+agent should continuously start new patrol rounds while the patrol goal is active.
+The redoproperty is an extension of the original JAM perform goal [16] and
+allows specifying that the activities of the goal should be performed iteratively.Therefore, when leaving the In Process state two state transitions may occur
+depending on the redoproperty. When redois speciﬁed the goal re-enters the
+In Process state to re-start plan execution. When redois not speciﬁed the goal
+enters one of the end states ( Failed ,Succeeded ) causing the Active state to end.
+Looking back at the generic goal lifecycle (Fig. 1) one can see that exiting theActive state also causes the Adopted state to end ( ﬁnished transition). Therefore,
+once the processing of the perform goal has stopped the goal is no longer adoptedby the agent, because it is already reached or failed.
+Achieve Goal. Anachieve goal represents a goal in the classical sense by spec-
+ifying what kind of world state an agent wants to bring about in the future.
+This target state is represented by a target condition . When an agent obtains a
+new achieve goal that shall be pursued (e.g. a cleanup goal) the agent starts ac-tivities for achieving the target state (e.g. no waste at given location). Whenthe target state is already reached before anything has been done the goalcan be considered as succeeded. Otherwise, for a yet unachieved goal the BDImechanism is started and plans are selected for execution. Whenever during theplan execution phase the target condition switches to success all running plans
+54 L. Braubach et al.
+of that goal can be aborted and the goal is reached. In [37] the description of
+an achieve goal is enriched with an additional failure condition, which helps toterminate the goal when it is absolutely not achievable any more. The diﬀerenceto the drop condition introduced in the generic goal lifecycle is that the dropcondition does not determine the ﬁnal state of the goal. In contrast, the failurecondition indicates that the agent is unable to achieve the goal and therefore thegoal has failed.
+Fig. 3. Achieve / Query goal states
+Fig. 3 shows the speciﬁc behaviour of an achieve goal. The main diﬀerence
+to the perform goal type is the target condition that speciﬁes the desired worldstate to be achieved. An activated achieve goal will ﬁrst check its target conditionfor fulﬁlment and enter the succeeded state directly when nothing needs to bedone. Additionally, the failure condition will be checked to abort the goal whenthe condition is true. When none of them has ﬁred the goal will enter the In
+Process state to start the execution of applicable plans. In contrast to the perform
+goal, plan execution may be terminated at any time when the target or failurecondition become satisﬁed. In this case the goal is ﬁnished and moves to theSucceeded resp. Failed state.
+When there are no more plans to execute and none of the executed plans
+could be completed successfully the goal moves to the Failed state. Another
+ﬁnal state Unknown is entered when the execution is ﬁnished, some plans have
+been executed properly, but the agent cannot determine the truth-value of the
+Goal Representation for BDI Agent Systems 55
+target condition (e.g. due to insuﬃcient knowledge). Any of the three ﬁnal states
+will cause the ﬁnished transition of the generic goal lifecycle (Fig. 1) to trigger.
+For example, when the given location is clean a cleanup goal is succeeded andcan therefore be removed from agent’s goal structure.
+Query Goal. Aquery goal is used to enquire information about a speciﬁed
+issue. Therefore, the goal is used to retrieve a result for a query and does not
+necessarily cause the agent to engage in actions. When the agent has suﬃcientknowledge to answer the query the result is obtained instantly and the goalsucceeds (e.g. an agent wants to ﬁnd a waste bin and already knows the loca-tion). Otherwise, applicable plans will be tried to gather the needed information(e.g. searching for a waste bin).
+The underlying model of the query goal resembles to a high degree the achieve
+goal [16]. The states of both goals are equal and are depicted in Fig. 3. Maindiﬀerence between both goal types is that the query goal requires an informa-tional result, which is captured by an implicit target condition testing if a resultis available.
+Maintain Goal. Amaintain goal has the purpose to observe some desired
+world state and the agent actively tries to re-establish this state when it is
+violated. The perform, achieve, and query goal types represent goals that con-tinuously cause the execution of plans while they are active. In contrast, anactivated maintain goal may not instantly cause any plan to be executed. Fig. 4shows that the maintain goal stays in the Idlestate until the maintain condi-
+tion is violated. Another diﬀerence is that there is no ﬁnal state. Even whenthe maintain condition is currently satisﬁed the agent always has to monitor
+the environment for changes that may violate the condition. The maintain goaltherefore always moves back to the Idlestate when processing has been ﬁnished
+successfully.
+In case the processing fails but the agent has no more applicable plan to
+execute, the Unmaintainable state is entered, which means that the agent knows
+that the condition is violated, but there is nothing it can do about it. Similarto the achieve goal, a maintain goal may be in the Unknown state when the
+agent cannot determine if the plan execution leads to the desired results. Fromthe Unknown state a transition back to the In Process orIdlestate may be
+done when the agent can determine the state of the maintain condition. Fromboth the Unknown and the Unmaintainable state, the goal may periodically re-
+enter the In Process state to try out if the goal can be maintained now. This
+behaviour is obtained by specifying the recur ﬂag. In contrast to the retryﬂag,
+which manages the sequential execution of applicable plans, the recur ﬂag leads
+to a complete restart of goal processing, thereby again considering previouslyexcluded plans.
+Using the maintain condition alone may sometimes lead to undesirable be-
+haviour, because of the event driven nature of goal processing in BDI agents.Consider the maintain-battery-loaded goal of the cleaner agent: When the con-
+dition to be maintained is speciﬁed as
+’chargestate 20%’ the agent will move to
+/BO
+56 L. Braubach et al.
+Fig. 4. Maintain goal states
+the charge-station whenever the energy level drops below 20%. However, as soon
+as the level is back at 20% the agent will stop loading its battery, because thecondition is satisﬁed again. Therefore, it is sometimes necessary to concretise thecondition to be established whenever the maintain condition is triggered. In ourmodel this can be speciﬁed by an optional target condition , which speciﬁes when
+the transition to the idle state is allowed. The semantics of this extended typeof maintain goal is therefore: Whenever the maintain condition is violated selectand execute plans in order to establish the (more speciﬁc) target condition. Inthe example the maintain condition
+’chargestate 20%’ canbe reﬁned to the target
+condition ’chargestate=100%’ to make sure that the cleaner agent will always do
+a full recharge.
+All of the speciﬁc types of goals (perform, achieve, query, maintain) inherit
+the same generic lifecycle presented in section 3.1. Therefore, in addition to theproperties speciﬁc to a goal type (such as failure condition for achieve goals)the speciﬁcation of any goal can be enriched by the generic goal properties suchas creation, context, and drop condition. This makes it possible e.g. to easilyspecify a maintain goal that should only be pursued in a given context.
+4 Goal Realisation in Jadex
+The last section presented a generic model for goals in BDI agents and identiﬁedfour goal types with distinct execution behaviour. In the following we will shortlysketch how this execution behaviour is realised in the generic agent frameworkJadex. The next section will then show how applications like the cleaner examplescenario can be easily implemented when such an abstract goal representationis available at the implementation level.
+The Jadex agent framework [26, 7] is built on top of the JADE plattform
+[1] and provides an execution environment and an API to develop agents using/BO
+Goal Representation for BDI Agent Systems 57
+beliefs, goals, and plans as ﬁrst class objects. Jadex adopts well established
+application development technologies such as XML, Java, and OQL to facilitatean easy transition from conventional object-oriented programming to BDI agentprogramming.
+To implement an agent the developer has to create two types of ﬁles: One
+XML ﬁle is used to deﬁne the agent by declaratively specifying among otherthings the beliefs, goals, and available plans. In addition to this agent deﬁnitionﬁle (ADF), for each plan used by the agent the plan body has to be implementedin a separate Java class. Plan implementations may use the Jadex API e.g. tosend messages, manipulate beliefs, or create subgoals (for details see [25]). Anexpression language is used throughout the ADF to establish the connectionbetween the declarative elements in the ADF and the object-oriented plan im-plementations. The language follows a Java syntax, but is extended to supportOQL constructs for querying the belief base.
+The goal tags in the XML ﬁle are read by the interpreter to create instances
+of the goals, which implement the state machines presented in section 3. The in-statiated goal objects themselves take care of their lifecycle by throwing so calledgoal-events (leading to the execution of plans) whenever they enter the In Pro-
+cessstate and by automatically performing the corresponding state transitions
+when goal conditions are triggered or the execution of a plan has ﬁnished. Thegoal conditions and parameters, which are evaluated at runtime, are speciﬁedusing the Java/OQL like expression language.
+At runtime the system keeps track of the instantiated goals, which may be
+created either as independent top-level goals or dispatched as subgoals inside ofa plan. Goal processing is initiated whenever the active state of a goal is entered.Before a goal is reached, several plans may try to process the goal, even at once,when speciﬁed so. Thereby, plans only have access to a copy of the original goalobject called process goal, to ensure a level of isolation between running plans and
+their associated subgoal-hierarchies. When the active state of a goal is exited (e.g.because the goal is suspended), all associated process goals are dropped leadingto a termination of the corresponding plans and subgoals created by those plans.For each goal, a history of process goals is kept to remember the executed planstogether with the outcome. This information is used to determine plans whichshould be excluded from the applicable plan list, when the goal needs to beprocessed again.
+5 Example Implementation
+The cleaner world scenario is realised as a simulation setting using two diﬀerentkinds of agents. Besides the cleaner agents an environment agent acts as substi-tute for the real surrounding. Using an agent as environmental representationhas the advantage that the setting can be easily distributed over a network ofcomputers having cleaner agents working in the same environment located ondiﬀerent platforms.
+58 L. Braubach et al.
+The cleaner agents use vision and movement plans that interact with the
+environment agent following a domain dependent ontolology in which the rel-
+evant concepts and actions like waste, waste bin and pick-up resp. drop wasteare deﬁned. They update their internal beliefs with respect to the sensed envi-ronmental changes and request actions in the environment that may fail undercertain conditions e.g. when two cleaners try to pick up the same piece of wastesimultaneously.
+Fig. 5. Goal - plan overview
+In Fig. 5 a brief overview of the relationships between the used goals and plans
+is given. On the left hand side the agents’ top-level goals are shown whereas onthe right hand side the subgoals that are used from within plans are depicted.For each goal at least one plan is deﬁned that is responsible for pursuing thegoal. As introduced in sectio n 2 a cleaner agent has top-level goals for perform-
+ing patrols (
+performpatrol ), cleaning-up waste ( achievecleanup ) and monitoring its
+battery state ( maintainbatteryloaded ). To avoid the agent doing nothing when it
+currently has no duty, a goal template for searching for waste is also deﬁned(
+performlookforwaste ).
+To handle the performpatrol goal a cleaner agent has a patrol plan that ac-
+cesses a predeﬁned route from the beliefbase and steers the agent to the actualpatrol points by using the
+achievmoveto subgoal. Somewhat more complex is
+the CleanupWastePlan that is used in response to an active achievecleanup goal.
+It employs three diﬀerent subgoals for decomposing the goal into the sepa-rate tasks of picking up a piece of waste (
+achievepickup ), searching for a non-
+full waste bin ( querywastebin ) and ﬁnally dropping the waste into the wastebin
+(achievedropwaste ). To be able to resume a suspended cleanup goal the plan also
+tests if the agent is already carrying a piece of waste. In the case that the
+Goal Representation for BDI Agent Systems 59
+agent already possesses the waste the pickup procedure can be omitted. For re-
+establishing a violated maintainbatteryloaded goal the LoadBatteryPlan tries to ﬁnd
+a charging station, heads towards it and consumes as many energy as needed. Toﬁnd a suitable station a query subgoal (
+querychargingstation ) is used that immedi-
+ately returns a result when the agent already knows a station. When this is notthe case, the
+ExploreMapPlan is used to systematically search for a yet unknown
+charging station. This plan is also used in the context of the performlookforwaste
+goal to discover new waste in the environment.
+Fig. 6. Cleaner World Example Snapshot
+A cleaner agent has three initial goal instances that drive its actions from
+birth. An instance of the performlookforwaste resp. the performpatrol goal lets the
+agent move around to search for waste or to observe the environment, dependingon the daytime. These two goals are only active, when the agent has no other im-portant things to do. An instance of the
+maintainbatteryloaded has highest priority
+and monitors the agent’s battery state during its lifetime. In addition, several goaltypes are declared for goals that get instantiated and adopted under certain con-ditions. In the following sections some example goal declarations are explained.More implementation details can be found in the freely downloadable Jadex pack-age, which includes a runnable implementation of the cleaner world example.
+5In
+Fig. 6 a snapshot of the running application is presented, which shows the globalenvironmental view as well as the local views of two cleaner agents.
+5available for download at http://vsis-www.informatik.uni-hamburg.de/projects
+/jadex
+60 L. Braubach et al.
+5.1 The Perform-Patrol Goal
+Fig. 7 shows the perform-patrol goal as it is speciﬁed in the XML agent descriptor
+of a cleaner agent. The goal is of type performgoal and is given the name perform-
+patrol. The attribute redowas already introduced in the reﬁned perform goal state
+chart (see Fig. 2) and causes the goal to be continuously executed as long as appli-cable plans are available. The exclude attribute is a special ﬂag that in this case
+tells the BDI plan selection mechanism that plans should not be excluded fromthe applicable plans list once they have been executed. Therefore, the agent willcontinue to patrol while the goal is active using any patrol plans it has.
+Fig. 7. Peform-patrol goal
+The example scenario demands that the agent should only be on patrol at
+night. Our system does not yet capture the (positive or negative) contributionbetween goals, but the agent has to be prevented somehow from continuing topatrol while it tries to reload its battery. It is assumed that the agent knows if it isday or night and if its battery state is low and has to be reloaded. Using these twoboolean beliefs (
+daytime ,isloading ) the developer can specify the contextcondition
+of the goal, where $beliefbase refers to the belief base of the agent. The context
+condition was introduced in the generic goal lifecycle (Fig. 1) and deﬁnes whenthe goal can or cannot be active. The perform patrol goal may therefore onlybe active when the agent is not loading its battery and it is not daytime. In asimilar way, a perform-look-for-waste goal is deﬁned with a context conditionthat is only valid at daytime.
+5.2 The Achieve-Cleanup Goal
+One purpose of the cleaner agent is to remove all pieces of waste it notices.
+The achieve-cleanup goal (Fig. 8) is an achievegoal that is instantiated for every
+single piece of waste to clean up. The goal contains a parameter
+wastespecifying
+which piece of waste to clean up. The given default value of the wasteparameter
+is speciﬁed by a selectstatement that always evaluates to the piece of waste that
+is nearest to the agent when the goal is instantiated. The known pieces of waste(belief
+wastes ) are sorted by distance ( order by clause) to the current location
+(belief my location ).
+For the agent to keep cleaning up every piece of waste it notices, the creation-
+condition as introduced in the generic goal lifecycle (Fig. 1) is used to trigger
+creation of new goal instances whenever needed. A cleanup goal will be createdwhenever the agent knows that there is some waste (belief
+wastes ) and that it is
+not currently cleaning (belief iscleaning ). The reason for the second part of the
+/BO/D4 /CT/D6/CU/D3 /D6/D1/CV/D3/CP/D0 /D2/CP/D1/CT/BPꜼ/D4 /CT/D6/CU/D3 /D6/D1/D4/CP/D8/D6/D3/D0Ꜽ /D6/CT/CS/D3/BPꜼ/D8/D6/D9/CTꜼ /CT/DC/CR/D0/D9/CS/CT/BPꜼ/D2/CT/DA/CT/D6Ꜽ/BQ/BO/CR/D3/D2/D8/CT/DC/D8/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/AX/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/CX/D7/CN/D0/D3/CP/CS/CX/D2/CV /B2/B2 /AX/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/CS/CP /DD/D8/CX/D1/CT/BO/BB/CR/D3/D2/D8/CT/DC/D8/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/BO/BB/D4 /CT/D6/CU/D3 /D6/D1/CV/D3/CP/D0/BQ
+Goal Representation for BDI Agent Systems 61
+Fig. 8. Achieve-cleanup goal
+condition is that there is currently no deliberation mechanism telling the agent
+which cleanup goal to achieve ﬁrst when there is more than one present at thesame time. Therefore, the
+iscleaning belief is used to assure that only one cleanup
+goal at a time is created. As with the perform-patrol goal a context condition isused to constrain under which circumstances the goal may be active: The agentshould pursue cleanup goals only when it is not loading its battery and only atdaytime. The goal is achieved when the waste is contained in one of the knownwaste bins as described in the target condition .
+In our example implementation we also added a rather complex dropcondition
+for the cleanup goal, which is not necessary for correct operation, but helps toimprove the performance of the cleaner agent. To allow opportunistic cleanupof new pieces of waste and to avoid unnecessary movement of the cleaner, anexisting cleanup goal is dropped when the agent comes to know that the pieceof waste to be picked up is no longer there or another piece of waste is closer tothe agent.
+5.3 The Query-Wastebin Goal
+The query-wastebin goal shows how a goal to query for information can be
+realised in Jadex (see Fig. 9). Assuming that the agent does not completelyknow its environment, the objective of the goal is to ﬁnd a waste bin that is not
+/BO/CP/CR/CW/CX/CT/DA/CT/CV/D3/CP/D0 /D2/CP/D1/CT/BPꜼ/CP/CR/CW/CX/CT/DA/CT/CR/D0/CT/CP/D2/D9/D4Ꜽ/BQ/BO/D4/CP /D6/CP/D1/CT/D8/CT/D6 /D2/CP/D1/CT/BPꜼ/DB /CP/D7/D8/CTꜼ /CR/D0/CP/D7/D7/BPꜼ/CF /CP/D7/D8/CTꜼ/BQ/BO /DA/CP/D0/D9/CT/BQ/D7/CT/D0/CT/CR/D8 /CP/D2/DD /B0/DB /CP/D7/D8/CT /CU/D6/D3/D1 /B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/DB /CP/D7/D8/CT/D7 /D3 /D6/CS/CT/D6 /CQ /DD/B0/DB /CP/D7/D8/CT/BA/D0/D3 /CR/CP/D8/CX/D3/D2/BA/CV/CT/D8/BW/CX/D7/D8/CP/D2/CR/CT/B4/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/D1/DD/CN/D0/D3 /CR/CP/D8/CX/D3/D2/B5/BO/BB/DA/CP/D0/D9/CT/BQ/BO/BB/D4/CP /D6/CP/D1/CT/D8/CT/D6 /BQ/BO/CR/D6/CT/CP/D8/CX/D3/D2/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/DB /CP/D7/D8/CT/D7/BA/D0/CT/D2/CV/D8/CW/BQ/BC /B2/B2 /AX/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/CX/D7/CN/CR/D0/CT/CP/D2/CX/D2/CV/BO/BB/CR/D6/CT/CP/D8/CX/D3/D2/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/BO/CR/D3/D2/D8/CT/DC/D8/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/AX/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/CX/D7/CN/D0/D3/CP/CS/CX/D2/CV /B2/B2 /B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/CS/CP /DD/D8/CX/D1/CT/BO/BB/CR/D3/D2/D8/CT/DC/D8/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/BO/CS/D6/D3/D4 /CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/AX/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/CR/CP /D6/D6/CX/CT/D7/DB /CP/D7/D8/CT/B2/B2 /B4/AX/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/CR/D3/D2/D8/CP/CX/D2/D7/BY /CP/CR/D8/B4Ꜽ/DB /CP/D7/D8/CT/D7Ꜽ/B8 /B0/CV/D3/CP/D0/BA/DB /CP/D7/D8/CT/B5/DG/DG /B4/D7/CT/D0/CT/CR/D8 /CP/D2/DD /B0/DB /CP/D7/D8/CT /CU/D6/D3/D1 /B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/DB /CP/D7/D8/CT/D7/D3 /D6/CS/CT/D6 /CQ /DD/B0 /DB /CP/D7/D8/CT/BA/D0/D3 /CR/CP/D8/CX/D3/D2/BA/CV/CT/D8/BW/CX/D7/D8/CP/D2/CR/CT/B4/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/D1/DD/CN/D0/D3 /CR/CP/D8/CX/D3/D2/B5/B5 /AX/BP /B0/CV/D3/CP/D0/BA/DB /CP/D7/D8/CT/B5/BO/BB/CS/D6/D3/D4 /CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/BO/D8/CP /D6/CV/CT/D8/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/B4/D7/CT/D0/CT/CR/D8 /CP/D2/DD /B0/DB /CP/D7/D8/CT/CQ/CX/D2 /CU/D6/D3/D1 /B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/DB /CP/D7/D8/CT/CQ/CX/D2/D7/DB/CW/CT/D6/CT /B0/DB /CP/D7/D8/CT/CQ/CX/D2/BA/CR/D3/D2/D8/CP/CX/D2/D7/B4/B0/CV/D3/CP/D0/BA/CV/CT/D8/C8 /CP /D6/CP/D1/CT/D8/CT/D6/B4Ꜽ/DB /CP/D7/D8/CTꜼ/B5/B5/B5 /AX/BP/D2/D9/D0/D0/BO/BB/D8/CP /D6/CV/CT/D8/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/BO/BB/CP/CR/CW/CX/CT/DA/CT/CV/D3/CP/D0/BQ
+62 L. Braubach et al.
+full and near to the agent. This goal is created by a plan as a subgoal of the
+achieve-cleanup goal once the agent has picked up some dirt (cf. sect. 2).
+Fig. 9. Query-wastebin goal
+It is modelled as querygoal and has a parameter result. This parameter is
+bound to the nearest not full waste bin, if any, and is evaluated ondemand what
+means that the select expression is evaluated whenever the parameter value isaccessed. The targetcondition of the query goal is not stated and therefore the
+default target condition for query goals is used. Hence the goal succeeds whena result is retrieved, i.e. a not full waste bin nearby was found. The implicittarget condition allows for opportunistic goal achievement (see Fig. 3), that is,the goal succeeds without the execution of any plan if the agent already knowsthe location of a not full waste bin.
+Fig. 10. Maintain-battery-loaded goal
+5.4 The Maintain-Battery-Loaded Goal
+The cleaning agent has to stay operational; therefore it has to monitor its in-
+ternal state and will occasionally move to the charging station to reload its bat-tery. The speciﬁcation of the maintain-battery-loaded goal is given in Fig. 10.The goal is a maintaingoal and therefore includes a maintaincondition and a
+targetcondition as present in the reﬁned maintain goal state chart (see Fig. 4).
+The maintain condition monitors the battery state (belief
+my chargestate ) and
+/BO/D5/D9/CT/D6/DD/CV/D3/CP/D0 /D2/CP/D1/CT/BPꜼ/D5/D9/CT/D6/DD/DB /CP/D7/D8/CT/CQ/CX/D2Ꜽ /CT/DC/CR/D0/D9/CS/CT/BPꜼ/D2/CT/DA/CT/D6Ꜽ/BQ/BO/D4/CP /D6/CP/D1/CT/D8/CT/D6 /D2/CP/D1/CT/BPꜼ/D6/CT/D7/D9/D0/D8Ꜽ /CR/D0/CP/D7/D7/BPꜼ/CF /CP/D7/D8/CT/CQ/CX/D2Ꜽ /D3/D4/D8/CX/D3/D2/CP/D0/BPꜼ/D8/D6/D9/CTꜼ/BQ/BO/DA/CP/D0/D9/CT /CT/DA/CP/D0/D9/CP/D8/CX/D3/D2/D1/D3 /CS/CT/BPꜼ/D3/D2/CN/CS/CT/D1/CP/D2/CSꜼ/BQ/D7/CT/D0/CT/CR/D8 /CP/D2/DD /B0/DB /CP/D7/D8/CT/CQ/CX/D2 /CU/D6/D3/D1 /B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/DB /CP/D7/D8/CT/CQ/CX/D2/D7/DB/CW/CT/D6/CT /AX/B0/DB /CP/D7/D8/CT/CQ/CX/D2/BA/CX/D7/BY /D9/D0/D0/B4/B5 /D3 /D6/CS/CT/D6 /CQ /DD/B0/DB /CP/D7/D8/CT/BA/D0/D3 /CR/CP/D8/CX/D3/D2/BA/CV/CT/D8/BW/CX/D7/D8/CP/D2/CR/CT/B4/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/D1/DD/CN/D0/D3 /CR/CP/D8/CX/D3/D2/B5/BO/BB/DA/CP/D0/D9/CT/BQ/BO/BB/D4/CP /D6/CP/D1/CT/D8/CT/D6 /BQ/BO/BB/D5/D9/CT/D6/DD/CV/D3/CP/D0/BQ/BO/D1/CP/CX/D2/D8/CP/CX/D2/CV/D3/CP/D0 /D2/CP/D1/CT/BPꜼ/D1/CP/CX/D2/D8/CP/CX/D2/CQ/CP/D8/D8/CT/D6/DD/D0/D3/CP/CS/CT/CSꜼ/BQ/BO/D1/CP/CX/D2/D8/CP/CX/D2/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/D1/DD/CN/CR/CW/CP /D6/CV/CT/D7/D8/CP/D8/CT /BQ /BC/BA/BE/BO/BB/D1/CP/CX/D2/D8/CP/CX/D2/CR/D3/D2/CS/CX/D8/CX/D3/D2 /BQ/BO/D8/CP /D6/CV/CT/D8/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/B0/CQ /CT/D0/CX/CT/CU/CQ/CP/D7/CT/BA/D1/DD/CN/CR/CW/CP /D6/CV/CT/D7/D8/CP/D8/CT /BP/BP /BD/BA/BC/BO/BB/D8/CP /D6/CV/CT/D8/CR/D3/D2/CS/CX/D8/CX/D3/D2/BQ/BO/BB/D1/CP/CX/D2/D8/CP/CX/D2/CV/D3/CP/D0/BQ
+Goal Representation for BDI Agent Systems 63
+triggers plan execution whenever the charge state drops below 20%. The reﬁned
+target condition causes the battery to be always reloaded to 100% before thegoal moves back to the idle state.
+6 Conclusions and Outlook
+This paper provides two main contributions. First, the way of how an agentattains and manages its goals is analysed and a generic lifecycle is proposedthat models the diﬀerent states of goals in BDI agent systems. Secondly, thegeneric goal lifecycle is reﬁned into diﬀerent goal types which capture commonlyrequired agent behaviour. Both of these contributions are backed by the cleanerworld example at the conceptual as well as implementation level.
+The example shows that the proposed goal model is well suited for a natural
+description of an agent-based system. The continuous usage of abstract conceptsin the design and implementation phases considerably simpliﬁes the developmentof software agents compared to the current practice of using object-orientedtechniques. Additionally, it helps to preserve the abstraction level throughoutthe whole development process. The system is easier to design, as the involvedgoal concepts are closer to the way that humans think and act. The transition tothe implemented system is largely simpliﬁed, because only minor reﬁnements ofdesign speciﬁcations are necessary to obtain an executable system. Moreover, thedevelopment is less error-prone, as large portions of complex agent behaviour,such as goal creation and processing, are already implemented in the underlyingagent architecture. Finally, the types of goals available in the agent languagehave the additional eﬀect that they may guide the agent developer in its analysisand design decisions, because they represent a natural and abstract means fordescribing the application domain.
+This work is also the result of practical considerations when realising the
+proposed goal model in an eﬃcient and easy to use software framework. Themodel includes those goal types and properties that frequently occured in theresearched systems and methodologies and that have practical relevance for agentsystems we have built so far.
+The presented goal model does not cover all important aspects of goals as
+they are presented in the introduction. One point that was not addressed by thispaper aﬀects the relations between goals such as hierarchies for goal decomposi-tion. In this ﬁeld, especially concerning the requirements and modelling phases,a lot of research has already been done and it has to be evaluated if these con-cepts can be successfully transferred to the design and implementation phase ofMAS. Another important aspect of goals that was covered only marginally inthis paper is goal deliberation. With the help of deliberation mechanisms, theagent is able to select between diﬀerent goals, detect goal conﬂicts and handlethem appropriately. The precondition for goal deliberation is the explicit anddeclarative representation of goals, which is not reﬂected in actual agent sys-tems and agent languages. Therefore, the conceptualization of the introducedgoal model is the foundation for further explorations of diﬀerent deliberationmechanisms.
+64 L. Braubach et al.
+References
+1. F. Bellifemine, G. Rimassa, and A. Poggi. JAD E – A FIPA-compliant agent frame-
+work. In 4th Int. Conf. Practical Applications of Agents and Multi-Agent Systems
+(PAAM-99) , pages 97–108, London, UK, December 1999.
+2. F. Bergenti, L. Botelho, G. Rimassa, and M. Somacher. A FIPA compliant Goal
+Delegation Protocol. In Workshop on Agent Communication Languages (AAMAS
+2002), 2002.
+3. R. Bordini, M. Fisher, W. Visser, and M. Wooldridge. Veriﬁable multi-agent pro-
+grams. In Procee dings of the First International Workshop ProMAS , pages 43–49,
+Australia, 2003.
+4. R. H. Bordini and J. F. H¨ ubner. Jason User Guide , 2004.
+http://jason.sourceforge.net/ .
+5. M. Bratman. Intention, Plans, and Practical Reason . Harvard University Press,
+1987.
+6. M. Bratman, D. Israel, and M. Pollack. Plans and Resource-Bounded Practical
+Reasoning. In Philosophy and AI: Essays at the Interface , pages 1–22. The MIT
+Press, 1991.
+7. L. Braubach, A. Pokahr, and W. Lamersdorf. Jadex: A Short
+Overview. In Net.ObjectDays 2004: AgentExpo , 2004. (to be published).
+http://vsis-www.informatik.uni-hamburg.de/papers/jadex_node.pdf .
+8. P. Busetta, N. Howden, R. R¨ onnquist, and A. Hodgson. Structuring BDI Agents
+in Functional Clusters. In Intelligent Agents VI, ATAL ’99 . Springer, 2000.
+9. A. Dardenne, A. van Lamsweerde, and S. Fickas. Goal-directed requirements ac-
+quisition. Science of Computer Programming , 20(1–2):3–50, April 1993.
+10. M. Dastani, F. de Boer, F. Dignum, and J.J. Meyer. Programming Agent Delib-
+eration: An Approach Illustrated Using the 3APL Language. In Procee dings of
+AAMAS’03 , 2003.
+11. Frank Dignum and Rosaria Conte. Intentional Agents and Goal Formation. In
+Agent Theories, Architectures, and Languages , pages 231–243, 1997.
+12. J. Firby. An Architecture for A Synthetic Vacuum Cleaner. In Proc. of the AAAI
+Fall Symp. Series Workshop on Instantiating Real-World Agents , Raleigh, NC,
+October 1993.
+13. M. Georgeﬀ and A. Lansky. Reactive Reasoning and Planning: An Experiment
+With a Mobile Robot. In Procee dings of the 1987 National Conference on Artiﬁcial
+Intelligence (AAAI 87) , pages 677–682, Seattle, Washington, July 1987.
+14. F. Giunchiglia, J. Mylopoulos, and A. Perini. The Tropos Software Development
+Methodology: Processes, Models and Diagrams. In Proc. of AAMAS02 .A C M
+Press, 2002.
+15. N. Howden, R. Ronnquist, A. Hodgson, and A. Lucas. JACK Intelligent Agents -
+Summary of an Agent Infrastructure. In Proc. 5th ACM Int. Conf. on Autonomous
+Agents , 2001.
+16. M. Huber. JAM: A BDI-Theoretic Mobile Agent Architecture. In 3rd Annual
+Conf. on Autonomous Agents (AGENTS-99) , pages 236–243, New York, May 1–5
+1999. ACM Press.
+17. F. Ingrand, R. Chatila, R. Alami, and F. Robert. PRS: A High Level Supervision
+and Control Language for Autonomous Mobile Robots. In Proc. of the IEEE Int.
+Conf. on Robotics and Automation , pages 43–49, Minneapolis, April 1996.
+18. E. Letier and A. van Lamsweerde. Deriving operational software speciﬁcations from
+system goals. In Proc.of the 10th ACM SIGSOFT Symposium on the Foundations
+of Software Engineering , pages 119–128. ACM Press, 2002.
+Goal Representation for BDI Agent Systems 65
+19. M. Luck and M. d’Inverno. Motivated Behaviour for Goal Adoption. In Multi-
+Agent Systems: Theories, Languages and Applications - 4th Australian Workshop
+on Distributed Artiﬁcial Intelligence , pages 58–73. Springer-Verlag, 1998.
+20.´A. Moreira, R. Vieira, and R. Bordini. Extending the operational semantics of aBDI agent-oriented programming language for introducing speech-act based com-munication. In Proc. Declarative Agent Languages and Technologies (DALT-03),
+held with AAMAS-03 , 2003.
+21. J. Mylopoulos. Requirements-Driven Information Systems Development. Invited
+Talk, AOIS’99 at CAiSE’99, Heidelberg, Germany, 1999.
+22. N. Nilsson. Problem-Solving Methods in Artiﬁcial Intelligence . McGraw-Hill, 1971.
+23. T. J. Norman and D. Long. Goal creation in motivated agents. In Intelligent
+Agents, Proc. of ATAL’95 , pages 277–290. Springer-Verlag, 1995.
+24. L. Padgham and M. Winikoﬀ. Prometheus: A methodology for developing in-
+telligent agents. In 3rd Int. Workshop on Agent Oriented Software Engineering
+(AOSE02) , July 2002.
+25. A. Pokahr and L. Braubach. Jadex User Guide , 2004.
+http://vsis-www.informatik.uni-hamburg.de/projects/jadex/download.php .
+26. A. Pokahr, L. Braubach, and W. Lamersdorf. Jadex: Implementing a BDI-
+Infrastructure for JADE Agents. EXP – in search of innovation , 3(3):76–85, 2003.
+27. M. Pollack. The Uses of Plans. Artiﬁcial Intelligence , 57(1):43–68, 1992.
+28. A. Rao. AgentSpeak(L): BDI Agents Speak Out in a Logical Computable Lan-
+guage. In 7th European Workshop on Modelling Autonomous Agents in a Multi-
+Agent World , 1996.
+29. A. Rao and M. Georgeﬀ. BDI Agents: from theory to practice. In Proc. of the 1st
+Int. Conference on Multi-Agent Systems (ICMAS’95) , pages 312–319. The MIT
+Press, 1995.
+30. S. Russell and P. Norvig. Artiﬁcal Intelligence: A Modern Approach . Prentice-Hall,
+Englewood Cliﬀs, NJ, 1995.
+31. M. Somacher, M. Tomaiuolo, and P. Turci. Goal Delegation in Multiagent System.
+InProc. Tecniche di Intelligenza Artiﬁciale per la ricerca di informazione sul Web,
+Siena, 2002.
+32. A. Tanenbaum. Modern Operating Systems . Prentice Hall PTR, 2001.
+33. J. Thangarajah, L. Padgham, and M. Winikoﬀ. Detecting and Avoiding Interfer-
+ence Between Goals in Intelligent Agents. In Procee dings of IJCAI 2003 , August
+2003.
+34. J. Thangarajah, L. Padgham, and M. Winikoﬀ. Detecting and Exploiting Positive
+Goal Interaction in Intelligent Agents. In Procee dings of AAMAS’03 , 2003.
+35. A. van Lamsweerde. Goal-Oriented Requirements Engineering: A Guided Tour. In
+Proc. RE’01 - Int. Joint Conference on Requirements Engineering , pages 249–263.
+IEEE, 2001.
+36. M. Winikoﬀ, J. Harland, and L. Padgham. Linking Agent Concepts and Method-
+ology with CAN. http://citeseer.ist.psu.edu/497423.html .
+37. M. Winikoﬀ, L. Padgham, J. Harland, and J. Thangarajah. Declarative & Proce-
+dural Goals in Intelligent Agent Systems. In Proc. of KR03 . Morgan Kaufmann
+Publishers, 2002.
+38. M. Wooldridge, N. Jennings, and D. Kinny. The Gaia Methodology for Agent-
+Oriented Analysis and Design. Autonomous Agents and Multi-Agent Systems ,
+3(3):285–312, 2000.

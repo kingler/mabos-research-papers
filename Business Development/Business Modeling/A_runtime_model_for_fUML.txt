@@ -1,0 +1,731 @@
+See discussions, st ats, and author pr ofiles f or this public ation at : https://www .researchgate.ne t/public ation/262346644
+A ru ntime model for fUML
+Conf erence Paper  · Oct ober 2012
+DOI: 10.1145/2422518.2422527
+CITATIONS
+33READS
+161
+3 author s, including:
+Some o f the author s of this public ation ar e also w orking on these r elat ed pr ojects:
+MAE4ASE  View pr oject
+CDL -MINT (Christian Doppler Labor atory for Model-Int egrated Smart Pr oduction)  View pr oject
+Tanja May erhof er
+TU Wien
+39 PUBLICA TIONS    422 CITATIONS    
+SEE PROFILE
+Philip Lang er
+TU Wien
+45 PUBLICA TIONS    872 CITATIONS    
+SEE PROFILE
+All c ontent f ollo wing this p age was uplo aded b y Tanja May erhof er on 22 Sept ember 2016.
+The user has r equest ed enhanc ement of the do wnlo aded file.
+A Runtime Model for fUML
+Tanja Mayerhofer, Philip Langer, and Gerti Kappel
+Business Informatics Group
+Institute of Software Technology and Interactive Systems
+Vienna University of Technology, Austria
+{mayerhofer, langer, gerti}@big.tuwien.ac.at
+ABSTRACT
+With the introduction of fUML, an OMG standard den-
+ing the operational semantics of a subset of UML and the
+conforming virtual machine, UML models can be used not
+only for informal design sketching but also for completely
+building executable systems. Although this has been an im-
+portant step for UML, the full potential of having executable
+UML models, such as enabling runtime analysis and adapta-
+tion, cannot be realized using the standardized virtual ma-
+chine due to the lack of the adequate means for accessing im-
+portant runtime information and controlling the execution of
+UML models. In this paper, we aim at establishing the nec-
+essary basis to overcome this limitation. Therefore, we intro-
+duce extensions of the standardized fUML virtual machine
+in terms of a dedicated trace model, an event model, and a
+command API. We provide an open-source implementation
+of the proposed extensions, as well as a model debugger for
+UML models based on this implementation to demonstrate
+the feasibility of the presented concepts.
+1. INTRODUCTION
+Executable models are necessary for bridging the gap be-
+tween design time models and the running application. To
+be executable, the semantics of a model has to be specied
+precisely and completely. Unfortunately, the semantics of
+many modeling languages is specied only informally lead-
+ing to imprecision and ambiguity. For a long time, this was
+also true for UML, the most adopted modeling language in
+industry [6]. However, UML has evolved recently from a de-
+scriptive language that can only be used for informal design
+sketching to a prescriptive language that can also be used as
+a programming language if desired [9]. This transition was
+enabled by the introduction of the fUML1standard.
+fUML contributes a formal denition of the operational se-
+mantics of a key subset of UML 2 in terms of a well-dened
+This research has been partly funded by our industry part-
+ner LieberLieber Software GmbH.
+1http://www.omg.org/spec/FUML/Currentvirtual machine for executing UML models. In essence, this
+subset consists of the key parts of UML activities and class
+diagrams, which are considered sucient for describing the
+semantics of the remainder of UML. Although this is a ma-
+jor step towards the utilization of executable UML models,
+the full potential of UML model execution cannot be ex-
+ploited, because the standardized virtual machine lacks in
+providing the means for runtime observation, analysis, and
+execution control. Moreover, it is currently unclear how
+the runtime information of executable UML models can be
+obtained from the virtual machine and how it may be repre-
+sented adequately in terms of a runtime model. As a result,
+important applications of models at runtime [1], such as con-
+trolling, observing, and adapting the behavior of a system
+at runtime, cannot be realized using fUML so far.
+To address this limitation, we propose a trace model for
+fUML, which enables the runtime analysis of executed UML
+models establishing the basis for runtime adaptation. Fur-
+thermore, we propose an event model and a command API,
+which enable to observe and control the model execution
+process during runtime. We implemented these proposed
+functionalities by extending the fUML reference implemen-
+tation2and developed a model debugger for UML models to
+demonstrate the feasibility and suciency of our approach.
+The remainder of this paper is structured as follows. In Sec-
+tion 2, we summarize related work regarding model execu-
+tion and runtime models. Our proposed trace model, event
+model, and command API for fUML are introduced in Sec-
+tion 3 and Section 4. In Section 5, we discuss the validation
+of the proposed artifacts and conclude with an outlook on
+future work in Section 6.
+2. RELATED WORK
+In this section we give an overview on existing approaches for
+specifying the semantics of UML enabling the execution of
+UML models. Further, we address existing work regarding
+the usage of traces as runtime models.
+UML semantics. Approaches for specifying the semantics
+of a modeling language can be classied according to three
+categories: denotational, translational, and operational se-
+mantics [3]. For formalizing the semantics of UML, re-
+markable approaches have been suggested in the past. One
+prominent example for a denotational approach is the Sys-
+tem Model introduced by Broy et al. [2]. The translational
+semantics approach has been, for instance, applied by Mel-
+lor and Balcer [8] with the introduction of Executable UML.
+2http://fuml.modeldriven.org
+The fUML standard is the latest attempt to standardize the
+semantics of UML using an operational semantics approach.
+As fUML is promoted by OMG, it seems to be promising to
+become widely adopted.
+Trace models. To enable runtime analysis, trace models
+are used to represent the execution trace of programs. There-
+fore, various trace formats have been proposed [5]. However,
+those formats focus on traditional programs and, hence, can-
+not be used to capture the execution trace of UML models,
+because the runtime concepts of programs, such as method
+calls androutine calls , cannot be transferred directly to run-
+time concepts of UML models. Moreover, the essential run-
+time concepts of UML activities, such as token ows , are
+not represented in existing trace formats. As runtime mod-
+els should be as close to the problem space as possible [1], we
+argue that a dedicated trace model for fUML is necessary to
+capture the execution of UML models adequately and pre-
+cisely.
+In the domain of software modeling, the usage of model-
+based traces (or traces in general) has been proposed al-
+ready to serve as runtime models enabling to reason about
+the execution, as well as dynamic analysis and adaptation.
+Most of these approaches assume that the running appli-
+cation is realized by generated code. In this scenario the
+runtime information available on the code level has to be
+mapped to the more abstract model level. Maoz [7] pro-
+posed an approach to derive the required mapping code
+automatically from models and weave it into the applica-
+tion code using aspect-oriented programming. A similar ap-
+proach was developed by Vogel et al. [10], who proposed
+to use model transformation techniques to synchronize the
+runtime information with the models that provide dierent
+views on the running system. Another approach was taken
+by Ghezzi et al. [4], who proposed to extract formal models
+from the runtime behavior of a running application. As the
+fUML virtual machine interprets the models directly, neither
+an extraction of behavior models nor a mapping of code-level
+runtime information to the model level is necessary.
+3. TRACE MODEL
+Traces record the execution of a system and provide an ab-
+stract representation of its runtime behavior. Thereby, a
+trace provides the information necessary for analyzing a sys-
+tem's execution, which constitutes the crucial basis for sev-
+eral applications, such as dynamic adaptation [1]. To enable
+these important applications for executable UML models, we
+elaborated a dedicated trace metamodel capable of recording
+the model execution carried out by the fUML virtual ma-
+chine. Thereby, we aimed at fullling the requirement that
+a recorded trace provides sucient information for compre-
+hending, reconstructing, and replaying an execution. For
+instance, a trace model should be expressive enough to al-
+low answering the following questions.
+1.Input/output relationship : Which inputs have been
+provided for the execution of an activity node / activity
+and which outputs have been produced?
+2.Chronological order : In which chronological order have
+the activity nodes of an activity been executed?
+3.Logical order : In which logical order have the activ-
+ity nodes of an activity been executed? In other words,
+the executions of which activity nodes have enabled the
+execution of another specic activity node?
+Activity1: Add a new student to a lecture
+student :
+StudentstudentName :String
+lecture :LectureNew student :
+Instantiate studentstudent :Student
+name :String
+Add lectureAddStructuralFeatureValueobject :Student
+value :Lectureresult :Student
+Activity2: Instantiate student
+student :Student
+name :StringSet nameAddStructuralFeatureValueobject :Student
+result :Student
+value :StringCreate studentCreateObjec tresult :
+StudentStudent
+- lectures  :Lecture [0..*]- name  :String
+Lecture
+- title  :StringFigure 1: Example of a UML activity
+4.Edge traversal : Across which edge has an input for the
+execution of an activity node been provided?
+For illustrating our elaborated trace metamodel, we use the
+UML activity example depicted in Figure 1. In this example
+the UML activity Activity1: Add a new student to a lecture
+rst instantiates an object of the class Student by calling the
+activity Activity2: Instantiate student (which also initializes
+thename attribute of the Student object with a given String
+value), adds a given Lecture object to its list of lectures and
+provides the Student object as activity output.
+Figure 2 depicts our elaborated trace metamodel for captur-
+ing traces of the execution of UML activities by the fUML
+virtual machine. The metaclasses colored white represent
+model elements of the executed UML activity itself. A
+Trace contains a list of ActivityExecutions that repre-
+sent the execution of UML activities. An ActivityExecu-
+tion consists of a chronologically ordered list of Activi-
+tyNodeExecutions , which represent the execution of activ-
+ity nodes. A CallActivityNodeExecution is a special kind
+of an ActivityNodeExecution that represents the call of a
+behavior that may cause the execution of another activity.
+ActivityExecutions , as well as ActivityNodeExecutions ,
+can have inputs and outputs represented by the metaclasses
+ParamterInput /ParameterOutput and Input /Output ,
+respectively. ParamterInputs and ParameterOutputs ref-
+erence ObjectTokenInstances that carry ValueInstances
+containing Values , such as String values or objects. Note
+that the ValueInstances refer to deep copies of the Values
+to maintain a self-contained copy of the input and output
+data. UserParameterInput is a subtype of ParameterIn-
+putthat is used to represent the input provided by the user
+when starting the execution of activities. Inputs and Out-
+puts ofActivityNodeExecutions can additionally refer to
+ControlTokenInstances representing the control ow.
+To exemplify the usage of this trace metamodel, Figure 3
+shows an excerpt of the trace resulting from the execution
+of the activity example introduced in Figure 1. This ex-
+cerpt only includes details about the execution of the activ-
+ityActivity2 . Using this trace, the before stated questions
+regarding its execution can be answered as follows.
+1. Input/output relationship. The inputs and outputs of
+an execution are recorded through the metaclasses Input /
+Output for the execution of activity nodes, as well as Param-
+terInput /ParameterOutput for the execution of activities.
+ActivityExecutionfUML::Syntax::Activities::
+IntermediateActivities::Activity
+ActivityNodeExecutionfUML::Syntax::Activities::
+IntermediateActivities::
+ActivityNodeInput
+OutputfUML::Syntax::Actions::
+BasicActions::InputPin
+fUML::Syntax::Actions::
+BasicActions::OutputPinParameterInput
+ParameterOutput
+TokenInstance
+ValueInstance ControlTokenInstance ObjectTokenInstancefUML::Syntax::Activities::
+IntermediateActivities::
+ActivityEdgeCallActivityNodeExecutionfUML::Syntax::CommonBehaviors::
+BasicBehaviors::Behavior
+Signals?Trace
+fUML::Syntax::Activities::
+IntermediateActivities::ActivityParameterNodeUserParameterInput
+fUML::Semantics::Classes::
+Kernel::Value0..1
++caller
+0..1+callee 0..1
+* 1
+1
+*+/traversedEdge11
+*1
+**0..1
+**
+1 +/successor
+0..1
+chronological +/predecessor
+0..1+/predecessor
+* logical
++/successor
+** 1*
+*
+{ordered}*
+*
+*1Figure 2: Trace metamodel
+In the trace excerpt we can see that the execution of the
+activity node Create student had no inputs and the object
+v2of the type Student as output (1a). The execution of
+the activity Activity2 had the String value v1\Alice" as in-
+put (1b) and produced an object v3of the type Student for
+which the property name was set to \Alice" as output (1c).
+2. Chronological order. The chronological order of activ-
+ity node executions is captured using the derived reference
+chronological . This reference can be derived from the or-
+der in which the ActivityNodeExecutions are contained by
+the corresponding ActivityExecution . The following OCL
+expression is used to derive the chronological predecessor.
+context ActivityNodeExecution : :chronologicalpredecessor :
+ActivityNodeExecution def:
+if self .activityExecution .activityNodeExecution  >
+indexOf (self )< > 1
+then self .activityExecution .activityNodeExecution  >
+at(self .activityExecution .activityNodeExecution  >
+indexOf (self ) 1)
+else null
+endif
+Using this OCL expressions, we can derive that the execu-
+tion of the activity node Create student is the chronological
+predecessor of the execution of the node Set name (2).
+3. Logical order. The logical order of activity node exe-
+cutions can be derived from the input/output relationships
+between them and is recorded in the trace using the derived
+reference logical . The execution of an activity node is the
+logical predecessor of the execution of another activity node
+if it provides some input to it. The following OCL expression
+derives the logical predecessor of an activity node execution.
+context ActivityNodeExecution : :logicalpredecessor :
+ActivityNodeExecution def:
+ActivityNodeExecution : :allInstances () >select (aj
+a.output .tokenInstance >select (tj
+self .input .tokenInstance >includes (t)) >size ()>0)
+In our example the execution of the node Create student is
+the logical predecessor of the execution of the activity node
+Set name because it provides the object v2as input (3).
+4. Edge traversal. Tokens transport the values that have
+been generated as output of an activity node execution to
+the (logical) successor nodes via activity edges. The infor-mation concerning the edge that was traversed by a token
+is represented by the derived reference traversedEdge and
+can be obtained by the following OCL expression.
+context TokenInstance : :traversedEdge :ActivityEdge def:
+ActivityEdge : :allInstances () >select (ej
+(e.source =Output : :allInstances () >select (oj
+o.tokenInstance >includes (self )) .outputPin )and
+(e.target =Input : :allInstances () >select (ij
+i.tokenInstance >includes (self )) .inputPin ))
+Based on this OCL expression, we can derive for our example
+that the object token instance ot2carrying a Student object
+traversed the object ow edge edge1 from the output pin
+op1\result" of the action Create student to the input pin
+ip1\object" of the action Set name (4).
+4. EVENT MODEL AND COMMAND API
+Based on a trace model (cf. Section 3), it is possible to an-
+alyze the runtime behavior of activities. However, for al-
+lowing to observe and control the execution during runtime,
+an event model and a command API are required in addi-
+tion. The main requirement for an event model is that each
+change of the runtime state triggers a corresponding event
+to enable observing applications to react accordingly. Be-
+sides, to provide a exible way to control the execution, we
+require a rich but minimal set of commands.
+For classifying the possible types of events, we introduce the
+event metamodel depicted in Figure 4. TraceEvents inform
+about the state of the execution. ActivityEvents indicate
+the start ( ActivityEntryEvent ) and the end ( Activity-
+ExitEvent ) of an activity execution. Accordingly, Activity-
+NodeEvents signalize the start ( ActivityNodeEntryEvent )
+and the end ( ActivityNodeExitEvent ) of the execution of
+an activity node. In addition to these entry and exit events,
+we introduce SuspendEvents indicating that the activity ex-
+ecution was suspended. An activity execution is suspended
+either if the activity is executed step-wise and an execution
+step was completed, or if a breakpoint, which was set for a
+specic activity node, was hit during the activity execution.
+In the former case a SuspendEvent is issued and in the latter
+aBreakpointEvent .ExtensionalValueEvents notify about
+the creation, destruction, and modication of extensional
+values (i.e., objects and links) and FeatureValueEvents de-
+note the modication of an extensional value's feature value.
+t :Trace ae1 :
+ActivityExecutiona1 :Activity
+- name = "Activity1"
+ot1 :
+ObjectTokenInstance
+vi1 :ValueInstanceae2 :
+ActivityExecution
+inparam :
+ParameterInputoutparam :
+ParameterOutput
+p2 :
+ActivityParameterNode
+- name = "name"p1 :
+ActivityParameterNode
+- name = "student"
+e1 :
+ActivityNodeExecutione2 :
+ActivityNodeExecution
+o1 :Output op1 :OutputPin
+- name = "result"
+ip1 :InputPin
+- name = "object"ip2 :InputPin
+- name = "value"op2 :OutputPin
+- name = "result"i1 :Input i2 :Input o2 :Outputn1 :CreateObjectAction
+- name = "Create student"n2 :
+AddStructuralFeatureValueAction
+- name = "Set name"
+v1 :StringValue
+- value = "Alice"ot3 :
+ObjectTokenInstance
+v3 :Object c1 :Class
+- name = "Student"
+fv1 :FeatureValue p1 :Property
+- name = "name"v4 :StringValue
+- value = "Alice"vi3 :ValueInstance
+v2 :Object c1 :Class
+- name = "Student"ot2 :
+ObjectTokenInstance
+vi2 :ValueInstancea2 :Activity
+- name = "Activity2"
+edge1 :ObjectFlow
+1a1b 1c23
+4chronologicalClass1
+. . .
++/predecessorlogical
++/successor
++/predecessor +/successor
++target+source
++/traversedEdge
++types +values +feature+types
++featureValuesFigure 3: Example of a trace model (excerpt)
+To allow applications to receive the notications about the
+event occurrences, we provide an observer interface Execu-
+tionEventListener that needs to be implemented. Listen-
+ers can register at the fUML execution environment realized
+by a class called ExecutionContext , which manages regis-
+tered listeners and provides them with execution events.
+Besides enabling applications to receive events regarding
+the state of activity executions, we also introduce a dedi-
+cated command API to be used for controlling the execution,
+which is again provided by the class ExecutionContext . An
+excerpt of the available commands is depicted in the follow-
+ing listing and discussed below.
+void execute (Behavior activity ,Object context ,
+ParameterValueList input )
+void executeStepwise (Behavior activity ,Object context ,
+ParameterValueList input )
+void nextStep (int executionID ,ActivityNode node )
+void resume (int executionID )
+To start the execution of an activity, the commands execute
+and executeStepwise can be used. The execute command
+triggers the execution of the activity until either a break-
+point is hit or the end of the activity is reached. Using the
+command executeStepwise , the activity execution can be
+carried out step-wise. In this case the execution is suspended
+not only if a breakpoint is hit, but also after the completion
+of each execution step. The rst step in an activity execution
+is completed, when the initially enabled nodes of the activity
+have been determined. This is indicated by a SuspendEvent .
+ASuspendEvent provides an executionID that identies the
+current execution of the activity. This is necessary because
+the same activity can be executed several times in parallel.
+This executionID can be further used to continue the partic-
+ular activity execution using the commands nextStep andresume . The command nextStep instructs the virtual ma-
+chine to trigger the execution of the next enabled activity
+node. As multiple activity nodes can be enabled at the same
+time, it is possible to provide a specic node to be executed
+in the next step. As the command nextStep only performs
+a single step, a SuspendEvent is triggered directly after the
+activity node has been executed. If this is not desired, the
+command resume can be used to continue the execution with
+the provided executionID until either a breakpoint is hit or
+the execution terminates.
+Further, we introduced methods that enable the manage-
+ment of breakpoints, as well as the retrieval of information
+about an activity execution, such as the current enabled
+nodes and the current trace.
+Figure 5 exemplies the sequence of events and commands
+exchanged between the ExecutionContext and an Execu-
+tionEventListener using the execution of the activity in-
+troduced in Figure 1. The listener starts the execution of
+the activity Activity1 using the command executeStepwise .
+Consequently, the context starts the execution of the activ-
+ity, determines the initially enabled nodes of the activity,
+and informs the listener about this by raising an Activity-
+EntryEvent , as well as a SuspendEvent . The Activity-
+EntryEvent informs the listener about the start of the exe-
+cution of the activity Activity1 and provides the executionID
+that identies this execution. The SuspendEvent indicates
+the completion of an execution step and carries the informa-
+tion about the nodes that were enabled in the last step. In
+our example only one node was enabled, namely the action
+New student . As stated before, the SuspendEvent informs
+about the suspension of the activity execution and indicates
+that the listener can now use the commands nextStep or
+resume to continue the execution. In the example, the lis-
+Event
+- timestamp  :long
+TraceEvent
+- executionID  :intExtensionalValueEvent
+- type  :ExtensionalValueEventType
+FeatureValueEventActivityEvent
+ActivityEntryEvent
+ActivityExitEvent
+BreakpointEventSuspendEventActivityNodeEvent
+ActivityNodeExitEventActivityNodeEntryEvent«enumeration»
+ExtensionalValueEventType
+ CREATION
+ DESTRUCTION TYPE_ADDED TYPE_REMOVED VALUE_CREATION VALUE_DESTRUCTION VALUE_CHANGED
+BreakpointfUML::Syntax::Activities::
+IntermediateActivities::Activity
+fUML::Syntax::Activities::
+IntermediateActivities::ActivityNodefUML::Semantics::Classes::
+Kernel::ExtensionalValue
+fUML::Semantics::Classes::
+Kernel::FeatureValue
+fUML::Semantics::Classes::
+Kernel::Element+extensionalValue1
++featureValue1
++location 1+newEnabledNodes0..*+node 1+parent
+0..1
++node1+activity 1
++breakpoint 1Figure 4: Event metamodel
+tener uses the nextStep command to instruct the context
+to perform the next execution step. This triggers the exe-
+cution of the New student node that calls the activity Ac-
+tivity2 . Accordingly the context delivers an ActivityNode-
+EntryEvent informing about the start of the execution of the
+activity node New student , an ActivityEntryEvent inform-
+ing about the start of execution of the activity Activity2 ,
+as well as a SuspendEvent informing about the suspension
+of the execution and the new enabled node Create student .
+Again the listener uses the command nextStep resulting
+in the execution of the enabled node Create student . An
+ActivityNodeEntryEvent tells the listener that the execu-
+tion of this node started, the ActivityNodeExitEvent in-
+forms about the completion of the execution of this node,
+and the SuspendEvent indicates the completion of the execu-
+tion step. After the ActivityEntryEvent , anExtensional-
+ValueEvent is issued, which informs the listener about the
+creation of a new object of the type Student .
+5. VALIDATION
+In this section, we report on our investigations concerning
+the feasibility and suciency of the proposed trace model,
+event model, and command API for fUML. In particular, we
+aim at answering the following research questions.
+1.Feasibility : Is it feasible to obtain the necessary infor-
+mation from the fUML reference implementation for cre-
+ating the trace model and the event model, and is it pos-
+sible to extend the fUML reference implementation for
+realizing the presented set of commands for controlling
+the execution of UML activities?
+2.Trace model : Is the information provided by the trace
+model a sucient basis for reasoning about the runtime
+and for identifying the steps that lead to a specic exe-
+cution state of a UML activity?
+3.Event model : Are the provided events and the informa-
+tion they carry sucient for observing the state changes
+thoroughly during the execution of a UML activity?
+4.Command framework : Is the set of commands su-
+cient for controlling the activity execution exibly?
+listener
+:ExecutionEventListenercontext
+:ExecutionContext
+activity = Activity1
+executionID = 347356060
+location = Activity1
+newEnabledNodes = {New student}executionID = 347356060
+node = New student
+executionID = 347356060
+activity = Activity2
+executionID = 185244352
+location = Activity2
+newEnabledNodes = {Create student}executionID = 185244352activity = Activity1
+input = {studentName = "Alice" : StringValue, 
+               lecture = lecture : Object (type = Lecture)}
+executionID = 347356060
+executionID = 185244352
+node = Create student
+executionID = 185244352
+type = CREATION
+value = student : Object (type = Student)
+node = Create student
+executionID = 185244352
+location = Create student
+newEnabledNodes = {Set name}executionID = 185244352
+. . .executeStepwise
+ActivityEntryEvent
+SuspendEvent
+nextStep
+ActivityNodeEntryEvent
+ActivityEntryEvent
+SuspendEvent
+nextStep
+ActivityNodeEntryEvent
+ExtensionalValueEvent
+ActivityNodeExitEvent
+SuspendEventFigure 5: Example of an event/command sequence
+Research Question 1. We assessed the feasibility by cre-
+ating a prototypical implementation of the proposed trace
+model, event model, and command API based on the ref-
+erence implementation of the standardized fUML virtual
+machine. Although the reference implementation oers a
+complete virtual machine for fUML-conforming activities, it
+currently neither provides the means for accessing the run-
+time information during the execution of a UML activity nor
+does it allow for controlling the execution. To establish the
+basis for this functionality, we had to extend the reference
+implementation. We used AspectJ to weave the necessary
+extensions into the original code without altering it. Nev-
+ertheless, by leveraging these extensions, we succeeded in
+realizing the means for building the trace model, for issuing
+events whenever a state change of the runtime model oc-
+curred, and for step-wise execution. The source code of our
+implementation is available at our project website3.
+Research Questions 2–4. The application domains of run-
+time models are very diverse. As a consequence, it may
+depend on the specic application whether runtime models
+may be considered sucient or not. However, one applica-
+tion domain that demands for very precise runtime informa-
+tion, that depends heavily on event notications during the
+runtime, and that requires a powerful mechanism for con-
+trolling the execution is debugging . Thus, we chose to assess
+the suciency of the proposed artifacts by implementing
+a debugger for UML models based on our extended fUML
+virtual machine. This implementation, which is available
+on our project website, is integrated with the Eclipse Debug
+framework4and allows debugging activities created with the
+Papyrus diagramming editor5.
+A debugger usually depicts the state of the program being
+debugged in terms of threads ,stack frames , and variables .
+Athread is a sequence of actions that may execute in parallel
+3http://www.modelexecution.org
+4http://www.eclipse.org/eclipse/debug
+5http://www.papyrusuml.org
+with each other. In the context of fUML, multiple activity
+nodes may be enabled at the same time, for instance, if the
+control ow of an activity exhibits fork nodes. Hence, we
+consider each concurrently enabled node to run in an own
+thread. For deriving the currently running threads, we may
+obtain the enabled nodes of a suspended activity execution
+easily from the ExecutionContext . However, a new enabled
+node does not always constitute a new thread, because the
+node activation may also result from resuming an already
+existing thread. To obtain this information, the trace model
+can be used, which contains for each enabled node an in-
+stance of ActivityNodeExecution having Inputs . If an ex-
+isting thread concerns the logical predecessor of this Activ-
+ityNodeExecution instance, this thread may be updated to
+the new enabled node. If it has several predecessors for
+which threads exist, one of them may be updated and the
+others are terminated. If we do not nd a corresponding
+thread or all corresponding threads have been assigned to
+other enabled nodes already, we create a new thread.
+Astack frame represents the runtime context of a suspended
+thread, which is in our context the current activity node be-
+ing executed. A stack frame may have child stack frames
+that represent nodes that called the activity where the cur-
+rent node resides in. For deriving the stack frame hierar-
+chy, we again make use of the trace model by navigating
+from the instance of ActivityNodeExecution representing
+the execution of the current node to its containing instance
+ofActivityExecution and check whether this Activity-
+Execution refers to an CallActivityNodeExecution instance
+using the reference caller . If this applies, we add a child
+stack frame, which indicates that the current activity node
+is executed in the context of an activity that has been called
+from another node. This procedure can be repeated until
+the upper most activity execution is reached.
+Avariable denotes data values that are in the scope of the
+current stack frame. In the domain of activities, variables re-
+fer to values that reside on input pins. Hence, obtaining the
+variables is easily possible by looking up the ActivityNode-
+Execution instance representing the current enabled node
+and read the ValueInstances of the ObjectTokenInstance
+via the referenced Input instance.
+Apart from depicting the current state of a suspended execu-
+tion, a debugger should empower users to step-wise resume
+a suspended execution using the commands step into ,step
+over,step return ,resume , and terminate . In the context of
+fUML, step into andstep over should cause the execution of
+the next node in the currently selected thread. However, if
+this node is a call action, step into should cause the thread
+to suspend directly before the rst node of the called activ-
+ity is executed, whereas step over should execute the entire
+called activity and suspend after the call action itself has
+been executed. Accordingly, step return should execute the
+entire current activity. This can be realized easily using the
+proposed event model and command API. Therefore, we call
+nextStep repeatedly until a certain event is issued. For in-
+stance, in the case of step return ,nextStep is called until an
+ActivityExitEvent for the current activity is received. The
+commands resume andterminate , as well as breakpoints, are
+supported directly by the command API.
+In summary, we conclude that the proposed trace model,
+event model, and command API are sucient for building
+a debugger oering all the functionality that is required for
+step-wise executing activities, as well as for inspecting thecurrent state of a suspended activity execution. Moreover,
+we argue that the trace model contains much more details,
+which build a solid basis also for other tools that rely on
+runtime information of activity executions, such as runtime
+analysis and adaptation.
+6. CONCLUSION AND FUTURE WORK
+In this paper, we presented an extension of the standardized
+fUML virtual machine in order to enable accessing impor-
+tant runtime information and controlling the execution of
+UML models. Therefore, we introduced a dedicated trace
+model acting as a basis for reasoning about the execution
+of a model, an event model for observing state changes dur-
+ing the execution, as well as a command API providing the
+means for controlling the execution exibly. With these ex-
+tensions, we aim at establishing the basis for exhausting
+the full potential of having executable UML models, such
+as enabling runtime analysis and performing adaptations at
+runtime. We provide an open-source implementation of the
+proposed extensions and of a model debugger based on this
+implementation to demonstrate the feasibility of the pre-
+sented concepts. In future work, we plan to validate the
+usefulness of the proposed extensions more thoroughly by
+building more sophisticated runtime analysis tools based on
+our implementation. In particular, we aim at developing
+techniques for validating whether changes applied to exe-
+cuted UML models invalidate existing traces, as well as for
+testing the behavior of a model based on execution traces.
+7. REFERENCES
+[1] G. S. Blair, N. Bencomo, and R. B. France. Models@
+run.time. IEEE Computer , 42(10):22{27, 2009.
+[2] M. Broy, M. V. Cengarle, H. Gr onniger, and
+B. Rumpe. Denition of the system model. In UML 2
+Semantics and Applications , pages 61{93. Wiley, 2009.
+[3] B. R. Bryant, J. Gray, M. Mernik, P. J. Clarke, R. B.
+France, and G. Karsai. Challenges and directions in
+formalizing the semantics of modeling languages.
+Computer Science and Information Systems ,
+8(2):225{253, 2011.
+[4] C. Ghezzi, A. Mocci, and M. Sangiorgio. Runtime
+monitoring of functional component changes with
+behavior models. In Proc. of MODELS'11 , pages
+152{166, 2012.
+[5] A. Hamou-Lhadj and T. C. Lethbridge. A metamodel
+for the compact but lossless exchange of execution
+traces. Softw. Syst. Model. , 11(1):77{98, 2012.
+[6] J. Hutchinson, J. Whittle, M. Rounceeld, and
+S. Kristoersen. Empirical assessment of MDE in
+industry. In Proc. of ICSE '11 , pages 471{480, 2011.
+[7] S. Maoz. Model-based traces. In Proc. of
+MODELS'08 , pages 109{119, 2009.
+[8] S. J. Mellor and M. J. Balcer. Executable UML: A
+foundation for model-driven architecture . Addison
+Wesley, 2002.
+[9] B. Selic. The less well known UML. In Formal
+Methods for MDE , volume 7320 of LNCS , pages 1{20.
+Springer Berlin / Heidelberg, 2012.
+[10] T. Vogel, S. Neumann, S. Hildebrandt, H. Giese, and
+B. Becker. Incremental model synchronization for
+ecient run-time monitoring. In Proc. of
+MODELS'09 , pages 124{139, 2010.
+View publication statsView publication stats

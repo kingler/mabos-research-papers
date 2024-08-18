@@ -1,0 +1,50 @@
+Programming Multi-Agent Systems in AgentSpeak Using JasonPublished by John Wiley & Sons Ltd., October 2007.http://jason.sf.net/jBook/
+AgentSpeak• Originally pr oposed by Rao [MAAMA W 1996]•Programming language for BDI agents• Elegant notation, based on logic pr ogramming•Inspir ed by PRS (Geor geff & Lansky), dMARS (Kinny), and BDI Logics (Rao & Geor geff)•Abstract pr ogramming language aimed at theor etical r esults
+Syntax of AgentSpeak•The main language constructs of AgentSpeak ar e: •Beliefs •Goals •Plans •The ar chitectur e of an AgentSpeak agent has four main components: •Belief Base •Plan Library •Set of Events •Set of Intentions 
+Syntax of AgentSpeak (Beliefs and Goals)•Beliefs represent the information available to an agent (e.g., about the envir onment or other agents)publisher(wiley) •Goals represent states of af fairs the agent wants to bring about (come to believe, when goals ar e used declaratively)•Achievement goals: !write(book) Or attempts to r etrieve information fr om the belief base •Test goals: ?publisher(P)
+Syntax of AgentSpeak (Events and Plans) •An agent r eacts to events by executing plans •Events happen as a consequence to changes in the agent’ s beliefs or goals •Plans are recipes for action, r epresenting the agent’ s know-how •An AgentSpeak plan has the following general structur e: triggering_event : context <- body. •wher e: •the triggering event denotes the events that the plan is meant to handle; •the context represent the cir cumstances in which the plan can be used; •the body is the course of action to be used to handle the event if the context is believed true at the time a plan is being chosen to handle the event.
+Syntax of AgentSpeak (Plans Cont.)•AgentSpeak triggering events: •+b  (belief addition) •-b  (belief deletion) •+!g (achievement-goal addition) •-!g (achievement-goal deletion) •+?g (test-goal addition) •-?g (test-goal deletion) •The context is logical expr ession, typically a conjunction of literals to be checked whether they follow fr om the curr ent state of the belief base •The body is a sequence of actions and (sub) goals to achieve. •NB: This is the original AgentSpeak syntax; Jason allows other things in the context and body of plans.
+AgentSpeak Plans+green_patch(Rock)  :  not battery_charge(low)  <- ?location(Rock,Coordinates);     !at(Coordinates);     !examine(Rock). +!at(Coords)  :  not at(Coords)     & safe_path(Coords)  <- move_towards(Coords);     !at(Coords).+!at(Coords) ...
+Jason•Jason implements the operational semantics of a variant of AgentSpeak•Various extensions aimed at a mor e practical pr ogramming language•Platform for developing multi-agent systems•Developed by Jomi F . Hübner and Rafael H. Bor dini•We’ll look at the Jason additions to AgentSpeak and its featur es
+Jason Reasoning Cycle
+SIEventsExternalEventSelectedSEBeliefs toAdd andDeleteRelevantPlans
+New PlanPushIntentionUpdatedOSApplicablePlansMeansIntendedEventsExternalPlanLibraryEventsInternalEvents3checkMailIntentionsExecuteIntention...NewNew9BeliefBase
+NewIntentionPercepts
+actSelectedIntentionIntentionsActionPercepts12BUF
+10Events
+ContextCheckEventUnifyBRFBeliefsAgent
+sendMsgBeliefs8MessagesPlansperceive75
+6
+ActionsBeliefs
+Suspended Intentions(Actions and Msgs)....sendSocAcc4MessagesMessagesSM
+Reasoning Cycle (Steps)1.  Perceiving the Envir onment2.  Updating the Belief Base3.  Receiving Communication fr om Other Agents4.  Selecting ‘Socially Acceptable’ Messages5.  Selecting an Event
+Reasoning Cycle (Steps)6.  Retrieving all Relevant Plans 7.  Determining the Applicable Plans8.  Selecting one Applicable Plan9.  Selecting an Intention for Further Execution10. Executing one step of an Intention
+10.  IntentionExecutiona.  Envir onment actionsb.  Achievement goalsc.  Test goalsd.  Mental notese.  Inter nal actionsf.  Expr essions
+Belief Annotations•Annotated pr edicate:ps(t1,...,tn)[a1,...,am]wher e ai are ﬁrst or der terms•All pr edicates in the belief base have a special annotation source(si)wher e si 㱨 {self,percept} 㱮 AgId
+Example of Annotations•An agent’ s belief base with a user -deﬁned doc annotation (degr ee of certainty)blue(box1)[source(ag1)]. red(box1)[source(percept)]. colourblind(ag1)[source(self),doc(0.7)].  lier(ag1)[source(self),doc(0.2)]. 
+Plan Annotations•Plan labels also can have annotations (e.g., to specify meta-leval information)•Selection functions (Java) can use such information in plan/intention selection•Possible to change those annotations dynamically (e.g., to update priorities)•Annotations go in the plan label
+Annotated Plan Example@aPlan[  chance_of_success(0.3),  usual_payoff(0.9),  any_other_property]+!g(X)  :  c(t)  <- a(X).
+Strong Negation•The operator ‘~’ is used for str ong negation+!leave(home)   :  not raining & not ~raining   <- open(curtains); ... +!leave(home)  :  not raining & not ~raining   <- .send(mum,askOne,raining); ... 
+Belief-Base Rules•Prolog-like rules in the belief baselikely_color(Obj,C)   :- colour(Obj,C)[degOfCert(D1)]      & not (        colour(Obj,_)[degOfCert(D2)]        & D2 > D1 )     & not ~colour(C,B).
+Handling Plan Failur e•Goal-deletion events wer e syntactically deﬁned, but no semantics•We use them for a plan failur e handling mechanism (pr obably not what they were meant for)•Handling plan failur es is very important as agents ar e situated in dynamic envir onments•A form of “contingency plan”, possibly to “clean up” befor e attempting another plan
+Contingency Plan Example•To create an agent that is blindly committed to goal g:+!g : g    <- true.+!g : ...  <- ... ?g....-!g : true <- !g.
+Internal Actions•Unlike actions, inter nal actions do not change the envir onment•Code to be executed as part of the agent r easoning cycle•AgentSpeak is meant as a high-level language for the agent’ s practical reasoning•Internal actions can be used for invoking legacy code elegantly
+Internal Actions (Cont.)•Libraries of user -deﬁned interal actionslib_name.action_name(...)•Predeﬁned inter nal actions have an empty library name•Internal action for communication.send(r,ilf,pc)    wher e ilf 㱨{tell,untell,achieve,unachieve, askOne,askAll,askHow, tellHow,untellHow}
+Internal Actions (Cont.)•Examples of BDI-r elated inter nal actions:
+•Many others available for: printing, sorting, list/string operations, manipulating  the beliefs/annotations/plan library , creating agents, waiting/generating events, etc..desire(literal).intend(literal).drop_desires(literal).drop_intentions(literal)
+A Jason Plan+green_patch(Rock)  :  ~battery_charge(low)     & .desire(at(_))  <- .drop_desires(at(_));     dip.get_coords(Rock, Coords);     !at(Coords);      !examine(Rock). 
+AgentSpeak X Pr olog•With the Jason extensions, nice separation of theor etical and practical reasoning•BDI ar cthictur e allows•long-term goals (goal-based behaviour)•reacting to changes in a dynamic envir onment•handling multiple foci of attention (concurr ency)•Acting on an envir onment and a higher -level conception of a distributed system•Direct integration with Java
+MAS Conﬁguration File•Simple way of deﬁning a multi-agent systemMAS my_system {   infrastructure: Jade   environment: MyEnv   ExecuctionControl: ...   agents: ag1; ag2; ag3;}
+MAS Deﬁnition (Cont.)•Infrastructur e options: Centralised, Saci, Jade•Easy to deﬁne the host wher e agents and the envir onment will run•If the ﬁle name with the code is unusualagents:   ag1 at host1.dur.ac.uk;agents: ag1 file1;
+MAS Deﬁnition (Cont.)•Multiple instances of an agent•Interpr eter conﬁguration•Conﬁguration of event handling, fr equency of per ception, system messages, user-deﬁned settings, etc.agents: ag1 #10;agents: ag1 [conf=option];
+Agent Customisation•Users can customise the Agent class to deﬁne the selection functions, social relations for communication, and belief update and r evision•selectMessage()•selectEvent()•selectOption()•selectIntention()•socAcc()•buf()•brf()
+Overall Agent Ar chitectur e•Users customise the AgentAr ch class to change the way the agent interacts with the infrastr cutur e: per ception, action, and communication•Helps switching between simulation for testing and r eal deployment•perceive()•act()•sendMsg()•broadcast()•checkMail()
+Belief Base Customisation•Logical belief base might not be appr opriate for lar ge applications•Jason has an alter native belief base combined with a database•Users can cr eate other customisations•add()•remove()•contains()•getRelevant()
+Customised MASMAS Custom { agents:  a1 agentClass MyAg     agentArchClass MyAgArch     beliefBaseClass Jason.bb.JDBCPersistentBB(       "org.hsqldb.jdbcDriver",     "jdbc:hsqldb:bookstore",     ...     "[count_exec(1,tablece)]");}
+Environments•In actual deployment, ther e will normally be an envir onment wher e the agents are situated•As discussed earlier , the AgentAr chitectur e needs to be customised to get perceptions and act on such envir onment•We often want a simulated envir onment (e.g., to test a MAS application)•This is done in Java by extending Jason’s Envir onment class and using methods such as addPer cept(String Agent, Literal Per cept)
+Jason for jEdit
+
+Jason’s Mind Inspector
+
+Jason is available Open Sour ce under GNU LGPL at: http://jason.sf.net (kindly hosted by SourceForge)Jasonby Gustave Moreau (1865)Oil on canvas, 204 x 1 15.5 cm.Musée d'Orsay , Paris.© Photo RMN. Photograph byHervé Lewandowski.
+Rafael H. BordiniJomi Fred HübnerMichael WooldridgeWILEY SERIES IN AGENT TECHNOLOGYprogrammingmulti-agent systemsin AgentSpeakJasonusing

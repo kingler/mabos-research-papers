@@ -1,0 +1,806 @@
+The Diagrammatic AI Language (DIAL): Version
+0.1
+Guy Marshall and Andr e Freitas
+School of Computer Science
+University of Manchester
+United Kingdom
+December 2018
+Abstract
+Currently, there is no consistent model for visually or formally repre-
+senting the architecture of AI systems. This lack of representation brings
+interpretability, correctness and completeness challenges in the description
+of existing models and systems. DIAL (The Diagrammatic AI Language)
+has been created with the aspiration of being an \engineering schematic"
+for AI Systems. It is presented here as a starting point for a community
+dialogue towards a common diagrammatic language for AI Systems.
+1 Introduction
+1.1 Motivation
+The development of real-world Articial Intelligence systems requires the com-
+plex coordination of multiple components. Currently, there is no consistent
+model for visually or formally representing the architecture of AI systems. This
+lack of representation brings interpretability, correctness and completeness chal-
+lenges in the description of existing models and systems.
+In the context of scientic communication, most approaches and systems
+today are described by a combination of arbitrary diagrammatic elements, algo-
+rithms, formulae and natural language descriptions. In this paradigm, there is
+little consistency on abstraction levels (for example, it is common for diagrams
+to refer to formulae terms) or notation.
+From the perspective of scientic practice, these limitations challenge dia-
+logue, transparency and reproducibility. This work outlines the initial specica-
+tion, design and application of a diagrammatic language for describing complex,
+multi-component AI systems. The goal of the language, named `DIAL' (Dia-
+grammatic AI Language), is to reduce the communication eort between AI
+1arXiv:1812.11142v1  [cs.AI]  28 Dec 2018
+researchers and engineers for describing, interpreting and reasoning over com-
+plex AI systems.
+1.2 Background
+The idea of applying diagrammatic representations to AI is not new. In 1985,
+Aaron Sloman writes about the need for representational formalisms in AI, prais-
+ing diagrams for controlling the search space [15]. In a related way, the Sapir-
+Wharf hypothesis states that the structure of native language determines the
+native speaker's perception and categorisation experience, a conjecture which
+could be extended to diagrammatic languages. Following this thinking, we argue
+that for AI researchers and engineers, diagrammatic structures can determine
+perception and categorisation of AI systems and subsystems. As such, a dia-
+grammatic language (such as DIAL) may aid in reasoning about AI systems.
+In the remainder of Section 1 we will look at the main structured alterna-
+tive diagrammatic approach (UML) and show the current heterogeneity issue
+with AI System diagrams. This will provide the necessary grounding to pro-
+pose requirements for AI System diagrams, and introduce DIAL as a potential
+solution to these issues. The main diagrammatic components of DIAL are then
+described, formalised and exemplied. As this document focuses on the speci-
+cation of DIAL v. 0.1, we concentrate on the narrative around the requirements
+and design for DIAL, seeking the engagement of a community around DIAL and
+the collection of critiques and contributions.
+1.3 Key Benets of DIAL
+The core benets aimed for DIAL are:
+1. Having a representation which supports AI systems design, reasoning and
+learning.
+2. Increasing the consistency and eciency of the communication around AI
+Systems.
+The rapid evolution of techniques have been dening an increasingly dy-
+namic and fragmented AI landscape. The plethora of proposed models and
+tools and their associated complexity brings an increasing diculty to inter-
+pret, contrast, compare and select models in a principled and critical manner.
+DIAL is designed using a combined bottom-up/top-down design approach. In
+the bottom-up component, reoccurring features observed in existing diagrams
+are amalgamated into the representation, complemented by the translation of
+elements represented as text into the integrated diagrammatic representation.
+In the top-down component, high-level requirements are introduced, focusing
+on the completeness and interpretability aspects of the representation.
+DIAL aims at providing the means for a self-contained description of the
+core functional elements of an AI system from both research and engineering
+2
+perspectives. Supporting datasets, data management infrastructures, gold stan-
+dards and evaluation metrics are rst-class citizens of the representation. Ad-
+ditionally, DIAL aims by design to provide a comprehensive set of components
+within the full AI spectrum, not privileging a particular category of techniques
+(e.g. Neural Networks).
+The self-contained and concise aspects of DIAL can be used as a foundation
+for a possible way to materialise nano-publications in the context of AI. Using
+DIAL, readers can navigate through a concise representation of an AI system
+or experiment, freeing the AI practitioner from the need to go through het-
+erogeneous diagrammatic and textual descriptions. This format supports the
+ability to quickly understand novel research and approaches, and be refreshed
+of them quickly without having to reread a supporting textual description. In
+the short-term, it is hoped that the usage of DIAL will facilitate more eective
+consumption of AI System concepts.
+1.4 Why UML isn't a Good Answer
+Within software more broadly, the communication and representation of archi-
+tectures is supported [14] with standards such as UML [3] and DARWIN [8].
+For more specic applications, dierent diagrammatic representations are
+also being created. For \user requirements specication", nine deciencies in
+UML have been identied, including that \UML cannot model the behavior
+of high-level system components. . . " [5]. In dynamic modeling, Otero [11]
+found Open Modeling Language worked better than UML for both quality and
+comprehension ratings.
+UML is also seen as overly complex, with UML Class Diagrams having a
+graphic complexity of 14 (where the human cognitive limit is six) [9]. Perhaps
+the most compelling argument against the suitability of UML comes from a
+pragmatic space. The existence of UML is quite common knowledge, and yet is
+not being used by AI practitioners, perhaps for reasons described in the above
+paragraph.
+Within AI, the increasing complexity of systems increases the associated
+eort in communicating and understanding the fundamental functional compo-
+nents of a system. In the context of AI research and practice, there is a natural
+entanglement between the scientic and engineering discourses. Additionally,
+the design of an AI system will involve the consideration of multiple abstraction
+levels, ranging from a formal mathematical description level, to their algorithmic
+realisation and upstream software materialisation.
+While this task imposes major challenges in a pure ML pipeline, with archi-
+tectural elements, hyper-parameters, feature engineering and associated datasets,
+this eort grows exponentially in systems which involve the coordination of
+multiple and heterogeneous classication, analytic and inference steps. In this
+context, a diagrammatic representation for AI can provide an interpretation
+mechanism which captures the core methods, resources and interdependencies
+employed within the AI task in a holistic manner.
+3
+1.5 The Problem of Diagrammatic Heterogeneity
+There is a large variety of AI Diagrams being used within the AI community at
+present. Taking the sub-area of Neural Networks as an example, a large variety
+of neural architectures have emerged recently. Some initiatives to collect and de-
+scribe them systematically have surfaced http://www.asimovinstitute.org/
+neural-network-zoo/ . However, as the author states: \One problem with
+drawing them [Neural Networks] as node maps: it doesn't really show how
+they're used". Tensorow has graph visualisations (see TensorBoard) which are
+also instructive, at a lower level of abstraction, and tied to a specic technology.
+In order to quantify this existing heterogeneity, we performed a short system-
+atic literature analysis on the use of diagrams to represent NNs in the context
+of NLP systems.
+The analysis started by selecting 30 randomly sample papers from the overall
+331 accepted papers from COLING 2018. For the sampled papers, diagrams
+of Neural Networks were manually extracted, and the diagrams categorised.
+Only the diagrams and the text or formulae included within those diagrams is
+analysed. The supporting context is purposefully ignored in order to examine
+the eectiveness of the diagrammatic representation itself. COLING 2018 was
+chosen exclusively in order to ensure the same social context. Prior to the study,
+we identied a set of core NN concepts often articulated through diagrammatic
+means, which have been captured in Table 1.
+Of the 30 papers selected at random, 23 (77%) were manually classied as
+being supported by a NN-based classier. Note that this was not ltered for
+Neural Network papers, and this perhaps serves to highlight the prevalence of
+this technique at this time. Of the papers in some way concerned with Neural
+Networks, 78% include a diagram of a Neural Network. Table 1 shows the
+distribution of Neural Network diagrams with each conceptual property.
+Table 1: Neural Network Diagram Summary
+Concept or Attribute Frequency
+Abstraction: High level system 67%
+Abstraction: Intermediate level 50%
+Abstraction: Component level 28%
+Abstraction: Mixed levels 6%
+Multiple diagrams 44%
+Processing Layer Organisation 61%
+Classifier Type 33%
+Equational or Mathematical Elements 72%
+Vector or Tensor Operation 33%
+Example input, output or processing 39%
+Dimensionality 11%
+Language Elements 94%
+Recurrent operations 94%
+4
+The vast majority of diagrams are high level diagrams, complemented by
+textual labels (e.g. LSTM). However, given the diagrams from a paper at ran-
+dom, it is often impossible to deduce fundamental aspects of the system, such
+as the functional elements. Table 1 shows that few diagrams include classier
+types, nor dimensional or compositional information.
+DLPaper2Code categorises Deep Learning model diagrams into ve cate-
+gories: Neuron plot, 2D box, Stacked2D box, 3D box and Pipeline plot [13].
+The authors showed this coarse-grained classication useful, though this ob-
+fuscates the cognitive complexity involved with the variety of representations
+within each category. There is a huge variety of semiotic principles utilised in
+dierent ways, from semiotic choices such as how colour is used, through to
+\icon" choices, and even in terms of semantic content (i.e. what they choose to
+represent).
+An eective way to informally see the heterogeneity issue is by observing
+concrete examples of diagrams in use. A simple randomised selection of papers
+from the main AI conferences can demonstrate this. In the following exami-
+nation, we include a brief commentary on some diagrams presented as part of
+papers at EMNLP 2017. Figures 1, 2 and 3 depict examples of dierent di-
+agrammatic design choices, including dierent abstraction levels, content, and
+representation.
+Natural Language Labelling Some symbolic representation
+Linear conceptual groupingsAcronymsArbitrary visual dimensional-
+ity,withsomevisualdimension-
+ality change
+Figure 1: Diagram for a Multilayer Perceptron Ensemble [2]
+5
+Natural language labelling
+Labelled layersUnconventional symbols
+Mathematical notation
+Explicit exampleVisual dimensional reduction
+Colour and shading
+grouping concepts (shared
+parameters)Natural language
+groupingNatural lan-
+guage and spa-
+tial metadata
+("left ofe1")AcronymsNo arrows
+"copy and concatenate" as a trapeziod objectPrimarily vertical spa-
+tial organisation
+Key in captionFigure 2: Global Normalization of CNN [1]
+Explicit datasetsExplicit example
+Symbolic elements
+Diﬀerent arrow style
+for diﬀerent data
+ﬂowsGrey dashed
+box for
+grouping
+Colour for
+grouping
+Coloured
+arrowsAcronyms
+Visual dimen-
+sional reduc-
+tionMathematical
+notation
+Implicit additional
+dimensions spatiallyArbitrary vi-
+sual dimension-
+alityNatural lan-
+guage labels
+Additional dimen-
+sions indicated by
+ellipsis
+Same symbols for
+diﬀerent opera-
+tionsBlack dashed
+lines for
+grouping
+Figure 3: Part-of-Speech tagging with adversarial neural networks [7]
+6
+2 Requirements
+AI systems orchestrate design choices of semantic representation ,algorithms ,
+software architecture and data resources . As such, there are multiple levels of
+abstraction and dierent use cases to be considered as part of understanding the
+requirements for a diagrammatic representation. Rather than engage directly
+with users in the initial stages, we have taken the opportunity to seed this
+conversation with a formal semiotic slant which will allow for additional thought,
+formalisation and rigor as the diagrammatic representation evolves.
+2.1 Use Cases and Target Questions
+In our consideration of the utility of diagrammatic representations for AI sys-
+tems we adopt two basic personas: That of an AI Researcher attempting to re-
+view and understand the contribution of the system, and that of an AI Systems
+Engineer , attempting to understand, reproduce or adapt the system architec-
+ture. The following list materialise some of the questions which the diagram-
+matic representation should answer directly.
+1. What are the main semantic representation choices in the system? (Re-
+lating to Category Theory's objects [4])
+(a) Latent vs explicit representations, embeddings, data models, compo-
+sitional models, classication categories, feature types, data integra-
+tion points.
+(b) How the data representation changes along the system?
+2. Which are the main AI algorithmic and functional choices, themes and
+patterns in the system? (Relating to Category Theory's morphisms )
+(a) Which recurring classication categories are used and what is their
+underlying architecture?
+(b) What are the functional composition patterns and their interdepen-
+dencies?
+(c) What are the hyperparameters congurations, and the optimisation
+ranges?
+3. What are the main software engineering choices/themes/patterns in the
+system?
+(a) What are the temporal dependencies of the components (e.g. asyn-
+chronous vs synchronous) and the emerging main architectural themes
+(e.g. event-based, workow)?
+(b) How are functional units deployed (e.g. in memory, services, or mi-
+croservices containerised) and how do they communicate?
+(c) What are the human interaction points in the system?
+7
+4. What are the main data management choices/themes/patterns (databases/data
+model, stream/batch processing) in the system?
+5. Which performance mechanisms are employed to ensure an ecient data
+access (query processing, indexing strategies)?
+6. What is the quality delivered by each component and under which evalu-
+ation metric?
+7. What and how are the data resources (knowledge bases, linguistic re-
+sources and gold standards) used in the system?
+2.2 DIAL Requirements
+The target questions lead to the following requirements for the representation:
+1. To target an abstraction-level which is optimal for complex and multi-
+component AI systems.
+2. To have a primary abstraction level of functional components and data
+transformation across the system.
+3. To keep a coherent perspective of the whole.
+4. To focus beyond the description of Machine Learning techniques.
+5. To utilise non-linguistic symbolic language for recurring primitives (mini-
+mization of verbal elements).
+6. To be extensible to relevant software architecture and data management
+aspects.
+7. To communicate the performance of each component.
+8. To be cognitively ecient rather than informationally dense.
+Quantication, measurement and analysis of the above is intended to take
+place as DIAL evolves. At this stage, DIAL attempts to satisfy the \representa-
+tional requirements" but not to completely address all of the \target questions",
+see Section 3.
+3 Roadmap
+In order to allow for dierent concepts and levels of abstraction, whilst remaining
+compatible, we are presenting DIAL as a set of dialects. The dialects presented
+here are rst iterations of:
+DIAL-SYS, providing the core common language to describe AI Systems
+at a high level.
+8
+DIAL-NN, extending to Neural Network components.
+The scope of DIAL-SYS is to describe complex (multi-component) AI sys-
+tems in operation. DIAL-NN extends the DIAL-SYS symbolset to facilitate
+diagrammatic representation of neural network aspects of AI Systems. This
+area was chosen to illustrate the possibility of dialects, and due to the preva-
+lence of neural networks architectures in current literature. Additional dialects
+to cover other aspects of AI Systems, such as logic will be published soon. To
+re-iterate, DIAL, encompassing these dialects, is not presented as a complete
+framework, but rather a starting point for community dialogue and collabora-
+tive construction. It is expected that signicant work will be required in order
+to make DIAL-SYS and DIAL-NN optimal for the AI Community. Once this
+is in a reasonable shape, and if it proves useful, additional dialects would be
+expected to evolve in order to tackle dierent aspects of AI Systems. Future
+dialects will include:
+DIAL-DB, focused on data analysis and data management.
+DIAL-LOG, extending to logic formalisms and systems.
+DIAL-ML, specialised for Machine-Learning
+DIAL-PGM, for probabilistic graph models such as Bayesian Networks
+DIAL-BIZ, to extend to business or application contexts
+DIAL-SEM, for semantic knowledge representations [12]
+DIAL-SYS will be developed to incorporate temporal elements, such as exe-
+cution performance. Extension of DIAL to include representation for \Human-
+in-the-loop", including external interaction points such as crowd-sourcing for
+training, will also be required as DIAL matures.
+Figure 4 contains an incomplete view of some of the expected DIAL dialects
+(DIAL-ects). Dark circles show existing work, and lines between the circles in-
+dicate signicant dependency between dialects. The prioritisation and timeline
+will be based on the comments received, and led by the future stewards of this
+standardisation eort who it is hoped will come forward (see Section 9).
+4 Applications
+With a more dened scope for DIAL, we continue to detail some of the an-
+ticipated applications of DIAL. The following subsections explore some of the
+possibilities of DIAL to support AI community members.
+4.1 Nano-publications
+With such a high pace of change and volume of conference papers in AI, it is
+extremely dicult to keep on top of the latest developments in the eld. One
+9
+DIAL-SYS
+DIAL-NNDIAL-LOG OthersDIAL-BIZ DIAL-PGM
+DIAL-DB
+DIAL-MLFigure 4: DIAL Architectural Map
+nano-publication, consisting of a DIAL diagram, can summarise the composition
+of the functional elements of the proposed model, their associated performance
+and core architectural decisions as well as the contribution.
+4.2 Software specication
+DIAL, as a language, allows for specication of software by prioritising recurring
+AI components in the representation. This focus on AI by design can provide
+a more concise representation, focusing on the articulation of the AI-related
+design decisions (in contrast with UML).
+4.3 Designing AI Systems
+There is the potential, with substantial development eort, to extend DIAL to be
+able to simulate AI Systems in a way analogous to Electronic Design Automation
+for chips. This could allow for rapid prototyping and facilitate reasoning about
+novel architectures. Dierently from TensorBoard, this would be created to
+support multiple dierent dataow libraries, and aim to be technology agnostic.
+4.4 Estimating the Impact of AI Systems in Businesses
+DIAL can serve as a lower entry barrier for communicating AI functionalities
+and their associated performance levels to non-AI experts stakeholders. This
+can serve as a mechanism to communicate requirements and to synchronize
+expectations between business and technical proles. This expected that DIAL
+10
+can improve the formalisation of the requirements (with a lower eort) and the
+quality of AI software estimation.
+4.5 Education
+In education, the creation of curricula describing the dierent perspectives
+around the construction of AI systems is still an open challenge. DIAL can
+reduce the barriers for conceptualising AI systems under a complex/multi-
+technique perspective, providing an integrative view of AI. Moreover, currently
+there is a substantial gap between the discussions within the research commu-
+nity and their industrial application. By reducing the interpretation bottleneck
+of existing scientic contributions, it is expected that DIAL can serve as a fun-
+damental educational device for AI practitioners and researchers, catalyzing
+experimentation across dierent communities.
+5 DIAL-SYS Components
+For interpreting DIAL it is assumed that users will have familiarity with ele-
+ments of AI Systems, and as such there is an assumption that common acronyms
+are understood and need not be specied. As an example, \Bi-directional long-
+short term memory architecture" is written as BiLSTM without special intro-
+duction. Many components and symbols do require more denition: Table 2
+contains an index to DIAL notation conventions.
+Table 2: DIAL notational index
+Table Number Content and associated conventions
+3 AI shapes, domain and range.
+4 DIAL-SYS symbolic elements.
+5 Data Types.
+6 Some example classifications.
+7 DIAL-NN symbolic elements.
+5.1 Symbols
+The iconic representation of DIAL, with its semiotic properties, provides the
+structuring framework for the diagrammatic representation. The DIAL-SYS
+symbolset provides a representation for high-level AI system components (as
+depicted in Table 3).
+The primary DIAL-SYS symbolset can be extended with more specic sym-
+bolsets. Section 6 provides a description of DIAL-NN, a dialect aiming towards
+the standardisation of NN architectures.
+11
+Table 3: Shape inputs and outputs
+Shape Domain Range
+POS Tagging (POS) S SPOS
+Syntactic Parsing (SYN) S(POS )PNStructure
+Named Entity Recognition (NER) S(Chunk )SNames
+Word Sense Disambiguation (WSD) SPOS;Chunk,KB TermWSDor
+wordnet IDs
+Entity Linking (EL) SNEREntity,(updated
+KB)
+Semantic Role Labeling (SRL) STokenSSem
+Semantic Relation Classification (SRC) Term 1,Term 2 TermSem
+Open Relation Extraction (OIE) S Pred (Arg)
+Predicate Creation (T)(Data ) Term New+ def-
+inition
+Structured Data Querying ?q;KB Tuples with la-
+bels
+Text Retrieval human T human-
+readable
+T?
+Natural Language Generation Pred (Arg) human-
+readable
+T
+Text Simplification T T
+Text Summarisation T(Chunk )(NER )(Arg )(Name )(Sem )T
+Co-reference resolution (COREF) SNERorT(Token )fChains with
+IDsg
+Rhetorical structure classification (RST) (S);(S1;S2);(T) SRS;TRS
+Argumentation structure classification [s1;s2];T TArgStruct
+Argument Scheme classification TArgStructCArgScheme
+Polarity and emotion analysis S(Pred (Arg ))Score
+Rhetorical figures analysis T TRST
+String similarity string 1;string 2 Score
+Semantic similarity terms(entity )Score
+Semantic relatedness terms(entity )Score
+Inductive reasoning Pred (Arg)F, (KBR),
+KBConstraintsS(Pred (Arg ))
+Deductive reasoning Pred (Arg)+KBF;R Pred (Arg)
+Abductive reasoning Pred (Arg)F,KB Pred (Arg)
+sequence
+12
+Table 4: DIAL-SYS Symbolic Elements
+Function Symbol
+Direct sumL
+Concatenation + +
+Tensor productN
+Set felementsg
+Data flow !
+Data flow (both ways) $
+KB Query
+Data persistence 7 !
+Conditional
+System interface (e.g. service, API) (
+Composition a b
+Join ./
+Similarity & Relatedness ]
+Embedding projection (with identifier) ~id
+Word2vec w2v
+Similarity & Relatedness (if not cosine, specify) ]
+Regression
+Classifier
+Classification C
+Ranking operator R"
+Top n elements R"n
+Encoder
+Decoder
+Deductive Reasoning E
+Verification (e.g. user validation) 2 
+Function
+Function (contraction)
+Datasets, Data resources
+Gold Standard
+Knowledge Base of functions
+Fn
+Zoom in Dotted line with box
+Accuracy acc
+13
+5.2 Data Types & Notation Convention
+DIAL symbols are typed with subscripts and superscripts, which describe recur-
+ring classication tasks , their associated classes ordata types , tensor dimension-
+ality, common data models (le formats). Table 2 indexes the tables. Features
+which form parts of the architecture are in circles , and full components are in
+rectangles . In this way, it is possible to see at a glance the level at which the
+system is abstracted.
+Table 5: Data Types
+Category Notation Description
+Text T Raw file.
+Passage pT Fragment of text.
+Sentence sT Set of words from a text, that is complete
+in itself.
+Character ChT A single printable symbol in a text.
+Term tT A word or set of words in a text that ex-
+press a concept.
+Word wT A single distinct meaningful element of
+text.
+Dialogue
+termdt A set of words forming a distint part of a
+dialogue.
+Sense wT A specifically disambiguated word, includ-
+ing ID.
+Clustered
+word_wT Word embedded in a Vector Space.
+Image im Raw file.
+Sentence
+SensesT An identified sentence, distinguished from
+minor or adjacent sentences.
+Query ?q A set of words as a query input.
+Answer ^a A set of words as an answer output.
+Facts F A predicate with an n-tuple of word con-
+stants, satisfied unconditionally.
+Rules R A statement which gives conditions under
+which tuples of words satisfy a predicate.
+Classification
+outcomePc[a;b]The probability distribution of a classifi-
+cationc, with range [a;b].
+6 DIAL-NN
+As a second dialect, DIAL-NN (Neural Networks) was prioritised due to their
+prevalence in recent literature. As mentioned in the survey of Section 1.5, 77% of
+the papers surveyed were designing new Neural Networks or applying NN-based
+architectures.
+14
+Table 6: Example Classications
+Category Notation
+NER classified sentence SNER
+SRL classified sentence SSRL
+POS classified sentence SPOS
+Argument Scheme Classification CArgScheme
+Argumentation Structure TArgStruct
+Classified ambiguous terms TermWSD
+Pred (Arg)labeled with Facts Pred (Arg)F
+6.1 Symbols
+DIAL-NN symbolic elements dier from DIAL-SYS symbolic elements due to
+distinguishing semiotic requirements. Table 7 shows the symbolic elements of
+this dialect.
+Table 7: DIAL-NN Symbolic Elements
+Function Symbol
+Loss function 
+Activation function (label with e.g. tanh)
+Softmax
+S
+Attention
+A
+RNN Layer (eg LSTM)
+BiLSTM Layer
+GRU Layer
+ GRU
+Convolutional Layer
+Recursive Neural Network
+Support Vector Machine
+Ground truth of sentiment classification gc
+Hidden layer (forward directionality)  !h
+Hidden layer (backward directionality)  h
+. . . . . .
+15
+7 DIAL by Example
+7.1 Example 1: QA System
+Figure 5 depicts an example DIAL-SYS diagram for a question answering system
+over unstructured text. The diagram depicts two cycles: (i) KB construction ,
+which transforms textual data into a structured KB and (ii) semantic pars-
+ing, which transforms a natural language query into a formal structured query
+representation over the KB extracted in (i).
+In the KB construction cycle, for each document dthe pipeline iterates
+through all the sentences performing open information extraction (OIE) (as an
+external service), named entity recognition (NER) and entity linking (EL). This
+diagram does not describe in this context the OIE and NER steps, however
+it details the EL step. The EL starts by taking the complement to the NER
+chunks within the context of the sentence. In parallel, it collects the entity types
+associated to a structured KB (DBpedia). Both result sets are projected into
+a pre-built w2v space, where a cross-product between both sets is performed,
+cosine similarity measures are calculated and the top 1 ( argmax() ) is calculated.
+The output of the OIE component is joined to the output of the NER and EL,
+which is serialised into a RDF-NL le and indexed using an inverted index using
+thetf-idf weighting scheme . The RDF-NL le is composed with a pre-built word
+embedding, and this KB is exposed as a service.
+In the semantic parsing cycle, a natural language question is sent to two
+parallel chains. In the upper part of the diagram, a POS tagger is applied,
+where the classier type and the associated corpus are specied, as well as the
+accuracy in the original corpus and the accuracy in the current domain, this
+is then sent to a lexical answer type (LAT) detection component. In the lower
+part of the diagram, a C-Structure syntactic parsing is performed. Its output is
+added to the output of the POS tagger and sent to the SRL tagger. The LAT
+and the SRL are sent to a Q-learning component , which uses the KB of actions
+Op(queries over the structured KB - not detailed in this example) and the LAT
++ SRL, to learn a sequence of operations . The nal output is given by the
+answera.
+16
+wikipediaT8sTsT
+sTOIE
+NER◦ ◦
+tNER
+EL
+./rdf-nl◦ ◦
+I:inv−index
+tf−idf~ s;~ p;~ o;~ c I :index−annoy
+w2v~Π:j?p;?oj
+KB
+~Π(+)
+/clockwisepred(arg) :rdf-nl
+◦tNERsntNER~Π0
+~Πip;io
+dbpediardfs
+o:s=t]θfsSPOgEntity Linking:◦qPOS
+SYNCRF PTBLAT
+SRLσQOps
+LLα: 0:85
+α: 0:98Semantic Parsing:
+KB Construction:Question Answering System
+SQuAD8:1:1 F1
+0.81LAT: Lexical Answer Typea
+Vectors
+R"1Input questionFigure 5: DIAL Diagram for a hypothetical QA system
+17
+7.2 Example 2: Lexicon-based Attention
+The DIAL-NN dialect is illustrated by depicting the model described in Zou et
+al [17], which performs sentiment analysis over a document with attention at
+word-level and at the sentence level. Figure 6 depicts the organization of the
+architecture where the up most diagram describes the two Bi-LSTM layers with
+attention at the word-level and at the sentence level. Both models are jointly
+trained based on the creation of a word-level and sentence-level attention lexicon
+(lower left part). The hyper-parameters and the model accuracy are described
+in the two tables.
+TsTwT_wTΠ
+w2vhw
+hwA~Qw
+~ s
+(8~ s2T)∆w~ aw
+hs
+hs~TSPc[0;1]gcC
+acc rmse
+word encoder sentence encoder
+Sentiment Lexicon Construction
+SWN 3.0
+SST
+MPQA
+HKD[0;1]
+[0;1]
+[0;1]
+[0;1]avg Sentiment Lexicon~ aw
+~ asL= -Pc
+j=1gjlog(pj)+:::
+∆(a∗;a) = -P
+ia∗
+ilog(a)
+8:1:1 accrmse
+IMBD [1] 0.4941.322
+Yelp 2013 0.6500.691
+Yelp 2014 0.6510.668Pc=argmaxP
+POS:sPPOS(c)+ 0 -linearf
+j~hwj= 100
+opt: Adam
+T/D/T: 8:1:1W[0;1] :uniform [-0:1;0:1]
+lr[0] : 0:001 batch: 32
+act: tanhS A~Qs∆s~ as
+SSentiment analysis
+over a document with
+attention at word-level
+and sentence-levelKey contribution
+L L
+Input documentOutput senti-
+ment classi ﬁed
+document
+Figure 6: DIAL Diagram for Zou et al's Lexicon-based supervision attention
+model
+18
+7.3 Example 3: Text Entailment
+Figure 7 is a DIAL-SYS for Zhao et al [16]. Note that the details of the Neural
+Network are not included in this DIAL, though it could be extended to show
+this. Two Siamese projections (with shared weights) occur for premise and
+hypotheses, in order to create binary-tree LSTMs. A dual-attention model
+is applied to tree nodes between premise and hypothesis. The attention and
+outputs from binary trees for both premise and hypothesis are used in the
+entailment. At each hypothesis node i, eiis calculated recursively given the
+meaning representation at this tree node hi, the meaning representation of every
+node in the premise tree hj,j2P, and the entailment from i's children, ei;1;ei;2.
+The entailment alignment is used in a tanh activation function for softmax, in
+order to output the probability of entailment between a premise and hypothesis.
+Note that this is a simplication due to forget gates etc.
+SNLI~ΠGloVe
+~ΠGloVeA
+Alignment StanhTpremise
+Thypothesis whypowpremBinary Tree-
+LSTM
+Binary Tree-
+LSTM
+kjθjMF1
+87.20.9m150Entailment: l≈exp(T2k;1([hi;hj]))P
+kexp(T2k;1([hi;hk])):
+Alignment ~Ai;j=Pr(Ai;j= 1jP;Q)P
+Q
+T2k;1aﬃne transformation R2ktoR
+hicalculatedrecursivelyfromthemeaningrepresentations hi;1;hi;2
+of its two children if node iis an internal node, otherwise hi
+should be calculated based on the word x2Rdin the leaf.
+hi=fMR(xi;hi;1;hi;2). Similar detail exists for relation eiand
+LSTM transitionTextual Entailment with Structured
+Attentions and Composition
+P(yj~A;P;Q)Key Contribution
+EntailmentInput premise and
+hypothesisOutput
+probability
+of entailment
+Figure 7: DIAL Diagram for Textual Entailment with Structured Attentions
+and Composition [16]
+19
+8 Creating DIAL Diagrams
+8.1 Practicalities
+The DIAL examples contained in this report were made with IPE, a LaTeX
+compatible graphics editor (download source http://ipe.otfried.org ). An
+accompanying DIAL resource library will be created in due course.
+8.2 Semiotic Principles
+By \semiotics", we follow Morris in his denition of the eld as encompassing
+semantics (what is represented), syntactics (relationships between things), and
+pragmatics (their interpretation within context) [10].
+Spatial arrangement of symbols, arrows and natural language (Section 5)
+attempts to be reasonably standardised but not overly prescriptive. Addition-
+ally, they inherit existing common practices collected from the observation of
+the literature (see Survey section ??).
+Top left title, bottom right data and hyperparameters are example of macro-
+scopic guidelines. On a more detailed level, left-to-right linear is the default with
+exceptions where it makes sense (such as Siamese Networks, see Figure 7). Ar-
+bitrary alignment or misalignment is not encouraged, as they can confuse the
+representation. Making use of \intuitive" spatial patterns is also advisable, such
+as if the input is on the left, keep the input on the left in a \zoom in". Any nec-
+essary functions, if necessary to detail, should be included in the mathematical
+key with notation consistent with the accompanying paper.
+Introduce new symbols and relational concepts sparingly: We appreciate
+that DIAL is a work in progress and that some useful symbols will be missing.
+For example, it may be tempting to create a new symbol for linear scaling
+functions: Please avoid doing this, instead using existing natural language or
+mathematical notation. We are also aware that the practice of embedding text
+within an image is not ideal, and that there is a need for DIAL-NN to incorporate
+more low-level architectures (along the lines of Graves et al's diagrams [6]). With
+interested community members we will be looking to adapt and extend DIAL in
+order to aid its usefulness. Please see Section 9 on how to become a contributor
+of DIAL.
+9 Request for Comments (RfC)
+Particularly at this early stage of development, feedback and interaction is
+sought from AI practitioners of all types. Feedback is especially helpful on
+topics that will aid completeness, consistency and usability of the existing scope
+of DIAL-SYS and DIAL-NN. As a longer-term commitment, those interested
+in being stewards for the standardisation eort should also get in touch with
+the authors. Further information, including contact details, can be found at
+aidiagrams.com .
+20
+Labelled input Labelled output
+Hyperparameters Additional key and formulasKey novelty labelledLinear system arrangement System purposeFigure 8: DIAL Schematic Outline
+21
+Acknowledgements
+The authors would like to thank Viktor Schlegel, Chaohui Marshall and three
+anonymous reviewers for their useful comments.
+References
+[1]Adel, H., and Sch utze, H. Global Normalization of Convolutional Neu-
+ral Networks for Joint Entity and Relation Classication. In Proceedings of
+the 2017 Conference on Empirical Methods in Natural Language Processing
+(2017), Association for Computational Linguistics, p. 1723{1729.
+[2]Akhtar, S., Kumar, A., Ghosal, D., Ekbal, A., and Bhat-
+tacharyya, P. A Multilayer Perceptron based Ensemble Technique for
+Fine-grained Financial Sentiment Analysis. In Proceedings of the 2017
+Conference on Empirical Methods in Natural Language Processing (2017),
+pp. 540{546.
+[3]Booch, G., Rumbaugh, J., Jacobson, I., and Wesley, A. Unied
+Modeling Language User Guide, The . Addison Wesley, 1998.
+[4]Eilenberg, S., and MacLane, S. General theory of natural equiv-
+alences. Transactions of the American Mathematical Society 58 (1945),
+231{231.
+[5]Glinz, M. Problems and Deciencies of UML as a Requirements Speci-
+cation Language. In Proceedings of the 10th International Workshop on
+Software Specication and Design (2000), Institut f ur Informatik, Univer-
+sit at Z urich, IEEE Computer Society, pp. 11{22.
+[6]Graves, A., Jaitly, N., and Mohamed, A.-R. Hybrid Speech Recogni-
+tion with Deep Bidirectional LSTM. In Automatic Speech Recognition and
+Understanding (ASRU), 2013 IEEE Workshop on (2013), IEEE, pp. 273{
+278.
+[7]Gui, T., Zhang, Q., Huang, H., Peng, M., and Huang, X. Part-
+of-Speech Tagging for Twitter with Adversarial Neural Networks. In Pro-
+ceedings of the 2017 Conference on Empirical Methods in Natural Language
+Processing (2017), pp. 2411{2420.
+[8]Harrison, N. The Darwin information typing architecture (DITA): ap-
+plications for globalization. In IPCC 2005. Proceedings. International Pro-
+fessional Communication Conference, 2005. (2005), IEEE, pp. 115{121.
+[9]Moody, D. What Makes a Good Diagram? Improving the Cognitive
+Eectiveness of Diagrams in IS Development. In Advances in Information
+Systems Development . Springer US, Boston, MA, 2007, pp. 481{492.
+22
+[10]Morris, C. W. Foundations of the theory of signs. The Journal of Sym-
+bolic Logic 3 , 04 (12 1938), 158.
+[11]Otero, M. C., and Dolado, J. J. An empirical comparison of the
+dynamic modeling in OML and UML. Journal of Systems and Software
+77, 2 (8 2005), 91{102.
+[12]Selby, J. H., Scandolo, C. M., and Coecke, B. Reconstructing
+quantum theory from diagrammatic postulates, 2018.
+[13]Sethi, A., Sankaran, A., Panwar, N., Khare, S., and Mani, S. DL-
+Paper2Code: Auto-generation of Code from Deep Learning Research Pa-
+pers. In Thirty-Second AAAI Conference on Articial Intelligence (2018),
+IBM Research, pp. 7339{7346.
+[14]Shahin, M., Liang, P., and Babar, M. A. A systematic review of
+software architecture visualization techniques. The Journal of Systems and
+Software 94 (2014), 161{185.
+[15]Sloman, A. Why We Need Many Knowledge Representation Formalisms.
+InProceedings BCS Expert Systems (1984), University of Sussex, Brighton,
+UK, Cambridge University Press, pp. 163{183.
+[16]Zhao, K., Huang, L., and Ma, M. Textual Entailment with Structured
+Attentions and Composition. In Proceedings of COLING 2016, the 26th
+International Conference on Computational Linguistics: Technical Papers
+(2016), pp. 2248{2258.
+[17]Zou, Y., Gui, T., Zhang, Q., and Huang, X. A Lexicon-Based Su-
+pervised Attention Model for Neural Sentiment Analysis. In Proceedings
+of the 27th International Conference on Computational Linguistics (2018),
+pp. 868{877.
+23

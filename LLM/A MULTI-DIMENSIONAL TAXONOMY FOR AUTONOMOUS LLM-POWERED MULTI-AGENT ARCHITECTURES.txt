@@ -1,0 +1,2265 @@
+BALANCING AUTONOMY AND ALIGNMENT :
+A M ULTI -DIMENSIONAL TAXONOMY FOR AUTONOMOUS
+LLM- POWERED MULTI -AGENT ARCHITECTURES
+Thorsten Händler
+Ferdinand Porsche Mobile University of Applied Sciences (FERNFH)
+Wiener Neustadt, Austria
+thorsten.haendler@fernfh.ac.at
+ABSTRACT
+Large language models (LLMs) have revolutionized the field of artificial intelligence, en-
+dowing it with sophisticated language understanding and generation capabilities. However,
+when faced with more complex and interconnected tasks that demand a profound and itera-
+tive thought process, LLMs reveal their inherent limitations. Autonomous LLM-powered
+multi-agent systems represent a strategic response to these challenges. Such systems strive
+for autonomously tackling user-prompted goals by decomposing them into manageable
+tasks and orchestrating their execution and result synthesis through a collective of special-
+ized intelligent agents. Equipped with LLM-powered reasoning capabilities, these agents
+harness the cognitive synergy of collaborating with their peers, enhanced by leveraging
+contextual resources such as tools and datasets. While these architectures hold promising
+potential in amplifying AI capabilities, striking the right balance between different levels of
+autonomy and alignment remains the crucial challenge for their effective operation. This
+paper proposes a comprehensive multi-dimensional taxonomy, engineered to analyze how
+autonomous LLM-powered multi-agent systems balance the dynamic interplay between
+autonomy and alignment across various aspects inherent to architectural viewpoints such as
+goal-driven task management, agent composition, multi-agent collaboration, and context
+interaction. It also includes a domain-ontology model specifying fundamental architectural
+concepts. Our taxonomy aims to empower researchers, engineers, and AI practitioners to
+systematically analyze, compare, and understand the architectural dynamics and balancing
+strategies employed by these increasingly prevalent AI systems, thus contributing to on-
+going efforts to develop more reliable and efficient solutions. The exploratory taxonomic
+classification of selected representative LLM-powered multi-agent systems illustrates its
+practical utility and reveals potential for future research and development.
+Keywords Taxonomy, autonomous agents, multi-agent collaboration, large language models (LLMs), AI
+system classification, alignment, software architecture, architectural viewpoints, software-design rationale,
+context interaction, artificial intelligence, domain-ontology diagram, feature diagram, radar chart.
+1 Introduction
+In recent years, the emergence and the technological feasibility of large language models (LLMs) have
+revolutionized the field of artificial intelligence [ 11,56,76,15,98]. Pre-trained on vast amounts of text data,
+these models have catalyzed significant advancements by enabling sophisticated language understanding and
+generation capabilities, opening doors to a broad range of applications [ 9,13,32]. Yet, despite their remarkable
+capabilities, LLMs also have inherent limitations.
+While LLMs excel at generating outputs based on patterns identified in their training data, they lack a genuine
+understanding of the real world. Consequently, their outputs might seem plausible on the surface, but can bearXiv:2310.03659v1  [cs.AI]  5 Oct 2023
+factually incorrect or even hallucinated [45,30]. Moreover, despite their proficiency in handling vast amounts
+of textual information and their rapid processing and pattern recognition capabilities, LLMs struggle with
+maintaining consistent logic across extended chains of reasoning. This deficiency hinders their ability to
+engage in a deliberate, in-depth, and iterative thought process (aka slow thinking ) [74,33,20,43]. As a result,
+LLMs encounter difficulties when it comes to handling more complex and interconnected tasks [37, 90].
+These limitations of individual LLMs have led to the exploration of more sophisticated and flexible AI
+architectures including multi-agent systems that aim at accomplishing complex tasks, goals, or problems with
+thecognitive synergy of multiple autonomous LLM-powered agents [ 77,51,79,59,70,41,71,28]. Such
+systems tackle user-prompted goals by employing a divide & conquer strategy, by breaking them down into
+smaller manageable tasks. These tasks are then assigned to specialized agents, each equipped with a dedicated
+role and the reasoning capabilities of an LLM, as well as further competencies by utilizing contextual resources
+like data sets, tools, or further foundation models. Taking a cue from Minsky’s society of mind theory [ 48],
+the key to the systems’ problem-solving capability lies in orchestrating the iterative collaboration and mutual
+feedback between these more or less ’mindless’ agents during task execution and result synthesis.
+For this purpose, LLM-powered multi-agent systems realize an interaction layer [ 4]. Externally, this layer
+facilitates the interaction between the LLM and its contextual environment. This includes interfacing with
+external data sources, tools, models, and other software systems or applications. These external entities can
+either generate or modify multi-modal artefacts or initiate further external processes. Internally, the interaction
+layer allows for organizing the task-management activity by providing a workspace for the collaboration
+between the LLM-powered agents. Thereby, LLM-powered multi-agent systems are characterized by diverse
+architectures implementing various architectural design options.
+One of the central challenges for the effective operation of LLM-powered multi-agent architectures (as with
+many AI systems) lies in finding the optimal balance between autonomy and alignment [97,10,66,92,28].
+On the one hand, the systems should be aligned to the goals and intentions of human users; on the other
+hand, the systems should accomplish the user-prompted goal in a self-organizing manner. However, a system
+with high autonomy may handle complex tasks efficiently, but risks straying from its intended purpose if not
+sufficiently aligned, resulting in unexpected consequences and uncontrollable side effects. Conversely, a highly
+aligned system may adhere closely to its intended purpose but may lack the flexibility and initiative to respond
+adequately to novel situations. Current systems exhibit diverse approaches and mechanisms to intertwine these
+cross-cutting concerns [35] throughout their architectural infrastructure and dynamics.
+However, existing taxonomies and analysis frameworks for autonomous systems [ 12,94,44,21,78] and
+multi-agent systems [ 7,19,82,50] fall short in providing means to categorize and understand these challenges
+and involved architectural complexities posed by LLM-powered multi-agent systems.
+This paper aims to bridge this gap by introducing a systematic approach in terms of a comprehensive multi-
+dimensional taxonomy. This taxonomy is engineered to analyze and classify how autonomous LLM-powered
+multi-agent systems balance the interplay between autonomy and alignment across different architectural
+viewpoints, encompassing their inherent aspects and mechanisms.
+Alignment
+static  /  adaptive  /  self-organizingintegratedArchitectural 
+Viewpoints
+AutonomyL0
+L0 L1L1
+L2L2
+user-
+guidedreal-time
+responsive
+goal-driven task managementagent compositionmulti-agent collaborationcontext interaction
+Figure 1: A simplified representation of the proposed multi-dimensional taxonomy for autonomous LLM-
+powered multi-agent systems. The x-axis represents the level of autonomy, the y-axis the level of alignment,
+and the z-axis the four applied architectural viewpoints. Characteristics of LLM-powered multi-agent systems
+can be assessed and classified by locating them within this taxonomic structure. For an in-depth discussion of
+the taxonomy, refer to Section 4.
+2
+The proposed taxonomy is built on the identification and specification of architectural characteristics of such
+systems. It aims at understanding the complexities arising from the interplay of interdependent architectural
+aspects and mechanisms, each characterized by distinct levels of autonomy and alignment. A simplified
+overview of the dimensions and levels applied in our taxonomy is represented by the cuboid shown in Fig. 1.
+First, the synergy between autonomy and alignment manifests as a two-dimensional matrix with multiple hier-
+archical levels. This matrix captures a spectrum of nine distinct system configurations, ranging from systems
+that strictly adhere to predefined mechanisms ( rule-driven automation , L0/L0) to those that dynamically adapt
+in real-time, guided by evolving conditions and user feedback ( user-responsive autonomy , L2/L2).
+Second, these configuration options are not imposed to the LLM-powered multi-agent system flatly. Instead,
+they are applied to multiple distinct architectural viewpoints [ 38], such as the system’s functionality ( goal-
+driven task management ), its internal structure ( agent composition ), its dynamic interactions ( multi-agent
+collaboration ) as well as the involvement of contextual resources such as tools and data ( context interaction ).
+Stemming from these four viewpoints, we have discerned 12 architectural aspects, each with distinct autonomy
+and alignment levels. When integrated into our taxonomic system, they culminate in 108 single configuration
+options available for further combination. This granularity facilitates a nuanced analysis and assessment of
+the system’s architectural dynamics resulting from the interplay between autonomy and alignment across the
+system architecture, laying the foundations for further analysis and reasoning about design decisions.
+The contributions of this paper can be categorized as follows:
+(1)Architecture Specification: We outline the architectural characteristics of autonomous LLM-
+powered multi-agent systems and propose a domain-ontology model represented as a UML class
+diagram structuring the architectural concepts and their interrelations relevant for our taxonomy.
+(2)Multi-dimensional Taxonomy: We introduce a comprehensive multi-dimensional taxonomy tailored
+to analyze and understand how autonomous LLM-powered multi-agent architectures balance the
+dynamic interplay between autonomy and alignment across different architectural viewpoints. For
+this purpose, our taxonomy provides hierarchical levels for both autonomy and alignment, which
+are applied to system viewpoints such as goal-driven task management, agent composition, multi-
+agent collaboration, and context interaction, thus incorporating a third dimension. Level criteria for
+autonomy and alignment are specified for several architectural aspects inherent to these viewpoints.
+(3)Taxonomic Classification of Selected Systems: We demonstrate the applicability and effectiveness
+of our taxonomy by assessing and comparing a selection of seven representative autonomous LLM-
+powered multi-agent systems. This taxonomic classification provides insights into the architectural
+dynamics and balancing strategies of the analyzed systems. Moreover, it identifies challenges and
+development potentials, not only concerning the interplay between autonomy and alignment. The
+application of the taxonomy also serves as a first empirical validation.
+Through these contributions, we aim to provide a systematic framework for analyzing, comparing, and
+understanding the architectural dynamics and complexities of LLM-powered multi-agent systems, thus
+contributing to the ongoing efforts towards building more reliable and efficient multi-agent systems.
+Structure of the Paper. The remainder of this paper is structured as follows. Section 2 discusses related work
+on taxonomies for intelligent systems and gives an overview of existing autonomous LLM-based multi-agent
+systems. Section 3 outlines the key characteristics and specifies foundational concepts of autonomous LLM-
+powered multi-agent architectures relevant for the taxonomy. In Section 4, we introduce our multi-dimensional
+taxonomy, which incorporates specifications of autonomy and alignment levels and their application to
+architectural viewpoints and aspects of LLM-powered multi-agent systems. Section 5 showcases the utility of
+our taxonomy, as we analyze and categorize selected current multi-agent systems. In Section 6, we discuss the
+insights gained from this analysis. Finally, Section 7 concludes the paper.
+2 Background and Related Work
+In this section, we discuss the application of taxonomies for autonomous agents and multi-agent systems
+(Section 2.1) and give an overview of the state-of-the-art of LLM-powered multi-agent systems (Section 2.2).
+2.1 Taxonomies and Intelligent Systems
+Taxonomies represent structured classification schemes employed to categorize objects in a hierarchical manner
+according to specific criteria. They are a popular means for structuring, measuring or comparing various
+3
+kinds of approaches such as methods, techniques or technologies. They find applications in a wide range of
+disciplines and domains such as software engineering [81] or explainable artificial intelligence (XAI) [2].
+The field of intelligent and autonomous systems spans a variety of configurations and operational structures,
+with some systems operating as individual entities and others involving multiple interacting agents. Reflecting
+this variety, the taxonomies proposed over the years have largely followed two main trajectories: those focusing
+on autonomous systems and those focusing on multi-agent systems.
+Taxonomies for Autonomous Systems mainly categorize systems based on the level and type of autonomy,
+intelligence, learning capabilities, and ability to interact with their environment. These taxonomies, such as
+those by [ 94,12,44,21,78], are essential for understanding the spectrum of capabilities and complexities
+inherent to these systems. In particular, Wooldridge and Jennings [ 94] present a comprehensive taxonomy
+that classifies intelligent agents based on key properties such as autonomy, social ability, reactivity, and
+proactiveness. Their classification sheds light on the independent operational capabilities of single-agent
+systems. In addition, Brustoloni [ 12] introduces a taxonomy centered around the idea of autonomy levels,
+drawing the distinction between autonomous, semi-autonomous, and non-autonomous systems. This provides
+a valuable lens through which the extent of an agent’s independence can be analyzed. Maes’ taxonomy [ 44]
+focuses on situating agents within a landscape defined by their reasoning and learning capabilities. The work
+provides a robust framework for assessing the cognitive dimensions of an agent, ranging from reflex agents to
+learning agents. Franklin and Graesser [ 21], in their work, delve into the interaction between autonomous
+agents and their environment, leading to a taxonomy that is heavily contextual and environmental-dependent.
+Lastly, Tosic and Agha [ 78] put forth a taxonomy that embraces the diversity in the field, offering a multi-
+faceted perspective on autonomous agents, taking into consideration their design, behavior, and interaction
+capabilities. Besides these scientific frameworks, further industry-focused and more pragmatic taxonomies
+are in use, such as the taxonomy provided by SAE international [ 29] serving as a foundational standard
+for self-driving cars with definitions for levels of driving automation; from no driving automation to full
+automation.
+However, while these taxonomies offer valuable insights into the capabilities and behaviors of autonomous
+systems, they don’t inherently address the complexity and nuances involved when multiple agents powered by
+large language models are working together within a multi-agent architecture. Hence, the need for a dedicated
+taxonomy for such systems is evident.
+Taxonomies for Multi-Agent Systems , on the other hand, extend beyond the confines of individual agent
+characteristics, integrating the dynamics of interactions and collaborations among multiple agents. The
+landscape of multi-agent systems taxonomies provides various works focusing on different aspects of these
+complex systems [ 7,19,82,50]. In particular, Bird et al. developed a taxonomy rooted in the communication
+and cooperation strategies among agents, investigating crucial factors such as communication methods, task
+decomposition, resource sharing, and conflict resolution [ 7]. Similarly, Dudek et al. offered a taxonomy
+specifically for multi-robot systems [ 19]. This taxonomy, while primarily focusing on robotic applications,
+can be generalized to other multi-agent systems, considering important aspects like team size, communication
+topology, team organization, and team composition. In a different vein, Van Dyke Parunak et al. proposed a
+taxonomy for distributed AI systems, putting emphasis on environmental aspects and interaction modalities,
+thus highlighting the importance of the agents’ ability to interact with and manipulate their environment [ 82].
+Further broadening the field, Moya et al. proposed a comprehensive taxonomy for multi-agent systems based
+on characteristics such as the nature of the agents, the environment in which they operate, the communication
+protocols they use, and the tasks they perform [ 50]. The taxonomy also thoroughly examined the various types
+of interactions among the agents, including cooperation, coordination, and negotiation.
+While these taxonomies have contributed significantly to our understanding of communication protocols and
+agent constellation within multi-agent systems, they were developed prior to the advent of large language
+models (LLMs), and thus do not encapsulate the characteristic challenges associated with LLM-based multi-
+agent architectures. In this context, autonomous agents, also as members of multi-agent networks, often
+have been used as a kind of metaphor [ 21] for intelligent and interacting components following rule-based
+communication protocols and bundling a set of specific skills to interact with their environment (e.g., equipped
+with certain sensors and actuators, cf. multi-robot systems [ 19]). LLMs have introduced a new degree of
+reasoning capabilities, enabling the creation of genuinely intelligent agents operating within collaborative
+networks in an autonomous manner.
+Moreover, while the concepts of autonomy and alignment are often discussed in AI literature [ 52,65] and
+also the system’s architecture plays a fundamental role in software engineering [ 4], none of the existing
+taxonomies for autonomous systems or for multi-agent systems has so far applied a systematic approach to
+4
+either investigate architectural aspects or combine the concepts of autonomy and alignment for analyzing the
+systems.
+In the light of these limitations, our work seeks to develop a new taxonomy specifically tailored to LLM-
+powered multi-agent systems. Our aim is to provide a taxonomy that captures the unique aspects and challenges
+of LLM-powered architectures, especially with regard to how autonomy and alignment are balanced across
+architectural aspects and viewpoints, offering a systematic framework for understanding and designing these
+complex systems.
+2.2 Current LLM-based Agent Systems
+The advent and widespread use of large language models (LLMs) like GPT-3 [ 11] have opened up new
+opportunities for creating increasingly sophisticated and human-like AI systems. These models empower
+the design of intelligent agents with advanced capabilities to comprehend and generate human-like text, thus
+enriching the interaction and experience for end-users. However, the application of LLMs also brings forth
+several challenges, as highlighted by [ 32]. Among these, one main challenge lies in handling task complexity,
+particularly when dealing with intricate tasks that necessitate a well-coordinated execution of numerous
+interconnected sub-tasks [ 70] and the interaction with further tools and data. In response to this, autonomous
+multi-agent systems utilizing the reasoning abilities of LLMs have emerged. These systems address complexity
+by intelligently breaking down larger goals into manageable tasks, which are then accomplished by multiple
+collaborating agents specializing in a specific role and equipped with distinct competencies. For this purpose,
+these systems realize an interaction layer [4] providing a workspace for multiple collaborating agents,
+each connected with an LLM. The reasoning competencies are enhanced, as needed, by the agent’s access
+to contextual resources, such as specific expert tools, data sets, further foundation models, and external
+applications, which allow the agents to gain information from and to impact their environment by creating or
+modifying multi-modal artefacts or by triggering external processes. The agents collaborate, bringing their
+capabilities to bear on the problem, and their results are subsequently combined to achieve the overall goal.
+Currently, several projects are established that aim at realizing such autonomous AI architectures for ac-
+complishing complex tasks based on multiple interacting agents and powered by large language models
+(LLMs). Exemplary but representative autonomous multi-agent systems are AUTOGPT [77],BABYAGI
+[51],SUPER AGI [79],HUGGING GPT [70],CAMEL [41],AGENT GPT [71] and METAGPT [28]. For a
+categorization and comparison of these selected system architectures using the developed taxonomy, see
+Section 5. Among these systems, we can distinguish those providing general-purpose task management and
+problem solving with generic agent types and collaboration mechanics [ 77,51,79,70] and those systems
+designed for specific application domains with corresponding domain agents and processes, such as for the
+domain of software development [28, 41, 61].
+Some of these recent multi-agent systems as well as further related projects such as GORILLA [60] orVOYAGER
+[83] are built upon the LANG CHAIN Python framework [ 14], which allows to realize the aforementioned
+interaction layer to define agents and chains of tasks as well as the access to and interplay between large
+language models and contextual resources in terms of data resources (such as vector databases [ 31]) or various
+expert tools. For this purpose, predefined components such as agent types and prompt templates, such as for
+data interaction, can be reused.
+Besides these open-source software projects, further scientific projects and approaches are identifiable that
+leverage multiple agents or personas powered by LLMs for task management and problem solving [ 88,26].
+Moreover, the interplay between multiple LLM-powered agents is also addressed in other related contexts,
+such as for simulating the interaction between multiple personas or roles [ 59,22], especially with focus on
+debating and thereby addressing challenges of hallucinations [ 18] or the degeneration-of-thought (DoT) [42],
+or for developing conversations and behavior provided by non-playable characters (NPCs) in role-playing
+video games [17].
+A recent survey of LLM-powered autonomous agents is provided by [ 84], which focuses on investigating
+and comparing the agents’ characteristics and capabilities in terms of profile generation, memory operations
+and structures, planning, tool integration and learning strategies. Complementing this, another recent survey
+[95] offers an expansive overview of existing approaches, contextualizing them with foundational technical,
+methodical, and conceptual paradigms formative for LLM-powered multi-agent systems.
+However, as we dive into the specifics of current autonomous LLM-powered multi-agent systems, striking
+the right balance between autonomy and alignment emerges as a central challenge. These AI systems must
+navigate a fine line – being autonomous enough to organize the interplay between multiple LLM-powered
+5
+agents and contextual resources to accomplish complex tasks consisting of various interconnected sub-tasks,
+but also adequately aligned to the intentions and goals of users. This especially proves challenging, since the
+specified and prompted user goal might not exactly represent the user’s intentions [ 8], resulting in unexpected
+consequences and uncontrollable side effects.
+Given the exploratory state of the field, current systems exhibit a wide range of architectures, each with its
+unique blend of autonomy and alignment dispersed across various architectural components and mechanisms.
+The diversity in these systems illuminates the different strategies and designs adopted to address this balancing.
+However, it also signifies the lack of a systematic approach, underscoring the importance of a taxonomy that
+can provide a structured understanding and comparison of these systems.
+3 Architecture Specification
+In this section, we specify architectural foundations relevant for our taxonomy. Section 3.1 provides an
+overview of architectural and behavioral characteristics of autonomous LLM-powered multi-agent systems.
+Following this, we delve deeper into the architectural key concepts and their interrelationships through a
+domain-ontology model (see Section 3.2).
+Alignment Techniques
+Memory RolePrompt
+Promptcollaborateexecutesinteracts
+with
+develops
+BCsynthesis
+Agent
+AgentHuman
+User 
+Large Language 
+Model (LLM)Agent-Interaction LayerUser Interface
+ResponsePrompt
+Preferences
+Expert Tools
+Data
+Foundation ModelsA
+Context 
+ System 
+Architect specifiesbreak 
+downGoal Task
+Task
+Result...
+MG
+Figure 2: Overview of the primary characteristics of autonomous multi-agent systems powered by large
+language models (LLMs) and enhanced by contextual resources like tools and data. A description of these
+characteristics is provided in Section 3.1, and for an in-depth exploration of architectural concepts, refer to
+Section 3.2.
+3.1 Characteristics Overview
+In the following, we outline the main architectural characteristics of autonomous LLM-powered multi-agent
+systems, as illustrated in Fig. 2.
+GGoal-driven Task Management. Autonomous LLM-powered multi-agent systems are designed
+to accomplish user-prompted goals or complex tasks. For this purpose, the system employs an
+interactive and multi-perspective strategy for problem solving, often referred to as deep reasoning or
+slow thinking [33] enabled by the capabilities of large language models (LLMs) and the advantages of
+contextual resources. When faced with such challenges, the system adeptly breaks down the complex
+task into smaller, manageable tasks. These sub-tasks are subsequently distributed among various
+agents, each equipped with specific competencies. A crucial aspect of this divide & conquer strategy
+lies in the effective orchestration of these interconnected sub-tasks and the subsequent synthesis of
+partial results, ensuring a seamless and cohesive final result.
+6
+ALLM-Powered Intelligent Agents. At the core of these systems, intelligent agents structure the
+system as the foundational components. Each agent is endowed with a unique set of competencies,
+which include a clearly defined role, an individual memory, as well as access to further contextual
+resources, such as data, tools, or foundation models (see below), required for solving the tasks
+assigned to them. The backbone of their reasoning and interpretative capabilities is rooted in the
+incorporation of large language models (LLMs). This enables the agents not only to reflect upon the
+tasks or to plan and process the assigned tasks efficiently, but also to access and utilize contextual
+resources, as well as to communicate with other agents.
+MMulti-Agent Collaboration. The interaction layer provides the workspace for a network of such
+collaborating LLM-powered agents. While executing the assigned tasks, these specialized agents
+collaborate with each other via prompt-driven message exchanges to delegate responsibilities, seek
+assistance, or evaluate the results of tasks undertaken by their peers. Key to the agents’ collaboration is
+to effectively combine the strengths of each agent to collectively meet the defined goals, exemplifying
+cognitive synergy . While individual skills are important, the power of these systems emerges from
+the coordinated efforts of the collective, a concept articulated by Minsky in his idea of the society of
+mind [48].
+CContext Interaction. Some tasks require the utilization of contextual resources, such as expert
+tools, data, further specialized foundation models, or other applications. These resources extend their
+ability to gather environmental information, create or modify artefacts, or initiate external processes.
+Leveraging these resources enables the agents to better understand and respond to their operational
+context and to effectively execute complex tasks. This capacity for contextual adaptation, augmented
+by the integration of various resources, contributes to a more versatile and comprehensive system that
+can address diverse challenges and requirements.
+BBalancing Autonomy and Alignment. The dynamics of LLM-powered multi-agent systems are
+characterized by a complex interplay between autonomy and alignment. As captured in Fig. 3, this
+complexity can be traced back to the triadic interplay and inherent tensions among the primary
+decision-making entities : human users, LLM-powered agents, and governing mechanisms or rules
+integrated into the system. Alignment , in this context, ensures that the system’s actions are in sync
+with human intentions and values. On the other side of the spectrum, autonomy denotes the agents’
+inherent capacity for self-organized strategy and operation, allowing them to function independent
+of predefined rules and mechanism and without human supervision . Moreover, in systems steered
+by user-prompted goals, it becomes pivotal to differentiate between generic alignment aspects, in
+terms of mechanisms predefined by system architects to inform core functionalities, and user-specific
+preferences customized by the system users themselves.
+Human
+User 
+LLM-powered
+AgentsAutomation  /  AutonomyAutomation / Customization Supervision / Autonomy
+AlignmentCollaboration
+Rules &
+MechanismsSystem Operation
+Figure 3: Triadic interplay and dynamic tensions between the decision-making entities in LLM-powered
+multi-agent systems.
+However, from an architectural perspective, autonomy and alignment transform into cross-cutting
+concerns [35]. They traverse components and mechanisms across the entirety of the system’s
+architecture, influencing the communication between agents, the interaction with contextual resources,
+and more. Achieving a balanced configuration of autonomy and alignment is a crucial challenge,
+which directly impacts the system’s efficiency and effectiveness.
+7
+In the following Section 3.2, we elaborate on the architectural details of these characteristics.
+1*resultsIn
+1
+isRefinedBy*
+0..10..1G
+11
+11
+1
+ArtefactUser
+Interface
+ToolContext
+Search
+Tool
+Reasoning
+Tool
+Communic.
+ToolDevelopment
+ToolExecution
+ToolDataFoundation
+Model
+Structured
+Text Data
+Unstructured
+Text Data
+Multimodal
+Data
+Domain-spec.
+DataMemoryRole
+Actions LogActivity Log
+Synthesis
+Interaction
+LayerEvaluate
+ResultExecute
+TaskCreate
+Task
+Delegate
+Task
+Alignment
+TechniqueTask
+Task Result
+Total
+ResulttranslatesTo
+forms
+guidesrelatesTo
+performs
+processedBytriggersinforms
+informsinvolves
+generates
+integratesinteractsWith
+specifiessub-tasktargets
+initiates
+assigns
+per-
+forms
+0..1
+0..10..1
+1
+0..10..10..10..1
+0..1
+Library
+0..1*
+*
+LLM
+**
+* * *
+*** *
+*
+*
+**
+*****1**
+**
+*
+*
+Natural Lang.
+Processing
+Audio
+MultimodalComputer
+VisionHuman
+User
+System
+Architect
+Agent
+Task-Mgmt.
+Agent
+Technical
+AgentDomain
+Role AgentActionUser
+Prompt
+Response
+Merge
+ResultGoal
+ACB
+M
+Prompt
+TemplatePrompt
+AugmentationCommunicat.
+ProtocolActivity
+Memory
+Impact
+Context
+Utilization
+Context
+InformationTask-Mgmt
+Activity
+Agent
+PromptResponseDecomposition
+Orchestration
+Preference
+*
+APInetworkDecompose
+Task
+**** *
+*
+0..1**
+**
+*
+11
+1 11
+11
+1
+1
+**
+**
+generates
+provides* *
+***
+*strivesToComplete
+appliesTo
+uses1
+11
+1
+1
+11
+1
+1
+1
+assessesaddr.
+combines
+Figure 4: Domain-ontology model represented as UML class diagram structuring selected architectural
+concepts and concept relations relevant for the domain of autonomous LLM-powered multi-agent systems.
+For a comprehensive exploration of this model, refer to Section 3.2.
+3.2 Specification of Architectural Components
+Fig. 4 illustrates a structured overview of selected concepts and their interrelations relevant for the addressed
+domain of autonomous LLM-powered multi-agent systems in terms of a domain-ontology model. Domain
+ontologies, embraced across fields from philosophy to information systems, facilitate a shared understanding
+of domain-specific concepts [ 75]. While they aid automated knowledge dissemination among software entities
+8
+asformal ontologies [23], they are also devised as conceptual models to support human understanding of the
+addressed domain [36, 24, 25].
+Our domain ontology is represented as a conceptual model in terms of a class diagram of the Unified Modeling
+Language (UML2) [55], which allows for organizing the identified concepts as classes and their relationships
+in terms of generalizations and kinds of associations with indicated multiplicities (i.e. amount of objects
+involved in a relationship). For further details on the applied diagram notations, the UML specification serves
+as a comprehensive guide [55].
+The primary objective of the presented model in Fig. 4 is to mirror architectural concepts especially relevant to
+our taxonomy’s scope. In doing so, it deliberately adopts a high-level view, abstracting from technical details
+and specifics typical of individual systems to support clarity and accessibility. For example, while diving into
+the complexities of the agent’s memory usage, as for reflecting and combining task instructions or for planning
+steps and actions, is undoubtedly worthy of thorough exploration [ 59,85], it falls outside the narrow scope of
+our taxonomy. This approach ensures that actual multi-agent systems can be regarded as potential instances of
+this conceptual framework. It’s worth noting that this doesn’t preclude the addition of more specific technical
+components and mechanisms as systems evolve.
+The domain-ontology model derives from an examination of the code and architectural documentation of
+several representative multi-agent architectures, especially AUTOGPT [77],SUPER AGI [79], and METAGPT
+[28], the Generative Agents project [ 59], as well as the LANGCHAIN framework [ 14]. The latter serves as the
+foundational infrastructure for some of the assessed multi-agent systems (refer to Section 2.2). Through an
+iterative process, we analyzed these systems and frameworks to understand their components, interactions, and
+overarching structures. This analysis facilitated the identification and abstraction of recurrent architectural
+characteristics prevalent among these architectures.
+The concepts of the model are arranged into thematic blocks corresponding to the system characteristics
+identified in Section 3.1, such as G. In the following, we delve into these concepts and their main interrelations.
+Further details are provided in the domain-ontology diagram illustrated in Fig. 4.
+GConcepts of Goal-driven Task Management. Typically, a Human User initiates system operations via a
+User Prompt through the User Interface . Most of these systems employ single-turn prompting to convey
+intricate Goals [68]. The prompts can be enriched with detailed instructions, exemplifications like reasoning
+sequences [ 90], role specifications, or output expectations [ 32]. Systems may also permit the definition of
+Preferences to better align AI operations with user objectives. Besides textual user input, speech, images,
+videos, or mode combinations are conceivable, for example. Internally, this user-prompted Goal (which might
+represent a directive, problem, question, or mission) undergoes decomposition into Tasks orSub-Tasks to
+be manageable by the Agents . These tasks can be interconnected in different ways, such as sequential tasks
+orgraph tasks [70], which requires appropriate task prioritization. Task decomposition is the first of three core
+phases within the Task-Management Activity :
+•Decomposition : Breaking down complex tasks into manageable Tasks andSub-Tasks ; optionally
+resolving dependencies between them, resulting in a prioritized list of Tasks .
+•Orchestration : Organizing the distribution and delegation of Tasks among suitable Agents .
+•Synthesis : Evaluating and combining Task Results as well as finally presenting a unified Total
+Result .
+Furthermore, each Task-Management Activity embodies an Activity Log and an Activity Memory .
+To maintain transparency and traceability of all Actions performed, an Activity Log captures all relevant
+action details throughout an activity, while the Activity Memory distills and retains key insights. In addition,
+systems might feature a Library , a repository storing best practices, lessons learned, or reusable knowledge,
+such as Prompt Templates [91] or specific information like API credentials. Actions within this activity
+are delegated to specialized Agents —each characterized by a distinct Role ,Type , and further competencies.
+Essential for the actions’ success is their interaction with various kinds Context —ranging from Data
+and expert Tools to foundational Models (detailed below). Once all partial tasks are completed, the Task
+Results are integrated and combined into a Total Result addressing the prompted Goal . This result
+might also include multiple Artefacts , encompassing text, graphics, multimedia, and more. The nature
+and involvement of tools applied, such as Execution orDevelopment Tools , can lead to varied Impacts ,
+such as triggering external processes. Finally, the Response , a summation of the result, is relayed to the user
+through the user interface.
+9
+AConcepts of LLM-Powered Intelligent Agents. Within each Task-Management Activity , a set
+of intelligent Agents collaborate, forming a multi-agent Network . These agents derive their advanced
+reasoning capabilities from Large Language Models (LLMs) [ 11,32,53], which are involved in performing
+different kinds of Actions , each related to a certain Task and/or contributing to its Task Result . Each
+agent is differentiated by its unique Role in the activity and possesses an individual Memory —a repository
+that encompasses condensed experiences and knowledge gained by the agent. It can manifest in multiple
+formats—be it textual records, structured databases, or embeddings. Oriented to human memorization, in multi-
+agent systems, we also see a combination of short-term memory (i.e., compressed information transmission via
+the context window) and approaches for long-term memory [ 87,86], such as by leveraging vector databases
+(see below). The encapsulated history of the agent’s actions might also be chronicled in an Actions Log .
+Furthermore, different generic Agent types can be distinguished in terms of their roles, and their unique
+functionalities within the collaborative agent network.
+•Task-Management Agents : These agents are specialized in organizing the processes related to the
+task-management activity [77, 51, 41].
+–Task-Creation Agent : Generating new tasks, which optionally also includes deriving tasks
+by breaking down complex tasks.
+–Task-Prioritization Agent : Assigning urgency or importance to tasks, which includes to
+resolve the dependencies between the tasks.
+–Task-Execution Agent : Ensuring efficient task completion.
+•Domain Role Agents : These agents are domain-specific experts. They excel in specialized roles
+within the application domain [ 59], collaborating with peer role agents when needed. Examples
+encompass roles in the software-development process, such as project manager, software architect,
+developer, or QA engineer [28, 41].
+•Technical Agents : These agents are tech-savvies, typically tasked with interfacing with technical
+platforms or development tools. Exemplary technical agents are represented by the SQL Agent for
+database interactions or the Python Agent for developing Python scripts [14, 28].
+An essential distinction to note is the variability in agent memory reliance. While some agents harness the
+power of memory or an action log, e.g., for reflecting or planning tasks, others function devoid of these
+recollections. Specifically, for technical aspects or actions that demand an unprejudiced or unbiased lens,
+agents without memories are often preferred.
+MConcepts of Multi-Agent Collaboration. As detailed above, each Task-Management Activity
+involves a set of multiple collaborating Agents with different roles and competencies as well as driven by the
+reasoning capabilities of utilized large language models (LLMs). This reasoning power enables the agents to
+reflect, plan and process the assigned tasks [ 85,59] as well as to interact with other agents [ 28]. In particular,
+theAgents execute different kinds of Actions which in sum aim at achieving the user-prompted Goal . In
+particular, the following sub-types of Action performed by the Agents can be distinguished:
+•DecomposeTask : Breaking down a task into multiple sub-tasks, optionally ordering and prioritizing
+the tasks.
+•Create Task : Defining and generating new tasks.
+•DelegateTask : Delegating a task to another agent, addressed as Receiver .
+•ExecuteTask : Actually executing a given task.
+•EvaluateResult : Assessing the outcomes of a task.
+•MergeResult : Integrating or combining two or more task results.
+Thereby, each Action can be part of another Action , which are, however, performed in the context of a certain
+phase of the Task-Management Activity (see Fig. 4). Furthermore, each Action can include multiple
+interactions with an LLM. The LLM’s reasoning capabilities are employed in multiple directions within an
+Action , such as for reflecting memories and instructions, observing existing results, planning steps and/or
+weighing options to proceed [ 85,59,28]. For this purpose, an Agent Prompt generated by an Agent and
+triggered within a certain Action is send to and then processed by the LLM, which generates a Response
+informing and/or guiding the next steps within the triggering action. An action might also include Context
+Utilization . Before the LLM receives the Agent Prompt , it may undergo Prompt Augmentation [72].
+This process can integrate additional specifics like the aspects or parts of the agent’s Role orMemory ,
+10
+Context Information (e.g., data excerpts) acquired from previous Context Utilization , or chosen
+Prompt Templates prepared and/or adapted for certain kinds of actions [ 14]. Such agent-driven prompt
+engineering is pivotal for LLM-powered multi-agent systems.
+Direct collaborations involving two or more agents typically rely on prompt-driven communication sequences
+or cycles. For instance, a Delegate Task action directed at a receiver agent might convey information,
+place a request, initiate a query, or suggest a potential course of action. Subsequently, the Evaluate Result
+action provides feedback by validating or refuting, and agreeing or disagreeing with the presented results [ 93].
+ACommunication Protocol provides a structured framework and methodology for agents’ collaboration,
+guiding the execution of specific Actions by establishing rules and mechanisms for message exchanges
+within the multi-agent network [ 73,39,93]. For instance, in LLM-powered multi-agent systems, the following
+distinct protocols are observable, each built upon the basic mechanisms of an interplay between instruction
+and execution, with optional subsequent result evaluation:
+•Strict finite processes or execution chains with predefined action sequences, interactions between
+predefined agents, and typically having a well-defined endpoint, which might represent the production
+of a specific output or artefact [28].
+•Dialogue cycles characterized by alternating DelegateTask andExecuteTask actions between two
+agents, creating a feedback loop of instruction and execution [41].
+•Multi-cycle process frameworks with interactions between generic agent types, allowing for greater
+dynamism in agent interactions [77, 51].
+In all these exemplary cases, dedicated Agent Types are defined and coupled with the corresponding types
+ofAction . Further details are discussed in Section 5.2.
+CConcepts of Context Interaction. For executing the task-related actions, the LLM-powered agents are
+able to leverage specialized competencies and further information provided by additional Context which can
+be distinguished into Tools ,Data , and Foundation Models [70] (see Fig. 4).
+•Tools in terms of contextual resources for multi-agent systems can be categorized into the following
+distinct groups:
+–Search and Analysis Tools : These tools offer specialized capabilities for probing and
+analyzing data, allowing agents to derive insights from vast information pools efficiently; such
+as search engines for the web.
+–Execution Tools : These are responsible for interfacing with and executing tasks within other
+environments, like software applications, ensuring seamless operation across platforms.
+–Reasoning Tools : Enhancing the capacity for logical thought, these tools bolster reasoning
+capabilities in specialized areas such as computational intelligence. For instance, platforms like
+WOLFRAM ALPHA empower agents with advanced computational skills.
+–Development Tools : Tailored for software development endeavors, these tools streamline the
+process of coding, debugging, and deploying solutions within the multi-agent framework.
+–Communication Tools : These facilitate interactions with external entities by supporting
+functionalities like sending and receiving emails, ensuring agents can effectively communicate
+outside their native environments.
+•Data types in multi-agent architectures encompass:
+–Structured Text Data : This refers to data that adheres to a defined model or schema, such
+as data found in traditional relational databases. It offers predictability and is easily queryable.
+–Unstructured Text Data : This data lacks a pre-defined model. An example is content found
+within PDF documents. For optimal processing by LLMs, unstructured text is typically stored
+in vector databases like PINECONE orCHROMA . These databases support semantic searches
+through vector embeddings, bridging the gap between structured and unstructured data [ 47,31].
+–Multimodal Data : Beyond just text, this category encapsulates various formats including
+videos, pictures, and audio. Specialized tools are employed to extract textual information from
+these formats, making them amenable to processing by LLMs.
+–Domain-specific Data : This data is tailored for particular sectors or areas of expertise.
+Examples include proprietary company data or external data sources specific to fields like law or
+medicine.
+11
+•Foundation Models refer to expansive machine learning models trained on vast amounts of data.
+These models are versatile, suitable for addressing a variety of tasks across different modalities such
+as language, vision, and audio/speech, as well as combinations thereof [ 9]. Based on their modalities,
+we categorize them as follows:
+–Natural Language Processing (NLP) Models : These focus primarily on understanding
+and generating human language. LLMs fall under this category of NLP Models . While there are
+general-purpose LLMs available, specialized models tailored to specific domains and tasks also
+exist, having been trained on corresponding niche data sets.
+–Computer Vision Models : Aimed at processing and understanding images or videos.
+–Audio Models : Specialized in processing and interpreting audio signals, including speech.
+–Multimodal Models : Designed to handle multiple types of data simultaneously, combining
+aspects of NLP,Vision , and Audio .
+The machine learning landscape shows a multitude of specialized foundation models, with Large
+Language Models (LLMs) standing out prominently [ 100]. Platforms like HUGGING FACE even
+offer access to numerous models provided by the global machine learning community.
+Access to LLMs, as well as associated resources such as tools, foundation models, and external data resources,
+is typically facilitated through Application Programming Interfaces (APIs) [ 60]. The access details for these
+APIs are integrated into the Interaction Layer . For instance, these details might be housed within a
+dedicated Library module for streamlined interfacing (see above). Moreover, multiple of these contextual
+resources can be combined within a single Action . For example, a certain expert tool could employ a selected
+foundation model to analyze a given dataset. Finally, Context Utilization might involve the creation
+or modification of Artefacts . Beyond mere artefact manipulation, this utilization can manifest as external
+Impact , such as initiating external processes in other software applications or triggering workflows that
+influence broader systems.
+BConcepts of Balancing Autonomy and Alignment. Autonomy and alignment represent cross-cutting
+concerns [35], influencing various architectural concepts and mechanisms. Nevertheless, they also distinctly
+materialize in specific concepts within our ontology model. Alignment , on the one hand, primarily mani-
+fests through the implementation of dedicated Alignment Techniques by the System Architect into the
+system architecture of the Interaction Layer . These techniques might include foundational infrastruc-
+tural approaches or procedural controls for system components, framed as constraints, rules, or limitations.
+Moreover, alignment can be expressed by the System User . The user-prompted Goal can be further refined
+pre-runtime through supplementary Preferences provided by the Human User via the User Interface .
+In addition, real-time adaptability can be offered by multi-agent systems, necessitating instantaneous system
+responsiveness. A more in-depth exploration of this is available in Section 4.1.2. However, apart from the
+alignment achieved within the interaction layer by the multi-agent system, which our taxonomy addresses,
+there also exist alignment methodologies specifically tailored for the employed LLMs or foundation models
+[3,92].Autonomy , on the other hand, primarily surfaces from the capability of the multi-agent system to fulfill
+the designated Goal autonomously through self-organized strategy and task execution. Not only do individual
+collaborative intelligent Agents utilize the LLMfor reflecting, planning, or performing reasoning-intensive
+actions pertinent to their roles, but the overarching organization of the Task-Management Activity , along
+with other infrastructural or dynamic elements, might also be directed in a self-organized manner, steered
+by LLM-powered Agents . Further details on this can be found in Section 4.1.1. Navigating the complex
+interplay between autonomy and alignment presents an ongoing challenge for LLM-powered multi-agent
+systems. Striking the right balance is crucial to ensure an efficient and effective task-execution process that
+faithfully accomplishes the user-defined Goal .
+In the following Section 4, we explain how our taxonomy addresses these challenges of analyzing and
+balancing the interplay between autonomy and alignment across architectural aspects and viewpoints.
+4 Multi-Dimensional Taxonomy
+In this section, we introduce the system of our multi-dimensional taxonomy, engineered to methodically
+analyze the interplay between autonomy and alignment across architectures of autonomous LLM-powered
+multi-agent systems. The taxonomy weaves three crucial dimensions, i.e. levels of autonomy, levels of
+alignment as well as architectural viewpoints. Together, they form a three-dimensional matrix, serving as a
+comprehensive repository of architectural design options (see Fig. 1).
+12
+Section 4.1 delves into the complexities of the interplay between autonomy and alignment, exploring how the
+synergies of different levels of autonomy and alignment can characterize a system’s dynamics. Subsequently,
+Section 4.2, underscores the importance of incorporating architectural viewpoints into the taxonomic system.
+Rather than applying the autonomy-alignment matrix flatly, we propose analyzing each architectural viewpoint
+as well as further inherent architectural characteristics individually. Such a viewpoint-focused approach allows
+for a deeper and more nuanced understanding of the systems, reflecting the complexity of their architectural
+design and resulting dynamics. Finally, in Section 4.3, we unify these components, mapping the autonomy-
+alignment dimensions and levels onto the identified architectural viewpoints, thus introducing a third dimension
+into our taxonomy. Furthermore, we distinguish architectural aspects inherent to these viewpoints and specify
+corresponding level criteria for both autonomy and alignment.
+This framework provides a comprehensive classification of autonomous LLM-powered multi-agent systems,
+revealing distinct insights into the complexities arising from the interplay of interdependent architectural
+aspects. Each aspect is characterized by its levels of autonomy and alignment, influencing the systems’
+behavior, interactions, composition, and interaction with contextual resources.
+4.1 Interplay between Autonomy and Alignment
+Autonomy and alignment, as interdependent and interplaying concepts, have their roots in management
+sciences and organizational behavior, playing integral roles in the ways teams and systems function [ 49,57]. In
+these fields, autonomy typically refers to the degree of discretion employees or teams possess over their tasks,
+while alignment denotes the degree to which these tasks correspond to the organization’s overall objectives.
+When shifting focus to the AI landscape, the interplay between autonomy and alignment remains pivotal
+[67,10]. AI systems, by nature, operate with varying degrees of independence and are often designed to
+accomplish tasks that are multifaceted, interconnected, and potentially beyond the capabilities of individual
+human operators. However, complete autonomy can pose risks. If the goals of an AI system deviate from
+those of its human supervisors, it could lead to unforeseen consequences or uncontrollable side effects.
+Therefore, controlling the level of autonomy is crucial to maintain the balance between operational efficiency
+and safety. As such, understanding and defining the bounds of autonomy and alignment becomes vital to
+appropriately guide system behavior and prevent unwanted consequences, especially when dealing with
+autonomous multi-agent systems powered by LLMs.
+In order to efficiently address the characteristics of current and forthcoming autonomous LLM-powered
+multi-agent systems, we adopt a pragmatic and technical perspective on both autonomy and alignment. In
+the following sections, we explain this perspective and elaborate in detail on the dimensions and levels of
+autonomy and alignment applied by our taxonomy. Table 1 gives an overview of the employed levels and the
+resulting spectrum of potential combinations.
+Levels of Autonomy
+& AlignmentL0: Static L1: Adaptive L2: Self-Organizing
+L2: Real-time
+Responsive3User-Supervised
+Automation6User-Collaborative
+Adaptation9User-Responsive
+Autonomy
+L1: User-Guided 2User-Guided
+Automation5User-Guided
+Adaptation8User-Guided
+Autonomy
+L0: Integrated 1Rule-Driven Automa-
+tion4Pre-Configured
+Adaptation7Bounded Autonomy
+Table 1: Matrix showcasing the interplay between gradations of alignment ( vertical ) and autonomy ( horizontal )
+in the context of LLM-powered multi-agent architectures. Each cell signifies a unique combination of autonomy
+and alignment levels. Refer to Sections 4.1.1 and 4.1.2 for details on the applied levels. Section 4.1.3 provides
+details on the resulting matrix combinations.
+4.1.1 Autonomy
+The degree of autonomy refers to the extent to which an AI system can make decisions and act independently
+of rules and mechanisms defined by humans. For LLM-powered multi-agent systems, this translates to a
+system’s proficiency in addressing the goals or tasks specified by the user in a self-organizing manner, adapting
+and re-calibrating to the complexities of a given situation. Autonomous multi-agent systems are by nature
+13
+striving for this end-to-end automatic goal completion and task management from a user perspective. While
+automation often gets conflated with autonomy, it’s essential to differentiate the two. Automation pertains
+to tasks being carried out without human input [ 12,29], while autonomy pertains to decisions about tasks
+being made without human intervention [ 21,58,6]. In the domain of LLM-powered multi-agent systems,
+we look beyond mere task automation, focusing on how these systems internally manage their dynamics to
+fulfill user objectives. Our taxonomy, therefore, distinguishes systems on a spectrum of autonomy. Drawing
+from the triadic interplay illustrated in Fig. 3, on the one end of the spectrum, we see systems that heavily
+rely on predefined rules and frameworks, set by their human system architects. While they may execute tasks
+autonomously, their decision-making process is constrained within a fixed set of parameters ( low autonomy ).
+On the other hand, we encounter systems characterized by their ability for self-organisation and dynamic
+self-adaptation. Rather than relying on hard-coded mechanisms, they harness the power of LLMs to interpret,
+decide, and act, making them more adaptable to changing situations ( high autonomy ).
+Autonomy Levels. The levels of autonomy, represented on the x-axis in our matrix (see Fig. 1 and Table
+1), articulate the degree of agency of the LLM-powered agents in making decisions regarding the system
+operation independently from predefined and automated mechanisms.
+L0: Static Autonomy - At this foundational level, systems are primarily automated, relying heavily
+on the rules, conditions, and mechanisms embedded by system architects. The systems follow
+defined rules and predetermined mechanisms. This, however, includes some degree of flexibility
+resulting from rule-based options and alternatives. Anyway, the agents in these systems, are not
+empowered to modify rules during runtime. For instance, their function here is limited to the
+effective execution of assigned tasks. Depending on the alignment level, this results in Rule-Driven
+Automation, User-Guided Automation, or User-Supervised Automation (see Table 1).
+L1: Adaptive Autonomy - Evolving from the static level, systems at this stage possess the capability to
+adapt their behavior within a structure and procedural guidelines established by the system architects.
+The LLM-powered agents are capable of adjusting the system’s operations within this provided
+framework (such as flexible infrastructures and protocols) due to the needs of the given application
+scenarios, but not beyond. Depending on the alignment level, this leads to Pre-Configured Adaptation,
+User-Guided Adaptation, or User-Collaborative Adaptation.
+L2: Self-Organizing Autonomy - At this highest level of autonomy, LLM-powered agents emerge as
+the principal actors, capable of self-organization, actively learning and dynamically tailoring their
+operations in real-time based on environmental cues and experiences. The autonomy lies not in
+being independent from user intervention, but in being independent of architect-defined rules and
+mechanisms. However, this might also include highly generic infrastructures that are modifiable by
+the LLM-powered agents and thus allow self organisation. Depending on the alignment level, this
+results in Bounded Autonomy, User-Guided Autonomy, or User-Responsive Autonomy.
+These levels of autonomy not only apply to the system as a whole, but to architectural viewpoints and involved
+architectural characteristics (see Section 4.3).
+4.1.2 Alignment
+In the context of AI, the term alignment traditionally refers to the challenge of ensuring that an AI system’s
+behavior aligns with human intentions, values or goals. This intricate problem, often framed as the control
+problem , is a cornerstone of AI safety discourse [ 10,65]. However, when viewed through a practical
+lens, especially in the context of autonomous LLM-powered multi-agent systems, the alignment paradigm
+acquires a more interactive, user-centric perspective [ 1]. Here, alignment techniques can be seen as a detailed
+calibration of conditions tied to user-specified objectives or complex tasks. This includes preferences, policies,
+constraints, and boundaries which collectively steer or regulate the system’s trajectory towards achieving its
+set targets. Importantly, within this framework, alignment is not seen as counter to autonomy. Instead, it acts
+to complement and refine it, being applicable across various levels of autonomy.
+It is also important to note that these alignment aspects are focused on the agent-interaction layer and do
+not, or at least only indirectly, concern the utilized large language models (LLMs) [ 3,92] or other contextual
+resources, such as foundation models. However, the agent-interaction layer extends alignment possibilities
+by integrating rules and mechanisms to control agent interactions, for example, by incorporating real-time
+monitoring via interceptors [4]. Such measures, as delineated by [ 40,27] enable precise control over agent
+interactions as well as their interactions with LLMs and contextual resources, ensuring that they adhere to
+predetermined conditions and behaviors. Moreover, employing methodologies like design by contract [46]
+14
+further augments this control. Through this paradigm, software components’ formal, verifiable specifications,
+orcontracts , can delineate conditions for agent interactions, especially when they engage with foundational
+resources like LLMs. Such contracts can specify acceptable behaviors, constraints, and criteria, ensuring the
+system behaves reliably and as intended. While foundational models like LLMs have their inherent challenges,
+the agent-interaction layer introduces a distinct dimension of complexity. It is imperative to ensure both are
+seamlessly and securely integrated, ensuring alignment across all levels of the system.
+For our taxonomy, we combine two important dimensions of alignment: its origin and timing, reflecting the
+dynamic tension between automated alignment mechanisms and human customization, as illustrated in Fig. 3.
+The origin delves into who dictates the alignment, the system architect or the system user. Meanwhile, timing
+refers to when the alignment is specified, encompassing phases like pre-deployment, post-deployment but prior
+to runtime, or even during runtime. Autonomous LLM-powered multi-agent systems strive for achieving a goal
+or accomplishing a task prompted by the system user. Given this user-centric model, the alignment techniques
+that are integrated into the system architecture might address generic aspects, which are not directly related
+to the nuances and characteristics of specific user goals. To address this, we’ve categorized alignment into
+levels. The base level, or low alignment level , signifies alignment that’s already embedded into the system’s
+design by the system architects. This intrinsic alignment sets broad behavioral boundaries without focusing on
+specific user preferences. On the other hand, the high alignment levels are more adaptable and centered around
+user-specified alignment. Here, users have the flexibility to set their preferences either before the system enters
+its runtime or, ultimately, during its active operation. This dynamic range ensures a tighter fit to user objectives,
+all however built upon mechanisms integrated into the system architecture.
+Alignment Levels. The levels of alignment, represented on the y-axis in our matrix (see Fig. 1 and Table 1),
+measure the degree to which users of the system can influence or adjust the system’s behavior.
+L0: Integrated Alignment - At this foundational level, the alignment techniques are built directly into the
+system’s architecture. In such system, alignment mechanisms are static and rule-driven, and cannot be
+altered by the users. Depending on the autonomy level, this results in Rule-Driven Automation, Pre-
+Configured Adaptation, or Bounded Autonomy, where user interaction with the system’s alignment is
+not provided (see Table 1).
+L1: User-Guided Alignment - Evolving from the previous level, the User-Guided Alignment offers
+a degree of customization. This level empowers users by allowing them to set or adjust specific
+alignment parameters, such as conditions, rules, or boundaries, before the system starts its operation.
+These interactions are primarily facilitated via user interfaces designed to capture user preferences
+in a structured manner. Depending on the autonomy level, this results in User-Guided Automation,
+User-Guided Adaptation, or User-Guided Autonomy.
+L2: Real-Time Responsive Alignment - The highest level of alignment is represented by means to
+adjust the system’s behavior in real-time. Thanks to integrated real-time monitoring mechanisms,
+the system can actively solicit user feedback user decisions at critical junctures or decision points.
+This responsiveness enables a high level of collaboration in terms of ongoing feedback between the
+user and the system. Depending on the autonomy level, this results in User-Supervised Automation,
+User-Collaborative Adaptation, or User-Responsive Autonomy.
+The hierarchical alignment structure mirrors the challenges commonly faced in software development, espe-
+cially as visualized by the cone of uncertainty [8]. This cone depicts how uncertainties, predominant in the
+early stages of a project, gradually diminish as developers gain better clarity. Transferred to the alignment
+of LLM-powered multi-agent systems, initial alignment challenges are approached with a broad brushstroke
+by system architects. Their main focus is to ensure foundational system functionality. At this juncture, the
+specificity of user-driven tasks, with their unique nuances and intricacies, will hardly be anticipated by system
+architects. In turn, a user-guided, pre-runtime alignment allows users to specify preferences and limitations
+based on a more concrete understanding of possible challenges associated to a given task. However, even
+at this stage, it is barely possible for the user to anticipate all alignment challenges. Factors like ambiguous
+prompts, incomplete task specifications, or, in general, unclear expectations, can inadvertently steer the system
+off course resulting in unintended outcomes and uncontrollable side effects. Thus, once the system is in
+operation, such deviations from user’s intentions might first become obvious to the user during runtime and
+require adjustment in real-time. This allows the system to re-align based on immediate user feedback.
+These levels of alignment not only apply to the system as a whole, but to architectural viewpoints and involved
+architectural characteristics (see Section 4.3).
+15
+4.1.3 Combinations of Autonomy and Alignment
+By combining these two dimensions in our matrix (see Table 1), we provide a comprehensive view of the
+interplay between diverse gradations of autonomy and alignment within LLM-powered multi-agent systems. As
+illustrated in Fig. 5, departing from static and rule-driven system configurations ( automation ), this autonomy-
+alignment matrix captures the progression of dynamism and responsibilities as we move along the axes. On
+the y-axis, alignment levels represent the gradation of human users’ involvement—from integrated systems
+where the user’s role is passive (L0), to real-time responsive setups demanding active participation (L2). On
+the y-axis, the autonomy levels signify the evolving capabilities of LLM-powered agents, progressing from
+static behaviors (L0) to adaptive (L1) and, ultimately, self-organizing mechanisms (L2). This matrix structure
+reflects the triadic interplay and dynamic tensions illustrated in Fig. 3. As we delve deeper into the matrix, the
+challenge becomes evident: ensuring balance between the evolving responsibilities of LLM-powered agents
+and the goals and intentions by the human users, ultimately resulting in a dynamic collaboration between
+agents and humans.
+Alignment
+rule-driven
+automationuser-guided
+adaptationuser-responsive
+autonomy
+Automation AutonomyBalance
+L0L0L1L2
+L1 L29
+5
+1
+Figure 5: Interplay between autonomy and alignment: balancing evolving levels of dynamism and responsibil-
+ities of both LLM-powered agents ( autonomy ) and human users ( alignment ).
+In the following, we detail the resulting nine combinations provided in Table 1.
+1Rule-Driven Automation (L0 Autonomy/L0 Alignment) : In this configuration, both autonomy and
+alignment are at the lowest levels. Such system operates based on scripted mechanisms and fixed
+conditions defined by the system architects. The alignment aspects are integrated into the system
+during the development stage. At this level, the behavior can not be affected by the user, neither
+pre-runtime or during runtime. However, this balanced setup is ideal for repetitive, well-defined tasks
+that require minimal variability or adaptability.
+2User-Guided Automation (L0 Autonomy/L1 Alignment) : Here, while the autonomy of the system
+remains at the lowest level, users can guide the system’s behavior within predefined parameters
+before runtime. The user can not make real-time adjustments, but can influence the system’s behavior
+within the predefined structure. It allows a certain level of customization without granting complete
+control, which can be ideal for scenarios where user expertise can refine the operation but the task
+management remains static.
+3User-Supervised Automation (L0 Autonomy/L2 Alignment) : This configuration allows the user
+to supervise and make real-time adjustments to the system, despite the system’s autonomy level
+remaining at the lowest. The user has more control over the system’s behavior, being able to guide
+and correct it as necessary in real-time. This configuration is suitable for tasks requiring real-time
+user feedback and supervision, but where the processes themselves are performed in a pre-scripted
+manner.
+4Pre-Configured Adaptation (L1 Autonomy/L0 Alignment) : At this level combination, the multi-
+agent system can adapt its behavior within certain predefined parameters, but the alignment aspects
+are still integrated into the system during the development stage, with no room for adjustments by
+the user during runtime. This allows the agents to handle a greater variety of scenarios than strictly
+rule-driven systems, while still maintaining a clear boundary on its behavior set by the predefined
+parameters.
+5User-Guided Adaptation (L1 Autonomy/L1 Alignment) : Here, the system can adapt its operations
+within predefined parameters, and the user can also guide the system’s behavior within a predefined
+structure. It offers a balanced mix of system adaptation and user guidance. This combination
+16
+can be useful when the tasks or environment have some level of unpredictability that requires the
+LLM-powered agents to adapt within predefined bounds, and where the user’s guidance can inform
+the system’s decisions.
+6User-Collaborative Adaptation (L1 Autonomy/L2 Alignment) : This configuration allows the
+system to adapt its operations and also be responsive to real-time user adjustments. It offers a dynamic
+interaction between the user and the agents. This configuration is well-suited to environments that are
+unpredictable and require the system to adapt and respond quickly to the user’s real-time instructions.
+7Bounded Autonomy (L2 Autonomy/L0 Alignment) : Here, the multi-agent system can self-organize
+and learn from the environment, but the alignment is integrated during the development stage and
+cannot be adjusted by users during runtime. This provides the system with a great degree of flexibility
+to handle complex tasks and environments, while still adhering to a defined set of limitations and
+constraints specified by the system architect.
+8User-Guided Autonomy (L2 Autonomy/L1 Alignment) : At this level, while the system can self-
+organize and learn from the environment, the user can guide the system’s behavior within predefined
+parameters. This system configuration leverages the agents’ self-organizing abilities while allowing
+user guidance pre-runtime. It combines the strengths of autonomous decision making and learning,
+with the assurance of user-specified boundaries.
+9User-Responsive Autonomy (L2 Autonomy/L2 Alignment) : This is the highest level of autonomy
+and alignment, where the LLM-powered agents can self-organize, learn from the environment and
+user’s real-time adjustments. It offers a balanced collaborative environment between the user and the
+agents, being ideal for complex, unpredictable environments where both autonomous strategy and
+action as well as real-time user-responsiveness are needed.
+In the following sections, we explore how the autonomy-alignment matrix can be applied within the context
+of architectural viewpoints and further architectural aspects inherent to these viewpoints on autonomous
+LLM-powered multi-agent systems.
+4.2 Architectural Viewpoints
+Architectural viewpoints are a structured means to analyze and assess complex systems from diverse perspec-
+tives focusing on selected aspects and layers of an architecture [ 4,16]. Central to these viewpoints is the
+consideration of stakeholder concerns, which inform and determine the highlighted aspects and their interrela-
+tions in each viewpoint. Providing a combined multi-perspective analysis, viewpoints serve as an effective
+framework to examine the structures and dynamics of software architectures. For our taxonomy, we leverage
+viewpoints on autonomous LLM-powered multi-agent systems. Rather than mapping the autonomy-alignment
+taxonomy flatly onto the system, which oversimplifies the multi-faceted nature of these systems, analyzing
+each architectural viewpoint individually offers a tailored lens, enabling to comprehend the role and impact of
+autonomy and alignment within the system. Each viewpoint reveals distinct insights into the system’s behavior,
+internal interactions, composition, and context interaction, leading to a more nuanced and comprehensive
+classification [64].
+«uses»G A Functional 
+Viewpoint
+Goal-driven
+Task Mgmt.Development 
+Viewpoint
+Agent 
+Composition
+Multi-Agent
+CollaborationProcess 
+ViewpointM
+Context
+InteractionPhysical 
+ViewpointC
+Figure 6: Architectural viewpoints oriented to the 4+1 view model of software architecture [38] applied to
+autonomous LLM-powered multi-agent systems.
+17
+4.2.1 Applied Viewpoints
+For our taxonomy, we orient to Kruchten’s renowned 4+1 view model of software architecture [38], an
+established standard viewpoint model for software architecture, adapting it to suit the architectural characteris-
+tics of LLM-powered multi-agent systems (see Section 3). Our taxonomy encompasses the following four
+architectural viewpoints on these systems (refer to Fig. 6):
+GGoal-driven Task Management (Functional Viewpoint) : Kruchten’s functional viewpoint refers to
+the system’s visible functionalities as experienced by its users [ 38]. In the context of autonomous
+LLM-powered multi-agent systems, we see Goal-driven Task Management as a manifestation of
+this functional viewpoint. It entails the system’s capabilities and mechanisms to decompose user-
+prompted goals or complex tasks into smaller, more manageable tasks, and subsequently, orchestrate
+task execution, combine the results, and deliver the final result forming the response for the user (see
+Figs. 2 and 4).
+AAgent Composition (Development Viewpoint) : According to Kruchten, the development viewpoint
+is primarily focusing on the system’s software architecture, the breakdown into components, and
+their organization [ 38]. In our context, we interpret this as Agent Composition , focusing on the
+system’s internal composition, particularly the assembly and constellation of agents. It includes the
+types and roles of agents, their memory usage, the relationships between agents (see Figs. 2 and 4).
+MMulti-Agent Collaboration (Process Viewpoint) : Kruchten’s process viewpoint concerns the dy-
+namic aspects of a system, specifically the system procedures and interactions between components
+[38]. We apply this to the Multi-Agent Collaboration in our model, emphasizing the col-
+laborative task execution and interactions among agents. This encompasses the application of
+communication protocols, the dynamics of actions management, such as the actual task execution,
+mutual task delegation, as well as the evaluation and merging of task results on agent level, as well as
+the management of communication components such as prompts and prompt templates (see Figs. 2
+and 4).
+CContext Interaction (Physical Viewpoint) : According to Kruchten, the physical viewpoint involves
+the system’s mapping to physical resources [ 38]. We extend this to Context Interaction , focusing
+on the system’s interaction with the external environment. It includes how the system acquires,
+integrates, and utilizes contextual resources such as external data, expert tools, and further foundation
+models as well as the organized distribution and utilization of contextual resources within the agent
+network (see Figs. 2 and 4).
+4.2.2 Viewpoint Interdependencies
+To effectively design and understand autonomous LLM-powered multi-agent systems, it’s essential to recognize
+the relationships and interdependencies between architectural components and viewpoints [ 99,64]. Fig. 6
+illustrates these interrelated architectural viewpoints for multi-agent architectures. The figure includes use
+dependencies between the viewpoints, denoted as dotted lines indicating the directions of usage [ 55]. These
+dependencies arise from the interconnected nature of these viewpoints, as they collectively shape the behavioral
+features provided by the system, here expressed in terms of the Goal-driven Task Management viewpoint.
+The interplay between architectural viewpoints is notably influenced by the autonomy levels of the systems.
+With regard to the levels of autonomy, we can distinguish the following two types of dependencies between
+architectural viewpoints, i.e., availability-driven dependencies for low-autonomy systems and requirements-
+driven dependencies for high-autonomy systems. Fig. 7 illustrates the two types in a simplified manner. For
+further details on dependencies between architectural aspects inherent to the viewpoints, also see the feature
+diagram in Fig. 8.
+Availability-driven Dependencies (Low-Autonomy System). For low-autonomy multi-agent systems, as
+depicted in Fig. 7 (a), the architecture operates predominantly under pre-established automation. In these
+systems, functionality largely relies on pre-configured rules and mechanisms. Thus, the functionality of such
+multi-agent system is contingent upon the predefined capabilities of the system processes, which are defined
+by the structure of the system and the resources available.
+•In such systems, Goal-driven Task Management depends on all other dimensions, as it represents
+the culmination of the system’s operations in terms of the key functionality as perceived by the user.
+The capabilities regarding the decomposition and orchestration of task execution towards completing
+18
+Low-Autonomy
+Multi-Agent System
+Goal-driven
+Task Mgmt.Multi-Agent
+CollaborationAgent
+CompositionContext
+InteractionAvailability-driven Dependencies
+(a)High-Autonomy
+Multi-Agent System
+Goal-driven
+Task Mgmt.Multi-Agent
+CollaborationAgent
+CompositionContext
+InteractionRequirements-driven Dependencies
+(b)«relies on capabilities of » «adapts capabilities to »Figure 7: Types of dependencies distinguished by different levels of autonomy provided by LLM-powered
+multi-agent architectures.
+the prompted task are essentially influenced by the predefined composition and constellation of
+agents (such as competencies, roles, types, and network), their scripted mode of collaboration for
+task execution, and the rule-based integration and utilization of contextual resources.
+•In turn, Multi-Agent Collaboration derives its operational modus from the foundational struc-
+tures established by the Agent Composition andContext Interaction . The mode of collabo-
+ration for task execution among agents is dictated by predefined characteristics and competencies
+(types, roles) of the agents involved and their relationships and organization as network ( Agent
+Composition ), as well as by the accessibility in terms of the effective integration and utilization of
+contextual information, tools and models to execute the given tasks ( Context Interaction ).
+•Finally, Agent Composition also relies on the availability of contextual resources (Context Interac-
+tion). The types and number of agents needed in the system as well as their roles and competencies
+are directly influenced by the contextual environment (e.g., the availability, accessibility, and quality
+of data, foundation models, and expert tools) used by the system and how they are utilized within the
+task-management activity.
+Requirements-driven Dependencies (High-Autonomy System). In turn, high-autonomy multi-agent systems,
+illustrated in Fig. 7 (b), have the ability to self-organize. In these systems, the architectural infrastructure and
+dynamics as well as the context interaction are self-organizing and thus capable of adapting their capabilities
+to the needs and requirements set by a given goal. Thus, compared to systems with low autonomy, there is an
+inverse dependency relationship.
+•In highly-autonomous multi-agent systems, the user-prompted goal delineates the requirements,
+charting the course for the entire architectural edifice of the system. All other viewpoints adapt to
+the envisioned functional behavior expressed as Goal-driven Task Management . Based on the
+complexity of the goal, its decomposition into tasks and their distribution, the other architectural
+aspects inherent to the three further viewpoints undergo adaptations to fit the needs of the given
+situation.
+•In addition, Agent Composition , encompassing agents’ roles, types, and their memory usage,
+as well as Context Interaction , including the integration and utilization of resources, adapt
+to the requirements set by the modes of collaboration to tackle the assigned tasks, including the
+communication protocol ( Multi-Agent Collaboration ).
+•Finally, also Agent Composition sets the requirement for the adaptation of Context
+Interaction . The specific roles of agents within the system mandate particular resource inte-
+gration. For instance, an agent with analytical responsibilities might necessitate the inclusion of
+specific data streams or computational tools.
+Intertwined Dependencies (Mixed Autonomy Levels). The two distinguished types, availability-driven
+and requirements-driven dependencies, address the challenge of interconnected architectural viewpoints in an
+illustrative, but simplified manner. On the one hand, the viewpoints of a multi-agent system might provide
+different autonomy levels; on the other hand, also the aspects or mechanisms within a viewpoint might be on
+19
+different levels of autonomy. Both cases result in intertwined dependencies . It is important to note that the
+autonomy levels set for one viewpoint or aspects can have an impact on others viewpoints or aspects due to
+their interconnected nature (see above). The intertwined dependencies might prove risky. They can introduce
+complexities and unpredictabilities, potentially jeopardizing system efficiency and effectiveness. It underscores
+the necessity of incorporating robust control mechanisms to navigate and manage these interdependencies,
+which is illustrated by the following illustrative example.
+Example. Consider a practical scenario where an autonomous LLM-powered multi-agent system is operating
+in the following dynamic environment:
+•Decomposition Dynamics : Within the Goal-driven Task Management viewpoint, tasks are
+dynamically decomposed into sub-tasks based on user requirements, and this decomposition operates
+with a L2 autonomy level, which signifies a self-organizing manner.
+•Agent Collaboration Dynamics : Similarly, the Multi-Agent Collaboration viewpoint, which
+encompasses how agents collaborate for task execution, operates on the same L2 autonomy. Agents
+decide on-the-fly how to interact, delegate tasks, and merge results.
+•Contextual Interaction Limitation : Contrasting the above, the Context Interaction viewpoint
+is constrained by L0 autonomy level. Here, the system’s access and interaction with the external
+environment (contextual resources) are limited by predefined rules. The system cannot autonomously
+decide to reach out to new resources or modify the way it interacts with existing ones.
+Given these conditions, a potential issue arises: As tasks are decomposed and agents plan their collaborations,
+they might, based on their L2 autonomy, decide to utilize certain contextual resources. However, when it’s
+time to access these resources, they might find them inaccessible due to the L0 constraints in the Context
+Interaction viewpoint. This discrepancy in autonomy levels can cause operational dead-ends. For instance,
+an agent might anticipate using an external data source to complete its task, but the L0 constraints prevent it
+from accessing that source, leaving the task incomplete.
+Such issues highlight the importance of having robust control mechanisms in place that can preemptively
+identify and mitigate these discrepancies, ensuring smooth system operations.
+For a detailed illustration of dependencies between viewpoint-specific aspects, refer to Section 4.3.2.
+4.3 Interplay of Autonomy and Alignment in the System Architecture
+As already illustrated, both autonomy and alignment serve as cross-cutting concerns [35] impacting the
+operational efficiency of various architectural aspects across LLM-powered multi-agent systems. Thus, in
+the following, we map our matrix of autonomy and alignment levels onto the architectural viewpoints. This
+projection crafts a three-dimensional matrix, offering a prism through which these systems can be analyzed and
+categorized (also see Fig. 1). In Section 4.3.1, we give systematic overview of the resulting viewpoint-specific
+combinations of autonomy and alignment levels. Section 4.3.2 details the architectural aspects associated to
+these viewpoints and specifies corresponding level criteria that establish the foundation for the taxonomic
+classification.
+4.3.1 Mapping Autonomy-Alignment Levels to Viewpoints
+Table 2 showcases the interplay of autonomy, alignment, and the distinct architectural viewpoints. It applies
+the autonomy-alignment matrix, as illustrated in Table 1, to the identified architectural viewpoints inherent to
+autonomous LLM-powered multi-agent systems. Each cell in this matrix signifies a unique architectural design
+choice, representing a distinct system configuration. The architectural viewpoints ( horizontal ; see Section
+4.2) are categorized into Goal-driven Task Management , which highlights the system’s functionalities;
+Agent Composition , emphasizing its intrinsic structure; Multi-Agent Collaboration , denoting the
+dynamics of agent interactions; and Context Interaction , detailing the system’s rapport with its external
+environment in terms of data and tools. Alongside these viewpoints, the nine combinations of autonomy and
+alignment levels ( vertical ; see Section 4.1) describe the system’s behavior. Autonomy ranges from Static
+toSelf-Organizing , determining the system’s degree of self-organization. Meanwhile, alignment varies
+from Integrated toReal-Time Responsive , capturing the depth of human influence over the system’s
+operations. Combining these dimensions results in 36 system architectural design options available for
+configuring multi-agent systems.
+20
+Matrix
+#Autonomy-
+Alignment
+LevelsGGoal-driven
+Task ManagementAAgent
+CompositionMMulti-Agent
+CollaborationCContext
+Interaction
+1 Rule-Driven Automa-
+tion: Static & Inte-
+grated (L0 & L0)Rule-driven task man-
+agement.Rule-driven agent
+composition and
+constellation.Rule-driven collabora-
+tion protocols.Rule-driven interac-
+tion with contextual
+resources.
+2 User-Guided Au-
+tomation: Static &
+User-Guided (L0 &
+L1)User-guided task man-
+agement.User-guided agent
+composition and
+constellation.User-guided collabora-
+tion protocols.User-guided context
+integration and utiliza-
+tion.
+3 User-Supervised
+Automation: Static
+& Real-Time Respon-
+sive (L0 & L2)Task management ad-
+justed during runtime.Agent composition
+and constellation ad-
+justed during runtime.Agent collaboration
+adjusted during run-
+time.Context integration
+and utilization ad-
+justed during runtime.
+4 Pre-Configured
+Adaptation: Adaptive
+& Integrated (L1 & L0)Adaptive task man-
+agement with prede-
+fined options.Adaptive agent com-
+position and constel-
+lation with predefined
+flexibility.Adaptive collaboration
+protocols.Pre-integrated adap-
+tive contextual re-
+sources.
+5 User-Guided Adapta-
+tion: Adaptive & User-
+Guided (L1 & L1)User-adjusted adap-
+tive task manage-
+ment.User-adjusted adap-
+tive agent composition
+and constellation.User-adjusted adap-
+tive collaboration.User-adjusted adap-
+tive context integration
+and utilization.
+6 User-Collaborative
+Adaptation: Adaptive
+& Real-Time Respon-
+sive (L1 & L2)Adaptive task man-
+agement adjusted dur-
+ing runtime.Adaptive agent com-
+position and constel-
+lation adjusted during
+runtime.Adaptive collaboration
+adjusted during run-
+time.Adaptive context inte-
+gration and utilization
+adjusted during run-
+time.
+7 Bounded Autonomy:
+Self-Organizing & Inte-
+grated (L2 & L0)Task management or-
+ganically based on
+current needs.Agents self-organize
+based on current sce-
+nario.Collaboration strategy
+evolves organically.Agents select from a
+pool of contextual re-
+sources.
+8 User-Guided Auton-
+omy: Self-Organizing
+& User-Guided (L2 &
+L1)User-guided self-
+organizing task
+management.User-guided agent
+self-organization.User-guided collabora-
+tion evolution.User-guided self-
+organized selection
+from contextual re-
+sources.
+9 User-Responsive
+Autonomy: Self-
+Organizing & Real-
+Time Responsive (L2
+& L2)Self-organizing task
+management adjusted
+during runtime.Agent self-
+organization adjusted
+during runtime.Collaboration evolu-
+tion adjusted during
+runtime.Self-organized selec-
+tion from contextual re-
+sources adjusted dur-
+ing runtime.
+Table 2: Mapping autonomy and alignment levels ( vertical , #1–9 resulting from Table 1) to architectural
+viewpoints ( horizontal ) on autonomous LLM-powered multi-agent systems resulting in 36 viewpoint-specific
+system configurations. A detailed explanation of the autonomy and alignment levels is provided in Section 4.1.
+For an overview of the applied viewpoints, refer to Section 4.2.
+In the following Section 4.3.2, we explore further viewpoint-specific aspects and their interdependencies, in
+order to derive level criteria for the taxonomic classification.
+4.3.2 Viewpoint-specific Aspects and Level Criteria
+As outlined above, architectural viewpoints provide means to analyze certain aspects and aspect relations of
+the system’s architecture in a multi-perspective manner [ 64]. Drawing from the domain-ontology model (Fig.
+4), we now systematize the viewpoint-specific aspects employed in our taxonomy. Subsequently, we specify
+level criteria for autonomy and alignment corresponding to each aspect. Furthermore, we outline the main
+interdependencies among these aspects.
+Fig. 8 gives an overview of our taxonomy’s characteristics, structured through a feature diagram [ 5,69].
+Employed predominantly in software engineering, feature diagrams visually express feature models, which
+aim to organize the hierarchical structure as well as dependencies among system features.
+In particular, Fig. 8 (a) structures the viewpoint-specific taxonomic structure. Each of the four integrated
+viewpoints provides a certain combination of autonomy and alignment levels. As illustrated in Figs. 8 (b–e),
+this structure is refined by viewpoint-specific aspects and their interdependencies in terms of requirements-
+driven dependencies ( adapts-to ), presuming a high-autonomy system configuration, as discussed in Section
+4.2.2. These dependencies suggest that the capabilities of a dependent aspect evolve in line with the needs
+and stipulations of the aspect it points to. In turn, also these viewpoint-specific aspects can be assessed by the
+autonomy and alignment levels, resulting in a more nuanced taxonomic classification.
+21
+alternatives
+mandatory
+«adapts to»
+G M
+A CGoal-driven
+Task Mgmt.Multi-Agent
+CollaborationAgent
+CompositionContext
+Interaction
+DecompositionGoal-driven
+Task Mgmt.
+Orchestration Synthesis
+Agent
+Composition
+Agent
+GenerationRole
+DefinitionMemory
+UsageNetwork
+ManagementMulti-Agent
+Collaboration
+Communication
+Protocol Mgmt.Prompt
+EngineeringAction
+ManagementAutonomy
+Level
+Static
+(L0)Adaptive
+(L1)Self-Organizing
+(L2)Alignment
+Level
+Integrated
+(L0)User-Guided
+(L1)Real-Time
+Respons. (L2)(a)
+(b) (c)
+(d) (e)Multi-Agent
+Architectural Viewpoint
+Context
+Interaction
+Resources
+IntegrationResources
+UtilizationFigure 8: Feature diagram showcasing the taxonomic structure. Each viewpoint integrates autonomy and
+alignment levels (a). The diagram further illustrates viewpoint-specific aspects and mechanisms (b–e) alongside
+theadapts-to dependencies among them.
+Across the four distinct viewpoints, a total of 12 characteristic aspects are identified (as illustrated in Fig.
+8). Each of these aspects can be assessed and classified by its corresponding autonomy and alignment
+levels, yielding 9 possible configuration options per aspect (detailed in Table 1). Thus, given the viewpoints
+V1,V2,V3,V4with respective aspect counts A1=A2= 3,A3= 4, andA4= 2, and a level count L= 3for
+both autonomy and alignment, we define:
+TA=4X
+i=1Ai, (Total Aspects) (1)
+SC=L2, (Single Configuration Options per Aspect) (2)
+TSC=TASC, (Total Single Configuration Options) (3)
+TCC= (L2)A1+A2+A3+A4=STA
+C. (Total Combined Configurations) (4)
+Using the provided values, we find TSC= 108 andTCC= 912≈282×109.
+22
+In sum, mapping the autonomy-alignment matrix onto the identified aspects, our taxonomy captures 108
+distinct single configuration options. When considering all possible combinations of these configurations,
+we arrive at a total of 912, which equates to roughly 282 billion combinations available for configuring
+LLM-powered multi-agent architectures. This underscores the complexity challenge posed by such systems,
+further accentuated by the various options for intertwined dependencies, as detailed in Section 4.2.2.
+In the following, we outline these viewpoint-specific aspects, drawing from the architectural specifications
+detailed in Section 3.2 and define corresponding criteria for the levels of autonomy and alignment.
+GAspects and Levels of Goal-driven Task Management.
+Taxonomic aspects of Goal-driven Task Management comprise the three constituting phases:
+Decomposition (how the goal or complex task is broken down into manageable sub-tasks), Orchestration
+(how these tasks are distributed among the LLM-powered agents), and Synthesis (how the results of the
+tasks are finally combined); refer to Fig. 8 (b).
+Level Criteria:
+•Static Autonomy (L0) : At this level, we observe scripted processes and automated mechanics with
+rule-based options and alternatives for the task-management activity, including the phases of task
+decomposition, distributing and orchestrating the execution of single tasks, or combining their results.
+These scripted automated processes might demonstrate variability and flexibility including iterations
+based on predetermined mechanics and conditions. However, this level also includes strict processes
+or execution chains with no variations.
+•Adaptive Autonomy (L1) : Here, the system provides predefined but adaptive procedures for the
+phases of the task-management activity. Based on these predefinitions integrated into the system’s
+design and implementation, the LLM-powered agents are vested with certain autonomy to adapt
+the managing and controlling of the task-management processes. For example, within a defined
+framework, the agents are involved in managing the task decomposition, the distribution to other
+agents, or decisions about the synthesis of results. For this purpose, also patterns or prepared
+mechanics are reused.
+•Self-Organizing Autonomy (L2) : This level embodies the LLM-powered agents’ capability to
+architect and implement their own strategy for deconstructing and solving problems due to the
+characteristics or complexity of a given goal. This might also include high-level generic frameworks
+scaffolding the agents’ interactions and processes, but leaving space to LLM-powered agents for
+effectively self-organizing the phases of the task-management process.
+•Alignment Levels : At this juncture, alignment can be seen in terms of information and constraints
+regarding the task-management activity, especially regarding the mechanics in the decomposition,
+orchestration or synthesis of sub-processes, e.g., decomposition depth or consensus options for the
+total result. The alignment is either integrated into the system’s design (L0), configurable by the user
+before runtime (L1) or adjustable during runtime (L2).
+MAspects and Levels of Multi-Agent Collaboration.
+For the taxonomic classification within Multi-Agent Collaboration , we consider
+Communication-Protocol Management (how the collaboration and dialogues between the agents
+are managed), Prompt Engineering (how prompts are applied during collaboration and executing the
+actions), and Action Management (how the different kinds of action, such as the delegation or actual
+execution of tasks, or the result evaluation, performed by the agents are managed); see Fig. 8 (c)).
+Level Criteria:
+•Static Autonomy (L0) : At this level, collaborative actions and interactions among agents adhere to
+a fixed script or set of rules. The communication protocols, prompt use and augmentation, as well
+as the management of actions are pre-defined and don’t adjust dynamically based on agent inputs
+or environmental changes. Agents communicate, delegate tasks, execute instructions, and evaluate
+results based strictly on established, non-adaptable guidelines. Variability in the collaboration process
+is minimal and doesn’t account for unforeseen scenarios or complexities.
+•Adaptive Autonomy (L1) : This level introduces adaptability of collaboration aspects for LLM-
+powered agents based on predefined mechanisms. For example, the communication protocol, the
+prompt templates, or the management of the agent actions are modifiable. While the foundational
+23
+mechanisms are preset, the LLM-powered agents can autonomously select and adapt them due to the
+evolving requirements of the given scenario. For this purpose, they might reuse prepared mechanisms
+or patterns.
+•Self-Organizing Autonomy (L2) : Agents operating at this level showcase the capability to inde-
+pendently strategize their collaboration for task execution. Driven by the specific demands of the
+set goals and task complexities, these LLM-powered agents actively plan and execute collaboration
+strategies that best address the scenario at hand. For instance, LLM-powered agents can self-organize
+protocols for collaboration, mechanisms of prompt engineering and negotiate collaboratively the
+execution of actions among the agent network.
+•Alignment Levels: Relevant considerations include information and constraints linked to collabora-
+tion mechanisms and patterns between agents, the specification of prompt templates, constraints for
+prompt augmentation, or preferences for the execution of actions. These components can be either
+embedded within the system’s design (L0), made available for user configuration before runtime (L1),
+or be amenable to real-time adjustments (L2).
+AAspects and Levels of Agent Composition.
+The aspects of Agent Composition applied by the taxonomy comprise Agent Generation (how the agents
+are created, including the strategies and mechanisms employed), Role Definition (how agents’ roles are
+specified), Memory Usage (how the agents utilize their memory, i.e., how information is summarized and
+stored, or how memory is used for reflecting instructions or planning actions), and Network Management
+(how the constellation and relationships among agents are managed); refer to Fig. 8 (d).
+Level Criteria:
+•Static Autonomy (L0) : This level features a predefined and rule-driven composition and constellation
+of agents. Rules and mechanisms manage the creating of agents, select the agent types, and delineate
+their roles and competencies. Memory utilization follows predefined mechanisms, as well as the
+relationship between agents.
+•Adaptive Autonomy (L1) : While a system at this level provides predefined structures, it grants a
+degree of flexibility, permitting LLM-powered agents to adapt their composition and constellation
+within the given framework and due to given scenarios. For example, agents can replicate instances,
+their competencies are extensible and roles and further attributes (such as the size or compression
+mode for the agent memory) can be modified. Agents can modify or extend existing relationships,
+e.g., by connecting with further agents.
+•Self-Organizing Autonomy (L2) : LLM-powered agents operating at this level exhibit the ability
+to autonomously define and generate types and establish collaborative networks. The impetus for
+such self-organization arises from an acute understanding of the demands and nuances of the given
+scenario. Instead of adhering to predefined agent types and roles or relationships, agents dynamically
+constitute and organize based on real-time needs.
+•Alignment Levels: Pertinent to agent composition are information and constraints regarding their
+creation, types, roles, and competencies. Further, the manner in which agents interrelate and how
+they are structured within the network holds significance. These mechanics and configurations can
+be either deeply embedded into the system’s design (L0), be made configurable by the user before
+runtime (L1), or be dynamically adjustable during system operation (L2).
+CAspects and Levels of Context Interaction.
+ForContext Interaction , the taxonomic aspects comprise ( Resources Integration (how the integra-
+tion of contextual resources in terms of data, tools, models, and other applications is achieved), and Resources
+Utilization (how these resources are actually utilized for executing tasks); refer to Fig. 8 (e).
+Level Criteria:
+•Static Autonomy (L0) : At this level, contextual resources, including data, expert tools, and special-
+ized foundation models, are rigidly integrated based on the system’s initial design. Their utilization is
+organized by predefined rules and patterns relating scenarios and resource application. However, this
+level also includes the case that certain or any resources might not be available for use.
+•Adaptive Autonomy (L1) : Certain contextual resources are pre-integrated, but the system provides
+adaptive mechanisms usable by LLM-powered agents for integrating missing resources when needed.
+24
+To this end, access to certain APIs might be prepared. Based on predetermined mechanisms, the
+LLM-powered agents can flexible determine how to best utilize and combine these provided resources,
+tailoring their approach to the unique requirements of the given scenario.
+•Self-Organizing Autonomy (L2) : LLM-powered agents possess the autonomy to interface with a
+diverse pool of contextual resources (cf. HUGGING FACE). They can discerningly select, integrate,
+and harness these resources based on the objectives at hand and the specific challenges they encounter.
+•Alignment Levels: Factors to consider encompass information and constraints pertaining to the
+integration and application of contextual resources. These may include specifications or guidelines on
+which resources to leverage, when and how to integrate them, any limitations on their utilization, and
+more. These specifications or guidelines might be built into the system’s design (L0), made available
+for user modification prior to runtime (L1), or even be adapted in real time (L2).
+In the following Section 5, we explore the application of our taxonomy to real-world LLM-based multi-agent
+systems.
+5 Classification of Selected Systems
+In order to demonstrate the practical utility of our taxonomy, we analyze and classify selected existing
+autonomous LLM-powered multi-agent systems. We have chosen a set of seven state-of-the-art multi-
+agent systems for this assessment: AUTOGPT [77],BABYAGI [51],SUPER AGI [79],HUGGING GPT [70],
+METAGPT [28],CAMEL [41], and AGENT GPT [71]. Each of these systems is maintained and available
+as open-source project. For basic information on these and further LLM-powered multi-agent systems, refer
+to Section 2.2. For each selected system, we gathered relevant information by examining the technical
+documentation and research papers, where available, as well as reviewing the code base. We further engaged
+with each system to explore its real-time functionalities, with emphasis on alignment mechanisms available
+before and during runtime.
+In the following sections, we first report on the results of analyzing and classifying the selected systems
+(Section 5.1). Then, we compare and interpret the results in Section 5.2.
+LLM-powered
+Multi-Agent
+SystemsGoal-driven Task Mgmt. Multi-Agent Collaboration Agent Composition Context Interact.
+Decom Orch Synth CommP PrEng ActM AGen RoleD MemU NetM Integ Util
+AU AL AU AL AU AL AU AL AU AL AU AL AU AL AU AL AU AL AU AL AU AL AU AL
+Auto-GPT [77] 2 0 0 0 1 0 0 0 1 0 2 0 0 0 1 0 0 0 0 0 0 0 2 0
+BabyAGI [51] 2 0 0 0 1 0 0 0 1 0 2 0 0 0 1 0 0 0 0 0 0 0 2 0
+SuperAGI [79] 2 0 1 0 1 1 0 0 1 0 2 0 1 1 2 1 0 1 0 0 0 1 2 1
+HuggingGPT [70] 2 0 1 0 2 0 0 0 2 0 2 0 2 0 2 0 1 0 0 0 2 0 2 0
+MetaGPT [28] 2 0 0 0 2 0 1 0 1 0 2 0 0 0 0 0 0 0 1 0 0 0 2 0
+CAMEL [41] 2 0 0 0 1 0 0 0 1 0 1 0 0 1 1 1 0 0 0 1 0 0 0 0
+AgentGPT [71] 2 1 1 0 1 0 0 0 1 0 2 0 1 1 2 0 0 0 0 0 0 0 2 1
+Zapier* [62] 1 1 0 1 0 1 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 1 0 1
+Table 3: Assessment of autonomy ( AU) and alignment ( AL) levels across viewpoint-specific aspects of selected
+LLM-powered multi-agent systems. Detailed level criteria for viewpoint-specific aspects are discussed in
+Section 4.3.2. * Z APIER , a workflow-automation tool, has been included to contrast the results.
+5.1 Taxonomic Classification
+The taxonomic classification relies on a detailed assessment of autonomy and alignment levels for viewpoint-
+specific aspects of the systems. Table 3 reports on the results of assessing these levels of autonomy ( AU) and
+alignment ( AL) for aspects characterizing the four architectural viewpoints applied by our taxonomy. In partic-
+ular, for Goal-driven Task Management , the aspects of decomposition ( Decom ), orchestration ( Orch ), and
+25
+synthesis ( Synth ); for Multi-Agent Collaboration , the aspects of communication-protocol management
+(CommP ), prompt engineering ( PrEng ), and action management ( ActM ); for Agent Composition , the aspects
+of agent generation ( AGen ), role definition ( RoleD ), memory usage ( MemU ), and network management ( NetM );
+forContext Interaction , the aspects of resource integration ( Integ ), and resource utilization Util are
+distinguished. An overview of these viewpoint-specific aspects and corresponding level criteria applied for
+this assessment is provided in Section 4.3.2.
+* In order to contrast the classification results, we included ZAPIER [62] into our comparison, a renowned tool
+offering the automation of workflows based on user-specified tasks.
+Decom
+Orch
+Synth
+CommP
+PrEng
+ActM
+AGenRoleDMemUNetMIntegU�lSuperAGI
+Decom
+Orch
+Synth
+CommP
+PrEng
+ActM
+AGenRoleDMemUNetMIntegU�lCAMEL (f)(c)
+Decom
+Orch
+Synth
+CommP
+PrEng
+ActM
+AGenRoleDMemUNetMIntegU�lBabyAGI
+Decom
+Orch
+Synth
+CommP
+PrEng
+ActM
+AGenRoleDMemUNetMIntegU�lZapier*
+Decom
+Orch
+Synth
+CommP
+PrEng
+ActM
+AGenRoleDMemUNetMIntegU�lMetaGPT
+(h)(e)(b)
+Decom
+level scheme (L0, L1, L2)autonomy level
+alignment level
+architectural aspect
+Decom
+Orch
+Synth
+CommP
+PrEng
+ActM
+AGenRoleDMemUNetMIntegU�lAuto-GPT
+Decom
+Orch
+Synth
+CommP
+PrEng
+ActM
+AGenRoleDMemUNetMIntegU�lHuggingGPT
+Decom
+Orch
+Synth
+CommP
+PrEng
+ActM
+AGenRoleDMemUNetMIntegU�lAgentGPT(a)
+(d)
+(g)
+Figure 9: Radar charts illustrating the system profiles based on an assessment of architectural aspects in terms
+of autonomy ( blue graph ) and alignment ( green dashed graph ) levels. Detailed assessment data can be found
+in Table 3.
+Fig. 9 displays the derived autonomy and alignment levels per multi-agent system using radar (or spider) charts
+[80]. In particular, architectural aspects form the multiple axes. The level scheme ( L0,L1,L2) for autonomy
+and alignment is depicted by grey circles linking these axes. The blue graph then represents the assessed
+autonomy levels, the green dashed graph the corresponding alignment levels.
+In what follows, we outline key results from the taxonomic assessment for each system.
+26
+•AUTO -GPT [77] - enables users to specify multiple goals, which are autonomously decomposed
+into tasks and then prioritized (L2 autonomy for Decomposition ); also see Fig. 9 (a). The system
+encompasses three distinct task-management agents: an execution agent, a task-creation agent, and a
+task-prioritization agent. All tasks are actually performed by this singular execution agent sequentially
+determined by prioritization (L0 autonomy for Orchestration ). Following the completion of each
+task, the agent evaluates the intermediate results, engaging in self-criticism. The tasks are optionally
+re-prioritized. The final result represents an aggregate of all partial results, complemented with a
+succinct summary (L1 autonomy Synthesis ). The communication between the three agents follows
+a predefined communication protocol. Prompt Engineering is adaptive based on templates (L1
+autonomy). The management of the performed actions is self-organized (L2 autonomy). Agents
+in the system are pre-configured and instantiated once, showing L0 autonomy. The Role of the
+execution agent is adaptive (L1 autonomy). Both Memory Usage andNetwork Management adhere
+to predefined rules, marking L0 autonomy. AUTO-GPT is equipped with a suite of predefined
+contextual resources (L0 autonomy), which are utilized in a self-organizing manner due to the needs
+of the scenario, demonstrating L2 autonomy. Across the aspects, the system provides a low level of
+user interaction. Beyond the transmission of goals, further user interaction is only available in terms
+of authorizing the subsequent execution step, which however, can also be skipped via the continuous
+mode , leaving users with no further intervention capabilities.
+•BABYAGI [51] - provides very similar functionalities and architectural characteristics to those
+demonstrated by AUTO-GPT . This similarity can be visually observed in the radar charts illustrated
+in Figs. 9 (a) and (b). In particular, both systems maintain a high-autonomy level regarding goal
+Decomposition , the management of single actions performed by the task-execution agent, and the
+Utilization of integrated contextual resources due to the requirements of the given tasks. Further-
+more, both systems provide transparency by reporting on the execution agent’s plans and thinking
+operations as basis for executing the tasks. They both maintain iterative, but fixed communication
+protocols allowing for the task-management agents to organize the decomposition and aspects of
+result synthesis. BABYAGI extends the set of task-management agents by a context agent, which
+is responsible for context-interaction tasks. In addition, it also allows the user to configure a few
+constraints governing the use of the LLM.
+•SUPER AGI [79] - also allows users to specify a goals or complex task, which are decomposed
+autonomously into tasks tackled sequentially by an LLM-powered agents. Thereby, its functionalities
+and architectural characteristics are in some regards similar to AUTO-GPT andBABYAGI (see
+above). For instance, the executing agent is performing the assigned tasks autonomously, showcasing
+L2 autonomy in Action Management ; also see Fig. 9 (c). The systems leverages predefined, but
+adaptable prompt templates (L1 autonomy for Prompt Engineering ). Contextual resources are
+also utilized in an autonomous manner, indicative of L2 autonomy. Diverging from its counterparts,
+SUPER AGI necessitates that users create a dedicated agent for every distinct goal. In contrast to the
+other two systems, the roles of these agents are highly task-adaptive (L2 autonomy) and can be influ-
+enced by user, attributing to L1 alignment. Moreover, the Orchestration of tasks is more adaptive
+(L1 autonomy). A distinctive feature of SUPER AGI is its ability to incorporate various alignment
+strategies. For instance, it permits constraints regarding Memory Usage , allowing users to cap the
+context window’s length, a trait of L1 alignment. In terms of Context Interaction ,SUPER AGI
+comes with an array of pre-configured tools, all of which can be authorized for Utilization .
+Furthermore, data can be uploaded, empowering agents to seamlessly incorporate and utilize it (L1
+alignment). Though SUPER AGI can handle multiple goals and agents, these agents work in parallel,
+separately. There is no actual collaboration between the agents, and no further configuration options
+for the user, resulting in L0 autonomy and alignment for Communication Protocol andNetwork
+Management .
+•HUGGING GPT [70] - follows a different strategy by leveraging the LLM as an autonomous controller
+that combines various multi-modal AI models to solve complex tasks. In this, it integrates with the
+HUGGING FACE platform that provides a large pool of foundation models available for utilization.
+This singular central LLM-powered agent, tailored to solve the given goal, is autonomous in breaking
+down the goal or complex task into manageable tasks (L2 autonomy for Decomposition ) as well as
+in selecting, combining, and applying the appropriate models via prompting, achieving L2 autonomy
+forIntegration andUtilization of contextual resources as well as for Prompt Engineering ,
+Action Management ,Agent Generation ,Role Definition . However, not every aspect of
+HUGGING GPT exhibits such high autonomy. Some procedural aspects are predefined, but adaptive
+to the given task, such the high-level process framework consisting of the predefined phases of
+27
+planning, model selection, task execution, and response generation. Despite its autonomy in many
+aspects, HUGGING GPT does not grant users any further degree of user customization, resulting in L0
+alignment for all aspects; see Fig. 9 (d). In sum, based on our autonomy-alignment matrix (see Table
+1), the system shows tendency towards Bounded Autonomy (#7; L2 autonomy and L0 alignment).
+•METAGPT [28] - aims to solve complex programming tasks (specifically in Python) by leveraging
+the synergies of multiple collaborating LLM-powered role agents. Thereby, the framework simulates
+human workflows and responsibilities inherent to software-development project. For this purpose,
+the task-management activity comprises distinct phases similar to the waterfall process (such as RE,
+design, coding, testing), each with dedicated role agents responsible for autonomously executing
+the associated tasks. Each phase delivers certain artefacts then processed by the next phase (e.g.,
+design specification). In particular, the user-specified requirements are autonomously transferred
+into these different artefacts (L2 autonomy for Decomposition ), which are finally also combined
+to product a tested software program, achieving L2 autonomy for Synthesis ; also see Fig. 9 (e).
+As mentioned aove, the actual Orchestration follows a defined scheme, termed as standardized
+operation process , resulting in L0 autonomy. Both Agent Generation andRoles are predefined
+(L0 autonomy). Within their designated phases, the agents display pronounced autonomy, exhibiting
+adaptability in their Action Management corresponding to the specificity of tasks, thereby reaching
+L2 autonomy. Prompt Engineering is predefined, but adapted for inter-agent collaboration (L1
+autonomy). Contextual resources are autonomously utilized as needed, marking L2 autonomy for
+Context Interaction . Similar to HUGGING GPT ,METAGPT showcases low levels of alignment
+for the user (L0), since it provides no further configuration or adjustment options for the user.
+•CAMEL [41] - aims to explore the potentials of autonomous cooperation among communica-
+tive LLM-powered agents to accomplish complex tasks. Similar the most other multi-agent sys-
+tems, it aspires to handle given user-prompted goals autonomously. To this end, a dedicated
+generic task-specifier agent breaks down the goal into a list of manageable tasks (L2 autonomy for
+Decomposition ), also see Fig. 9 (f). Subsequently, these tasks are processed by a pair of agents work-
+ing in tandem through a cyclical dialogue pattern, wherein the AI-user agent lays out the directives,
+and the AI-assistant agent assumes the role of the executor. This strict modus operandi corresponds to
+L0 autonomy in Orchestration ,Communication Protocol , and Network Management . The
+specific Roles of these predefined agent archetypes can be selected by the user (L1 alignment). Aug-
+menting this duo are other specialized agents designed for specific roles, including task allocation and
+strategic planning. In contrast to most other analyzed systems (except METAGPT ),CAMEL provides
+actual collaboration between role agents executing the given tasks. During the task-execution phases,
+agents operate with a marked sense of autonomy, achieving L2 in both Prompt Engineering and
+Action Management . Alignment options for the user are provided via the definition of agents,
+encompassing their Roles and interrelation in the Network , resulting in L1 alignment.
+•AGENT GPT [71] - also strives to accomplish a user-prompted goal by leveraging a single task-
+execution agent, who can be created by the user by specifying its goal, resulting in L1 alignment
+forAgent Generation . The agent systematically addresses tasks, prioritizing them based on a
+predefined list and capitalizing on contextual resources, all in a self-organized manner corresponding
+to L2 autonomy. In terms of autonomy levels across different facets, it closely mirrors SUPER AGI, as
+can be observed in Fig. 9 (c) and (g). However, when it comes to alignment possibilities, AGENT GPT
+diverges slightly. On the one hand, it provides no adjustment options regarding the agent’s role or the
+Synthesis of results (both L0 alignment). On the other hand, it introduces the option to extend the
+task list by inserting custom tasks, achieving L1 alignment for Decomposition .
+•ZAPIER [62] - Unlike the other entities discussed, ZAPIER focuses on workflow automation based on
+user-specified tasks and does not represent an LLM-powered multi-agent system. Its inclusion in this
+classification serves to contrast the results, providing a clearer understanding of the capabilities and
+potential limits of LLM-powered systems when juxtaposed with traditional task-oriented automation
+platforms. In particular, in ZAPIER , users need to define step-by-step instructions to facilitate the
+automation process. The resulting workflows can work in parallel, but lack the capability for direct
+inter-task interactions. ZAPIER offers configuration options (pre-runtime) for diverse aspects related to
+Task Management andContext Interaction , resulting L1 alignment; also see Fig. 9 (h). Given
+its non-reliance on LLM-powered agents, it naturally secures an L0 ranking in both autonomy and
+alignment for agent-centric attributes. Nevertheless, it leverages LLMs to process textual tasks such
+as writing emails, or for decomposing user-specified goals into tasks, a feature users can optionally
+activate (thus L1 autonomy for Decomposition ). Drawing from our autonomy-alignment matrix,
+detailed in Table 1, ZAPIER is aptly categorized as User-Guided Automation (#2; signifying L0
+28
+autonomy and L1 alignment). Given its unique positioning as a workflow automation system, ZAPIER
+provides an illustrative deviation from these trends. Its strategic approach is distinct, predominantly
+showcasing lower levels of autonomy, as the LLMs are only leveraged for specific, limited tasks.
+Conversely, it favors a strategy of extensive user-guided alignment, applicable to all except the
+agent-specific aspects. Note, however, that alignment here is not applied as an enhancement or
+refinement to actually align the system’s operation to the user’s goal or intention, but in terms of
+specifications of process steps with detailed instructions essential for the system’s operation.
+5.2 Comparative Analysis
+In the following, we discuss the distribution of assessed levels (Section 5.2.1) and explore strategies across
+system categories (Section 5.2.2).
+5.2.1 Comparison of Assessed Levels
+Fig. 10 offers an overview of how the assessed levels of autonomy and alignment distribute over the 12
+categories of architectural aspects of the seven selected multi-agent systems. Detailed assessment data is
+provided in Table 3.
+Decom Orch Synth CommP PrEng ActM AGen RoleD MemU NetM Integ U�l
+L2 7 0 2 0 1 6 1 3 0 0 1 6
+L1 0 3 5 1 6 1 2 3 1 1 0 0
+L0 0 4 0 6 0 0 4 1 6 6 6 1(a)   Autonomy Levels
+Decom Orch Synth CommP PrEng ActM AGen RoleD MemU NetM Integ U�l
+L2 0 0 0 0 0 0 0 0 0 0 0 0
+L1 1 0 1 0 0 0 3 2 1 1 1 2
+L0 6 7 6 7 7 7 4 5 6 6 6 5(b)   Alignment Levels
+Figure 10: Distribution of identified autonomy and alignment levels across architectural aspects of selected
+LLM-powered multi-agent systems, represented as stacked bar charts with corresponding data provided below.
+On the one hand, three groups of aspect categories emerge when assessing autonomy levels, each displaying a
+certain degree of homogeneity. A detailed representation can be found in Fig. 10 (a).
+•High-Autonomy Aspects: Among the systems, we encounter a high-autonomy strategy for certain
+aspects, demonstrated by self-organizing and autonomously deciding LLM-powered agents. This
+strategy is particularly evident for the decomposition of goals into manageable tasks ( Decom ), for the
+management of actions, encompassing the actual performance of different task-related actions ( ActM ),
+as well as for utilizing the contextual resources such as tools and data ( Util ). Nearly all systems
+delegate the responsibilities for these aspects to the LLM-powered agents, which corresponds to L2
+autonomy.
+29
+•Medium-Autonomy Aspects: For other aspects, systems lean towards a semi-autonomous strategy
+(L1), featuring predefined mechanisms adaptable by the LLM-powered agents. This is prominently
+observed in two aspects. First, in result synthesis ( Synth ), by combining the task results guided by a
+predefined framework adaptable by the LLM-powered agents. Second, in the engineering of prompts
+(PrEng ), such during prompt augmentation by adapting predefined prompt templates.
+•Low-Autonomy Aspects: Several architectural aspects showcase a deterministic strategy with
+rule-based mechanisms and automation, demonstrating L0autonomy, which can observed for the
+following aspects:
+–orchestrating and distributing the tasks ( Orch ).
+–guiding the collaboration between the agents ( CommP ).
+–managing the utilization of memory, such as for reflecting and planning ( MemU ).
+–managing the agent network, such as regarding the relationships between the agents ( NetM ).
+–integrating contextual resources ( Integ ).
+Variable-Autonomy Aspects: The autonomy levels for the aspects of agent generation ( AGen ) and role
+definition ( RoleD ) display notable variability, as depicted in Fig. 10 (a). This heterogeneity is reflective of the
+different strategies employed by the multi-agent systems under analysis (detailed in Section 5.2.2).
+Integrated and User-Guided Alignment: Drawing insights from Fig. 10 (b), it emerges that the predominant
+strategy across most systems is to maintain lower levels of alignment across all assessed aspects. This primarily
+manifests in alignment techniques already integrated into the system architecture (L0 alignment), offering
+little to no options for user adjustment. Furthermore, low-autonomy aspects with predefined and automated
+mechanisms can be used to control and align other higher-autonomy levels. Thus, these mechanisms can be
+seen as manifestations of integrated alignment. However, we observe a noticeable inclination for systems to
+provide user-guided alignment (L1) for specific aspect categories, namely the agent generation ( AGen ), agent
+role definition ( RoleD ), and contextual resource utilization ( Util ). Furthermore, the data reveals a consistent
+lack of real-time responsive alignment options across all examined systems. Nonetheless, in this context, it is
+worth mentioning that some systems at least facilitate monitoring functionalities available for system users
+(often termed as verbose mode ), which provide transparency of the reasoning and decision-making performed
+by the execution agents during task reflection and planning. This transparency grants users the leverage to
+either greenlight or halt the impending actions. However, there are no possibilities to further influence the task
+planning or execution, such as by adjusting or refining task planning.
+Intertwined Dependencies: As evident from the radar charts in Fig. 9, a diverse range of autonomy levels
+manifests both within and across architectural viewpoints of the analyzed systems. This variance results in
+a complex web of intertwined dependencies between the aspects: Certain aspects have to deal with diverse
+dependencies. While dependent on predefined mechanisms or resources provided by low-autonomy aspects
+(availability-driven dependencies ), they have to adapt dynamically in response to situational imperatives set by
+other high-autonomy aspects ( requirements-driven dependencies ). This complexity resulting from intertwined
+dependencies can be seen as challenging for ensuring accurate process execution. A detailed description of
+these challenges associated with architectural dependencies is provided in Section 4.2.2.
+5.2.2 Strategies Across System Groups
+We now explore how different categories of systems balance the interplay between autonomy and alignment.
+Based on our taxonomic classification and the resulting system profiles as illustrated in Fig. 9, we can categorize
+the selected 7 systems under analysis into three distinct system groups, which encompass general-purpose
+systems, central-controller systems, and role-agent systems. It’s important to note that our categorization
+into these three groups, based on the systems chosen for this exploration, doesn’t capture the entire spectrum
+of autonomous LLM-powered multi-agent systems. For a comprehensive overview of existing systems and
+system categories, we recommend referring to the recent surveys provided by [ 84,95]. In the following, the
+key characteristics as observed from the corresponding system profiles are discussed.
+•General-Purpose Systems - representing multi-agent systems designed for and adaptable to a
+broad spectrum of tasks and applications. Within the analyzed set of multi-agent systems, the
+following fall into this group: AUTO-GPT [77],BABYAGI [51],SUPER AGI [79], and AGENT GPT
+[71]. Goals are decomposed autonomously and represented as prioritized task lists (L2 Decom ).
+They employ a multi-cycle process framework performed by dedicated task-management agents
+represented by certain generic agent types, including a single task-execution agent (see Section 3.2).
+30
+Relations and communications between these agents are strictly predefined, and agent conversations
+express as a monologue of the task-execution agent, resulting in low autonomy levels (L0) for
+communication protocol ( CommP ), and network management ( NetM ). The task-related actions are
+performed autonomously by the task-execution agent (mostly L2 autonomy ActM ). while resource
+integration is based on provided mechanisms ( Integ ), the resources are selected and utilized by the
+LLM-powered in a self-organizing manner (L2 autonomy for Util ), except for CAMEL ; resulting
+in similar autonomy profiles for the aforementioned aspects. Besides from these commonalities,
+these systems distinguish in certain characteristics. Both AUTO-GPT andBABYAGI employ generic
+task-execution agent, and provide no further alignment options at all. Moreover, these systems
+employ a generic task-execution agent with predefined agent roles and relations, reulting in L0
+autonomy for AGen andNetM . In contrast, SUPER AGI andAGENT GPT employ execution agents
+with self-organizing agent roles (L2 autonomy for RoleD ), an adaptable orchestration process (L1 for
+Orch ), and some alignment options, especially for agent-specific aspects. Moreover, these systems
+employ execution agents, whose roles can be customized by the user (L1 alignment for AGen ).
+•Central LLM Controller - marks a third group specialized in leveraging and combining contextual
+resources for accomplishing the complex goals. HUGGING GPT [70] serves as an archetype of such
+systems, utilizing resources especially in terms of existing ML models integrated via HUGGING FACE.
+As already detailed in Section 5.1, HUGGING GPT is characterized by a single central LLM-powered
+control agent with monologue-based reflection and planning. Language in terms of agent prompts
+as generic interface to manage the interplay between multiple specialized foundation models. In
+comparison to other systems or system groups, we see the highest levels of autonomy granted to
+this central agent (mostly L2); also see Fig. 9 (d). Furthermore, we see a finite and artefact-oriented
+process adaptable by the LLM-powered agent for orchestrating the different model-related tasks (L1
+autonomy). As already stated above, beyond prompting the task, there are no further user-centric
+alignment options (L0 alignment).
+•Role-Agent Systems - employ an interplay or simulation between multiple dedicated roles agents.
+This collaboration can serve different purposes, such as simulating a discussion or solving tasks that
+demand for a multi-perspective collaboration. With defined roles in a certain environment (such as
+in a software development project), their application is bound to this application domain or special
+purpose. Among the analyzed systems, METAGPT [28] and CAMEL [41] represent such systems. In
+contrast to the general-purpose systems, the execution agents play roles with dedicated responsibilities
+in a certain application domain. Furthermore, these role agents actually collaborate directly with
+each other. In case of the two exemplary systems, this collaboration is realized by communication
+protocols employing a dynamic exchange between agents with instructor and executor roles. In
+particular, CAMEL employs two such role agents based on predefined agent types, but adjustable by
+the user. In ongoing strict dialogue cycles, the AI-user role agents instructs the AI-assistant role agent
+to execute the tasks (L0 autonomy for CommP ). Similar to SUPER AGI,CAMEL requires the user to
+specify the agents’ roles (L1 alignment). METAGPT , in contrast, internally assigns predefined roles
+with responsibilities alongside a waterfall development process (L0 alignment); thus, also expressing
+a finite and artefact-oriented process (L0 autonomy for Orch ), terminating with the produced and
+tested software program. However, like in real-world software project, refinement iterations can
+follow, optional feedback cycles make it adaptable for the agents (L1 autonomy for CommP ).
+Strategy Assessment. Beyond differences in the applied communication protocols, it is the flexibility of
+agent roles (in relation to both autonomy and alignment) and further customization options for agent-specific
+aspects that distinguishes the systems’ strategies (see above). However, when examining how the systems
+deal with autonomy and alignment across further aspects, most systems and system groups show similar
+strategies. The reasoning capabilities of LLM-powered agents are especially leveraged in areas demanding
+high autonomy, such as the goal decomposition, the actual execution of task-related actions, and the utilization
+of contextual resources. Interestingly, these high-autonomy aspects are mostly combined with low alignment
+levels, resulting in bounded autonomy aspects (refer to Table 1). A closer look at aspect interdependencies, as
+depicted in Fig. 8, reveals that these internally unbalanced aspects are accompanied by other low-autonomy
+aspects equipped with limited flexibility, as follows:
+• Autonomous decomposition directly depends on the user-prompted goal.
+• Autonomous action management depends on strict or predefined communication protocol.
+• Autonomous resource utilization depends on strict or predefined resource integration.
+In these cases, the predefined and rule-based mechanisms serve as integrated alignment guiding and controlling
+the accurate operation of the dependent autonomous aspects.
+31
+Based on the findings of the taxonomic classification, in the next Section 6, we discuss challenges for current
+systems and reflect on the taxonomy’s limitations and potentials.
+6 Discussion
+This paper introduces and applies a novel comprehensive taxonomy, shedding light on the ways autonomous
+LLM-powered multi-agent systems manage the dynamic interplay between autonomy and alignment within
+their architectures. When interpreted through the lens of our taxonomy, we encounter challenges and develop-
+ment potentials for current LLM-powered multi-agent systems, which are discussed in Section 6.1. Moreover,
+in Section 6.2, we reflect on limitations and further potentials of the taxonomy itself.
+6.1 Challenges for Current Systems
+Our analysis of architectural dynamics inherent to current LLM-powered multi-agent systems, as detailed
+in Section 5, reveals a number of challenges regarding the interplay between autonomy and alignment. In
+accordance with [ 84], we recognize challenges related to the adaptability of agent collaboration. Moreover,
+our exploration indicates potentials for user-centric alignment options and controlling high-autonomy aspects.
+Agent Collaboration. Among the systems analyzed, we especially observe limitations regarding collaboration
+modes and role-playing capabilities, as well as risks tied to prompt-driven collaboration techniques.
+•Adaptability of Communication Protocols: As discussed in Section 5.2, the collaboration be-
+tween agents is mainly characterized by restricted communication protocols between predefined
+task-execution agents, such as instructor-and-executor relationships, or sequential or multi-cycle
+processes with predefined execution chains. Employing LLM-powered agents to manage and adapt
+the constellation of the agent network as well as their collaboration modes could pave the way for
+more creative problem-solving methods in task execution.
+•Dynamic Role-Playing: In particular, we also see development potentials via the flexible collab-
+oration between self-organizing role agents, such as for simulating the complex interplay within a
+certain application domain. As far as observable, the potential of engaging multiple perspectives
+through different roles and standpoints has not yet been fully sounded.
+•Robustness of Prompt-driven Collaboration: Collaboration between LLM-powered agents ba-
+sically relies on prompt-driven message exchange, such as by delegating tasks, asking questions,
+or evaluating task results. This communication mechanism, founded on a sequence of prompts,
+heavily relies on the quality of LLM responses, which are susceptible to errors in terms of incorrect
+or hallucinated results [ 45,30]. However, without the integration of comprehensive and robust
+control mechanisms to check the quality of these responses, the system is vulnerable to inaccuracies,
+misunderstandings, and inefficiencies [28].
+User-Centric Alignment. Within the scope of analyzed systems, user-centric alignment options are very rare.
+Alignment mechanisms are predominantly integrated into the system architecture (see Section 5.2). Drawing
+from this limitation, we see potentials in certain user-guided and real-time responsive alignment options.
+•User-Guided Alignment Options: The options for users to access and influence the internal workings
+of the system are very limited. The internal composition and collaboration of the agents are mostly
+opaque to the user, which reduces transparency of the system operation. Exception to this represents
+the runtime documentation of agents’ reflection and planning, provided by certain systems (see
+Section 5.1). The customization of internal mechanisms is mostly not provided to users. Besides
+agent generation and role definition (offered by a few systems), there is potential for user modifications
+related to communication protocols, task orchestration, or result synthesis. Corresponding to the
+aspect adaptability for LLM-powered agents (see above), modifying these internal mechanisms would
+enable the user in exploring alternative problem-solving ways.
+•Real-Time Responsiveness: The obvious lack of real-time adjustment capabilities can be seen
+founded in the nature of autonomous agent systems, which is accomplishing the user-prompted
+goal without further human intervention. However, as elaborated on in Section 4, autonomy and
+alignment can be understood as complementary aspects. The absence of user interaction and control
+during runtime restricts the potential for dynamic alignment, thereby limiting the system’s flexibility
+in response to changes in the operational context. As detailed in Section 4.1.2, the interaction
+32
+layer allows the integration of interceptor mechanisms. This not only allows real-time monitoring,
+addressing key concerns of explainable AI [ 63,96], but also to implement effective feedback and
+intervention options [ 40,27]. Collaborative environments fostering hybrid teamwork , comprising
+autonomous agents (or agents systems) and human co-workers are essentially built upon such real-
+time responsiveness, ensuring dynamic realignment while working towards shared goals [ 34,54,89].
+Controlling High-Autonomy Aspects. Besides prompting-related flaws such as inaccurate or hallucinated
+responses (see above), our engagement with the analyzed multi-agent systems has revealed additional opera-
+tional issues. Occasionally, we witness non-terminating activities, where the system falls into infinite loops.
+For instance, this can manifest via solutions continually fine-tuned under the premise of improvement, or the
+system operation is stuck in a never ending dialogue between two LLM-powered agents. Conversely, system
+operations might terminate in a dead end when encountering a task that requires competencies or resources that
+are either unavailable or inaccessible. Obviously, the corresponding control mechanisms ( integrated alignment )
+applied in such systems are ill-equipped to efficiently catch these kinds of exceptions. This insufficiency proves
+particularly concerning, as it undermines the reliability and effectiveness of these systems. However, besides
+this symptomatic treatment, the reasons for these problems can be seen founded in architectural complexities,
+such as high-autonomy levels not adequately aligned or intertwined dependencies resulting from varying levels
+of autonomy (refer to Section 4.2.2).
+6.2 Limitations and Potentials of the Taxonomy
+For engineering the taxonomic system, we chose a pragmatic and technical perspective (see Section 4) and
+explored its utility by the exemplary classification of seven selected LLM-powered multi-agent systems (see
+Section 5). However, departing from this exploration, certain limitations and further potentials become evident.
+Taxonomic System. Our taxonomy conceptualizes autonomy and alignment not as binary extremes in a
+one-dimensional continuum, but as interacting and synergistic aspects. This distinctions allows forming a
+two-dimensional matrix (see Section 4) combining hierarchic levels of autonomy (from automated mechanisms
+to self-organizing agents) and alignment (from system-integrated to real-time responsive). This structure
+reflects the aforementioned triadic relationship between the key decision-making entities in the system (i.e.,
+human users, rules and mechanisms, as well as LLM-powered agents) and their dynamic interplay (i.e.,
+alignment, system operation, and collaboration), as illustrated in Fig. 3. Augmenting this, we map this matrix
+onto different characteristic aspects derived from four applied architectural viewpoints (see Section 4.2).
+•Autonomy Scope: Within this, we reference high autonomy to the agents’ self-organization capabili-
+ties for decision-making and further operational impact (see Section 4.1.1). However, it’s essential to
+consider that autonomy can span beyond this definition, encompassing facets like an agent’s ability
+for self-enhancement and proactive agency.
+•Alignment Scope: In turn, the alignment dimension employed by the taxonomy reflects two key
+aspects, i.e., the origin of the alignment, and the moment of its communication to the system (see
+Section 4.1.2). In combination with the architectural dimension, we also reflect the architectural or
+functional scope of the alignment technique in terms of the viewpoint-specific aspects. However, one
+must note that this dimension does not reflect the quality, efficacy, or depth of the applied techniques.
+•Scope of Architectural Aspects: As detailed in Section 4.3, the taxonomy adopts 12 architectural
+aspects inherent to the four architectural viewpoints characteristic for LLM-powered multi-agent
+systems. The viewpoints are oriented to Kruchten’s viewpoint model for software architecture [ 38], a
+recognized standard in this field. However, as there exist more viewpoint models reflecting further
+concerns and perspectives on software systems, there might also be further architectural aspects
+possibly relevant to autonomous LLM-powered multi-agent systems. Considering the ongoing
+evolution in the field, these adaptions become crucial.
+Expressiveness of Taxonomic Classification. The scope of the taxonomic structure forms the foundation for
+the taxonomy’s analytical power enabling conclusions about the classified systems under analysis.
+•Levels as Strengths and Weaknesses: It is important to understand that higher levels in autonomy
+and alignment, termed as user-responsive autonomy (see Table 1), might not always be the optimal
+system configuration for every scenario. Indeed, high autonomy can deviate from the intended goal
+and therefore needs to be aligned accordingly. In certain situations, a system with modest autonomy
+could be considered the best choice. Given the intention to automate a repetitive set of routine tasks
+33
+with predictable variables and contextual requirements, a static autonomy with predefined rules and
+mechanisms would not be just sufficient, but also provide a higher reliability. If there is no need to
+include user-specific information, a combination with an integrated alignment can be seen as best
+choice ( rule-driven automation ).
+•System Efficiency and Accuracy: As previously elaborated, our taxonomy focuses on the architec-
+tural complexities driven by the dynamics between autonomy and alignment, rather than evaluating
+functional performance metrics like operational efficiency or accuracy. Neither recent surveys in
+the field [ 84,30] do measure the systems’ performance, such as in terms of efficiency, accuracy, or
+scalability. However, while engaging with the analyzed systems, we observed substantial differences
+among them, reflecting the exploratory state and the ongoing rapid evolution of the domain. For
+measuring their functional performance, benchmarks and methods could be adopted similar to those
+presented in [13].
+•Balancing Techniques: As reported in Section 5.2, we have identified different balancing strategies
+across the system architectures. In this context, it is important to notice that aspects marked as
+unbalanced (for example, combining high-autonomy and low-alignment levels) might be actually
+controlled or balanced via automated mechanisms applied by another aspect (static autonomy and
+integrated alignment). Within the analyzed systems, user-centric alignment options are barely applied
+to curb the wildness of high-autonomy aspects. It would be interesting, to investigate and compare in
+detail, how integrated alignment techniques are employed to deal with the challenges and complexities
+of agent-driven autonomy.
+Practical Implications. Drawing from the information value provided by the classification results, we can
+distinguish considerations regarding the practical utility and relevance of the taxonomy.
+•Analysis Purposes: The analysis and understanding of these dynamic architectural complexities can
+serve different purposes, such as:
+–Comparing, selecting, and applying available multi-agent systems in the context of given
+scenarios with certain requirements for autonomy and alignment.
+–Reasoning about architectural design options for the development of novel multi-agent systems.
+–Scrutinizing and rethinking strategies for balancing levels of autonomy and alignment.
+–Building a foundational framework for additional analysis techniques or complementing them,
+such as measuring the functional system capabilities (see above).
+•Ongoing Evolution: As underscored by recent surveys [ 84,95], the field of autonomous LLM-
+powered multi-agent systems is characterized by an ongoing rapid evolution showcasing a dynamically
+growing number of approaches featuring diverse architectures and a wide spectrum of system-maturity
+levels. While designed to abstract from concrete system specifics, the taxonomic system might need
+periodic updates to accommodate this dynamically evolving landscape.
+•Broader Applicability. Tailored to address the characteristics of autonomous LLM-powered multi-
+agent architectures (refer to Section 3), the foundational principles of our taxonomy, however, seem
+to be transferable to other AI systems. Certain segments of the taxonomic structure can be seen
+as universally applicable across AI architectures. Conversely, facets specifically tailored to multi-
+agent systems, such as the aspects inherent to the agent composition and multi-agent collaboration
+viewpoints, would require corresponding adjustments.
+7 Conclusion
+In this paper, we have introduced a comprehensive multi-dimensional taxonomy engineered to analyze how au-
+tonomous LLM-powered multi-agent systems balance the dynamic interplay between autonomy and alignment
+across their system architectures. For this purpose, the taxonomy employs a matrix that combines hierarchical
+levels of autonomy and alignment. This matrix is then mapped onto various architectural aspects organized
+by four architectural viewpoints reflecting different complementary concerns and perspectives. The resulting
+taxonomic system enables the assessment of interdependent aspect configurations in a wide spectrum, ranging
+from simple configurations, such as predefined mechanisms combined with system-integrated alignment
+techniques ( rule-driven automation ), to sophisticated configurations, such as self-organizing agency responsive
+to user feedback and evolving conditions ( user-responsive autonomy ). Applied to 12 distinct architectural
+aspects inherent to viewpoints, such as goal-driven task management, multi-agent collaboration, agent compo-
+sition, and context interaction, this taxonomy allows for a nuanced analysis and understanding of architectural
+complexities within autonomous LLM-powered multi-agent systems.
+34
+Through our taxonomy’s application to seven selected LLM-powered multi-agent systems, its practical
+relevance and utility has been illustrated. In particular, it has been shown that a combined assessment
+of autonomy and alignment levels across the architectural aspects of each multi-agent system allows for
+identifying system profiles that can indicate certain strategies for balancing the dynamic interplay between
+autonomy and alignment. This exploration of exemplary current systems also revealed several challenges.
+Most prominently, we observed a lack of user-centric alignment options across all systems, with little user-
+guided alignment, but no real-time responsive alignment at all. Moreover, the systems exhibit high autonomy
+levels mostly for certain aspects, such as the goal decomposition, the action management, or the utilization of
+contextual resources. In contrast, other key aspects of the system operation show limited autonomy; aspects
+such as managing the communication protocol, memory usage, or agent network are largely static, leaning
+heavily on predefined mechanisms.
+Based on these and further findings, we especially see two promising avenues for the evolution of autonomous
+LLM-powered multi-agent systems. Firstly, by employing adaptable and self-organizing communication
+protocols and agent networks, the systems’ role-playing capabilities could be enhances, which enables them to
+better simulate complex multi-perspective environments. By reflecting and weighing up diverse standpoints
+and strategies, this could also pave the way for more in-depth inter-agent discussions and creativity in problem
+solving. Secondly, the exploration of real-time responsive systems, which can adapt to evolving conditions as
+well as to user feedback during runtime, would foster dynamic collaboration and hybrid teamwork between
+LLM-powered agents and human users.
+Departing from an exploratory stage, the field of autonomous LLM-powered multi-agent systems is rapidly
+evolving, resulting in a growing number of promising approaches and innovative architectures. With their
+current capabilities and inherent potentials, such as multi-perspective domain simulations or collaborative
+environments of autonomous agents and human coworkers, these systems could significantly contribute to
+the progression towards advanced stages of artificial intelligence, such as AGI or ASI. From a pragmatic
+perspective, there are numerous opportunities for combining LLMs as general purpose technology with
+the specifics of various application domains. LLM-based multi-agent systems can serve as foundation for
+developing corresponding domain-specific application layers. The architectural complexities resulting from the
+dynamic interplay between autonomy and alignment can be seen as one of the key challenges in such systems.
+By providing a systematic framework for analyzing these complexities, our taxonomy aims to contribute to
+these ongoing efforts.
+For our subsequent endeavors, we aim at developing a comprehensive overview and comparison of existing
+autonomous LLM-powered multi-agent systems, complementing existing literature reviews in the field [ 84,95].
+To this end, we intend to analyze and classify available systems using our taxonomy. The identified system
+profiles and balancing strategies resulting from this analysis will then be combined with further investigations
+of functional system capabilities. In addition, driven by the potentials identified during the taxonomic
+classification of selected systems, we currently explore the development of an LLM-powered multi-agent
+system that aims at combining high levels of agency with real-time user-centric control mechanisms.
+Building on the foundation of our taxonomy, future initiatives could venture into the following areas: A
+dedicated exploration, assessment, and systematization of alignment techniques, particularly tailored for
+LLM-based interaction and application layers, could serve as reference for future systems. Moreover, the
+conception of a methodological framework with instruments and benchmarks for measuring the functional
+capabilities of LLM-powered multi-agent systems could provide a structured template to evaluate key metrics
+like efficiency, accuracy, and scalability of these systems.
+Acknowledgements
+The author gratefully acknowledges the support from the "Gesellschaft für Forschungsförderung (GFF)" of
+Lower Austria, as this research was conducted at Ferdinand Porsche Mobile University of Applied Sciences
+(FERNFH) as part of the "Digital Transformation Hub" project funded by the GFF.
+35
+References
+[1]D. Amodei, C. Olah, J. Steinhardt, P. Christiano, J. Schulman, and D. Mané. Concrete problems in AI
+safety. arXiv preprint arXiv:1606.06565 , 2016.
+[2]A. B. Arrieta, N. Díaz-Rodríguez, J. Del Ser, A. Bennetot, S. Tabik, A. Barbado, S. García, S. Gil-
+López, D. Molina, R. Benjamins, et al. Explainable artificial intelligence (XAI): Concepts, taxonomies,
+opportunities and challenges toward responsible AI. Information fusion , 58:82–115, 2020.
+[3]A. Askell, Y . Bai, A. Chen, D. Drain, D. Ganguli, T. Henighan, A. Jones, N. Joseph, B. Mann,
+N. DasSarma, et al. A general language assistant as a laboratory for alignment. arXiv preprint
+arXiv:2112.00861 , 2021.
+[4]L. Bass, P. Clements, and R. Kazman. Software architecture in practice . Addison-Wesley Professional,
+2003.
+[5]D. Batory. Feature models, grammars, and propositional formulas. In 9th International Software
+Product Line Conference , pages 7–20, 2005.
+[6]J. M. Beer, A. D. Fisk, and W. A. Rogers. Toward a framework for levels of robot autonomy in
+human-robot interaction. Journal of human-robot interaction , 3(2):74, 2014.
+[7]S. D. Bird. Toward a taxonomy of multi-agent systems. International Journal of Man-Machine Studies ,
+39(4):689–704, 1993.
+[8]B. W. Boehm and P. N. Papaccio. Understanding and controlling software costs. IEEE transactions on
+software engineering , 14(10):1462–1477, 1988.
+[9]R. Bommasani, D. A. Hudson, E. Adeli, R. Altman, S. Arora, S. von Arx, M. S. Bernstein, J. Bohg,
+A. Bosselut, E. Brunskill, et al. On the opportunities and risks of foundation models. arXiv preprint
+arXiv:2108.07258 , 2021.
+[10] N. Bostrom. Superintelligence . Dunod, 2017.
+[11] T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam,
+G. Sastry, A. Askell, et al. Language models are few-shot learners. Advances in neural information
+processing systems , 33:1877–1901, 2020.
+[12] J. C. Brustoloni. Autonomous agents: Characterization and requirements . Carnegie Mellon University,
+1991.
+[13] S. Bubeck, V . Chandrasekaran, R. Eldan, J. Gehrke, E. Horvitz, E. Kamar, P. Lee, Y . T. Lee, Y . Li,
+S. Lundberg, et al. Sparks of artificial general intelligence: Early experiments with GPT-4. arXiv
+preprint arXiv:2303.12712 , 2023.
+[14] H. Chase. LangChain. https://github.com/langchain-ai/langchain , 2022.
+[15] A. Chowdhery, S. Narang, J. Devlin, M. Bosma, G. Mishra, A. Roberts, P. Barham, H. W. Chung,
+C. Sutton, S. Gehrmann, et al. Palm: Scaling language modeling with pathways. arXiv preprint
+arXiv:2204.02311 , 2022.
+[16] P. Clements, D. Garlan, R. Little, R. Nord, and J. Stafford. Documenting software architectures: views
+and beyond. In 25th International Conference on Software Engineering, 2003. Proceedings. , pages
+740–741. IEEE, 2003.
+[17] L. M. Csepregi. The effect of context-aware LLM-based NPC conversations on player engagement in
+role-playing video games. 2023.
+[18] Y . Du, S. Li, A. Torralba, J. B. Tenenbaum, and I. Mordatch. Improving factuality and reasoning in
+language models through multiagent debate. arXiv preprint arXiv:2305.14325 , 2023.
+[19] G. Dudek, M. R. Jenkin, E. Milios, and D. Wilkes. A taxonomy for multi-agent robotics. Autonomous
+Robots , 3:375–397, 1996.
+[20] F. Fabiano, V . Pallagani, M. B. Ganapini, L. Horesh, A. Loreggia, K. Murugesan, F. Rossi, and
+B. Srivastava. Fast and slow planning. arXiv preprint arXiv:2303.04283 , 2023.
+[21] S. Franklin and A. Graesser. Is it an agent, or just a program?: A taxonomy for autonomous agents. In
+International workshop on agent theories, architectures, and languages , pages 21–35. Springer, 1996.
+[22] C. Gao, X. Lan, Z. Lu, J. Mao, J. Piao, H. Wang, D. Jin, and Y . Li. S3: Social-network simulation
+system with large language model-empowered agents. arXiv preprint arXiv:2307.14984 , 2023.
+36
+[23] T. R. Gruber. Toward principles for the design of ontologies used for knowledge sharing? International
+journal of human-computer studies , 43(5-6):907–928, 1995.
+[24] G. Guizzardi, H. Herre, and G. Wagner. On the general ontological foundations of conceptual modeling.
+InConceptual Modeling—ER 2002: 21st International Conference on Conceptual Modeling Tampere,
+Finland, October 7–11, 2002 Proceedings 21 , pages 65–78. Springer, 2002.
+[25] T. Haendler and G. Neumann. Ontology-based analysis and design of educational games for soft-
+ware refactoring. In Computer Supported Education: 11th International Conference, CSEDU 2019,
+Heraklion, Crete, Greece, May 2-4, 2019, Revised Selected Papers , pages 602–628. Springer, 2020.
+[26] R. Hao, L. Hu, W. Qi, Q. Wu, Y . Zhang, and L. Nie. ChatLLM network: More brains, more intelligence.
+arXiv preprint arXiv:2304.12998 , 2023.
+[27] J. L. Hellerstein, Y . Diao, S. Parekh, and D. M. Tilbury. Feedback control of computing systems . John
+Wiley & Sons, 2004.
+[28] S. Hong, X. Zheng, J. Chen, Y . Cheng, C. Zhang, Z. Wang, S. K. S. Yau, Z. Lin, L. Zhou, C. Ran,
+et al. MetaGPT: Meta programming for multi-agent collaborative framework. arXiv preprint
+arXiv:2308.00352 , 2023.
+[29] S. International. Taxonomy and definitions for terms related to driving automation systems for on-road
+motor vehicles, 2016.
+[30] Z. Ji, N. Lee, R. Frieske, T. Yu, D. Su, Y . Xu, E. Ishii, Y . J. Bang, A. Madotto, and P. Fung. Survey of
+hallucination in natural language generation. ACM Computing Surveys , 55(12):1–38, 2023.
+[31] J. Johnson, M. Douze, and H. Jégou. Billion-scale similarity search with GPUs. IEEE Transactions on
+Big Data , 7(3):535–547, 2019.
+[32] J. Kaddour, J. Harris, M. Mozes, H. Bradley, R. Raileanu, and R. McHardy. Challenges and applications
+of large language models. arXiv preprint arXiv:2307.10169 , 2023.
+[33] D. Kahneman. Thinking, fast and slow . Macmillan, 2011.
+[34] R. Khosla. Engineering intelligent hybrid multi-agent systems . Springer Science & Business Media,
+1997.
+[35] G. Kiczales, J. Lamping, A. Mendhekar, C. Maeda, C. Lopes, J.-M. Loingtier, and J. Irwin. Aspect-
+oriented programming. In ECOOP’97—Object-Oriented Programming: 11th European Conference
+Jyväskylä, Finland, June 9–13, 1997 Proceedings 11 , pages 220–242. Springer, 1997.
+[36] B. A. Kitchenham, G. H. Travassos, A. V on Mayrhauser, F. Niessink, N. F. Schneidewind, J. Singer,
+S. Takada, R. Vehvilainen, and H. Yang. Towards an ontology of software maintenance. Journal of
+Software Maintenance: Research and Practice , 11(6):365–389, 1999.
+[37] T. Kojima, S. S. Gu, M. Reid, Y . Matsuo, and Y . Iwasawa. Large language models are zero-shot
+reasoners. Advances in neural information processing systems , 35:22199–22213, 2022.
+[38] P. B. Kruchten. Architectural blueprints — the “4+1” view model of software architecture. IEEE
+software , 12(6):42–50, 1995.
+[39] Y . Labrou and T. Finin. Semantics and conversations for an agent communication language. arXiv
+preprint cs/9809034 , 1998.
+[40] P. A. Laplante et al. Real-time systems design and analysis . Wiley New York, 2004.
+[41] G. Li, H. A. A. K. Hammoud, H. Itani, D. Khizbullin, and B. Ghanem. CAMEL: Communicative agents
+for "mind" exploration of large scale language model society. arXiv preprint arXiv:2303.17760 , 2023.
+[42] T. Liang, Z. He, W. Jiao, X. Wang, Y . Wang, R. Wang, Y . Yang, Z. Tu, and S. Shi. Encouraging divergent
+thinking in large language models through multi-agent debate. arXiv preprint arXiv:2305.19118 , 2023.
+[43] B. Y . Lin, Y . Fu, K. Yang, P. Ammanabrolu, F. Brahman, S. Huang, C. Bhagavatula, Y . Choi, and
+X. Ren. SwiftSage: A generative agent with fast and slow thinking for complex interactive tasks. arXiv
+preprint arXiv:2305.17390 , 2023.
+[44] P. Maes. Artificial life meets entertainment: lifelike autonomous agents. Communications of the ACM ,
+38(11):108–114, 1995.
+[45] J. Maynez, S. Narayan, B. Bohnet, and R. McDonald. On faithfulness and factuality in abstractive
+summarization. arXiv preprint arXiv:2005.00661 , 2020.
+[46] B. Meyer. Applying’design by contract’. Computer , 25(10):40–51, 1992.
+37
+[47] T. Mikolov, K. Chen, G. Corrado, and J. Dean. Efficient estimation of word representations in vector
+space. arXiv preprint arXiv:1301.3781 , 2013.
+[48] M. Minsky. The Society of mind . Simon and Schuster, 1988.
+[49] H. Mintzberg. The structuring of organizations . Springer, 1989.
+[50] L. J. Moya and A. Tolk. Towards a taxonomy of agents and multi-agent systems. In SpringSim (2) ,
+pages 11–18, 2007.
+[51] Y . Nakajima. BabyAGI. https://github.com/yoheinakajima/babyagi , 2023.
+[52] K. S. Narendra and A. M. Annaswamy. Stable adaptive systems . Courier Corporation, 2012.
+[53] H. Naveed, A. U. Khan, S. Qiu, M. Saqib, S. Anwar, M. Usman, N. Barnes, and A. Mian. A
+comprehensive overview of large language models. arXiv preprint arXiv:2307.06435 , 2023.
+[54] M. Neef. A taxonomy of human-agent team collaborations. In Proceedings of the 18th BeNeLux
+Conference on Artificial Intelligence (BNAIC 2006) , pages 245–250, 2006.
+[55] Object Management Group. Unified Modeling Language – version 2.5.1. https://www.omg.org/
+spec/UML/2.5.1 , Dec. 2017.
+[56] L. Ouyang, J. Wu, X. Jiang, D. Almeida, C. Wainwright, P. Mishkin, C. Zhang, S. Agarwal, K. Slama,
+A. Ray, et al. Training language models to follow instructions with human feedback. Advances in
+Neural Information Processing Systems , 35:27730–27744, 2022.
+[57] C. A. O’reilly Iii and M. L. Tushman. Ambidexterity as a dynamic capability: Resolving the innovator’s
+dilemma. Research in organizational behavior , 28:185–206, 2008.
+[58] R. Parasuraman, T. B. Sheridan, and C. D. Wickens. A model for types and levels of human interaction
+with automation. IEEE Transactions on systems, man, and cybernetics-Part A: Systems and Humans ,
+30(3):286–297, 2000.
+[59] J. S. Park, J. C. O’Brien, C. J. Cai, M. R. Morris, P. Liang, and M. S. Bernstein. Generative agents:
+Interactive simulacra of human behavior. arXiv preprint arXiv:2304.03442 , 2023.
+[60] S. G. Patil, T. Zhang, X. Wang, and J. E. Gonzalez. Gorilla: Large language model connected with
+massive APIs. arXiv preprint arXiv:2305.15334 , 2023.
+[61] C. Qian, X. Cong, C. Yang, W. Chen, Y . Su, J. Xu, Z. Liu, and M. Sun. Communicative agents for
+software development. arXiv preprint arXiv:2307.07924 , 2023.
+[62] A. Rahmati, E. Fernandes, J. Jung, and A. Prakash. IFTTT vs. Zapier: A comparative study of
+trigger-action programming frameworks. arXiv preprint arXiv:1709.02788 , 2017.
+[63] M. T. Ribeiro, S. Singh, and C. Guestrin. "why should i trust you?" explaining the predictions of any
+classifier. In Proceedings of the 22nd ACM SIGKDD international conference on knowledge discovery
+and data mining , pages 1135–1144, 2016.
+[64] N. Rozanski and E. Woods. Software systems architecture: working with stakeholders using viewpoints
+and perspectives . Addison-Wesley, 2012.
+[65] S. Russell. Human compatible: Artificial intelligence and the problem of control . Penguin, 2019.
+[66] S. Russell. Artificial intelligence and the problem of control. Perspectives on Digital Humanism ,
+page 19, 2022.
+[67] S. Russell, D. Dewey, and M. Tegmark. Research priorities for robust and beneficial artificial intelligence.
+AI magazine , 36(4):105–114, 2015.
+[68] S. K. K. Santu and D. Feng. TELeR: A general taxonomy of LLM prompts for benchmarking complex
+tasks. arXiv preprint arXiv:2305.11430 , 2023.
+[69] P.-Y . Schobbens, P. Heymans, J.-C. Trigaux, and Y . Bontemps. Generic semantics of feature diagrams.
+Computer networks , 51(2):456–479, 2007.
+[70] Y . Shen, K. Song, X. Tan, D. Li, W. Lu, and Y . Zhuang. HuggingGPT: Solving AI tasks with ChatGPT
+and its friends in Hugging Face. arXiv preprint arXiv:2303.17580 , 2023.
+[71] A. Shrestha, S. Subedi, and A. Watkins. AgentGPT. https://github.com/reworkd/AgentGPT ,
+2023.
+[72] K. Shum, S. Diao, and T. Zhang. Automatic prompt augmentation and selection with chain-of-thought
+from labeled data. arXiv preprint arXiv:2302.12822 , 2023.
+38
+[73] M. P. Singh. Agent communication languages: Rethinking the principles. Computer , 31(12):40–47,
+1998.
+[74] S. A. Sloman. The empirical case for two systems of reasoning. Psychological bulletin , 119(1):3, 1996.
+[75] J. F. Sowa. Top-level ontological categories. International journal of human-computer studies , 43(5-
+6):669–685, 1995.
+[76] R. Thoppilan, D. De Freitas, J. Hall, N. Shazeer, A. Kulshreshtha, H.-T. Cheng, A. Jin, T. Bos, L. Baker,
+Y . Du, et al. Lamda: Language models for dialog applications. arXiv preprint arXiv:2201.08239 , 2022.
+[77] Torantulino et al. Auto-GPT. https://github.com/Significant-Gravitas/Auto-GPT , 2023.
+[78] P. T. Tosic and G. A. Agha. Towards a hierarchical taxonomy of autonomous agents. In 2004 IEEE
+International Conference on Systems, Man and Cybernetics (IEEE Cat. No. 04CH37583) , volume 4,
+pages 3421–3426. IEEE, 2004.
+[79] TransformerOptimus et al. SuperAGI. https://github.com/TransformerOptimus/SuperAGI ,
+2023.
+[80] E. R. Tufte. The visual display of quantitative information , volume 2. Graphics press Cheshire, CT,
+2001.
+[81] M. Usman, R. Britto, J. Börstler, and E. Mendes. Taxonomies in software engineering: A systematic
+mapping study and a revised taxonomy development method. Information and Software Technology ,
+85:43–59, 2017.
+[82] H. Van Dyke Parunak, S. Brueckner, M. Fleischer, and J. Odell. A design taxonomy of multi-agent
+interactions. In Agent-Oriented Software Engineering IV: 4th InternationalWorkshop, AOSE 2003,
+Melbourne, Australia, July 15, 2003. Revised Papers 4 , pages 123–137. Springer, 2004.
+[83] G. Wang, Y . Xie, Y . Jiang, A. Mandlekar, C. Xiao, Y . Zhu, L. Fan, and A. Anandkumar. V oyager: An
+open-ended embodied agent with large language models. arXiv preprint arXiv:2305.16291 , 2023.
+[84] L. Wang, C. Ma, X. Feng, Z. Zhang, H. Yang, J. Zhang, Z. Chen, J. Tang, X. Chen, Y . Lin, et al. A
+survey on large language model based autonomous agents. arXiv preprint arXiv:2308.11432 , 2023.
+[85] L. Wang, W. Xu, Y . Lan, Z. Hu, Y . Lan, R. K.-W. Lee, and E.-P. Lim. Plan-and-solve prompting: Improv-
+ing zero-shot chain-of-thought reasoning by large language models. arXiv preprint arXiv:2305.04091 ,
+2023.
+[86] Q. Wang, L. Ding, Y . Cao, Z. Tian, S. Wang, D. Tao, and L. Guo. Recursively summarizing enables
+long-term dialogue memory in large language models. arXiv preprint arXiv:2308.15022 , 2023.
+[87] W. Wang, L. Dong, H. Cheng, X. Liu, X. Yan, J. Gao, and F. Wei. Augmenting language models with
+long-term memory. arXiv preprint arXiv:2306.07174 , 2023.
+[88] Z. Wang, S. Mao, W. Wu, T. Ge, F. Wei, and H. Ji. Unleashing cognitive synergy in large language mod-
+els: A task-solving agent through multi-persona self-collaboration. arXiv preprint arXiv:2307.05300 ,
+2023.
+[89] J. Wei, K. Shuster, A. Szlam, J. Weston, J. Urbanek, and M. Komeili. Multi-party chat: Conversational
+agents in group settings with humans and models. arXiv preprint arXiv:2304.13835 , 2023.
+[90] J. Wei, X. Wang, D. Schuurmans, M. Bosma, F. Xia, E. Chi, Q. V . Le, D. Zhou, et al. Chain-of-thought
+prompting elicits reasoning in large language models. Advances in Neural Information Processing
+Systems , 35:24824–24837, 2022.
+[91] J. White, Q. Fu, S. Hays, M. Sandborn, C. Olea, H. Gilbert, A. Elnashar, J. Spencer-Smith, and D. C.
+Schmidt. A prompt pattern catalog to enhance prompt engineering with ChatGPT. arXiv preprint
+arXiv:2302.11382 , 2023.
+[92] Y . Wolf, N. Wies, Y . Levine, and A. Shashua. Fundamental limitations of alignment in large language
+models. arXiv preprint arXiv:2304.11082 , 2023.
+[93] M. Wooldridge. An introduction to multiagent systems . John wiley & sons, 2009.
+[94] M. Wooldridge and N. R. Jennings. Intelligent agents: Theory and practice. The knowledge engineering
+review , 10(2):115–152, 1995.
+[95] Z. Xi, W. Chen, X. Guo, W. He, Y . Ding, B. Hong, M. Zhang, J. Wang, S. Jin, E. Zhou, et al. The rise
+and potential of large language model based agents: A survey. arXiv preprint arXiv:2309.07864 , 2023.
+39
+[96] F. Xu, H. Uszkoreit, Y . Du, W. Fan, D. Zhao, and J. Zhu. Explainable AI: A brief survey on history,
+research areas, approaches and challenges. In Natural Language Processing and Chinese Computing:
+8th CCF International Conference, NLPCC 2019, Dunhuang, China, October 9–14, 2019, Proceedings,
+Part II 8 , pages 563–574. Springer, 2019.
+[97] E. Yudkowsky. The AI alignment problem: why it is hard, and where to start. Symbolic Systems
+Distinguished Speaker , 4, 2016.
+[98] S. Zhang, S. Roller, N. Goyal, M. Artetxe, M. Chen, S. Chen, C. Dewan, M. Diab, X. Li, X. V . Lin,
+et al. OPT: Open pre-trained transformer language models. arXiv preprint arXiv:2205.01068 , 2022.
+[99] J. Zhao. Using dependence analysis to support software architecture understanding. arXiv preprint
+cs/0105009 , 2001.
+[100] W. X. Zhao, K. Zhou, J. Li, T. Tang, X. Wang, Y . Hou, Y . Min, B. Zhang, J. Zhang, Z. Dong, et al. A
+survey of large language models. arXiv preprint arXiv:2303.18223 , 2023.
+40

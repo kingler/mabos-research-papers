@@ -1,0 +1,965 @@
+Explaining an Agent’s Future Beliefs through Temporally
+Decomposing Future Reward Estimators
+Mark Towersa,*, Yali Dub, Christopher Freemanaand Timothy J. Normana
+aSchool of Electronics and Computer Science, University of Southampton, UK
+bDepartment of Informatics, Kings College London, UK
+ORCID (Mark Towers): https://orcid.org/0000-0002-2609-2041, ORCID (Yali Du):
+https://orcid.org/0000-0001-5683-2621, ORCID (Christopher Freeman): https://orcid.org/0000-0003-0305-9246,
+ORCID (Timothy J. Norman): https://orcid.org/0000-0002-6387-4034
+Abstract. Future reward estimation is a core component of rein-
+forcement learning agents; i.e., Q-value and state-value functions,
+predicting an agent’s sum of future rewards. Their scalar output,
+however, obfuscates when or what individual future rewards an agent
+may expect to receive. We address this by modifying an agent’s fu-
+ture reward estimator to predict their next Nexpected rewards, re-
+ferred to as Temporal Reward Decomposition (TRD). This unlocks
+novel explanations of agent behaviour. Through TRD we can: esti-
+mate when an agent may expect to receive a reward, the value of the
+reward and the agent’s confidence in receiving it; measure an input
+feature’s temporal importance to the agent’s action decisions; and
+predict the influence of different actions on future rewards. Further-
+more, we show that DQN agents trained on Atari environments can
+be efficiently retrained to incorporate TRD with minimal impact on
+performance.
+1 Introduction
+With reinforcement learning (RL) agents exceeding human perfor-
+mance in complex and challenging game environments (e.g., Atari
+2600 [3], DotA 2 [6], and Go [22]), there is significant interest in
+applying these methods to address practical problems, often in sup-
+port of human judgement. There are several barriers to realising this
+vision, however, with the need for agents to be able to explain their
+decisions one of the most important [18]; agents need to be able to
+work with people [7], and so we need effective Explainable Rein-
+forcement Learning (XRL) mechanisms.
+Central to RL agents is a future reward estimator (Q-value or state-
+value function) predicting the sum of future rewards for a given state.
+These functions are used either explicitly in the policy itself (e.g.,
+DQN [16]) or for learning with a critic (e.g., PPO [19] and TD3 [8]).
+However, few XRL algorithms have devised methods to explain these
+functions directly. One problem is that their scalar outputs provide no
+information on its composition (i.e., when and what future rewards
+the agent believes it will receive), just its expected cumulative sum.
+An example of this problem is illustrated in Figure 1 where a drone
+has two paths: up or down. Depending on the path taken, the drone
+can receive coins for 1 point each or the treasure chest for 4 points.
+Using a discount factor of 0.95, the drone’s Q-value for moving up
+∗Corresponding Author. Email: mt5g17@soton.ac.uk
+Figure 1. Example Gridworld with an agent and two paths (up and down)
+that contain different rewards.
+is3.26while moving down is 3.52. Despite this small difference
+in Q-values, the quantity and temporal immediacy of their expected
+rewards are radically different; moving up, the drone receives a single
+large reward, while moving down receives many smaller rewards. A
+fact unknown from observing the Q-values alone although critical to
+agent behaviour in selecting whether to move up or down.
+We propose a novel future reward estimator that predicts the
+agent’s next Nexpected rewards for a given state, referred to as Tem-
+poral Reward Decomposition (TRD) (Section 4). We prove that TRD
+is equivalent to the Q-value and state-value functions. In this way,
+TRD can report the temporal immediacy and quantity of future re-
+wards for different action choices, enabling decisions to be explained
+and contrasted. For example, using Figure 1, the agent’s TRD Q-
+value for moving down is [0,0.95,0.90,0.86,0.81]and moving up
+[0,0,0,0,3.26], enabling us to produce explanations such as “while
+the sum of actual rewards is equal, taking the route down has more
+immediate rewards, which are preferred by the drone due to its dis-
+count factor”.
+Implementing TRD requires only two changes to a deep RL
+agent’s future reward estimator: increase the network output by N+1
+for predicting the future rewards and a novel element-wise loss func-
+tion of future rewards (Section 4). Importantly, TRD can achieve
+similar performance as DQN [16] agents for Atari environments [4]arXiv:2408.08230v1  [cs.AI]  15 Aug 2024
+across a wide range of N(Section 5).
+Building on this direct access to an agent’s predictions for indi-
+vidual future rewards, we explore three novel applications for un-
+derstanding an agent’s decision-making (Section 6). The first is to
+generate explanations for an action choice based on when and what
+rewards it will receive, and, for particular environments, the agent’s
+confidence in collecting a reward (Section 6.1). The second is to ex-
+plain how the importance of an observation feature changes depend-
+ing on how far into the future a reward is expected; e.g., identify-
+ing features that are more activate for earlier rewards (Section 6.2).
+Thirdly, we produce contrastive explanations using the difference in
+future expected rewards for two actions, which can reveal changes in
+expected rewards the agent will receive between them (Section 6.3).
+Together, these three explanation mechanisms demonstrate the value
+of Temporal Reward Decomposition for XRL.
+Prior to presenting TRD, proving key properties and detailing how
+this can be used to generate explanations of an agent’s action choices
+with respect to future rewards, we briefly review relevant prior re-
+search and present some preliminary formalisation that we build
+upon.
+2 Related Work
+In this brief review we focus on existing reward-based explanation
+mechanisms and algorithms for understanding an agent’s decision-
+making in similar domains (see Qing et al. [18] for a survey).
+Prior work in XRL has explored decomposing the Q-value into re-
+ward components and by future states. Juozapitis et al. [11] proposed
+decomposing the future rewards into components. In Figure 1, for
+example, we have two components (or reward sources), the treasure
+chest and the coins. An explanation would then contrast the coin(s)
+versus treasure chest(s) along different trajectories, but not when any
+rewards are expected. Further work has incorporated policy summary
+[21] and abstract action spaces for robotics [12] into the explana-
+tions. Alternatively, Tsuchiya et al. [26] proposed decomposing the
+Q-value into the importance of future states and Yau et al. [28] into
+the probabilities of state transitions. However, neither state decom-
+position proposal has been shown to scale to complex environments
+where explanations are most important for understanding agents. Im-
+portantly, all these decomposition approaches differ from our work
+as they require decomposing the reward estimator into components
+or states rather than over time, although future work could explore
+combining these approaches.
+An alternative approach to understanding an agent’s rewards is
+to modify the environment’s reward function. Mirachandani and
+Karamcheti [15] proposed a reward-shaping approach using natu-
+ral language to convert long-horizon task descriptions to lower-level
+dense rewards. This allows the higher-level descriptions to be used to
+explain the agent policy however this relies on correctly interpreting
+these complex descriptors while our work requires no modification
+to the environment setup.
+For approaches that contribute similar applications to TRD, Mad-
+umal et al. [13] proposed a text-based explanation using a hand-
+crafted causal model of a Starcraft 2 agent to explain why (or why
+not) to take an action with respect to environmental state variables
+from the causal model. Our explanation similarly illustrates the fu-
+ture reasoning of an agent, but does so in terms of rewards not
+changes to the environment’s state. Most importantly, our approach
+requires neither a hand-crafted causal model nor explicitly identified
+environment features. To explain the agent’s focus within an obser-
+vation, Greydanus et al. [9] proposed a perturbation-based saliencymap that uses the changes in the policy output for noise applied to
+an area of the observation to understand a region’s importance to the
+agent. This is limited to only visualising a region’s importance for
+all future rewards, whereas combining TRD with saliency map algo-
+rithms can explain a particular future reward’s regions of importance
+in decision-making.
+Outside XRL, researchers have explored non-scalar variants of the
+Q-value, primarily for improving performance. Bellemare et al. [5]
+proposed C51, a training algorithm that learns the distribution of cu-
+mulative rewards rather than just the expectation, achieving state-of-
+the-art performance in Atari. Our work differs as we propose decom-
+pose the Q-value into the expected reward for future timesteps rather
+than the probability distribution over all future rewards. Furthermore,
+we propose new explanatory applications that are facilitated by TRD.
+3 Preliminaries
+Before we present TRD, we provide sufficient technical detail on
+methods we build upon: Markov Decision Processes to mathemat-
+ically describe TRD; Deep Q-learning for learning Q-value func-
+tions in complex environments; QDagger for learning with pretrained
+agents; and GradCAM for creating saliency map explanations.
+To model a reinforcement learning environment, we use a Markov
+Decision Process [17] described by the tuple ⟨S, A, R, P, T ⟩. These
+variables denote the set of possible states and actions ( SandAre-
+spectively), the reward function ( R(s, a)) given a state action s, a
+that is bounded to finite values, the transition probability ( P(s′|s, a))
+of the next state ( s′) given the prior state-action ( s, a) and the termi-
+nation condition ( T(s)) that returns True if the state ( s) is a goal
+state. For simplicity, following Sutton and Barto [24], we denote Si,
+AiandRias the state, action and reward received for timestep i.
+Given an environment, we wish to learn a policy πthat maximises
+its cumulative rewards over an episode. Furthermore, to incentivise
+the agent to collect rewards sooner, we apply an exponential discount
+factor ( γ∈[0,1)). For a policy, π, we may define the expected sum
+of future rewards in terms of the Q-value, qπ(s, a), or the state-value,
+vπ(s), functions, Eqs. (1) and (2) respectively.
+qπ(s, a) =Eπh∞X
+n=0γnRt+n|St=s, At=ai
+(1)
+vπ(s) =Eπh∞X
+n=0γnRt+n|St=si
+(2)
+To learn an optimal policy, agents can select actions that maximise
+the Q-value for a given state. Using this, Watkins and Dayan [27]
+proposed iteratively minimising the error between the predicted Q-
+value for a state-action and a bootstrapped target Q-value using the
+state-action’s resultant reward plus the maximum Q-value in the next
+timestep (Eq. (3)), referred to as Q-learning. Importantly, given ini-
+tial conditions and an infinite number of iterations, [27] proved Q-
+learning would converge to the optimal policy.
+LQ(D) =E(s,a,R,s′)∼D(qπ(s, a)−ytarget)2(3)
+ytarget=R+γmax
+a′∈Aˆqπ(s′, a′) (4)
+This was extended by Mnih et al. [16] to use neural networks, re-
+ferred to as Deep Q-learning (DQN) for a general RL algorithm that
+achieved state-of-the-art performance in image-based environments.
+They combined several extensions to Q-learning including an expe-
+rience replay buffer to store training examples, a target network for
+stability and a convolutional neural network to learn the Q-values.
+To help minimise the training time of TRD agents, we utilise
+QDagger [2], a workflow for learnt policies to reuse or transfer
+their knowledge to new agents. In particular, QDagger proposes two
+changes to an agent’s training scheme: an offline training stage using
+a teacher’s (pretrained agent) replay buffer and adding a distillation
+loss to the agent’s (student) policy loss that minimises the KL diver-
+gence between the student’s πand teacher’s πTpolicy (Eq. (5)). The
+weighting of this loss term is controlled by λTas the ratio of teacher
+to student average reward. Agarwal et al. [2] showed QDagger allows
+student agents to match the teacher’s performance for Atari environ-
+ments with 20x fewer observations than normal.
+LQDagger (D) =LQ(D) +λTEs∼D"X
+aπT(a|s) logπ(a|s)#
+(5)
+We utilise GradCAM [20], a popular saliency map algorithm high-
+lighting the input features that have the greatest influence on a neural
+network’s decision-making. For a given convolutional layer, Grad-
+CAM computes the gradients from the layer’s features to one of the
+network’s outputs such that the gradient is proportional to the fea-
+ture’s importance in that network’s decision-making for the output.
+4 Temporal Reward Decomposition
+As described in Section 1, due to the scalar output of future reward
+estimators (i.e., Q-value and state-value functions), their reward com-
+position cannot be known, preventing understanding when and what
+future rewards the agent expects to receive. We, therefore, propose a
+novel future reward estimator (Eqs. (6)), referred to as Temporal Re-
+ward Decomposition (TRD) that predicts an agent’s next Nexpected
+rewards. Furthermore, we prove its equivalence to scalar future re-
+ward estimators and provide a bootstrap-based loss function to learn
+the estimator (Eq. (15)). For consistency, all equations in this section
+are for the Q-value with state-value equations in Appendix A.
+Before defining our TRD-based future reward estimators, to prove
+their equivalence to scalar future reward estimators (Eq. (7)), we first
+prove that the expected sum of future rewards is equivalent to the sum
+of expected future rewards enabling the decomposition of rewards in
+Eq. (6): Theorem 1.1
+qTRD
+π(s, a) =
+Eπ[Rt|St=s, At=a]
+Eπ[γRt+1|St=s, At=a]
+...
+Eπ[γN−1Rt+N−1|St=s, At=a]
+EπP∞
+i=NγiRt+i|St=s, At=a
+(6)
+X
+qTRD
+π(s, a)≡qπ(s, a) ∀s∈S,∀a∈A (7)
+Using the notation in Section 3, we propose Eq. (6) that outputs
+a vector of the next Nexpected rewards with the last element being
+equal to the cumulative sum of expected rewards from Nto∞. Each
+element irefers to the expected reward in t+itimesteps with the
+final element being the sum of rewards beyond Ntimesteps. Using
+1Linearity of Expectation (LoE) is a property that any expectation can be
+split into its linear components, even for dependent random variables [23,
+Page 166].Theorem 1, Eq. (6) is provably equivalent to the scalar Q-value by
+summing over the array elements (Eq. (7)) through expanding Eq.
+(11) with N+1expectations. Critically, this equivalence is not re-
+versible such that given a scalar Q-value, Eq. (6) cannot be known.
+Theorem 1. Given a state sand action a, the expected sum of
+rewards is equal to the sum of expected rewards, more precisely
+EπP∞
+i=0γiRt+i|St=s, At=a
+≡P∞
+i=0Eπ[γiRt+i|St=
+s, At=a]for all s∈Sanda∈A.
+Proof.
+Eπ"∞X
+i=0γiRt+iSt=s, At=a#
+(8)
+=Eπ"
+Rt+∞X
+i=1γiRt+iSt=s, At=a#
+(9)
+=Eπ[Rt|St=s, At=a]
++Eπ"∞X
+i=1γiRt+iSt=s, At=a#
+(given LoE1) (10)
+=Eπ[Rt|St=s, At=a] +Eπ[γRt+1|St=s, At=a]
++Eπ"∞X
+i=2γiRt+iSt=s, At=a#
+(11)
+=∞X
+i=0Eπ[γiRt+i|St=s, At=a] (12)
+Implementing TRD within a deep RL agent’s future reward esti-
+mator requires two primary changes. The first is increasing the neu-
+ral network output by N+1; i.e., the size of Eq. (6) for predicting
+the next Nfuture rewards. The second is the loss function (Eq. (15))
+for the network to learn Eq. (6). Additionally, as the network now
+outputs a vector of future rewards rather than a scalar, for action
+selection and other applications, qπcan be recovered by summing
+across vector elements before being applied as normal (Eq. (7)). Ap-
+pendix B includes pseudocode for implementing the loss function,
+and the associated GitHub repository2contains the implementation
+of a TRD-modified DQN training algorithm using Gymnasium [25].
+For long-horizon environments where an agent may take hundreds
+or thousands of actions, TRD is limited in scale as the number of
+predicted rewards scales linearly with the number of output neurons.
+We therefore propose an alternative approach to preserve the tem-
+poral distance that can be explained using a fixed number of output
+neurons. Rather than each vector element predicting an individual re-
+ward, Eq. (13) groups rewards in each vector element; e.g., for pair
+grouping [Rt+Rt+1, Rt+2+Rt+3, . . .]. This approach, denoted
+wfor the reward grouping size, scales linearly with the number of
+future rewards by wfor a fixed Nsuch that the total number of pre-
+dicted rewards is N·w. Importantly, like Eq. (6), Eq. (13) is equiv-
+alent to the Q-value by summing across elements (Eq. (14)) using
+N·w+ 1expansions of Eq. (11). Additionally, for w= 1, Eq. (13)
+is equivalent to Eq. (6) and implementation only requires utilising an
+N-step [24] experience replay buffer to compute the sum of the first
+wrewards and the next observation in wtimesteps.
+As a result, Nandwpresent a trade-off between the reward vector
+size (N) and precise knowledge of each timestep’s expected reward
+(w). For example using Figure 1, if w= 2andN= 2then the qTRD
+π
+2https://github.com/pseudo-rnd-thoughts/temporal-reward-decomposition
+qTRD
+π(s, a) =
+Eπ[Rt|St=s, At=a] +···+Eπ[γw−1Rt+w−1|St=s, At=a]
+Eπ[γwRt+w|St=s, At=a] +···+Eπ[γ2w−1Rt+2w−1|St=s, At=a]
+...PNw
+i=(N−1)wEπ[γiRt+i|St=s, At=a]
+Eπ[P∞
+i=NwγiRt+i|St=s, At=a]
+(13)
+X
+qTRD
+π(s, a)≡qπ(s, a) ∀s∈S,∀a∈A (14)
+LTRD=E(st,at,Rt+i,st+w)∼D
+ 
+qTRD 0π(st, at)−Pw
+i=0Rt+i2
+ 
+qTRD 1π(st, at)−γwqTRD 0π(st+w, a′)2
+ 
+qTRD 2π(st, at)−γwqTRD 1π(st+w, a′)2
+...
+qTRDNπ (st, at)−γwqTRDN−1
+π (st+w, a′)2
+
+qTRDN+1
+π (st, at)−γw(qTRDNπ (st+w, a′) +qTRDN+1
+π (st+w, a′))2
+(15)
+for moving up is [0,0,3.26]as[0 + 0 ,0 + 0,3.26]and moving down
+is[0.95,1.76,0.81]as[0 + 0 .95,0.90 + 0 .86,0.81]. Furthermore,
+to predict, for example, the next 30 rewards, N= 30 , w= 1 and
+N= 6, w= 5 are both valid parameters. We explore the impact of
+these parameters on training in Section 5.
+Through experiment, we found that converting qTRD
+πtoqπby sum-
+ming over elements (Eq. (7)), then using the scalar loss function (Eq.
+(3)) does not converge to qTRD
+π. Therefore, based on the Q-learning
+loss function (Eq. (3)), we define a novel element-wise mean squared
+error of reward vectors (Eq. (15)) where a′denotes the optimal next
+action ( arg maxa∈APqTRD
+π(st+w, a)) and we use the following no-
+tation to index an element of the reward vector:
+qTRD 0π(s, a) =Eπ[Rt|St=s, At=a] (16)
+qTRD 1π(s, a) =Eπ[γRt+1|St=s, At=a] (17)
+qTRDNπ (s, a) =Eπ[γN−1Rt+N−1|St=s, At=a] (18)
+qTRDN+1
+π (s, a) =Eπ"∞X
+i=NγiRt+i|St=s, At=a#
+(19)
+For Eq. (15), we construct a predicted and bootstrap-based target
+value (cf. Q-learning), computing the element-wise mean squared
+error of the predicted and target reward vectors. The prediction is
+the reward vector for the action taken in state t,qTRD
+π(st, at). For
+the target, the first element is the actual reward collected ( Rtto
+Rt+w) followed by the reward vector for the optimal action in st+w,
+qTRD
+π(st+w, a′), shifted along one position with the last two ele-
+ments combined. We do this because element iof the reward vector,
+qTRDiπ(st, at), refers to the predicted reward in t+itimesteps, for the
+next observation, t+w, the equivalent reward vector element is i−1
+in the target vector, γqTRDi−1
+π (st+w, a′).
+5 Retraining Pretrained Agents for TRD
+The goal of Temporal Reward Decomposition (TRD) is to provide
+information about an agent’s expected future rewards over time so
+that we can use this information to better understand its behaviour.
+For this to be practically effective, TRD agents should be capable of
+achieving performance similar to their associated base RL agent. In
+this section, therefore, we evaluate the performance of DQN agents[16] that incorporate TRD for a range of Atari environments [4] and
+assess the impact of TRD’s two hyperparameters on training: reward
+vector size, N; and reward grouping, w.
+We conduct hyperparameter sweeps across each independently,
+varying N,w, andN·w, across three Atari environments (Breakout,
+Space Invaders and Ms. Pacman), each containing different reward
+functions. To account for variability in training, we repeat our hy-
+perparameter sweeps three times. The training hyperparameters and
+hardware used in training, along with the agent’s final scores, are
+presented in Appendix B. Training scripts and final neural network
+weights for all runs are provided in the associated GitHub repository.
+Rather than training agents from scratch for these environments,
+we use open-sourced pretrained Atari agents [10] and the QDagger
+training workflow [2], described in Section 3.
+Using periodic evaluation on the same ten seeds, Figure 2 plots
+the teacher normalised interquartile mean [1] of the episodic reward.
+We find that all three hyperparameter sweeps enable the agent to ap-
+proach the pretrained (teacher) agent’s score with neither parameter
+having a significant detrimental impact. Only the offline training for
+a constant temporal distance ( N·w= 24 ) do the agents with smaller
+values of wshowcase greater initial performance, but this difference
+is resolved during the online training stage.
+Interestingly, for the sweep of N, we found no degradation in per-
+formance, which was unexpected as we believed that larger values of
+Nwould require more training to reach the same performance. As
+a result, in Section 6, we trained agents with N=40, w=1. Further
+work is required to understand if these performance curves hold for
+larger values of Nand for more complex environments or agents.
+To verify that our TRD loss function (Eq. (15)) converges to a
+policy that is similar to the pretrained agent’s scalar Q-value. Figure 3
+plots the mean squared error of the Q-values for both pretrained DQN
+agents and TRD agents during training. We find all parameters get
+close to the pretrained agent’s Q-value with w=1being an important
+factor.
+Regarding the computation impact of incorporating TRD, we
+found that our QDagger+TRD DQN agents took ≈10% fewer steps
+per second than our base DQN agents, 248to274steps per second,
+respectively. This performance will be jointly caused by QDagger re-
+quiring an additional forward pass from the teacher agent and TRD
+using a larger network output and a more complex loss function.
+0 5 10 2 4 6 8 10
+   Steps (x100k)                     Env. Frames (x 1m)0.00.20.40.60.81.01.2Aggregate Teacher Normalised Score
+Offline Onlinea) Sweep over the number of bins (N) with w=1
+N=5
+N=10
+N=15
+N=20
+N=25
+0 5 10 2 4 6 8 10
+   Steps (x100k)                     Env. Frames (x 1m)0.00.20.40.60.81.01.2Aggregate Teacher Normalised Score
+Offline Onlineb) Sweep over the rewards grouped (w) with N=5
+w=1
+w=2
+w=3
+w=4
+w=5
+0 5 10 2 4 6 8 10
+   Steps (x100k)                     Env. Frames (x 1m)0.00.20.40.60.81.01.2Aggregate Teacher Normalised Score
+Offline Onlinec) Sweep over constant temporal distance (Nw=24)
+N=24, w=1
+N=12, w=2
+N=8, w=3
+N=6, w=4
+N=4, w=6Figure 2. Interquantile mean training curves for Atari TRD-DQN agents for three environments (Breakout, Space Invaders and Ms Pacman) with three repeats,
+normalised by the teacher’s score. Offline and Online indicate where training used the offline replay buffer and the online environment steps.
+0 5 10 2 4 6 8 10 12
+   Steps (x100k)                     Env. Frames (x 1m)101102Aggregate Student-Teacher Error (log-scale)Offline Onlinea) Sweep over the number of bins (N) with w=1
+N=5
+N=10
+N=15
+N=20
+N=25
+0 5 10 2 4 6 8 10 12
+   Steps (x100k)                     Env. Frames (x 1m)101102Aggregate Student-Teacher Error (log-scale)Offline Onlineb) Sweep over the rewards grouped (w) with N=5
+w=1
+w=2
+w=3
+w=4
+w=5
+0 5 10 2 4 6 8 10 12
+   Steps (x100k)                     Env. Frames (x 1m)101102Aggregate Student-Teacher Error (log-scale)Offline Onlinec) Sweep over constant temporal distance (Nw=24)
+N=24, w=1
+N=12, w=2
+N=8, w=3
+N=6, w=4
+N=4, w=6
+Figure 3. The Mean Squared Error between the student (TRD agent) and pretrained teacher agent averaged over three Atari environments with three repeats.
+Offline and Online indicate where training used the offline replay buffer and the online environment steps.
+6 Explaining an Agent’s Future Beliefs and
+Decision-Making
+We now present three novel explanation mechanisms using future ex-
+pected rewards: understanding what rewards the agent expects to re-
+ceive and when, and their confidence in this prediction; visualising an
+observation feature’s importance for predicting rewards at near and
+far timesteps; and a contrastive explanation using the difference in
+future rewards to understand the impact of different actions choices
+(Sections 6.1, 6.2, and 6.3 respectively). We showcase these appli-
+cations using three different Atari environments with more examples
+in Appendices C, D, and E. All agents were retrained DQN agents
+incorporating TRD using N=40 andw=1.
+6.1 What Rewards to Expect and When?
+For environments with complex transition dynamics or reward func-
+tions such as Atari, understanding how an agent maximises its fu-
+ture rewards or predicting what rewards it will receive and when is
+not possible, unlike with the toy example illustrated in Figure 1. We
+show here how a TRD agent’s predicted future rewards supply this
+information, presenting an important explanatory perspective for un-
+derstanding agent decisions. Furthermore, for environments with bi-
+nary reward functions (i.e., where the rewards are either zero or a
+constant value) the agent’s expected reward can be further decom-
+posed into the probability of the reward function components. Atari
+uses integer rewards and DQN agents clip rewards to -1 to 1, and sofor these examples the agent’s probability of collecting a reward is
+equivalent to the reward’s expectation.
+Figures 4 and 5 plot the agent’s expected rewards over the next
+40 timesteps for the observation on the left. As w=1, the discount
+factor is constant for each predicted timestep, and so we factor it out,
+leaving just the expected reward. Without domain knowledge of each
+environment and its reward functions, we can observe from the ex-
+pected rewards plots that the agent expects periodic non-zero rewards
+every 8 to 9 timesteps for Space invaders and every 15 timesteps for
+Breakout. Additionally, considering that the expected rewards (for
+these environments) are equivalent to the agent’s confidence (proba-
+bility) in receiving a reward for a particular timestep, users can infer
+that the agent’s confidence reduces over time for the specific timestep
+that the agent will receive a reward. As such, for space invaders, the
+agent has high confidence for the close timesteps ( t+6andt+15)
+with the expected rewards for the third and fourth rewards being dis-
+tributed across several timesteps ( t+23 tot+24 andt+30 tot+40).
+Further, utilising domain knowledge of each environment, Fig-
+ures 4 and 5 correlate with our understanding as agents can only
+shoot aliens or break bricks periodically. Additionally, as the policy
+is stochastic due to epsilon-greedy action selection and with random-
+ness in the environment, the uncertainty of timesteps far in the future
+is unsurprising and matches with human expectations.
+Building on the two figures, we can generate videos of the agent’s
+expected rewards across entire episodes plotting the expected reward
+for each observation. Example videos are provided in the associated
+Observationt+1 t+6 t+12 t+17 t+23 t+28 t+34 t+40
+Future time step0.00.20.40.60.81.0Expected RewardFigure 4. A Space Invaders observation (left) with the respective predicted next 40 future expected rewards (right).
+Observationt+1 t+6 t+12 t+17 t+23 t+28 t+34 t+40
+Future time step0.00.10.20.30.40.50.6Expected Reward
+Figure 5. A Breakout observation (left) with the respective predicted next 40 future expected rewards (right).
+GitHub repository and contain significant additional context for users
+to visualise how the agent’s predicted future rewards change over
+time as the environment’s state evolves.
+As a result, we anticipate that TRD has the potential to aid re-
+searchers and developers debug RL agents; Figure 4 and the related
+videos provide novel information about an agent’s future beliefs and
+its understanding of an environment’s reward function.
+6.2 What Observation Features are Important?
+Understanding the areas of an input that have the greatest impact on
+a neural network is a popular technique for generating explanations,
+called saliency maps. These allow users to visualise what features of
+an observation most influence an agent’s decision. With access to an
+agent’s beliefs about its future expected rewards, TRD provides novel
+saliency map opportunities to understand how the agent’s focus with
+respect to an observation varies.
+Utilising GradCAM [20] (a popular saliency map algorithm de-
+scribed in Section 3), we can select individual expected rewards as
+the output to discover its feature importance. Figure 6 plots an Atari
+Breakout observation and the normalised feature importance for the
+expected reward of the next timestep ( t+1) and the most distance
+expected reward ( t+40) along with their normalised difference. The
+feature importance plots highlight areas of focus (red), influencing
+its decision and ignored areas (blue). We find that the agent’s focus
+on the ball and bricks vary depending on how far in the future a re-
+ward is predicted. For the t+1feature importance, the agent is highlyfocused (shown in red) on the ball in the centre. In comparison, for
+t+40, the agent has a greater focus on the bricks than the ball. Using
+domain knowledge of the environment validates human expectations
+as the number of bricks left and their position will have greater long-
+term importance to the agent than the ball. This difference is high-
+lighted when subtracting the feature importance of t+1from t+40
+such that the ball’s importance is significantly lower (shown in blue)
+and the bricks have relatively greater importance (shown in red).
+To help visualise this change in an observation feature’s impor-
+tance across each predicted future reward, we provide a video of
+Figure 6 within the associated GitHub repository. Additionally, we
+provide a video of an episode plotting the first and last predicted
+reward’s feature importance for each timestep. Like visualising an
+agent’s expected reward in Section 6.1, Figure 6 and videos can
+help researchers and developers understand in what context a fea-
+ture has importance for an agent. Previously, it was only possible to
+understand a feature’s importance to predict the agent’s total reward,
+whereas TRD provides us with the ability to investigate the impor-
+tance of features in a more granular way.
+6.3 What is the Impact of an Action Choice?
+Within an environment, there are often multiple (possibly similar)
+paths to complete a goal with humans interested in understanding
+the differences between them (e.g., Figure 1). Contrastive explana-
+tions are a popular approach to understanding the reasons for taking
+one decision over another. In our case, this is the choice between
+Observation
+ t+1 feature importance
+ t+40 feature importance
+Difference between t+40 and
+t+1 feature importance
+0.00.20.40.60.81.0
+Feature importanceFigure 6. GradCAM saliency maps for the t+ 1andt+ 40 expected reward along with their difference for a Breakout observation. GradCAM uses the first
+convolutional layer of the agent’s neural network to differentiate.
+Observation
+0 10 20 30 40
+Future Timesteps0.2
+0.00.20.4Expected RewardExpected rewards for noop
+0 10 20 30 40
+Future Timesteps0.2
+0.00.20.4Expected RewardExpected rewards for fire
+0 10 20 30 40
+Future Timesteps0.50
+0.25
+0.000.250.50Difference in Expected RewardDifference in actions noop and
+fire's expected rewards
+Figure 7. The difference of each future expected reward for taking Left and Right actions of the observation for the Atari Seaquest environment.
+two alternative actions in some state [14]. With the future expected
+rewards, TRD provides additional information to compare and con-
+trast states and actions using what rewards the agent expects to re-
+ceive and when along different paths. In this section, we show how
+simple explanations only using the timestep-wise difference in ex-
+pected rewards can help understand an action’s impact on an agent’s
+future rewards.
+Figure 7 shows the expected reward for taking no action (noop)
+and firing and the differences between the expected reward for noop
+and firing in the Atari Seaquest environment. The right-hand side
+figure shows that the difference in future rewards produces a positive
+and negative spike after which the expected rewards converge. We
+can infer from these spikes that if the agent fires rather than noop then
+there is a more immediate reward, whereas if the agent waits, taking
+no action, the reward is delayed resulting in a later spike. Crucially,
+this difference in reward outcomes is resolved afterwards causing no
+long-term difference in the agent’s expected rewards. Using domain
+knowledge, we can assume that this means if the agent doesn’t fire
+in this timestep, it will most likely fire in the following timestep or
+soon after, thus receiving a slightly delayed reward.
+Collectively, with the explanations from Sections 6.1 and 6.2, con-
+trastive explanations highlight the consequences of different actions
+on an agent’s future rewards.
+7 Conclusion
+Temporal Reward Decomposition (TRD) is a novel reward estima-
+tor that is equivalent to scalar future reward estimators that can
+uniquely reveal additional information about deep reinforcement
+learning agents. We have shown that pretrained Atari agents can beefficiently retrained to incorporate TRD with minimal impact on per-
+formance. Furthermore, we have showcased three novel explanatory
+mechanisms enabled by TRD, demonstrating how these can aid re-
+searchers and developers understanding agent behaviour in complex
+environments such as the three Atari environments considered here.
+We can ask “What rewards to expect and when?” by predicting re-
+wards numerous timesteps into the future and the confidence the
+agent has in their prediction (Section 6.1). We can ask “What ob-
+servation features are important?” by revealing how an agent’s focus
+changes depending on the immediacy of the reward predicted (Sec-
+tion 6.2). Lastly, we can as “What is the impact of an action choice?”
+by revealing the difference in future expected rewards for two alter-
+native actions (Section 6.3).
+TRD can be extended in various ways to better explain an agent’s
+future rewards. Incorporating prior decomposition approaches such
+as Juozapaitis et al. [11] to explain the future expected rewards of
+different reward components is a clear option for future research.
+Further, each reward could be modelled as a probability distribution,
+decomposing the expectation of a reward for a timestep [5]. A further
+avenue for future research is that the linear relationship between fu-
+ture reward estimators and TRD (Eq. (7)) may be exploited for more
+efficient training.
+Acknowledgements
+This work was supported by the UKRI Centre for Doctoral Training
+in Machine Intelligence for Nano-electronic Devices and Systems
+[EP/S024298/1] and RBC Wealth Management.
+Thanks to John Birbeck for advice on the proof of Theorem 1.
+References
+[1] R. Agarwal, M. Schwarzer, P. S. Castro, A. Courville, and M. G.
+Bellemare. Deep reinforcement learning at the edge of the statistical
+precipice. Advances in Neural Information Processing Systems , 2021.
+[2] R. Agarwal, M. Schwarzer, P. S. Castro, A. C. Courville, and M. Belle-
+mare. Reincarnating reinforcement learning: Reusing prior computa-
+tion to accelerate progress. Advances in Neural Information Processing
+Systems , 35:28955–28971, 2022.
+[3] A. P. Badia, B. Piot, S. Kapturowski, P. Sprechmann, A. Vitvitskyi, Z. D.
+Guo, and C. Blundell. Agent57: Outperforming the atari human bench-
+mark. In International Conference on Machine Learning , pages 507–
+517. PMLR, 2020.
+[4] M. G. Bellemare, Y . Naddaf, J. Veness, and M. Bowling. The arcade
+learning environment: An evaluation platform for general agents. Jour-
+nal of Artificial Intelligence Research , 47:253–279, 2013.
+[5] M. G. Bellemare, W. Dabney, and R. Munos. A distributional perspec-
+tive on reinforcement learning. In International Conference on Machine
+Learning , pages 449–458. PMLR, 2017.
+[6] C. Berner, G. Brockman, B. Chan, V . Cheung, P. Debiak, C. Dennison,
+D. Farhi, Q. Fischer, S. Hashme, C. Hesse, et al. Dota 2 with large scale
+deep reinforcement learning. arXiv preprint arXiv:1912.06680 , 2019.
+[7] G. Dulac-Arnold, N. Levine, D. J. Mankowitz, J. Li, C. Paduraru,
+S. Gowal, and T. Hester. Challenges of real-world reinforcement learn-
+ing: Definitions, benchmarks and analysis. Machine Learning , 110(9):
+2419–2468, 2021.
+[8] S. Fujimoto, H. Hoof, and D. Meger. Addressing function approxi-
+mation error in actor-critic methods. In International Conference on
+Machine Learning , pages 1587–1596. PMLR, 2018.
+[9] S. Greydanus, A. Koul, J. Dodge, and A. Fern. Visualizing and under-
+standing atari agents. In International conference on machine learning ,
+pages 1792–1801. PMLR, 2018.
+[10] S. Huang, Q. Gallouédec, F. Felten, A. Raffin, R. F. J. Dossa,
+Y . Zhao, R. Sullivan, V . Makoviychuk, D. Makoviichuk, M. H. Danesh,
+C. Roumégous, J. Weng, C. Chen, M. M. Rahman, J. G. M. Araújo,
+G. Quan, D. Tan, T. Klein, R. Charakorn, M. Towers, Y . Berthelot,
+K. Mehta, D. Chakraborty, A. KG, V . Charraut, C. Ye, Z. Liu, L. N.
+Alegre, A. Nikulin, X. Hu, T. Liu, J. Choi, and B. Yi. Open RL Bench-
+mark: Comprehensive Tracked Experiments for Reinforcement Learn-
+ing.arXiv preprint arXiv:2402.03046 , 2024. URL https://arxiv.org/abs/
+2402.03046.
+[11] Z. Juozapaitis, A. Koul, A. Fern, M. Erwig, and F. Doshi-Velez. Ex-
+plainable reinforcement learning via reward decomposition. In IJ-
+CAI/ECAI Workshop on Explainable Artificial Intelligence , 2019.
+[12] W. Lu, X. Zhao, S. Magg, M. Gromniak, M. Li, and S. Wermterl. A
+closer look at reward decomposition for high-level robotic explanations.
+In2023 IEEE International Conference on Development and Learning
+(ICDL) , pages 429–436. IEEE, 2023.
+[13] P. Madumal, T. Miller, L. Sonenberg, and F. Vetere. Explainable re-
+inforcement learning through a causal lens. In Proceedings of the
+AAAI conference on Artificial Intelligence , volume 34, pages 2493–
+2500, 2020.
+[14] T. Miller. Contrastive explanation: A structural-model approach. The
+Knowledge Engineering Review , 36:e14, 2021.
+[15] S. Mirchandani, S. Karamcheti, and D. Sadigh. Ella: Exploration
+through learned language abstraction. Advances in neural information
+processing systems , 34:29529–29540, 2021.
+[16] V . Mnih, K. Kavukcuoglu, D. Silver, A. A. Rusu, J. Veness, M. G. Belle-
+mare, A. Graves, M. Riedmiller, A. K. Fidjeland, G. Ostrovski, et al.
+Human-level control through deep reinforcement learning. Nature , 518
+(7540):529–533, 2015.
+[17] M. L. Puterman. Markov Decision Processes: Discrete Stochastic Dy-
+namic Programming . John Wiley & Sons, 2014.
+[18] Y . Qing, S. Liu, J. Song, and M. Song. A survey on explainable rein-
+forcement learning: Concepts, algorithms, challenges. arXiv preprint
+arXiv:2211.06665 , 2022.
+[19] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov. Prox-
+imal policy optimization algorithms. arXiv preprint arXiv:1707.06347 ,
+2017.
+[20] R. R. Selvaraju, M. Cogswell, A. Das, R. Vedantam, D. Parikh, and
+D. Batra. Grad-cam: Visual explanations from deep networks via
+gradient-based localization. In Proceedings of the IEEE International
+Conference on Computer Vision , pages 618–626, 2017.
+[21] Y . Septon, T. Huber, E. André, and O. Amir. Integrating policy sum-
+maries with reward decomposition for explaining reinforcement learn-
+ing agents. In International Conference on Practical Applications of
+Agents and Multi-Agent Systems , pages 320–332. Springer, 2023.
+[22] D. Silver, J. Schrittwieser, K. Simonyan, I. Antonoglou, A. Huang,A. Guez, T. Hubert, L. Baker, M. Lai, A. Bolton, et al. Mastering the
+game of go without human knowledge. Nature , 550(7676):354–359,
+2017.
+[23] D. Stirzaker. Elementary Probability . Cambridge University Press,
+2003.
+[24] R. S. Sutton and A. G. Barto. Reinforcement Learning: An Introduction .
+MIT press, 2018.
+[25] M. Towers, A. Kwiatkowski, J. Terry, J. U. Balis, G. De Cola, T. Deleu,
+M. Goulão, A. Kallinteris, M. Krimmel, A. KG, et al. Gymnasium:
+A standard interface for reinforcement learning environments. arXiv
+preprint arXiv:2407.17032 , 2024.
+[26] Y . Tsuchiya, Y . Mori, and M. Egi. Explainable reinforcement learning
+based on q-value decomposition by expected state transitions. CEUR
+Workshop Proceedings , 2023.
+[27] C. J. Watkins and P. Dayan. Q-learning. Machine Learning , 8:279–292,
+1992.
+[28] H. Yau, C. Russell, and S. Hadfield. What did you think would happen?
+explaining agent behaviour through intended outcomes. Advances in
+Neural Information Processing Systems , 33:18375–18386, 2020.
+A State-value based Temporal Reward
+Decomposition
+Section 4 outlines the Temporal Reward Decomposition for the Q-
+value only for consistency. Therefore, in this Appendix, we provide
+the equivalent Temporal Reward Decomposition for the state-value
+with theorem 2 providing the equivalent given only a state s, Eqs.
+(25) and (26) for the state-value based reward vector and Eq. (28) for
+the loss function.
+Theorem 2. Given a state s, the expected sum of rewards
+is equal to the sum of expected rewards, more precisely
+EπP∞
+i=0γiRt+iSt=s]≡P∞
+i=0Eπ[γiRt+i|St=s].
+Proof.
+Eπ"∞X
+i=0γiRt+iSt=s#
+(20)
+=Eπ"
+Rt+∞X
+i=1γiRt+iSt=s#
+(21)
+=Eπ[Rt|St=s] +Eπ"∞X
+i=1γiRt+iSt=s#
+(22)
+=Eπ[Rt|St=s] +Eπ[γRt+1|St=s]+
+Eπ"∞X
+i=2γiRt+iSt=s#
+(23)
+=∞X
+i=0Eπ[γiRt+i|St=s] (24)
+vTRD
+π(s) =
+Eπ[Rt|St=s]
+Eπ[γRt+1|St=s]
+...
+Eπ[γN−1Rt+N−1|St=s]
+EπP∞
+i=NγiRt+i|St=s
+(25)
+B Training
+For training, in this Appendix, we provide the training hardware
+used, agent performance, an example implementation of the TRD-
+based loss function (Listing 8), and a Table of training hyperparam-
+eters (Table 1).
+For the hardware used for each training script, we used a single
+Nvidia V100 and Intel Xeon Gold 6138 with 20 cores, resulting in a
+wall time of around 7 hours.
+As we conduct a hyperparameter sweep, we report the average
+final evaluation results for the training environments using N=
+25, w= 1 (and a seed of 0). The scores are 399.0,1444.0, and
+2756.0for Breakout, Space Invaders, and Ms Pacman, respectively
+(the teacher-based DQN agents have scores of 386.9,1324.0, and
+2433.0) with clipped rewards.
+For Listing 8, Nand ware called num_bins and
+reward_width respectively. To implement the loss func-
+tion, there are two core changes to a standard DQN-based
+loss function: selecting the next_q_values and determin-
+ing the q_targets . For computing the next_q_values is
+np.max(next_q_values, axis=-1) however, due to theimport numpy as np
+def trd_loss(obs, actions, next_obs,
+rewards, terminations):
+next_q_values = model(next_obs)
+next_actions =
+np.argmax(np.sum(next_q_values)) ,→
+next_q_values =
+next_q_values[next_actions] ,→
+q_targets = (1 - terminations) *
+discount_factor *next_q_values ,→
+q_targets = np.roll(q_targets, shift=1)
+q_targets[-1] += q_targets[0]
+q_targets[0] = rewards
+q_values = model(obs)
+q_actions = q_values[actions]
+loss = np.mean(np.square((q_actions -
+q_targets))) ,→
+return loss
+Figure 8. Example implementation of the TRD Q-value loss function
+output including the future expected rewards, we first need to roll up
+the rewards to compute the scalar Q-value to know the optimal next
+actions, which can be used to collect the optimal future expected
+rewards for each observation. The second change is to compute
+theq_targets which is normally (1 - terminations) *
+discount_factor *next_q_values . As the number of
+future rewards is variable, we modify the multiple the discount
+factor by the reward width. Next, we np.roll the targets by 1; this
+is equivalent to moving the first index to the second index, second to
+third, etc, and the last index to the first. Using the shifted predicted
+future rewards; we update the last element to include the new first
+element (previously the last element of the predicted rewards).
+Finally, we set the first element as the actual rewards collected by
+the agent.
+Table 1. Training hyperparameters for DQN Atari with TRD and QDagger
+heuristics
+Parameter name Value
+Training seeds 0, 1, 2
+Number of online training timesteps 4 million
+Size of the offline training replay buffer size 1 million
+Number of offline training timesteps 1 million
+Learning rate 1e-4
+Buffer size 1 million
+Discount factor 0.99
+Target network update frequency 1000
+Batch size 32
+Epsilon for action selection 0.01
+Training frequency 4
+QDagger temperature 1.0
+Evaluation seeds 0,1, . . . , 9
+Offline training evaluation period 100,000
+Online training evaluation period 250,000
+C More Examples of an Agent’s Future Rewards
+Building upon Section 6.1, we provide more examples for the Atari
+[4] Ms. Pacman, Breakout and Seaquest in Figures 9, 10 and 11. All
+vTRD
+π(s) =
+Eπ[Rt|St=s] +···+Eπ[γw−1Rt+w−1|St=s]
+Eπ[γwRt+w|St=s] +···+Eπ[γ2w−1Rt+2w−1|St=s]
+...PNw
+i=(N−1)wEπ[γiRt+i|St=s]
+Eπ[P∞
+i=NwγiRt+i|St=s]
+(26)
+X
+vTRD
+π(s)≡vπ(s) ∀s∈S (27)
+LTRD=E(st,Rt+i,st+w)∼D
+ 
+vTRD 0π(st)−Pw
+i=0Rt+i2
+ 
+vTRD 1π(st)−γwvTRD 0π(st+w)2
+ 
+vTRD 2π(st)−γwvTRD 1π(st+w)2
+...
+vTRDNπ (st)−γwvTRDN−1
+π (st+w)2
+
+vTRDN+1
+π (st)−γw(vTRDNπ (st+w) +vTRDN+1
+π (st+w))2
+(28)
+agents in this section were trained with N= 40 andw= 1.
+For Ms Pacman, we can observe from Figure 9 that the agent
+expects high-frequency rewards of 1, around every three timesteps.
+Interestingly, the agent has high confidence in these future rewards
+(until t+ 25 ) as they are not spread out over several timesteps like
+Breakout or Seaquest in Figures 10 and 11 respectively. At t+ 25
+and beyond, the agent’s confidence in a reward’s particular timestep
+reduces, generally spread over two timesteps, e.g., t+ 35 andt+ 36 .
+In comparison, Breakout and Seaquest (Figures 5 and 11)show
+the agent’s confidence in future rewards is significantly lower. For
+Breakout, the expected reward is spread over two timesteps with no
+subsequent expected reward within the next 30 timesteps. While, for
+Seaquest, the agent has very low confidence in the particular timestep
+of the reward, with the agent’s belief centred around t+ 5. Both
+of these figures show that the agent’s uncertainty about their future
+behaviour with future work required to understand if more training
+would enable the agent’s greater confidence or if randomness within
+the environment prevents this.
+D More Visualisations of a Feature’s Temporal
+Importance
+Building upon Section 6.2, in this Appendix, we provide more ex-
+amples of feature importance for the Breakout environment at later
+stages in an episode than Figure 5 with Figures 12 and 13. These
+show that the agent’s focus varies depending on the temporal dis-
+tance to the predicted reward.
+With both figures, the agent shows greater relative importance to
+the bricks for t+ 40 thant+ 1, in particular, Figure 12. For Figure
+5 and 12, we find that the ball has higher importance in t+ 1 than
+t+ 40 ; however, unexpectedly, in Figure 13, this is reversed. We find
+that the agent’s t+ 40 feature importance contains high importance
+of the ball while t+ 1does not. The reason for this is unclear with
+future work required.
+E More Contrastive Explanations of an Agent’s
+Future Rewards
+Building upon Section 6.3, in this Appendix, we provide two more
+example contrastive explanations for the River raid and Ms Pacmanenvironments in Figures 14 and 15. These figures show the impact of
+an action on the agent’s future expected rewards; in particular, they
+show a significant impact on the short-term rewards of the agents,
+which slowly converge to the same expected rewards.
+For Figure 14, if the agent moves left, the difference in its future
+expected rewards compared to if it moved right have a four times in-
+crease in its expected reward, from 0.2to0.8. Similarly, for Figure
+15, the agent can move towards pellets (that reward the agent) with
+left or away, moving right. This is reflected in the agent’s future be-
+liefs in its rewards as the agent has significantly higher confidence
+only when moving left, whereas when moving right, the agent’s ex-
+pected rewards are limited to around 0.5.
+Observationt+1 t+6 t+12 t+17 t+23 t+28 t+34 t+40
+Future time step0.00.20.40.60.81.01.2Expected RewardFigure 9. Expected Reward of a DQN-based TRD agent for Ms. Pacman with N= 40, w= 1.
+Observationt+1 t+6 t+12 t+17 t+23 t+28 t+34 t+40
+Future time step0.00.10.20.30.4Expected Reward
+Figure 10. Expected Reward of a DQN-based TRD agent for Breakout with N= 40, w= 1.
+Observationt+1 t+6 t+12 t+17 t+23 t+28 t+34 t+40
+Future time step0.00.10.20.3Expected Reward
+Figure 11. Expected Reward of a DQN-based TRD agent for Seaquest with N= 40, w= 1.
+Observation
+ t+1 feature importance
+ t+40 feature importance
+Difference between t+40 and
+t+1 feature importance
+0.00.20.40.60.81.0
+Feature importanceFigure 12. GradCAM saliency maps for the t+ 1 andt+ 40 expected reward along with their difference for a Breakout observation in the middle of an
+episode.
+Observation
+ t+1 feature importance
+ t+40 feature importance
+Difference between t+40 and
+t+1 feature importance
+0.00.20.40.60.81.0
+Feature importance
+Figure 13. GradCAM saliency maps for the t+ 1andt+ 40 expected reward along with their difference for a Breakout observation at the end of an episode.
+Observation
+0 10 20 30 40
+Future Timesteps0.00.20.40.60.8Expected RewardExpected rewards for left
+0 10 20 30 40
+Future Timesteps0.00.20.40.60.8Expected RewardExpected rewards for right
+0 10 20 30 40
+Future Timesteps0.4
+0.2
+0.0Difference in Expected RewardDifference in actions left and
+right's expected rewards
+Figure 14. The difference of each future expected reward for taking Left and Right actions of the observation for the Atari River raid environment.
+Observation
+0 10 20 30 40
+Future Timesteps0.000.250.500.751.00Expected RewardExpected rewards for left
+0 10 20 30 40
+Future Timesteps0.000.250.500.751.00Expected RewardExpected rewards for right
+0 10 20 30 40
+Future Timesteps0.00.51.0Difference in Expected RewardDifference in actions left and
+right's expected rewards
+Figure 15. The difference of each future expected reward for taking Left and Right actions of the observation for the Atari Ms Pacman environment.

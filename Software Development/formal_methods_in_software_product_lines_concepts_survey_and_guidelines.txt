@@ -1,0 +1,955 @@
+Formal Methods in Software Product Lines: 
+Concepts, Survey, and Guidelines  
+ 
+Mikoláš Janota  
+Lero – The Irish Software Engineering Research Centre 
+School of Computer Science and Informatics, 
+University College Dubl in, Dublin, Ireland 
+ 
+Joseph Kiniry  
+Lero – The Irish Software Engineering Research Centre 
+School of Computer Science and Informatics, 
+University College Dubl in, Dublin, Ireland 
+ 
+Goetz Botterweck  
+Lero – The Irish Software Engineering Research Centre 
+Department of Computer Science and Information Systems, 
+University of Limerick, Limerick, Ireland 
+ 
+12 March 2008
+Lero Technical Report Lero-TR-SPL-2008-02  
+ 
+ii 
+ Contact 
+Address  ..  Lero 
+International Science Centre 
+University of Limerick 
+Ireland  
+Phone  .....  +353 61 233799 
+Fax  .........  +353 61 213036 
+E-Mail  ....  info@lero.ie  
+Website  ..  http://www.lero.ie/  
+ 
+ 
+ 
+Copyright 2008 Lero, University of Limerick 
+This work is partially supported by Science Foundation Ireland 
+under grant no. 03/CE2/I303-1. 
+Formal Methods in Software Product Lines:
+Concepts, Survey, and Guidelines
+Mikol ´aˇs Janota, Joseph Kiniry
+School of Computer Science and Informatics
+University College Dublin
+Belﬁeld, Dublin 4, Ireland
+{mikolas.janota, joseph.kiniry }@ucd.ieGoetz Botterweck
+Lero, University of Limerick
+Limerick, Ireland
+goetz.botterweck@lero.ie
+Abstract
+Based upon our survey of the literature, software product
+lines is a fertile research ﬁeld for the application of formal
+methods. Most computer scientists and software practition-
+ers, including software product lines researchers, are not
+exploiting the powerful tools and techniques available in
+modern formal methods. This paper (i) summarizes the core
+of modern applied formal methods, (ii) discusses software
+product lines from a formal methods point-of-view, (iii) sur-
+veys the application of formal methods to software product
+lines research, and, most importantly, (iv) highlights key re-
+search opportunities and challenges for joint work between
+formal methods and software product lines researchers.
+1 Introduction
+Applying mathematics in software development is today
+known as “Formal Methods.” It has a long tradition in Com-
+puter Science—especially given that the early decades of
+Computer Science would today be known as formal meth-
+ods. A notable example is the early work of Floyd and
+Hoare in the 1960s that resulted in what is called Hoare
+logic [15] today, which is a means of connecting program
+code and its logic speciﬁcations. Another common exam-
+ple is speciﬁcation languages, such as Z or VDM [ 27],
+that are used to rigorously describe software-intensive sys-
+tems. This year’s Turing Award winners also work in formal
+methods—they invented model checking, which is used to
+reason about the correctness of hardware circuits and soft-
+ware systems.
+Although, compared to Formal Methods (FM), the re-
+search on Software Product Lines (SPL) [ 9] is a younger
+and developing ﬁeld, it has roots in many earlier software
+engineering areas. For instance, ideas such as mass pro-
+duced software components [ 24], software families [ 28],software reuse [ 19], domain engineering, domain-speciﬁc
+software architectures [ 26], and feature modeling [ 22] have
+inﬂuenced SPL research or provide techniques used in SPL
+approaches.
+So what insights do we gain if we consider these two
+ﬁelds, SPL and FM, in conjunction ? Many of the challenges
+brought up by SPL research and practice can be addressed
+by techniques available in FM—and in part that is already
+happening. However, we believe that there is still great po-
+tential to make even better use of these opportunities. First,
+there is a whole spectrum of standard FM techniques with
+software tools ready to be used. SPL researchers should be
+aware of this “toolkit”. Second, there are challenges still
+waiting to be picked and solved. FM researchers should
+know about these questions waiting to be answered.
+Consequently, with this article we focus on the use
+of of formal methods in the domain of Software Product
+Lines (SPL). We strive to both raise awareness for available
+techniques and identify opportunities for further research.
+This article brings several contributions: (i) it provides
+a snapshot of modern formal methods, particularly with re-
+spect to the most useful, tool-supported methods, (ii) it sum-
+marizes some facets of SPL from an FM point-of-view, (iii)
+it is a survey of the current use of FM in SPL, and (iv) it
+highlights opportunities and challenges in SPL research for
+the application of FM.
+Hence, a FM reader will ﬁnd opportunities for research
+within the area of SPL, and an SPL reader will ﬁnd hints
+and guidelines that will help him to chose the appropriate
+FM tool or technique for his particular problem.
+2 Formal Methods Overview
+There are several tomes, hundreds of pages in length,
+that summarize formal methods [ 18]. Thus, any summary
+of modern applied formal methods of a few pages in length
+does the ﬁeld injustice. This section focuses instead upon
+1
+the key facets of applied formal methods —those subﬁelds
+of formal methods that have shown to be, in recent years,
+the most useful and applicable, have the most supportive
+and active communities, and have excellent tool support.
+The steps of the general process of using FM comprise of
+the following: 1) create a formal model of the studied sys-
+tem, 2) formally express the desired properties of that sys-
+tem, 3) attempt prove (show) that the model satisﬁes these
+properties, and 4) if the proving process failed, analyze the
+cause so the model can be amended or the property adjusted.
+To create a formal model , one needs an underlying for-
+mal system in which to build the model. Most readers will
+be familiar with one or more formal languages used to de-
+ﬁne such models, but in the end, each of these languages’
+semantics is expressed in a logic. Thus, the foundational
+system used in FM are logics of various kinds. Conse-
+quently, in these logics, one deﬁnes models, expresses prop-
+erties about models, and then performs reasoning about the
+model and its properties. In the following sections we dis-
+cuss some of the most relevant (to the SPL researcher) log-
+ics, reasoning techniques and tools, and standardized lan-
+guages used to express models and properties in these logics
+for such tools.
+2.1 Logics
+Logics are the languages of mathematics used to for-
+mally capture the concepts about which one wishes to rea-
+son. Often, FM practitioners are not writing in a logic
+directly—rather they are using a language tailored for the
+particular domain. Nevertheless, it is some form of logic
+that eventually formalizes the semantics of such a language.
+There are two main properties of a logic that determine
+its suitability for a particular problem. One property is its
+expressiveness , i.e., which concepts are expressible in that
+logic and how easily such is done. A second property is the
+difﬁculty of constructing proofs for statements in that logic.
+Propositional logic is a logic with two-values for each
+variable1,true andfalse , and the formulas are typically ex-
+pressed using Boolean connectives ( ∨,∧, etc.) and nega-
+tion ( ¬). Propositional logic is decidable , meaning that
+there exists an algorithm that decides whether a given for-
+mula is a tautology (evaluates to true under any valuation
+of variables, also known as being valid ) or not. Neverthe-
+less, this problem is a co-NP complete problem for CNF
+(conjunctive normal form) formulas; dually deciding CNF
+formula’s satisﬁability is NP-complete.
+First-order logics (FOL) are propositional logics embel-
+lished with quantiﬁers used to express things such as “mul-
+1Many other useful logics exist that have more than two truth values,
+including several three-valued logics (with a third truth value of unknown ),
+a bevy of many-valued logics (with either a ﬁnite, inﬁnite and enumerable,
+or inﬁnite and non-enumerable number of truth values), temporal logics
+and logics of causality, fuzzy logics, etc.tiplication by 0yields 0”—-(∀x)(0∗x=x∗0 = 0) . FOL
+are (in the general case) semi-decidable , meaning that there
+exists an algorithm that, for a given formula, terminates if
+that formula is valid. But, in addition, there is no algorithm
+that for any formula terminates and determines whether that
+formula is valid or not (a direct result of G ¨odel’s incom-
+pleteness theorems).
+Higher-order logics (HOL) [ 31], of which second-order
+logics are a common variant, enable quantiﬁcation over
+functions and predicates, rather than just over variables.
+Even though the general FOL is only semi-decidable,
+there exist fragments of FOL that are decidable. An exem-
+plar of such fragment is Presburger arithmetic —arithmetic
+without multiplication. This led to the development of al-
+gorithms and tools for deciding the validity of formulas in
+these fragments, see Sections 2.2,2.3for more details.
+A variety of logics have been introduced to facilitate
+writing expressions in different certain domains. For exam-
+ple, the aforementioned temporal logics are logics special-
+ized to express properties of processes evolving over time.
+2.2 Reasoning
+Logics are used to describe the objects about which one
+wants to reason. The reasoning itself is an attempt to con-
+struct a proof of the desired claim. The term proof has a
+rather wide scope and for the purpose of this text we just
+assume that a proof is either a set of steps that adhere to the
+pertaining calculus or it is an exhaustive enumeration of all
+the possible valuations.
+There is a variety of options how a proof is constructed.
+A traditional pen and paper approach offers freedom and
+ﬂexibility to the mathematician and it is a popular choice for
+proofs attempted for the ﬁrst time. The disadvantage is that
+working by hand does not take advantage of tool support .
+So how do tools help with proving? Generally speaking,
+tools provide two functions: automation of the proving pro-
+cess, and validation of the steps performed by the human.
+Complementing the palette of logics, FM provide us with a
+number of tools with the support of different logics, varying
+in the degree of automation and time requirements, etc.
+Table 1 provides an overview of some of the main tools
+supporting reasoning. The following provides an overview
+of several kinds of reliable, useful, popular tools that appear
+in FM. Several concrete examples of these tools are also
+provided, and nearly all of them are freely available online.
+SAT solvers operate on propositional logic and attempt to
+decide whether the given formula, typically in CNF, is sat-
+isﬁable or not. Due to the NP-completeness of satisﬁability
+of a CNF formula we are guaranteed termination, but the
+resource requirements may be unwieldy. The good news
+is that, in practice, SAT solvers are very capable of solv-
+ing problems with thousands of free variables. Examples of
+2
+SAT solvers include C HAFF ,MINISAT, SAT ZILLA2.
+Finding a satisfying evaluation of a formula is a special
+case of the Constraint Satisfaction Problem (CSP). CSP
+is given as a set of domains and constraints on these do-
+mains and we are interested in the states that satisfy all the
+constraints. Constraint Satisfaction Optimization Problem
+(CSOP) is an extension of CSP where we are interested
+in states that apart from satisfying the constraints, maxi-
+mize (resp. minimize) the so-called objective function .Con-
+straint solvers are tools that answer queries about the given
+CSPs or CSOPs. Examples of constraints solvers are J A-
+COP, M INION , VALCSP3.
+Model checking is a fully automated technique targeting
+properties of ﬁnite systems by the exhaustive (explicit or
+symbolic) search through all possible executions of the sys-
+tem. The modeled system is often described with a state
+transition system, and the desired properties in a temporal
+logic (LTL, CTL, etc.). The domain of search is ﬁnite but
+very large. Examples include Bogor and SPIN.
+Tools that decide the validity of formulas of decidable
+fragments of FOL are typically referred to as SMT solvers
+(SMT stands for satisﬁability modulo theories ). Popular
+SMT solvers include Yices, CVC3, MathSAT4.
+Fully automated tools that handle ﬁrst-order formulas are
+called automated theorem provers . As FOL is undecidable,
+an automated theorem prover is not guaranteed to termi-
+nate. Popular automated provers include CVC, Simplify,
+Vampire, Yices, Z3.
+Proof assistants (also known as proof checkers or some-
+times logical frameworks ) are tools that let the user deter-
+mine the steps of the proof, while checking that these adhere
+to the pertaining calculus. Moreover, they provide automa-
+tion for certain types of steps. Proof assistants typically sup-
+port higher-order languages and thus are very expressive.
+Examples include Coq, HOL, Isabelle, PVS.
+Finally, some tools are somewhere halfway between au-
+tomated provers and interactive proof assistants. Many of
+them support specialized logics, such as rewriting logic in
+the case of Maude, or reasoning techniques, such as induc-
+tion in FOL, in the case of ACL2.
+Apart from reasoning tools, some programming lan-
+guages are close to logic. Logic programming (e.g., Prolog)
+enables expressing logic formulas as programs in a straight-
+forward fashion.
+2.3 Standardized Languages
+Many of the input languages of the tools just discussed
+have been de facto standardized. It is a very important
+fact that a language has been standardized; such avoids tool
+2See the results of the SAT competition for more information.
+3See the results of the CSP Solver Competition for more information.
+4See the results of the SMT Competition for more information.Tool category Logic
+SAT solvers propositional logic
+constraint solvers constraints over ﬁnite domains
+model checkers temporal logic and state transi-
+tion systems
+SMT solvers decidable fragments of FOL
+automated theo-
+rem proversFOL
+proof assistants HOL
+Table 1. Tools for Mechanized Reasoning.
+“lock-in” and enables the use of multiple tools to solve (var-
+ious different parts of) a problem. Here we provide several
+important examples of such standardized languages.
+Speciﬁcation languages are languages used to describe
+systems (hardware, software, business, etc.). They are used
+to abstract away from the implementation details of the sys-
+tem and reason about its overall properties. The languages
+B, JML, VDM, Z are examples of popular speciﬁcation lan-
+guages with excellent tool support.
+For automated reasoning tools, several regular competi-
+tions expedited a widespread of standard problem formats.
+In SAT solving, the most common format is the DIMACS
+format, designed for the DIMACS Implementation Chal-
+lenges and used for the aforementioned SAT competition .
+Thousand Problems for Theorem Provers (TPTP) is a
+competition and a set of benchmarks for ﬁrst-order theorem
+provers; this format is now widely supported.
+TheSatisﬁability Modulo Theories (SMT) initiative fo-
+cuses on automated reasoning for decidable fragments of
+FOL. SMT provers are very popular and powerful, as the
+logics supported by such provers are primarily useful in the
+ﬁelds of hardware and program veriﬁcation.
+3 Software Product Lines
+Some core concepts of software product lines are now
+introduced. This overview is based on an ongoing survey of
+SPL literature, however, here SPL concepts are described
+from a FM point-of-view. By taking this fresh perspective,
+speciﬁc SPL approaches are generalized using FM concepts
+(e.g., as sets or functions). The foundation provided here fa-
+cilitates a review of some approaches that apply FM in SPL
+(Section 4 ) and the identiﬁcation of several open research
+challenges ( Section 5 ).
+3.1 Motivation: Economic production
+The major motivation behind SPL is that, under certain
+conditions, it is more efﬁcient to treat a group of similar
+3
+software systems as a whole, rather than handling each in-
+dividual system on its own. In this sense Parnas deﬁnes
+program families as
+... sets of programs whose common properties
+are so extensive that it is advantageous to study
+the common properties of the programs before
+analyzing individual members. [ 28]
+To avail of these commonalities, SPL engineering ap-
+plies techniques that were known before, e.g., software
+reuse andsoftware components . In contrast to other ap-
+proaches, SPL engineering strives to achieve reuse in a
+strategic, prescribed way and to use a managed set of fea-
+tures satisfying the needs of a particular market segment [ 9].
+Consequently, in comparison to Single System Engineer-
+ing, SPL Engineering requires additional upfront invest-
+ment to establish the product line (seeinFigure 1 ). Ex-
+amples of such investment include the deﬁnition of a prod-
+uct line’s scope, the development of reusable assets, and the
+creation of a production plan that describes how products
+are derived.
+Figure 1. Costs of SPL Engineering.
+If this investment is to pay off, a sufﬁcient number of
+products and a lower costs per product is necessary to lever-
+age the economy of scale (seeinFigure 1 ).
+Such an approach is applied to FM in SPL as well. For
+instance, if a model analysis technique that optimizes prod-
+uct derivation is created, the technique and its related tools
+must be introduced to an organization, but the marginal
+costs of such an introduction is reduced by performing
+product-related processes more efﬁciently.
+3.2 SPL Artifacts
+To support the efﬁcient execution of SPL processes with
+FM, it helps if we ﬁrst understand the types of artifacts used
+in SPL and the relationships between these artifacts. Later
+on, we will see how we can exploit these relationships with
+FM, for instance by checking the conformance of one model
+against constraints given in another model.
+SPL engineering employs artifacts very similar to those
+used in general software engineering like speciﬁcations,models, and source code. However, SPL artifacts are differ-
+ent and distinct in some ways. Some of these differentiating
+aspects are summarized in Figure 2 .
+Figure 2. SPL Artifacts.
+3.2.1 Product line vs. Product
+SPL approaches distinguish between two levels of system
+development: the product line and its products (see ver-
+tical dimension in Figure 2 ). Often, there is oneproduct
+line artifact describing an aspect for the whole product line,
+andmany product-speciﬁc artifacts describing that aspect
+of the individual products. For example, consider a feature
+model with many product-speciﬁc feature conﬁgurations,
+or a product line architecture (PLA) with many product-
+speciﬁc architectures, based upon this PLA.
+We see this introduction of an artifact that explicitly
+describes an aspect (e.g., features or architecture) for the
+whole software family as a major contribution of SPL En-
+gineering. Such a product line artifact serves multiple pur-
+poses: (i) it describes the products by modeling overall
+structures and constraints, (ii) it provides guidance when
+creating a product-speciﬁc instance, and (iii) it enables
+conformance checking of instances with some given con-
+straints.
+3.2.2 Variability
+As a direct consequence of the structure “one product line,
+many products, ” SPL engineering has to provide a means
+to describe the commonalities and variability between dif-
+ferent products (see the diagonal dimension in Figure 2 ).
+This is, for instance, implemented by extending existing
+modeling languages, or by introducing a separate variability
+model that contains references to elements in other artifacts.
+3.2.3 Mapping from Problem to Solution
+Another dimension through which one categorizes and re-
+lates SPL artifacts is seen in the distinction between prob-
+lemand solution (see horizontal dimension in Figure 2 ).
+4
+An example of a problem-oriented SPL artifact is fea-
+ture models , which describe each individual problem as a
+combination of features ; where a feature is ...
+... a prominent or distinctive user-visible aspect,
+quality, or characteristic of a software system or
+system. [ 22]
+On the other hand, an example of a solution-oriented ar-
+tifact is architecture description languages (ADLs). Tradi-
+tional ADLs now support variability, for example, by sup-
+porting the description of multiple architectures [ 12].
+Consequently, an interesting research area is product line
+models that integrate both problem- and solution-oriented
+aspects—fertile ground for further research. Section 4 pro-
+vides several references to such models.
+3.3 Interpretation from a FM Perspective
+In the preceding section, relationships between SPL arti-
+facts was discussed. Here, these relationships are examined
+from a FM perspective (see Figure 3 ).
+Problem spaceSolution space
+valid problem or solution invalid problem or solution 
+Figure 3. Product line concepts.
+Aproblem space is the domain of problems under con-
+sideration, and a solution space is the range of potential so-
+lutions. These spaces determine the scopes of the problems
+and solutions within a given domain, respectively.
+For a particular product line, one needs to determine the
+set of problems that the product line covers. These prob-
+lems are referred to as the valid problems . In the context
+of the preceding section, this determination corresponds to
+a product-line artifact that deﬁnes a set of instances at the
+product level.
+Analogously, valid solutions that are realizable by the
+product line must be identiﬁed. An example of a solution
+space is a set of programs written in the Cprogramming lan-
+guage, and valid solutions in this context are exactly those
+programs which compile.
+Furthermore, to link the two domains, a mapping from
+problems to solutions is necessary. This mapping, depicted
+as arrows in Figure 3 , determines which elements of the
+solution space are solutions for a particular given problem.
+Such a mapping is, for example, realized by a program gen-
+erator that takes a feature conﬁguration as input and pro-
+duces a valid program as output.3.4 Processes
+Product development with a SPL encompasses numerous
+processes and roles. Figure 4 offers a somewhat simpliﬁed
+version thereof.
+When establishing the product line, an expert develops a
+problem-space model and the reusable assets.
+The customer is then presented only with the view of
+the problem space model, representing the set of available
+products from which he or she may choose. By conﬁgura-
+tion, the customer chooses a member of the problem space,
+which in turn deﬁnes the desired properties of the product.
+If the set of valid problems is large and has complex depen-
+dencies between the conﬁgurable parts, this conﬁguration
+process may require interaction with the application expert.
+Finally, the product itself must be assembled according
+to the product description. As discussed earlier in Sec-
+tion 3.1 , the success of the product line hinges on this partic-
+ular point since, if product assembling is not efﬁcient, one
+might just as well develop product by product. Hence, one
+might say that the ‘holy grail’ for a product line is a fully
+automated assembly.
+DomainEngineerProblem DescriptionConfigurationProblem Space ModelProduct AssemblyProductReusable AssetsDevelopment
+Customer
+ApplicationEngineerArtefactProcessInvolved inData flow
+Figure 4. SPL Processes.
+3.5 Properties of a Product Line
+The mathematical point of view on a product line out-
+lined in Section 3.3 enables us to explicitly point out the
+desirable, resp. undesirable, properties of the relevant con-
+cepts. This section discusses such properties and later Sec-
+tion 4 demonstrates how various researchers have targeted
+these properties with formal analyses.
+First, we ask what are the desired, resp. undesired, prop-
+erties of the mapping? On reﬂection, we have identiﬁed the
+following properties of such mappings:
+1.If a solution is classiﬁed as invalid, it must never be
+derived. Hence, a valid problem must not be mapped
+to an invalid solution. (Validity is preserved across the
+mapping.)
+2.We must have a solution for all problems under con-
+sideration. Hence, each valid problem must have a so-
+lution, and furthermore that solution must be mapped
+5
+to from that particular valid problem.
+(The restriction of the mapping to the valid problems
+must be total.)
+3.If two problems are distinct, the solutions must be dis-
+tinct as well. Hence, no two distinct problems may
+map to the same solution. The violation of this prop-
+erty is not as alarming as for the previous two proper-
+ties, but still, the violation is worth exploring.
+(The restriction of the mapping to the valid problems
+must be injective.)
+We do not prohibit mapping a problem to multiple so-
+lutions (the mapping need not be a function) , as leaving a
+non-determinacy in a system’s description is a common and
+useful practice in program/system speciﬁcation.
+Another important property of the (problem and solu-
+tion) spaces is that none of them should be empty. Hence,
+the product-line models that describe spaces must be consis-
+tent. (Were they to be inconsistent, then any solution would
+satisfy any problem.)
+Finally, the absence of redundancies is a desirable prop-
+erty of the individual models and the mappings between
+them. For instance, for a given feature model, a feature that
+cannot be selected into any product—a so-called dead fea-
+ture—is redundant. Dead features must either be removed,
+or the underlying constraints must be reconsidered.
+4 Survey
+This section summarizes some recent research that lies
+within the intersection between FM and SPL. It is by no
+means complete. Speciﬁc papers were chosen because they
+highlight the clear and straightforward application of FM to
+a variety of SPL problems.
+4.1 Feature Models
+To express the semantics of feature models in proposi-
+tional logic is rather straightforward. Features are repre-
+sented as propositional variables, and the semantics of a
+feature model is a propositional formula, e.g., f1⇒f2
+for feature f1requires f2. Thus, a feature conﬁguration,
+expressed as a variable valuation, conforms to the feature
+model if and only if it satisﬁes the formula deﬁned by the
+feature model.
+This approach is extensively studied by Schobbens et al.
+[30]. In this work, they provide a survey of the variants
+of FODA-like feature models, their semantics, investigates
+their expressiveness, and studies the complexity of several
+feature model analyses.
+Jonge and Visser [ 13] propose the use of context-free
+grammars for capturing the semantics of feature models.Feature conﬁgurations conforming to a feature model are
+deﬁned as the sentences generated by the pertaining gram-
+mar. This idea is extended by Batory [ 2] by combining
+grammars and propositional logic.
+Czarnecki et al. [ 10] also use context-free grammars to
+capture the semantics of feature models. Their meta model
+is more expressive than the feature models covered by the
+aforementioned articles, as their meta model enables cardi-
+nalities , similar to ER-multiplicities, and feature cloning .
+H¨ofner et al. [ 16] take an algebraic approach to feature
+modeling. In this approach, a product family is a set of sets
+of features, and the language of algebra is used to abstract
+from the sets. Dependencies, such as exclusion, are ex-
+pressed as additional equalities. What makes this approach
+interesting is that it enables to use multisets (sets with repe-
+titions of an element, aka bags ) instead of sets. This exten-
+sion permits the modeling of feature models with cloning.
+Even though this approach seems interesting, no other pub-
+lications along this line of research are known.
+In our own work [ 21] we use the proof assistant PVS to
+reason in and about feature models. Thanks to the expres-
+sive power of the PVS language and HOL, this approach
+enables reasoning about the full bevy of feature models—
+with cloning or attributes. Furthermore, it supports reason-
+ing about feature modeling mechanisms, such as: “is this
+operation a specialization?”.
+4.2 Analyses
+Section 3.5 introduced several desirable properties of a
+product line (and the related models). This section discusses
+the research focused on identifying the violation of some of
+these properties.
+Let us recall some of the recurring terminology. A fea-
+ture model is consistent if and only if there is at least one
+conﬁguration permitted by the model. A dead feature is a
+feature that cannot be selected into any conﬁguration.
+Probably the ﬁrst documented analysis of a feature
+model was done by Mannion who uses Prolog to check for
+the consistency and the absence of dead features [ 23].
+This line of research was followed by Batory [ 2] who
+not only applies a SAT solver (see Section 2.2 ) to detect in-
+consistencies of a feature model, but also to debug a feature
+model, i.e., to test whether certain feature combinations that
+are expected to be allowed, resp. disallowed, really are.
+Along this line, Benavides et al. [ 7] apply constraint pro-
+gramming to analyze feature models. Constraint program-
+ming enables features to have attributes of ﬁnite domains.
+Furthermore, one can ask a variety of queries, such as model
+consistency, number of models, or to ﬁnd a product with
+certain properties (ﬁltering).
+For further reference, see a survey on the automated
+analyses of feature models by Benavides et al. [ 6] or a set
+6
+of challenges for feature model analyses identiﬁed by Ba-
+tory et al. [ 3].
+The work of Sinz et al. [ 32] focuses on general prod-
+uct conﬁguration in the automotive industry, a domain that,
+until recently, did not necessarily deal with software. How-
+ever, this domain bares a strong resemblance to SPL, and
+software-intensive subsystems are gaining importance.
+The authors operate in a two tiered model: conﬁguration
+at the engineering stage andconﬁguration at the manufac-
+turing stage . The engineering stage is concerned with the
+capabilities of the intended products. The manufacturing
+stage needs to deal with things like availability of the indi-
+vidual parts. The scope of intended products is expressed as
+a set of rules, and several consistency criteria for these rules
+are described. A SAT solver of their own making is used
+which supports some specialized constructs useful for their
+particular problem, e.g., choosek
+loperator5. This formal-
+ism enables the assignment of time frames to the rules in
+the manufacturing stage, and these time frames determine
+when the pertaining rule is in effect.
+An important part of consistency analysis is to provide
+thesource of an inconsistency, if one is found. Research
+on this topic is still somewhat scarce, but the work of
+Trinidad et al. [ 34] shows some promising results.
+4.3 Aiding the Conﬁguration Process
+Once the feature model is expressed in a formal (logical)
+representation, tool support assists the user during the con-
+ﬁguration process, inferring the consequences of the user-
+made selection thus far ( decision propagation ).
+In the case of feature selection, the consequences of the
+user’s selection are other features that must be selected or
+deselected. Batory applied a Logic Truth Maintenance Sys-
+temto implement such support [ 2]; the implementation is
+part of the AHEAD tool suite [ 5] as the tool guidsl .
+For further discussion on this topic, see Section 5.2 .
+4.4 Product Line Modeling
+This section focus on approaches that model and analyze
+the product line as a whole (see Figure 3 ).
+Feature oriented programming (FOP) represents a line
+of research where programs are composed on demand
+from some speciﬁed features. Hence, in FOP, features are
+mapped, in a 1-to-1 fashion, to pieces of program code [ 5].
+In the FOP context, Batory and Geraci [ 4] specify rules for
+the validity of component composition and attribute gram-
+mars are used to implement the checks of these rules.
+In the context of the FOP framework AHEAD [ 5],
+Thaker et al. [ 33] use a SAT solver to validate that a feature
+5choosek
+l(t1, . . . , t n)evaluates to true if and only if at least land at
+most kout of t1, . . . , t nevaluate to true.model does not allow feature combinations which result in
+illegal code.
+Similarly, Van der Storm proposes a model where fea-
+tures are mapped to components with dependencies. Sub-
+sequently, one validates whether any feature conﬁgurations
+violate these dependencies [ 35].
+Another example along this same line is work by Czar-
+necki and Pietroszek [ 11] who use UML to describe both
+the problem and the solution space. Additionally, they use
+the Object Constraint Language (OCL) to specify proper-
+ties of the valid solution space in order to show that a valid
+problem will not be mapped to an invalid solution.
+All of this summarized research are different variants for
+detecting the aforementioned property: that a valid problem
+must not be mapped to a invalid solution ( Section 3.5 ).
+Kumbang [ 1] is a framework, implemented as an Eclipse
+plugin, that provides support for modeling in two-tiers—
+features andcomponents . A reasoning engine is used to
+facilitate the conﬁguration process.
+In our own work [ 20], a generic formalism for reason-
+ing about product line models is provided. This formal-
+ism mathematically captures the idea illustrated by Figure 3 .
+Furthermore, it enables the formalization and study of sim-
+ilar approaches that also deal with models of features and
+their implementation.
+We conclude this section with a reference to the domain
+of program generation. Effectively, a program generator re-
+alizes the mapping between the problem and solution space.
+Huang et al. [ 17] use an automated theorem prover to verify
+that a given template will only generate valid Java code (i.e.,
+code that will compile, in their case). In our terminology,
+this generation mechanism ensures that no valid problem is
+mapped to an invalid solution.
+4.5 Component Composition
+The work of Blundell et al. [ 8] utilizes model-checking
+in the SPL context. Components, modeled as state ma-
+chines, correspond to individual features. Constraints on
+the model are expressed using temporal logic (CTL). Fea-
+ture composition corresponds to adding transitions between
+the relevant state machines.
+The work of Scheidemann [ 29] is somewhat more gen-
+eral. The author presents algorithms for choosing a (mini-
+mal) subset of all possible conﬁgurations to verify a whole
+family. These algorithms exploit the fact that certain re-
+quirements apply only to a subset of components.
+5 Recommendations and Challenges
+This section provides several guidelines for those who
+wish to employ FM in their research or engineering pro-
+7
+cesses. We use the markerto denote open research chal-
+lenges in SPL via FM.
+5.1 Model Analyses
+As we have mentioned before, models are analyzed to
+uncover undesired properties. One popular form of analysis
+is what is known as sanity checking .
+Figure 5 illustrates a potential procedure for such anal-
+yses. We ﬁrst have to interpret the initial model, for in-
+stance by translating f1requires f2asf1⇒f2. This yields
+a formal model in the chosen logic, that is represented in a
+concrete syntax in a standardized format. Using this data
+as input to an automated tool, the desired analysis results
+are obtained.
+We will now provide guidelines for choosing the appro-
+priate means (to perform such analyses) according to the
+form of the model. A bulk of the SPL research focuses on
+the feature models and so does this section. Nevertheless,
+these guidelines apply to other types of models so long they
+are expressible in the corresponding logic.
+For the sake of brevity, we introduce the following no-
+tation: Let Mbe a feature model then /llbracketM/rrbracketis a formula
+corresponding to M’s semantics. Additionally, we say that
+a model is consistent if and only if the formula expressing
+its semantics, i.e., /llbracketM/rrbracket, is satisﬁable.
+Bymodel debugging we mean that we expect the model
+to enable or disable certain speciﬁc conﬁgurations. For in-
+stance, we expect that a feature model does not allow one to
+select both a manual and an automatic gearshift in an auto-
+mobile.
+The procedure to verify such a requirement is to ﬁrst
+translate the requirement to its logical representations, say
+a formula φ, and then check for the satisﬁability resp. un-
+satisﬁability of /llbracketM/rrbracket∧φ. E.g., for the given example we
+require that the following formula is unsatisﬁable:
+/llbracketM/rrbracket∧(manual ∧automatic ) (1)
+Recall that dead features are features that do not appear
+in any product. Mathematically speaking, a feature repre-
+sented by the variable fis dead in the model Mif and only
+if the following formula is unsatisﬁable.
+/llbracketM/rrbracket∧f (2)
+For models expressible in propositional logic, as most
+variants of FODA are, SAT solvers are a natural choice
+forconsistency checking andmodel debugging . To use a
+SAT solver, one either chooses to export the problem into
+the DIMACS format, or directly uses the solver’s program
+interface. For instance, M INISATprovides such an inter-
+face [ 14].
+To determine whether a feature is dead, a SAT solver
+is called repeatedly on formula 2for each feature. We arenot aware of a documented, more efﬁcient technique and
+we believe that minimizing the number of calls to the SAT
+solver to ﬁnd dead features is a research challenge.For models whose semantics is not propositional, but
+which still have ﬁnite domains of values, constraint solvers
+are a good choice. Using SMT solvers is also a possibility
+and using such increases the expressiveness of constraints
+on features and attributes. Nevertheless, we are unaware
+of any research using SMT solvers in the feature modeling
+domain.Even thought there has been research in the semantics
+of feature models that enable cloning of features [ 10,16,
+21], we are not aware of a semantics that is readily used
+with automated tools. We believe that constraint solvers are
+useful when there is no support for cloning arbitrary many
+times, as the domain is still ﬁnite. For feature models where
+a feature can be cloned arbitrary many times, more powerful
+techniques are required.As we can see, to solve problems that lead to satisﬁabil-
+ity is rather straightforward and off-the-shelf tools are use-
+ful. However, there are problems that take into account all
+the conﬁgurations of the model, such as counting the num-
+ber of all conﬁgurations. Finding the number of valid con-
+ﬁgurations does not necessarily uncover a problem (unless
+the number is 0). However, this number is an important san-
+ity check: if the number is too large, the constraints might
+be too loose; if the number is too small, the constraints
+might be too restrictive or too speciﬁc for the products de-
+veloped so far. One can imagine other kinds of similar anal-
+yses, such as an average price of all valid products.Constraint solvers typically have the support for return-
+ing all possible solutions. Once solutions are obtained, fur-
+ther analysis can be performed. Naturally, this technique is
+problematic once the set of solutions becomes unwieldy.
+One way to store and build the whole set of conﬁgura-
+tions for the propositional logic formulas are Binary Deci-
+sion Diagrams (BDDs) [ 25]. BDDs are essentially efﬁcient
+representations of sets of satisfying valuation of a given for-
+mula. Libraries with BDD support are easily accessible,
+e.g., the JavaBDD library . BDDs, however, suffer from the
+space-explosion problem. Moreover, BDDs are not readily
+applicable to models whose semantics is not propositional.
+Hence, we believe that there is utility in looking for ded-
+icated algorithms for such analyses, like counting numbers
+of conﬁgurations. We should note that recent advances in
+the SAT community make counting the number of satisfy-
+ing valuations for a propositional formula possible, includ-
+ing estimates, see e.g., [ 36].5.2 Conﬁguration Process
+During the conﬁguration process ﬁrstly we want to make
+sure that the user does not make decisions that violate the
+8
+Formal Model(Feature Model in Propositional Logic)Model(Feature Model)Interpretation
+ImproveModelSemantic Specification(Meaning of Feature Model Elements)
+SPL Engineer12
+Analysis Results(Consistency, Dead Features, Implicit Dependencies)Meta Model(Feature Meta Model)Instance of 
+ProvideFeedbackMechanizationMechanizedFormal Model(Feature Model in SAT input format)
+Tool!supported Formal Analysis(SAT Solver)4Manual Formal Analysis(Pencil and Paper)3Path suggested in this paper(Text in parentheses represents examples)
+Figure 5. Data ﬂow for model analysis.
+feature model’s restrictions. Secondly, we would like to
+help the user with making the decisions.
+5.2.1 Completing a Conﬁguration
+Given a model Mand a set of decisions expressed by the
+formula φ, the ﬁrst question to ask is whether it is possible
+to complete the conﬁguration process while keeping these
+decisions. That is a satisﬁability problem of the formula
+/llbracketM/rrbracket∧φand hence, the recommendations for satisﬁability
+given above apply here as well.
+A step further is to look for an actual conﬁguration that
+respects the decisions already made. In other words, we
+wish to automatically complete a partial conﬁguration. This
+is desirable if, e.g., the customer expressed some parameters
+for the conﬁguration and is indifferent to the setting of the
+rest of the features.
+If we are looking for anycompletion of the given con-
+ﬁguration and we are using a constraint or SAT solver, the
+query for satisfaction of /llbracketM/rrbracket∧φis sufﬁcient, as these types
+of solvers also provide the actual solution.
+The problem gets trickier if we are looking for a com-
+pletion that is optimal in some sense, e.g., for the cheapest
+solution. Here, SAT solvers typically would not help, even
+though M INISAT+ (a modiﬁcation of M INISAT) does al-
+low for minimizing an expression. Nevertheless, most con-
+straint solvers enable one to specify the so-called objective
+function, a function that the solution should minimize/max-
+imize (i.e., CSOP speciﬁcation, recall Section 2.2 ).
+5.2.2 Decision Automation
+The previous subsection discussed how to complete a partial
+conﬁguration by a single call to a tool that provides all the
+missing decisions. However, tools can also help the person
+throughout an interactive conﬁguration process by automat-
+ically making necessitated decisions. Primarily, this means
+1) preventing the user from making the decisions that are
+no longer possible, as they would violate some constraint2) automatically making the decisions that must be made if
+the conﬁguration process is to succeed.
+In the propositional case, the points 1) and 2) collapse
+into one as they both mean enforcing a particular value ( true
+orfalse ) on a certain variable. For instance, once ais se-
+lected (set to true) in the presence of the constraint ¬(a∧b),
+bmust be deselected (set to false ).
+In the case of variables with larger domains, 1) corre-
+sponds to removing elements from a particular domain that
+violates the model’s constraints and 2) corresponds to au-
+tomatically selecting a value that is the only one left in the
+particular domain.
+As we have mentioned before ( Section 4.3 ), a Logic
+Truth Maintenance System is a natural choice for the propo-
+sitional case, see e.g., Batory [ 2].
+It is easy to see how 1) and 2) are implemented for at-
+tributes with ﬁnite domains. In fact, constraint solvers con-
+tain such decision propagation. Nevertheless, we are not
+aware of a documented and available application of deci-
+sion automation for non-propositional constraints.6 Conclusions
+By providing a comprehensive survey of the application
+of FM in the software product line (SPL) literature, we have
+shown that many formal methods approaches have been
+adopted into the state-of-the-art techniques. Besides this
+overview, our article identiﬁes what these approaches have
+in common and identiﬁes numerous important concepts.
+Furthermore, we have provided guidelines for the appli-
+cation of formal methods for particular tasks in the SPL do-
+main, coupled with pointers to relevant tools and literature.
+Last but not least, the article identiﬁes open challenges
+for research of formal methods in SPL.
+7 Acknowledgements
+This work is partially supported by Science Foundation
+Ireland under grant no. 03/CE2/I303 1.
+9
+References
+[1]T. Asikainen, T. M ¨annist ¨o, and T. Soininen. Kumbang: A
+domain ontology for modelling variability in software prod-
+uct families. Advanced Engineering Informatics , 21, 2007.
+[2]D. Batory. Feature models, grammars, and propositional
+formulas. In H. Obbink and K. Pohl, editors, Proceedings
+of the 9th International Software Product Line Conference
+(SPLC) , 2005.
+[3]D. Batory, D. Benavides, and A. Ruiz-Cort ´es. Automated
+analysis of feature models: challenges ahead. Communica-
+tions of the ACM , 49(12):45–47, 2006.
+[4]D. Batory and B. J. Geraci. Validating component compo-
+sitions in software system generators. In Proceedings of the
+4th International Conference on Software Reuse (ICSR ’96) .
+IEEE Computer Society, 1996.
+[5]D. Batory, J. N. Sarvela, and A. Rauschmayer. Scaling step-
+wise reﬁnement. IEEE Transactions on Software Engineer-
+ing, 30(6), 2004.
+[6]D. Benavides, A. Ruiz-Cort ´es, P. Trinidad, and S. Segura. A
+survey on the automated analyses of feature models. In Jor-
+nadas de Ingenier ´ıa del Software y Bases de Datos (JISBD) ,
+2006.
+[7]D. Benavides, P. Trinidad, and A. Ruiz-Cort ´es. Automated
+reasoning on feature models. In CAiSE’05 , 2005.
+[8]C. Blundell, K. Fisler, S. Krishnamurthi, and P. Van Henten-
+ryck. Parameterized interfaces for open system veriﬁcation
+of product lines. In IEEE International Symposium on Au-
+tomated Software Engineering , 2004.
+[9]P. Clements and L. Northrop. Software Product Lines: Prac-
+tices and Patterns . Addison–Wesley Publishing Company,
+2002.
+[10] K. Czarnecki, S. Helsen, and U. Eisenecker. Staged conﬁgu-
+ration using feature models. In R. L. Nord, editor, Proceed-
+ings of Third International Conference on Software Product
+Lines (SPLC) , 2004.
+[11] K. Czarnecki and K. Pietroszek. Verifying feature-based
+model templates against well-formedness OCL constraints.
+InProceedings of the 5th International Conference on Gen-
+erative Programming And Component Engineering , 2006.
+[12] E. M. Dashofy and A. van der Hoek. Representing product
+family architectures in an extensible architecture description
+language. In Proceedings of PFE ’01 , 2001.
+[13] M. de Jonge and J. Visser. Grammars as feature diagrams.
+Presented at the Generative Programming Workshop 2002,
+Austin, Texas, Apr. 2002.
+[14] N. E ´en and N. S ¨orensen. An extensible SAT-solver. In
+Theory and Applications of Satisﬁability Testing (SAT ’03) .
+Springer-Verlag, 2003.
+[15] C. A. R. Hoare. An axiomatic basis for computer program-
+ming. Communications of the ACM , 12:576–580, 1969.
+[16] P. H¨ofner, R. Khedri, and B. M ¨oller. Feature algebra. In
+Proceedings of the 14th International Symposium on Formal
+Methods (FM) , LNCS. Springer-Verlag, 2006.
+[17] S. S. Huang, D. Zook, and Y . Saragdakis. Statically safe pro-
+gram generation with SafeGen. In R. Gl ¨uck and M. Lowry,
+editors, GPCE ’05 , LNCS. Springer-Verlag, 2005.[18] M. Huth and M. Ryan. Logic in Computer Science: Mod-
+elling and Reasoning about Systems . Cambridge University
+Press, second edition, 2004.
+[19] I. Jacobson, M. Griss, and P. Jonsson. Software reuse: ar-
+chitecture, process and organization for business success .
+ACM Press/Addison-Wesley Publishing Co., New York,
+NY , USA, 1997.
+[20] M. Janota and G. Botterweck. Formal approach to integrat-
+ing feature and architecture models. To appear in FASE 08,
+2008.
+[21] M. Janota and J. Kiniry. Reasoning about feature models in
+higher-order logic. In P. Kellenberger, editor, Proceedings
+of SPLC , 2007.
+[22] K. C. Kang, S. G. Cohen, J. A. Hess, W. E. Novak, and
+A. S. Peterson. Feature-oriented domain analysis (FODA),
+feasibility study. Technical Report CMU/SEI-90-TR-021,
+SEI, Carnegie Mellon University, Nov. 1990.
+[23] M. Mannion. Using ﬁrst-order logic for product line
+model validation. In G. J. Chastek, editor, Proceedings of
+SPLC ’02 , 2002.
+[24] D. McIlroy. Mass-produced software components. In Pro-
+ceedings of the 1st International Conference on Software
+Engineering, Garmisch Pattenkirchen, Germany , 1968.
+[25] C. Meinel and T. Theobald. Algorithms and Data Struc-
+tures in VLSI Design: OBDD-foundations and applications .
+Springer-Verlag, 1998.
+[26] E. Mettala and M. Graham. The domain-speciﬁc soft-
+ware architecture program. Technical Report TRCMU/SEI-
+92SR-9, Carnegie Mellon SEI, June 1992.
+[27] N. Nissanke. Formal Speciﬁcation: Techniques and Appli-
+cations . Springer-Verlag, 1999.
+[28] D. L. Parnas. On the design and development of program
+families. IEEE Transactions on Software Engineering , 1976.
+[29] K. D. Scheidemann. Optimizing the selection of representa-
+tive conﬁgurations in veriﬁcation of evolving product lines
+of distributed embedded systems. In L. O’Brien, editor, Pro-
+ceedings of SPLC ’06 , 2006.
+[30] P.-Y . Schobbens, P. Heymans, and J.-C. Trigaux. Feature di-
+agrams: A survey and a formal semantics. In Proceeding of
+14th IEEE International Requirements Engineering Confer-
+ence (RE) , 2006.
+[31] S. Shapiro. Foundations Without Foundationalism: A Case
+for Second-Order Logic . Oxford University Press, 1991.
+[32] C. Sinz, A. Kaiser, and W. K ¨uchlin. Formal methods for the
+validation of automotive product conﬁguration data. Artiﬁ-
+cial Intelligence for Engineering Design, Analysis and Man-
+ufacturing , 17:75–97, 2003.
+[33] S. Thaker, D. Batory, D. Kitchin, and W. Cook. Safe com-
+position of product lines. In GPCE ’07 , 2007.
+[34] P. Trinidad, D. Benavides, A. Dur ´an, A. Ruiz-Cort ´es, and
+M. Toro. Automated error analysis for the agilization of
+feature modeling. Journal of Systems and Software , 2007.
+[35] T. van der Storm. Generic feature-based software compo-
+sition. In Proceedings of 6th International Symposium on
+Software Composition , 2007.
+[36] W. Wei and B. Selman. A new approach to model count-
+ing. In Theory and Applications of Satisﬁability Testing
+(SAT ’05) . Springer-Verlag, 2005.
+10

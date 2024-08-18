@@ -1,0 +1,829 @@
+Rule-Based Information Extraction
+for Structured Data Acquisition using T EXTMARKER
+Martin Atzmueller and Peter Kluegl and Frank Puppe
+Department of Computer Science, University of Würzburg, Germany
+{atzmueller, pkluegl, puppe}@informatik.uni-wuerzburg.de
+Abstract
+Information extraction is concerned with the lo-
+cation of speciﬁc items in (unstructured) textual
+documents, e.g., being applied for the acquisition
+of structured data. Then, the acquired data can be
+applied for mining methods requiring structured
+input data, in contrast to other text mining meth-
+ods that utilize a bag-of-words approach.
+This paper presents a semi-automatic approach
+for structured data acquisition using a rule-based
+information extraction system. We propose a
+semi-automatic process model that includes the
+TEXTMARKER system for information extrac-
+tion and data acquisition from textual documents.
+TEXTMARKER applies simple rules for extract-
+ing blocks from a given (semi-structured) doc-
+ument, which can be further analyzed using
+domain-speciﬁc rules. Thus, both low-level and
+higher-level information extraction is supported.
+We demonstrate the applicability and beneﬁt of
+the approach with two case studies of two real-
+world applications.
+1 Introduction
+Textual documents contain a lot of unstructured data. In-
+formation extraction systems are then applied in order to
+generate structure data using the source documents, i.e.,
+for generating structured instances (cases) containing the
+extracted information. The data bases containing the struc-
+tured instances can then be applied in multiple ways, e.g.,
+for data mining or text mining methods that do not employ
+the common bag-of-words representation for textual data
+but structured instances.
+The extracted instances can be considered at different
+levels of granularity: Corresponding to the quality of the
+features (of the instances) that we want to generate, there
+are different levels of difﬁculty when generating these fea-
+tures. The latter range from blocks of words, to sentences,
+phrases, and ﬁnally concepts. A general information ex-
+traction system should support all these different options
+in order to be broadly applicable for different domains.
+Another issue concerns the ease of use of the system and
+its applicability: Automatic information extraction systems
+are usually applied when there is a lot of labeled training
+data. Rule-based systems, for which the rules are manu-
+ally or semi-automatically acquired, are commonly applied
+if there is not enough training data available, or if the con-
+sidered domain is too difﬁcult to handle using purely auto-
+matic methods.In this paper, we propose a semi-automatic approach for
+rule-based structured data acquisition from text. The user
+can specify simple rules that consider features of the text,
+e.g., structural or syntactic features of the textual content.
+These rules are then applied by the T EXTMARKER system
+for information extraction from text. Using its ﬂexible rule-
+based formalism T EXTMARKER supports both low-level
+information extraction tasks such as named entity recogni-
+tion, but also higher-level tasks since the extracted concepts
+can also be processed using specialized rules.
+Rules are especially suitable for the proposed informa-
+tion extraction task since they allow a concise and declara-
+tive formalization of the relevant domain knowledge that is
+especially easy to acquire, to comprehend and to maintain.
+Furthermore, in the case of errors, the cause can easily be
+identiﬁed by tracing the application of the individual rules.
+Especially the latter feature is rather important for an ef-
+fective application of such an approach. Since the person
+applying the system does not necessarily need to be a spe-
+cialist concering the rules for text extraction, a simple and
+intuitive way of signaling and tracing errors is necessary
+for supporting these types of users. In the past, we have
+considered other approaches for structured data acquisition
+from text, e.g., [Betz et al. , 2005 ]: The technique was ap-
+plied sucessfully at the initial development stage. However,
+the maintenance of the formalized knowledge and the prac-
+tical support of an inexperienced user in the case of errors
+proved to be a signiﬁcant problem.
+Therefore, we opted for a more robust alternative, and
+developed the T EXTMARKER system as a powerful sys-
+tem for rule-based information extraction. It can be ap-
+plied very intuitively, since the used rules are especially
+easy to acquire and to comprehend. Using the extracted
+information, data records can be easily created in a post-
+processing step. So far, we have applied the system for
+two real-world projects: The ﬁrst case study concerns the
+extraction of medical data from a phyisician’s letter (dis-
+charge letter). The letter contains the observations and the
+diagnoses for a speciﬁc patient. After the relevant infor-
+mation have been extracted, a record for the patient can be
+created quite easily. The second project concerns a techni-
+cal domain. T EXTMARKER is applied for generating struc-
+tured data records from textual (Word-)documents.
+The rest of the paper is organized as follows: Section 2
+presents the process model for rule-based structured data
+acqusition from text. In Section 3 we introduce the T EXT-
+MARKER system and discuss related work. Section 4
+presents the two case studies of the presented approach
+for two real-world applications. Finally, Section 5 con-
+cludes the paper with a discussion of the presented work
+and promising directions for future work.
+Acquire  
+RulesRefine 
+RulesExtraction 
+RulesCreate 
+Data 
+RecordApply 
+Rules
+Training 
+CorpusText 
+CorpusDocumentKnowledge Acquisition Structured Data Acquisition
+DatabaseFigure 1: Process Model: Semi-Automatic Rule-Based Structured Data Acquisition from Texts
+2 Process Model for Rule-Based Structured
+Data Acquisition
+In the following section, we describe the semi-automatic
+process model for rule-based text extraction for generating
+structured data records. We utilize the T EXTMARKER sys-
+tem (c.f., Section 3) as the core component of the process.
+TEXTMARKER is a ﬂexible integrated system for the ex-
+traction of textual information from unstructured or semi-
+structured documents.
+In general, the proposed process consists of two phases:
+The knowledge acquisition phase, and the structured data
+acquisition phase. The knowledge acquisition phase neces-
+sarily precedes the structured data acquisition phase: In a
+semi-automatic process, the necessary knowledge for struc-
+tured data acquisition from text can be formalized by a do-
+main specialist, and can be tested on a training corpus con-
+taining a set of typical documents from the domain. The
+knowledge is given by a set of speciﬁc extraction rules. The
+process is incremental such that the extraction performance
+can be used for optimizing the set of extraction knowledge.
+The obtained knowledge provided by a set of extraction
+rules are then applied by the T EXTMARKER system de-
+scribed below.
+In the structured data acquisition phase the formalized
+knowledge, i.e., the formalized rules, are applied on the
+(new) documents in a straight-forward manner. Given a
+document, for example, a set of segments (blocks of words)
+can be extracted, and further specialized rules can be ap-
+plied for extracting speciﬁc concepts. Then, the structured
+data is created and inserted into the database.
+Alltogether, the process for rule-based text extraction
+and acquisition of structured data considers the following
+steps that are shown in Figure 1:
+1.Knowledge Acquisition Phase :
+(a)Acquire Extraction Rules : Using a set of train-
+ing documents, usually an initial set of extrac-
+tion rules is formalized by a domain specialist,
+based on the features of the training documents
+and the concepts to be extracted. Therefore, the
+training documents should ideally capture typi-
+cal characteristics of the documents encountered
+in the practical application.
+(b)Reﬁne Rules : Using the given rules, the user can
+tune and reﬁne these in incremental fashion. In
+this way, also extensions and changes for the doc-
+ument corpus can be easily included.2.Data Acquisition Phase :
+(a)Apply Rules : After the knowledge acquisition
+phase a set of extraction rules is available. These
+can then be applied for each document of the
+text corpus, and the output can be created. For
+this step, for example, segments or words of the
+document can be considered, but also annota-
+tions , that were generated during the process, can
+also be utilized. In this way both low-level and
+high-level information extraction tasks can be
+implemented. In general, the output is domain-
+speciﬁc, but in the context of the presented work
+usually attribute–value pairs will be considered.
+(b)Create Data Record : In this step, the set of
+attribute–value pairs (concepts) is applied for
+creating the ﬁnal data record. The speciﬁc imple-
+mentation of this step is domain-dependent, and
+can vary from a simple matching of concepts to
+more sophisticated natural language processing
+techniques. In the case studies in Section 4 we
+discuss some exemplary techniques.
+Theinput of the process, i.e., the knowledge acquisition
+phase is usually given by a set of training documents that
+are used for optimization and reﬁnement of the set of ex-
+traction rules. Although the domain specialist could also
+provide a set of rules directly, in practice validating these
+with a set of typical documents will usually increase the
+performance of the system. The applied training corpus
+can consist of the complete text corpus, but usually also
+a representative sample of these documents is sufﬁcient for
+obtaining valid results. However, in practice the text corpus
+usually grows over time, therefore the process can also be
+iterated including further documents in the training corpus.
+The output of the process is a set of structured data
+records to be integrated in a database. In general, the out-
+put of the data acquisition phase can be speciﬁed quite
+ﬂexible: Since T EXTMARKER provides several output op-
+tions including direct textual output, modifying the input
+document, and also the connection with programming lan-
+guages, the user can provide ﬂexible solutions that are also
+easily extensible. In the context of the presented work, the
+output for the creation of structured data records will usu-
+ally consist of attribute–value pairs that are subsequently
+included in the created data records.
+3 Information Extraction using
+TEXTMARKER – An Overview
+In manual information extraction humans often apply a
+strategy according to a highlighter metaphor : First rele-
+vant headlines are considered and classiﬁed according to
+their content by coloring them with different highlighters.
+The paragraphs of the annotated headlines are then consid-
+ered further. Relevant text fragments or single words in the
+context of that headline can then be colored. In this way, a
+top-down analysis and extraction strategy is implemented.
+Necessary additional information can then be added that
+either refers to other text segments or contains valuable do-
+main speciﬁc information. Finally the colored text can be
+easily analyzed concerning the relevant information.
+The T EXTMARKER system1tries to imitate this man-
+ual extraction method by formalizing the appropriate ac-
+tions using matching rules : The rules mark sequences of
+words, extract text segments or modify the input document
+depending on textual features. The current T EXTMARKER
+implementation is based on a prototype described by [von
+Schoen, 2006 ]that supports a subset of the T EXTMARKER
+language described below. The present T EXTMARKER
+system is currently being extended towards a rich client ap-
+plication and an integration as a UIMA component [Götz
+and Suhre, 2004; Ferrucci and Lally, 2004 ]. This enables
+a feature rich development environment with powerful de-
+bugging capabilities and also an easy reusability of the
+components.
+The default input for the T EXTMARKER system is semi-
+structured text, but it can also process structured or free
+text. Technically, HTML is often the input format, since
+most word processing documents can be converted to
+HTML. Additionally, the T EXTMARKER systems offers
+the possibility to create a modiﬁed output document.
+In the following sections we ﬁrst give a short conceptual
+overview on the T EXTMARKER language and introduce its
+core concepts. After that, we discuss the syntax and the se-
+mantics of the T EXTMARKER language in detail, and pro-
+vide several illustrating examples. Next, we present spe-
+cial characteristics of the language that distinguishes the
+TEXTMARKER system from other rule based information
+extraction systems, and discuss related work.
+3.1 Core T EXTMARKER Concepts
+As a ﬁrst step in the extraction process the T EXTMARKER
+system uses a tokenizer (scanner) to tokenize the input doc-
+ument and to create a stream of basic symbols. The types
+and valid annotations of the possible tokens are predeﬁned
+by a taxonomy of annotation types . Annotations simply re-
+fer to a section of the input document and assign a type or
+concept to the respective text fragment.
+Figure 2 shows an excerpt of a basic annotation taxon-
+omy: CWdescribes all tokens, for example, that contains a
+single word starting with a capital letter, MARKUP corre-
+sponds to HTML or XML tags, and PMrefers to all kinds
+of punctuations marks.
+By using (and extending) the taxonomy, the knowledge
+engineer is able to choose the most adequate types and
+concepts when deﬁning new matching rules , i.e., T EXT-
+MARKER rules for matching a text fragment given by a set
+of symbols to an annotation. If the capitalization of a word,
+for example, is of no importance, then the annotation type
+Wthat describes words of any kind can be used.
+1textmarker is a common german word for a highlighterThe initial scanner creates a set of basic annotations that
+may be used by the matching rules of the T EXTMARKER
+language. However, most information extraction appli-
+cations require domain speciﬁc concepts and annotations.
+Therefore, the knowledge engineer is able to extend the set
+of annotations, and to deﬁne new annotation types tuned to
+the requirements of the given domain. These types can be
+ﬂexibly integrated in the taxonomy of annotation types.
+8 Die Konzeption von Textmarker
+Abbildung 8.1: Ein Ausschnitt aus der Symboltyphierarchie, Erl ¨auterungen dazu ﬁnden
+sich im Text.
+Als letzter Bestandteil kann auf die Heuristiken eine in runden Klammern eingeschlosse-
+ne Aktion folgen. Diese besteht wie eine Heuristik aus einem Namen in Großbuchstaben,
+evtl. gefolgt von einer durch Kommata abgetrennten Liste von Parametern.
+8.3 Die Symboltyphierarchie
+Im ersten Schritt der Analyse wird mit einem Scanner ein Symbolstrom aus dem Ein-
+gabedokument erzeugt, indem Folgen einzelner Zeichen zu Symbolen unterschiedlicher
+Typen zusammengefasst werden. Zu diesen Typen z ¨ahlen z.B. klein- und großgeschriebe-
+ne W ¨orter ( SWundCW), Zahlen ( NUM ), Markup ( MARKUP ) oder Satzzeichen wie
+Punkt ( PERIOD ) oder Doppelpunkt ( COLON ). Den meisten dieser Typen sind aber
+noch allgemeinere Typen zugeordnet, etwa den Typen CW und SW ist der Symboltyp
+W¨ubergeordnet, der beliebige W ¨orter beschreibt (siehe Abbildung 8.1). Bei der For-
+mulierung von Regeln kann so immer derjenige Typ dieser Hierarchie gew ¨ahlt werden,
+der im aktuellen Fall angemessen ist. Kommt z.B. der Unterscheidung von Groß- und
+Kleinschreibung bei W ¨ortern keine Bedeutung zu, so kann der Typ Wgew¨ahlt werden.
+Eine weitere Speziﬁzierung ist sowohl ¨uber Heuristiken m ¨oglich, die etwa die Verwen-
+dung regul ¨arer Ausdr ¨ucke erlauben als auch ¨uber weitere Regelelemente, durch die der
+erlaubte Kontext des Symbols eingeschr ¨ankt wird. Die folgende Regel veranschauchlicht
+die letztere M ¨oglichkeit anhand der Bestimmung einer Zahl als Preisangabe:
+ADDTYPE NUM(MARK,price) ’Euro’
+8.4 Heuristiken
+Im Folgenden werden die einzelnen Heuristiken kurz vorgestellt und ihr m ¨oglicher Ver-
+wendungszweck mit jeweils einem oder mehreren einfachen Beispielen veranschaulicht.
+76
+Figure 2: Part of a taxonomy for basic annotation types
+(W=Word, NUM=Number, PM=Punctuations, SW=Word
+without capitals, CW=Word starting with a capital letter).
+3.2 Syntax and Semantics of the T EXTMARKER
+Language
+One of the goals in developing a new information extrac-
+tion language was to maintain an easily readable syntax
+while still providing a scalable expressiveness of the lan-
+guage. Basically, the T EXTMARKER language contains
+expressions for the deﬁnition of new annotation types and
+for deﬁning new matching rules. The rules are deﬁned by
+expressions containing a list of rule elements headed by the
+type of the rule.
+The purpose of the different rule types is to increase the
+readability of rules by making their semantic intention ex-
+plicit. Each rule element contains at least a basic matching
+condition referring to text fragments or already speciﬁed
+annotations. Additionally a list of conditions and actions
+may be speciﬁed for a rule element. Whereas the condi-
+tions describe necessary attributes of the matched text frag-
+ment, the actions point to operations and assignments on
+the current fragments. These actions will then only be exe-
+cuted if all basic conditions matched on a text fragment or
+the annotation and the related conditions are fulﬁlled. Ta-
+ble 1 summarizes the T EXTMARKER grammer for deﬁn-
+ing matching rules and annotations. It contains an excerpt
+of the T EXTMARKER syntax in Backus-Naur-Form (BNF)
+concerning the rule deﬁnitions.
+Due to the limited space it is not possible to describe all
+of the various conditions and actions available in the T EXT-
+MARKER system. However, the usage of the language and
+its readability can be demonstrated by simple examples:
+ADDTYPE CW{INLIST,animals.txt}(MARK,animal)
+ADDTYPE animal ’and’ animal
+(MARK,animalpair,0,1,2)
+The ﬁrst rule looks at all capitalized words that are listed
+in an external document animals.txt and creates a new an-
+notation of the type animal using the boundaries of the
+matched word. The second rule searches for an annotation
+of the type animal followed by the literal andand a second
+animal annotation. Then it will create a new annotation an-
+imalpair covering the text segment that matched the three
+Rule !RuleType RuleElement+
+RuleType !’ADDTYPE’ | ’DEFAULT’ | . . .
+RuleElement !MatchType Conditions? Actions?’+’?
+MatchType !Literal | Annotation
+Annotation !’ALL’|’ANY’|’MARKUP’|’W’|. . .
+Conditions !’{’ Condition (’;’ Condition)* ’}’
+Condition !’-’? CondType (’,’ parameter)*
+CondType !’PARTOF’|’CONTAINS’|’NEAR’|. . .
+Actions !’(’ Action (’;’ Action)* ’)’
+Action !ActionType (’,’ parameter)*
+ActionType !’MARK’|’FILTER’|’REPLACE’|. . .
+Table 1: Extract of the T EXTMARKER language deﬁnition
+in Backus-Naur-Form
+rule elements (the digit parameters refer to the number of
+matched rule element).
+ADDTPYE W(MARK,firstname,firstnames.txt)
+ADDTYPE firstname CW(MARK,lastname)
+LOGGING paragraph{VOTE,firstname,lastname}
+(LOG,’Found more firstnames than
+lastnames’)
+In this example, the ﬁrst rule annotates all words that oc-
+cur in the external document ﬁrstnames.txt with the type
+ﬁrstname . The second rule creates a lastname annotation
+for all capitalized word that follow a ﬁrstname annotation.
+The last rule ﬁnally processes all paragraph annotations. If
+theVOTE condition counts more ﬁrstname than lastname
+annotations, then the rule writes a log entry with a prede-
+ﬁned message.
+ADDTYPE ANY{PARTOF,paragraph,ISINTAG,
+font,color=red}(MARK,delete,+)+
+ADDTYPE firstname(MARK,delete,0,1) lastname
+DEFAULT delete(DEL)
+Here, the ﬁrst rule looks for sequences of any kind of
+tokens except markup and creates one annotation of the
+type delete for each sequence, if the tokens are part of a
+paragraph annotation and colored in red. The +signs indi-
+cate this greedy processing. The second rule annotates ﬁrst
+names followed by last names with the type delete and the
+third rule simply deletes all text segments that are associ-
+ated with that delete annotation.
+3.3 Special Features of the T EXTMARKER
+Language
+The T EXTMARKER language features some special char-
+acteristics that are usually not found in other rule-based in-
+formation extraction systems or even shift it towards script-
+ing languages. The possibility of creating new annotation
+types and integrating them into the taxonomy facilitates an
+even more modular development of information extraction
+systems than common rule based approaches do. Beside
+others, there are two features that deserve a closer look in
+the scope of this work: The robust extraction by ﬁltering
+the token or annotation set and the usage of scoring rules
+for uncertain and heuristic extraction.
+Robust extraction using ﬁltering
+Rule based or pattern based information extraction systems
+often suffer from unimportant ﬁll words, additional whites-
+pace and unexpected markup. The T EXTMARKER System
+enables the knowledge engineer to ﬁlter and to hide all pos-
+sible combinations of predeﬁned and new types of annota-
+tions. Additionally, it can differentiate between every kindof HTML markup and XML tags. The visibility of tokens
+and annotations is modiﬁed by the actions of rule elements
+and can be conditioned using the complete expressiveness
+of the language. Therefore the T EXTMARKER system sup-
+ports a robust approach to information extraction and sim-
+pliﬁes the creation of new rules since the knowledge en-
+gineer can focus on important textual features. If no rule
+action changed the conﬁguration of the ﬁltering settings,
+then the default ﬁltering conﬁguration ignores whitespaces
+and markup. Using the default setting, the following rule
+matches all four types of input in this example (see [von
+Schoen, 2006 ]):
+DEFAULT ’Dr’ PERIOD CW CW
+Dr. Peter Steinmetz
+Dr . Peter Steinmetz
+Dr. <b><i>Peter</i> Steinmetz</b>
+Dr.PeterSteinmetz
+Heuristic extraction using scoring rules
+Diagnostic scores are a well known and successfully ap-
+plied knowledge formalization pattern for diagnostic prob-
+lems [Puppe et al. , 2001 ]. Single known ﬁndings valuate a
+possible solution by adding or subtracting points on an ac-
+count of that solution. If the sum exceeds a given threshold,
+then the solution is derived. One of the advantages of this
+pattern is the robustness against missing or false ﬁndings,
+since a high number of ﬁndings is used to derive a solution.
+For more information on the diagnostic score pattern see,
+e.g., [Puppe, 2000 ].
+The T EXTMARKER system tries to transfer this diagnos-
+tic problem solution strategy to the information extraction
+problem. In addition to a normal creation of a new anno-
+tation, a MARK action can add positive or negative scoring
+points to the text fragments matched by the rule elements.
+If the amount of points exceeds the deﬁned threshold for
+the respective type, then a new annotation will be created.
+Further, the current value of heuristic points of a possible
+annotation can be evaluated by the SCORE condition. In
+the following, the heuristic extraction using scoring rules is
+demonstrated by a short example:
+ADDTYPE paragraph{CONTAINS,W,1,5}(MARK,
+headline,5)
+ADDTYPE paragraph{CONTAINS,W,6,10}(MARK,
+headline,2)
+ADDTYPE paragraph{CONTAINS,emph,80,100,%}
+(MARK,headline,7)
+ADDTYPE paragraph{CONTAINS,emph,30,80,%}
+(MARK,headline,3)
+ADDTYPE paragraph{CONTAINS,CW,50,100,%}
+(MARK,headline,7)
+ADDTYPE paragraph{CONTAINS,W,0,0}(MARK,
+headline,-50)
+ADDTYPE headline{SCORE,10}(MARK,realhl)
+LOGGING headline{SCORE,5,10}(LOG,
+’Maybe a headline’)
+In the ﬁrst part of this rule set, annotations of the type
+paragraph receive scoring points for a headline annotation,
+if they fulﬁll certain CONTAINS conditions. The ﬁrst con-
+dition, for example, evaluates to true, if the paragraph con-
+tains one word up to ﬁve words, whereas the fourth con-
+ditions is fulﬁlled, if the paragraph contains thirty up to
+eighty percent of emph annotations. The last two rules ﬁ-
+nally execute their actions, if the score of a headline anno-
+tation exceeds ten points, or lies in the interval of ﬁve and
+ten points, respectively.
+3.4 Related Work and Discussion
+Information extraction and the related acquisition of struc-
+tured data are part of a widespread and still growing scien-
+tiﬁc community that originates a multiplicity of new sys-
+tems, tools and approaches. Many systems for process-
+ing structured and semi-structured texts can be found in
+the area of web information extraction systems [Kaiser and
+Miksch, 2005 ].
+One of these systems is the L APIS system ( Lightweight
+Architecture for Processing Information Structure )[Kuh-
+lins and Tredwell, 2003 ]that executes self-explanatory
+script-like edit operations on the input document. Provid-
+ing a graphical user interface with an integrated browser,
+this system allows to revise the extraction results in a
+HTML view. But its original purpose as innovative text
+editor causes a lack of some essential concepts like the def-
+inition of new types and the representation of uncertainty
+that is necessary for the effective text extraction.
+Another system for extraction information especially for
+text extraction from the web is the L IXTO SUITE [Baum-
+gartner et al. , 2001b ]with its L IXTO VISUAL WRAPPER .
+This system provides a graphical user interface for a semi-
+automatic generation of wrappers. The supervised learning
+approach uses manual annotations and decisions of the user
+to learn and reﬁne rules of the E LOG language [Baumgart-
+neret al. , 2001a ]. Therefore there is no knowledge about
+the language representation or HTML structure needed to
+created an appropriate wrapper. But its visual program-
+ming approach seems to prefer simple conditions instead
+of complex ones that would increase the robustness of the
+wrapper.
+The P HOENIX system [Betz et al. , 2005 ]uses a rule set
+in a proprietary XML syntax to recursively segment rele-
+vant blocks of text. The rules are composed of a set of
+XPATH statements that make a preliminary selection of in-
+teresting text segments and use constraining conditions to
+increase their precision. This system was especially devel-
+oped to extract case information from documents created
+by common word processing programs, but depends sig-
+niﬁcantly on a predeﬁned structure of the documents by
+which the robustness of its extraction process is affected
+signiﬁcantly.
+Various tools and approaches are available to extract in-
+formation from semi-structured texts and for the creation
+of structured data records (e.g., [Mustafaraj et al. , 2007 ]).
+A prominent example is given by the D ISCO TEXsystem
+by[?]that applies a learning component for generating
+the information extraction system. After textual documents
+have been processed, a data mining component can then be
+applied for the speciﬁc knowledge discovery step. While
+DISCO TEXalso proposes a process model for text extrac-
+tion and mining, the process presented in this work is more
+general. It focuses on the semi-automatic acquisition of
+extraction functionality, using rules, that is applicable for
+both low-level and high-level text extraction systems.
+In summary, no system fulﬁlled all requirements for the
+core system of this process. This motivated the new devel-
+opment of the T EXTMARKER system with the described
+features: The modeling of extraction knowledge using rule-
+based patterns, the intuitive knowledge acquisition sup-
+ported by graphical editors, the powerful features of the
+TEXTMARKER language and its extensibility prove crucial
+when developing efﬁcient and effective text extraction ap-
+proaches for structured data record creation.4 Case Studies
+In the following sections we describe two real-world case
+studies applying the presented approach. The ﬁrst case
+study considers the generation of structured data records
+given semi-structured medical discharge letters. The sec-
+ond case study is concerned with high-level information
+extraction and data acquisition in a technical domain.
+4.1 Generating Structured Discharge Letters
+The ﬁrst case study considers the generation of data records
+from semi-structured medical discharge letters. These let-
+ters are written by the physicians when a patient has been
+diagnosed and leaves after a hospital stay. The letters are
+typically written by the responsible physicians themselves
+and are stored as Ofﬁce (Word) documents. These contain
+the observations, for example, the history of the patient,
+results from certain examinations, measurements of labo-
+ratory parameters, and ﬁnally the inferred diagnoses of the
+patient. Figure 3 shows an example of the diagnoses and
+the history part of an (anonymized) discharge letter. The
+available electronic discharge letters provide the basis for
+various purposes, for example, for quality control with re-
+spect to a hospital information system, for medical evalu-
+ations, or for creating case-based training sessions. How-
+ever, the manual formalization and record creation using
+these is quite costly. Therefore, we applied the presented
+approach for structured data acquisition from the textual
+documents.
+~..E".tz.n
+~M,,'imn·
+B"rb.~.niM,u,hm'
+"'Form'!>'orl,g.n,nd"n'Unl.rt~.1 IK.inl....',hw"h... Inl.n,iv•.AaBbCcI o\aSbCCOd ,jaBbCcDdl ,joßbC<D.tl
+Form,!>'orl'g.nAaBb(
+Ub",(hr~ ...,jaBbCcDdl ~o\aSbCCOd~ AaBb(
+Hmorh.... I,bnd.,d m.1An,ichl
+Ab"tzA.rrtbriel-Beispiel-lOO38881.doc [Kompatibil~ätsmod"sl -Microsoft Word
+Ari,1 •10 •KA'I~1:='i='';;=:.,~~t~[TI]@]
+IFKll·....",,,'Aa·Jly·.a·llllO. :tI~[:~'Il~' t.:d...1KopimEinHlgm
+IWilCh.n'bl'g.Einfug.n::JForm,1ub.rt"gm
+Universitätsklinikum Würzburg
+Klinikum derB_,,,,,,,,,,, Juliu.-Ma><imili.ns-Un,_snbl
+Medizinische KlinikundPoliklinik
+Direktor:Prof.Dr:G.Ertl•
+dervomxx.yy.2007 biszumxx.yy.2007 stationär behandelt "",rde.
+I
+Di~gnosen:
+Hypoglykamie beiDiabetes mellitusTyp11,sekundär insulinpflichtig
+Pneumonie linkerUntenappen~ bds.,links>rechts
+Therapierefraktäre Anämie und~ bei~ Syndrom DD
+Knochenma.r1<sschädigung, daneben Eisenmangel beiBlutungsneigung undleichteHämolyse bei
+jgQSensibilisierung derErythrozyten so"';evermutlich~Anämie
+Vorübergehende Dialysepflicht bei~ diabetiseher~
+AkuterHamvemalt,~ Diskokation des~ mitemeuterAnlage
+Bekannte~ hochgradige~ mitlJt.multiplen Bougierungen
+Benigne Prostatahypertrophie
+Kompressionsfrakturen BYrK10und12
+lJt.globaler kardiale Dekompensation mit~ linksbeiPerikarditis~ mit
+diastolischer Funktionseinschränkung 3/07
+lJt·ACVB-OP 1982,lJt.Hinterwandinfar1<t 1981
+Erfolgreiche~ beipersistierendem Vomofflattem 1112006
+AktuellSinusmythmus
+QlB.E;Arterieller Hypertonus~~
+l:iffiiJJQ- und~ mit~ ShuntsbeiPmtiJJmHypertension
+GAVE-Syndrom beiLeberzirmose,lJt. Laser1<oagulation
+lJt.Ulcera~ undUlceraxeJJ!MJm mitBlutung2002
+Multiple~ imS&!lmlJt.hyperplastischen Kolonschleimhautpolypen
+Hämormoiden GradIImitakuterBlutung, Chronische Analfissur,~ Ekzem~
+""'"""'"Himatrophie mitbeginnender Demenz~ mitHörgeräten bds.
+Anill1lnese:
+HerrX"",rdewegenAllgemeinzustandsverschlechterung undHypoglykamie überdenNotarztbeiuns
+eingev.iesen. DerBlutzucker hattebeimNotarzt67mg%betragen, derPatientwarvenangsamt, konnte
+iJJiliiJJkeinevemünftige Anamnese geben.DerPatientspritztselbstInsulin.
+KÖrperlicher Untersuchungsbefund :
+76-jähriger Patient inleichtreduziertem AZundadipösem EZ(165cm,85kg),keineZyanose oderAtemnot,~ bds.,Integument, Lymphknoten, KopfundHals,bisaufleichtikterische Skleren
+unauffällig. E!IlJnq!!riCorregelmäß'g, 761min,keinepathologischen Geräusche,~ bds.tastbar,
+RR130170romI:.:!lJ..S0296%beiRaumluft, Temperatur )l;yc, reiz10se~ deutliche~, Nierenlager frei,Abdomen imlibrigen unauffällig. Rückenunauffällig, Stauungsdermatose bds.
+mitmassiven~ bd""Nervensystem: Patient venangsamt, weitschweifend,
+Mer1<fähigkeits- undKonzentrationsstörungen. Soweitbeurteilbar keinfokal-f1eurologisches Defizil. Im
+VenaufBesserung derkognitiven Funktion, wobeieinbeginnendes~ Syndrom vorzuliegen
+scheint.
+Figure 3: Example of a discharge letter (in German): The
+screenshot shows the diagnoses ("Diagnosen: . . . ") and the
+history part (’Anamnese: . . . ’). The segments correspond-
+ing to these need to be extracted for the case creation.
+We started with a training corpus of 43 discharge letters.
+The goal was then to process these and to extract the rele-
+vant information (observations, diagnoses) in order to cre-
+ate data records for later evaluation and text mining. Dis-
+charge letters usually follow certain formalization patterns:
+The document is started by the salutation, the diagnosis
+part, the history of the patient, textual paragraphs describ-
+ing the results of various examinations like computer to-
+mography (CT), and the result of laboratory examinations,
+i.e., the measured parameters. Since this structure is fol-
+lowed quite strictly, we were able to utilize this feature for
+extracting the relevant observations.
+Figure 4: Intermediate results: Exemplary segments (for the diagnoses part) for the discharge letter shown in Figure 3.
+For extracting the relevant information, we developed a
+set of rules that take the structure of the document into ac-
+count. As discussed above, a discharge letter needs to fol-
+low a certain standard structure. For applying the T EXT-
+MARKER system, we could therefore focus on these build-
+ing blocks of the document. In this way, we developed a
+set of rules for extracting segments of the letter ﬁrst, for
+example, considering the diagnosis block (c.f., Figure 4).
+After that, those segments were split up further, for ex-
+ample, considering the fact that individual diagnoses are
+almost always contained in separate lines within these seg-
+ments. Some examples of the applied extraction rules for
+the diagnoses are shown below.
+DECLARE diagnosisStartMarker
+ADDTYPE CW{PARTOF,paragraph;-PARTOF,
+diagnosisStartMarker;INLIST,
+SynonymeAdditional.txt}(MARK,
+diagnosisStartMarker,0,1)
+CW{INLIST,SynonymeDiagnosis.txt,
+5,relative}
+ADDTYPE CW{PARTOF,paragraph;-PARTOF,
+diagnosisStartMarker;INLIST,
+SynonymeDiagnosis.txt,5,relative}
+(MARK,diagnosisStartMarker)
+DECLARE historyStartMarker
+ADDTYPE CW{REGEXP,[A-Za-zÄÖÜäöüß] *(anamnese
+|Anamnese)}(MARK,historyStartMarker)
+DECLARE startMarker
+ADDTYPE diagnosisStartMarker(MARK,startMarker)
+ADDTYPE historyStartMarker(MARK,startMarker)
+ADDTYPE highlightedParagraph{TOTALCOUNT,
+historyStartMarker,0,0}
+(MARK,startMarker)
+The rules concern the deﬁnition of several markers for a
+set of diagnoses (block of diagnoses in the discharge letter)
+and the start of the history section. Both the diagnosisStart-
+Marker and the StartMarker are used for marking the start
+of an interesting paragraph, i.e., block of content. The last
+rule considers the case that the history, i.e., the historyS-
+tartMarker is missing, since for extracting the diagnoses
+we consider the content between the diagnosisStartMarker
+and the following startMarker . The last rule was added for
+increasing the robustness of the system. However, the case
+that the history was missing occurred only in a minority of
+cases. The diagnoses block is then split up into segments
+concerning the individual diagnoses.An example of the intermediate output of the extraction
+phase is shown in Figure 4. After the segments have been
+extracted we apply a post-processing phase in which the
+segments are matched with speciﬁc diagnoses and obser-
+vations using a lexicon and a synonym-list. This matching
+step can be easily implemented using the T EXTMARKER
+system, focusing on a set of interesting concepts (obser-
+vations and diagnoses). The result of the application is a
+set of attribute–value pairs that can be directly applied for
+structured data record creation. Considering the diagnoses,
+for example, we create pairs for binary attributes regarding
+the extracted diagnoses. The resulting database of dissec-
+tion records is then available, e.g., for knowledge discovery
+and quality monitoring.
+4.2 High-Level Information Extraction
+The second case study describes the application of the pre-
+sented process for a high level information extraction and
+automatic content segmentation and extraction task. Un-
+fortunately, we can only describe the case study in a very
+general way due to non-disclosure terms. Therefore, we
+will outline and summarize the general setting and ideas,
+but we will not show speciﬁc screenshots or technology.
+As a general setting, word processing documents in com-
+mon ﬁle formats are the input of the described system.
+These documents, initially2consisting of common Mi-
+crosoft Word or OpenOfﬁce documents need to be mined
+for project-like information with temporal margins, e.g., in-
+formation similar to facts commonly contained in curricu-
+lums vitae.
+In the concrete application, the input documents feature
+an extremly heterogeneous layout and are each written by
+a different person. Interesting text fragments may relate
+from plain text to structured tables, combinations of these,
+or parts of them. Additionally, the layout is not sufﬁcient
+enough for a correct classiﬁcation, since also domain de-
+pendant semantics may change the relevance of a fragment
+in its speciﬁc context. The output of a document are a set
+of templates that contain exact temporary information, the
+exact text fragment related to the template and various do-
+main speciﬁc information, e.g., the responsible position or
+a title phrase, in our curriculum vitae analogy.
+2The input documents are converted to HTML
+Although the application is still under development, it al-
+ready involves 479 rules and contains several domain spe-
+ciﬁc dictionaries with up to 80000 entries. During the pro-
+cess, the T EXTMARKER system basically tries to imitate
+the human perception of text blocks when processing the
+documents. For this purpose interesting named entities,
+e.g., temporal information, are recognised. Then, the ap-
+plication identiﬁes text structures of different types of com-
+plexity and size, e.g., a headlined paragraph or a row of a
+table. These overlapping text fragments are then compared
+both in a top-down and a bottom-up manner. If one of these
+text fragments or a set of text fragments of the same type
+contains a signiﬁcant pattern of interesting named entities,
+then they are marked as a relevant block of text. Finally
+additional rules ﬁnd the domain speciﬁc information which
+is also used to reﬁne the found segments. This outline de-
+scribes the basic functionality of the system. According
+to this speciﬁcation, extraction rules were deﬁned by the
+knowledge engineer using test documents provided by the
+domain specialist.
+In the current state the described T EXTMARKER appli-
+cation was evaluated on correct text fragments and tem-
+porary data only. In this setting, it already achieved an
+F1 measure of about 89% tested on 58 randomly selected
+documents with 783 relevant text fragments. These results
+seem to indicate potential for further improvements, how-
+ever, in order to obtain more reliable results we need to
+perform more evaluations together with our project part-
+ners ﬁrst.
+5 Conclusions
+This paper presented an effective rule-based approach for
+the generation of structured data records from text: We
+have proposed a semi-automatic process that featured the
+TEXTMARKER system as the core-component for the text
+extraction. The paper provided a conceptual overview
+on the T EXTMARKER application, and described the core
+concepts, the T EXTMARKER language, and the acquisition
+and application of extraction rules. For demonstrating the
+applicability, beneﬁt and effectiveness of the approach, the
+paper discussed two cases studies from two real-world ap-
+plications.
+The results and the experiences so far show, that the pro-
+posed process and the T EXTMARKER system are quite ca-
+pable for implementing difﬁcult text and information ex-
+traction tasks. Then, the application of the versatile T EXT-
+MARKER system can also be applied as a preprocessing
+step for the structured data acquisition task.
+In the future, we aim to consider automatic learning
+methods for the (semi-)automatic acquisition of extraction
+rules. Then, the acquisition of extraction knowledge can
+be supported by the system, e.g., by proposing appropriate
+templates for the extraction. Furthermore, we plan to ex-
+tend the T EXTMARKER language in order to further sim-
+plify the creation of domain-speciﬁc annotations. Addi-
+tionally, we aim to completely integrate the T EXTMARKER
+system with other natural-language processing tools using
+UIMA (Unstructured Information Management Architec-
+ture) [Ferrucci and Lally, 2004 ], such that the extraction
+process can be enhanced using further specialized tools.
+Acknowledgements
+This work has been partially supported by the German Re-
+search Council (DFG) under grant Pu 129/8-2.References
+[Baumgartner et al. , 2001a ]Robert Baumgartner, Sergio
+Flesca, and Georg Gottlob. The Elog Web Extraction
+Language. In LPAR ’01: Proceedings of the Artiﬁcial
+Intelligence on Logic for Programming , pages 548–560,
+London, UK, 2001. Springer-Verlag.
+[Baumgartner et al. , 2001b ]Robert Baumgartner, Sergio
+Flesca, and Georg Gottlob. Visual Web Information Ex-
+traction with Lixto. In The VLDB Journal , pages 119–
+128, 2001.
+[Betz et al. , 2005 ]Christian Betz, Alexander Hörnlein,
+and Frank Puppe. Authoring Case-Based Training by
+Document Data Extraction. In Proc. 10th Intl. Workshop
+on Chemical Engineering Mathematics , 2005.
+[Ferrucci and Lally, 2004 ]David Ferrucci and Adam
+Lally. UIMA: An Architectural Approach to Unstruc-
+tured Information Processing in the Corporate Research
+Environment. Nat. Lang. Eng. , 10(3-4):327–348, 2004.
+[Götz and Suhre, 2004 ]Thilo Götz and Oliver Suhre. De-
+sign and Implementation of the UIMA Common Analy-
+sis System. IBM Syst. J. , 43(3):476–489, 2004.
+[Kaiser and Miksch, 2005 ]Katharina Kaiser and Silvia
+Miksch. Information extraction. a survey. Technical
+Report Asgaard-TR-2005-6, Vienna University of Tech-
+nology, Institute of Software Technology and Interactive
+Systems, 2005.
+[Kuhlins and Tredwell, 2003 ]Stefan Kuhlins and Ross
+Tredwell. Toolkits for Generating Wrappers – A Sur-
+vey of Software Toolkits for Automated Data Extrac-
+tion from Web Sites. In Mehmet Aksit, Mira Mezini,
+and Rainer Unland, editors, Objects, Components, Ar-
+chitectures, Services, and Applications for a Networked
+World , volume 2591 of Lecture Notes in Computer Sci-
+ence (LNCS) , pages 184–198, Berlin, October 2003.
+International Conference NetObjectDays, NODe 2002,
+Erfurt, Germany, October 7–10, 2002, Springer.
+[Mustafaraj et al. , 2007 ]Eni Mustafaraj, Martin Hoof, and
+Bernd Freisleben. Knowledge Extraction and Summa-
+rization for an Application of Textual Case-Based In-
+terpretation. In Case-Based Reasoning Research and
+Development, Proc. 7th Intl. Conference on Case-Based
+Reasoning (ICCBR 2007) , volume 4626 of Lecture
+Notes in Computer Science , pages 517–531, Berlin,
+2007. Springer.
+[Puppe et al. , 2001 ]Frank Puppe, Susanne Ziegler, Ulrich
+Martin, and Jürgen Hupp. Wissensbasierte Diagnosesys-
+teme im Service-Support [Knowledge-Based Systems for
+Service-Support] . Springer, Berlin, 2001.
+[Puppe, 2000 ]Frank Puppe. Knowledge Formalization
+Patterns. In Proc. PKAW 2000 , Sydney, Australia, 2000.
+[von Schoen, 2006 ]Patrick von Schoen. Textmarker: Au-
+tomatische Aufbereitung von Arztbriefen für Train-
+ingsfälle mittels Anonymisierung, Strukturerkennung
+und Teminologie-Matching [TextMarker: Automatic
+Reﬁnement of Discharge Letters for Training Cases
+using Anonymization, Structure- and Terminology-
+Matching]. Master’s thesis, University of Wuerzburg,
+2006.

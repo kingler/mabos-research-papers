@@ -1,0 +1,585 @@
+Know ledge Modelling in Multiagent Systems: 
+The Case of the Manageme nt of a National Network  
+Martin  Molina 1  and  Sascha Oss owski 2  
+1 Departm ent of Artific ial Intelligence, Technic al Universit y of Madrid, 
+Campus de Montegan cedo  s/n, 2 8660 Bo adilla d el Monte (Madr id), Spain 
+mmolina@dia.fi.upm.es 
+2 School of  Engineering , Rey Juan Carlos Univ ersity, 
+Campus de Móstoles, C alle Tulip án s/n, 28933 M óstoles (Madrid) , Spain 
+S.Ossowski@es cet.urjc.es 
+ 
+Abstract.  This paper presents the knowledge model of a distributed decision  
+support s ystem, that has  been  designe d for the manag ement of a national 
+network in  Ukra ine. It shows how advanc ed Art ificial Inte lligence techn iques 
+(multiagen t systems and knowledge m odelling)  have been appli ed to solve this  
+real-world  decis ion support pro blem: on the o ne hand  its d istributed  natur e, 
+implied b y different loci of decis ion-ma king at th e network nodes, suggested to 
+apply  a multiag ent solution ; on the oth er, du e to the complex ity of prob lem-
+solving for local network administratio n, it was useful to apply  knowledge 
+modelling techn iques, in order  to stru cture the differen t knowledge ty pes and 
+reasoning pro cesses involved. The p aper sets out from a d escription  of our  
+particular management pr oblem. Subsequently , our ag ent model is described, 
+pointing ou t the local prob lem-solvi ng and coordination  knowledge models. 
+Finally, the dynamics of th e app roach is illustrated by an example. 
+1. Introduction 
+The p roblem of coherent distributed deci sion-making is intrinsic to many com plex 
+real-world situations, where the behaviour of a com plex dynamic system is to be 
+regulated by a group of operators, eac h performing pa rticular control actions on 
+different parts of the system. In t he managem ent of a road traffic net work, for 
+instance, different control centres are res ponsible for making ce rtain types of c ontrol 
+decisions (e .g. pri vate ve hicles, public tr ansport, etc.). Anothe r example is the  
+managem ent of a computer network, where different local administrators reconfigure 
+sub-networks to improve network performance. In gene ral, local decisions made by  a 
+particular operator m ay affect  the deci sions of ot her c ontrol pers onnel. So, besides 
+making good local con trol decision s, it is n ecessary to ach ieve certain  level of 
+coordination in orde r to obtain a cohe rent and m utually accept able set of local cont rol 
+decisions.  
+A distribu ted decision  supp ort system  is a software t ool t hat assists ope rators in 
+their decision -mak ing with in the fram e of a distribu ted organ isatio n, by automatically 
+monitoring a dynamic system, warni ng about prese nt or future undesired situations 
+and suggesting ap propriate control actions to operators [9]. In order to develop a 
+In “Intelligence in Services and Netw orks”. H. Zuidweg et al. (Eds.). Proc.  6th International Conf erence on 
+Intelligence and Services in Network s, IS&N 99, LNCS  1597, p p. 501-513 . Barcelona , Spain, April,  1999.  
+© Spr inger-Verlag Berlin Heidelber g 1999.  
+brought to you by CORE View metadata, citation and similar papers at core.ac.uk
+provided by Servicio de Coordinación de Bibliotecas de la Universidad Politécnica de Madrid
+software architecture that implements such  a system, a variety of technical problems 
+have to be considered: efficient communication between management centres, a 
+powerful interface to the dyna mic system to be controlled etc. However, there are two 
+key issues that are crucial for the successful implantation of this kind of system in an 
+existing organisation: 
+• Operators are responsible for the effects of the control decisions taken. As bad 
+decisions may have catastro phic effects, the support system must be able to 
+provide explanations  respecting its recommendations, which need to be logically 
+and conceptually understandable  by the operators 
+• The operators’ responsibility goes in line with certain autonomy  in their decision 
+making. In such a distributed organisation a decision support system will not be accepted, if it tries to achieve coordinatio n by centrally imposed decisions, without 
+taking into account local preferences and autonomy 
+In order to cope with these characteristic features, two advanced techniques from the 
+field of Artificial Intelligence appear adequate: 
+• Knowledge-based systems  technology is popular for its capability of providing 
+explanations. By using recent knowledge modelling techniques, the knowledge of 
+local decision-makers can be organise d and structured, so as to provide 
+explanations at a reasonable level of complexity. 
+• Multiagent  techniques provide a natural context to solve the coordination problem 
+between local decisions: unlike centralis ed traditional approaches that rely on a 
+top-level authority to solve conflicts, each agent is given the autonomy to make its 
+own decisions. Coordination emerges by means of peer communication in a 
+“bottom-up” fashion. Its result is biased by existing conventions and organisational 
+structures. 
+Still, when trying to build real-world systems in a principled manner on the basis of 
+the above insights, a problem arises. Although  there is a variety of methodologies and 
+tools that support design and implementation of “monolithic” knowledge-based 
+systems (e.g. [25, 8, 20, 15]), similar approaches for multiagent system design (e.g. 
+[16, 12, 4]) are still in quite initial stages. A convincing integration of knowledge 
+modelling and multiagent design methodologies is still to come. 
+In this paper we take a pragmatic tack towards the problem, showing how existing 
+knowledge modelling approaches can be transf erred to solve a real-world distributed 
+decision support problem. We first describe our particular problem: the management of a national Wide Area Network in Ukraine. Local problem-solving and coordination 
+knowledge models are described next within a task-oriented knowledge modelling 
+framework, giving rise to the implementation. We illustrate the dynamics of the 
+system by an example and discuss the lessons learnt from this enterprise. 
+2. The Problem: The Management of a National Network 
+The government of Ukraine recen tly initiated the programme Informatization of 
+Ukraine , directed towards the development of telecommunication infrastructures and 
+information technologies at a national level, during the years 1996-2000. Together 
+with partners from Greece, Spain, Ukrain e and Hungary we contributed to this 
+enterprise in  the frame of the project ExperNet , which is finance d through the 
+European Union’s Inco-Cope rnicus Programme. The goal of the ExperNet  project was 
+to develop a distributed expert system that supports the managem ent of an Ukrainian 
+national data network.  
+Within this context, we considered that most conventional network managem ent 
+systems (e.g. [11]), based on algorithmic techniques, are usually not able to provide 
+the required level of assistance f or the operators. Su ch a lev el of suppo rt requires 
+conce ptually understandable recom mendat ions together with explanations, which can 
+be offere d by knowledge-bas ed technology . Recently, a gent-based a pproaches have 
+been applied to network  management [13,23], but they attack  mainly complexity 
+issues and  provide rather limited  support to the different n ode operators within th e 
+fram ework of a distributed organisation. In the sequel we are c oncerned with our 
+contribution to the project : the defi nition of the conceptual model of the system, and 
+the development of a com putational version. 
+Relcom , one of the main national networks of Ukraine, was c hosen as t he 
+expe rimental zone of the ExperNet  project. Relcom  mainly provides I nternet services 
+(email, ftp, news, tel net, Cyrillic-o riented version of Ly nx for the access to  www-
+serve rs, etc.). The c onnect ivity between the nodes is based on UUCP using switched 
+telephone lines and permanent /leased l ines using TC P/IP. Besides t he usual dial-up 
+modem  connec tion, Relcom makes use of differen t radio, fibre and  satellite ch annels. 
+As illu strated  by figure 1, the n etwork  includes sev eral h undred s of network nodes 
+provide d by independent or ganisations. For t he acces s to inte rnational net works 
+channels provide s peeds up to 512 K. 
+ 
+Figure 1. Th e Relcom Network in Ukraine (Courtes y of Relcom). 
+ 
+The infrast ructure of a typical 
+network no de is shown in figure 2.  
+The no de is en dowed with  an 
+external lin k o f 256  K, and  
+main tains conn ectio ns to fou r other 
+network nod es: Tech nosoft (256K), 
+UAC OM (33.6K), the Institute of 
+Physics and Semicond uctors (28.8K) 
+and t o the Donetsk University of 
+Physics an d Techno logy (64K). 
+Routing is supported by two Cisco 
+2511 (“goodwin” and  “gal”) and one 
+Cisco 2 501 (“skif f”) hardware  
+routers. A Sun Ul traSparc1 and 8 
+Pentium computers are conf igured to 
+provide a  variety of different 
+services . 
+At each node of the Relco m 
+network, there i s a  n ode 
+administrator,  resp onsible of 
+main taining a co nvenient quality  of 
+service. T he administrator obtains 
+inform ation about the state of certain part  of the net work by means of a wh ole bunch 
+of different observ ables , including current and historic data on link and host 
+utilisatio n, routing tables, messag e buffer queues, av erage message delays between  
+nodes, servi ce delays, etc.. In  the cou rse of the Ex perNet project several  tools have 
+been installed (suc h as HNMS+, an ada pted versi on of the Hierarc hical Network 
+Managem ent System [11] , and the DEV ICE system [2], which includes an object-
+oriented dat abase), by  means of w hich most of t he above dat a is supplied on-line. 
+Adm inistrators  can also acc ess add itional variables as the resu lt of exploratory 
+actions, such as the output of execu ting operating sy stem com mands. 
+3. Know ledge Acquisition  
+During the knowle dge ac quisition phase it becam e clear that node a dministrators 
+perform  essen tially th ree tasks fo r local problem-solving. (1) fault detectio n: in case  
+of communication m alfunctions, a repai r plan is to be configured that besi des t he 
+primary actions (e.g . repai r equipment) also com prises additional secondary actions  
+that iso late a fau lt so as to  minimise its i mpact (e.g . change rou ting); (2) performance  
+optimisa tion: in order to assur e a convenient network performance, re source 
+utilisatio n is to be balanced, by deferring  services (e.g. news), ch anging serv ices to  
+different hosts, cha nging routing tables et c.; (3) network re-con figuration: wh ile 
+main taining a certain  quality of serv ice, t he eco nomic efficien cy of the network  is to 
+be ass ured through actions such as i ncreas ing/dec reasing the ca pacity of cha nnels, 
+leasin g or cancellin g new lines, installin g new eq uipment etc.  64Mb RAM, 2Gb HDD33.6 K to
+UACOM
+ GVC
+ 33000256 K
+external
+ RAD
+ASMi-50
+... RAD
+ASMi-50256 K to
+echnosoft
+site
+Cisco 2511
+( goodw in )28.8 K to
+Institute of Phisics of
+Semiconductors
+ GVC
+ 28800
+...
+Cisco 2511
+( gal )64 K to
+Donetsk University for
+Phisics and Technology
+ Patton 1092
+...
+Cisco 2501
+( skiff )
+Sun Ultra 1
+ 32Mb RAM, 2Gb HDD
+PC Pentium 32Mb RAM, 2Gb HDD
+PC Pentium 32Mb RAM, 1.5 Gb HDD
+PC Pentium
+ 24 Mb RAM, 1.5 Gb HDD
+PC Pentium
+ 16 Mb RAM, 1.5 Gb HDD
+PC Pentium
+ 16 Mb RAM, 1 Gb HDD
+PC Pentium
+ 16 Mb RAM, 1 Gb HDD
+PC PentiumDigiBoardDialup usersT
+ 
+Figure 2. Ty pical node infr astructure  
+(Courtes y of Technosoft). 
+It soon turned out that coordination problems play an essent ial role in the tasks of 
+administrato rs. Th ey arise in  at least fo ur situ ations: (1) Informa tion a cquisitio n 
+problems: a node l acks observables which are avai lable to (or can be acqui red by) 
+another n ode. (2) Respo nsibility p roblems: nodes with  overlapp ing problem-solving 
+capacities h ave to  agree upon which one of them is to  attack  a task. (3) Interest 
+problems: a node’s plan to overcome a pr oblem conce rns another node, beca use i t 
+affects th e utilisatio n of resou rces (hosts, links etc.) th at “b elong” to the latter (who  
+paid for them ). Still, th e affected  node does not agree with this. (4 ) Reso urce con flicts : 
+nodes develop com plementary plans (in order to cope with different problems), but 
+these plans t ry to em ploy the s ame, scarce resource i n differen t, incompatible ways. 
+In order t o solve these problems, the internal orga nisation of the Relcom network 
+has e volved towards a hiera rchical struct ure. Nod es may correspond to any of three 
+levels (n ational, reg ional an d district),  associated with di ffere nt aut hority and  
+respon sibility p atterns. Within this framework, nodes communicate i n acco rdance 
+with cert ain con versation patterns s o as t o overc ome coor dination problems. 
+Inform ation acquisition  prob lems are tack led by observable acquisition conversatio ns, 
+where a node  sim ply asks an acquainta nce to provi de a desired i nform ation. 
+Resp onsibility prob lems are cop ed with by delegation to higher lev el nodes. The 
+solution to interest problems relies o n a conve rsation scheme, in the cour se of which a 
+higher lev el node successively g enerates altern ative management plans, until all  
+affected nodes  agree with it. The occurrenc e of re source c onflicts are m ostly avoide d 
+by a hi erarchical link pl acements, but if they occu r their sol ution involves peer 
+negotiatio n.1 
+4. The System Architecture 
+Our objectiv e was to design  a distributed decision s upport syste m, which assists the  
+Relcom  node administrators in coping with their network managem ent tasks. T he 
+inherent distri bution of the problem  sugge sted to use a m ultiagent system  architecture, 
+where each m anagem ent node  in th e network is en dowed with one agent, specialised 
+in managing the net work area  that the node is resp onsible for. Eac h deci sion support 
+agent c ommunicates the res ults of its reasoning processe s to its human administrator, 
+which is in  charg e of settlin g the management actio ns to be taken. In this sectio n we 
+describe an agen ts’ “ind ividual” k nowledge endowment for lo cal p roblem-solving as 
+well as its “so cial” k nowled ge that en ables it to  ren der supp ort to in ter-n ode 
+coordination. 
+4.1 The kno wledge modelling  approa ch 
+In order t o characterise the knowledge m odel of each a gent we ha ve applied t he 
+conce pt of model-based expert system devel opment, which has bec ome a po pular 
+approach t o the development of complex knowledge-based systems. Thi s modelling 
+approach c onsiders t he existence of an abstract knowledge level [18] at which the 
+                                                           
+1 Resource conf licts ar e out of the scope o f the current v ersion. 
+ 
+knowledge can functionally described on the basis of its role, independently on the 
+particular symbolic representation. Some recent methodologies for system 
+development (such as KADS [23], KSM [8], Protégé-II [19] and KREST [15]) follow 
+this model-based approach. Any of these methodologies organise the knowledge 
+according to certain structuri ng principles. In particular, one organisation followed by 
+most of the methodologies is the task-oriented perspective.  
+According to this view, a task is an abstract description that identifies a goal to be 
+achieved (for instance, mineral classificati on or the design of the machinery of an 
+elevator). Tasks are usually characterised by the classes of premises that they receive 
+as input and the classes of conclusions that they produce as output. On the other hand, problem-solving methods (or methods  in short) are used to cope with the tasks. A 
+method indicates how a task is achieved, by describing the different reasoning steps 
+by which its inputs are transformed into outputs. Simple tasks (called primitive 
+inferences  following the KADS methodology [23]) can be attained directly by means 
+of basic methods . They rely on a knowledge base , modelling the declarative domain 
+knowledge used by basic methods. The complexity of real-world tasks requires 
+compound methods that decompose tasks into subtasks. These subtasks may again be 
+decomposed by a method and so on, developing a task-method-subtask hierarchy, 
+whose leaves are given by basic methods that use simple knowledge bases. Thus, the 
+resulting model for an agent can be viewed as a collection of types of knowledge 
+bases (each one with its own symbolic repres entation) together with a hierarchically 
+structured set of reasoning strategies that make use of such knowledge bases. 
+4.2 Agent Local Knowledge Model 
+We have modelled the problem-solving comp etence of each decision support agent 
+within this task oriented perspective (figu re 3). It reflects the fact that a node 
+administrator’s reasoning comprises three main tasks, which follow a three step 
+sequence: (1) symptom detection , where administrators watch out for symptoms of 
+undesired network states and behaviours (e.g. a certain service –ftp, www, etc.– does not respond, a host is unreachable, over/under- utilisation of links or equipment, etc.), 
+(2) diagnosis , which is done by discriminating hypothesis of different degrees of 
+precision on the basis of network data and the result of exploratory actions to find the 
+causes of symptoms (e.g. inadequate capacity for some resource, unbalance of 
+workload and resources, resource malfunctions, etc.) and (3) repair , where a sequence 
+of repair actions is proposed to solve the problem. Figure 3 shows this abstract 
+reasoning structure corresponding to an agent. The top-level method network 
+diagnosis & repair  performs the reasoning cycle outlined above: first, the detect  
+method generates symptoms, whose causes are determined during the invocation of 
+the diagnose  method, which deduces a set of current problems. Finally, the repair  
+method generates repair plans by means of which these problems shall be overcome.  
+In order to achieve these sub-tasks we have adapted three well-known problem-
+solving methods: heuristic classification for symptom detection, establish-and-refine 
+for diagnosis, and hierarchical planning for repair.  
+The heuristic classification  problem-solving method [6] identifies a typical 
+reasoning structure for classification problems,  such as symptom detection. It follows 
+three st eps (abstraction, matching and refinement) that are performed in our model by 
+three su btasks usi ng two types of k nowledge bases:  one a bout the net work model for 
+abstraction and refinement, that includes a declarative re presentation of the network 
+structure, and another one t hat uses a set  of problem scenari os relating symptoms and 
+observables.  
+For diagnosis, the establish an d refine method is used [5]. This method ca n be 
+concei ved as a n abstract reasoning pattern based on a heuristic search in a taxonomy 
+of hy potheses  of pr oblems. The part icular adapt ation of the establish a nd refin e 
+method i n the network managem ent dom ain m akes use of three primitive inferences:  
+(1) refin e problem  hypotheses uses  a knowledge base represent ed by a taxonomy of 
+hypothesis classes u sing the is-a relation;  (2) select bes t hypothesis  makes use o f 
+knowledg e abo ut the validity of hypotheses (represen ted using fram es) to estab lish 
+whether any of the input hypoth esis can  be proved; (3) acquire ad ditional observab les 
+determines the seq uence of exploratory actions to get additional observables by using 
+a knowledge base ab out acquisition m ethods  (represent ed by rules).  
+Finally, th e hierarc hical planning method is used for the repair task. This method 
+is based on a search in a hi erarchy of speci alists that ar e knowledg eable ab out partial 
+abstract pla ns, whic h are dynamically co mposed duri ng the reasoni ng [3]. T he 
+particular in stance of the hierarchical planning method that we use in the netwo rk 
+managem ent domain makes use o f four speci alists (top l evel, fault detection, 
+performance m anagem ent and c onfiguration) a nd uses five p rimitive inferences 
+supported by four types of knowledge bases. 
+ 
+Manage Network
+Diagnose and
+Repair
+AbstractMatch Refine
+HipothesisRefine Select
+BestAcquire
+Observ.Select
+Specialist
+Determine
+Applicab.Propose
+PlanDecompose
+PlanCompose
+PlanDetect Diagnose Repair
+HeuristicClassificationEstablish &RefineHierarchicalPlanning
+Propose
+Partial Plan
+ConditionalRefinement
+Plan
+StructureRefinemen t Heuristic
+PlansApplicab.
+ConditionsPlan
+StructureAcquisition
+MethodsHypothesis
+ValidityHypothesis
+TaxonomyNetwork
+ModelProblem
+Scenar.Network
+Model 
+Figure 3. Knowledge model of  an agen t. 
+ 
+4.3 Agent Social Knowledge Model 
+In this section we show how social abilities can be “wrapped” around the local 
+problem-solving capabilities of our stand-alone decision support agents within the 
+task-oriented knowledge modelling framework.  For this purpose we see the different 
+conversations that resulted from the knowle dge acquisition process (see section 3) as 
+logically coherent sequences of agent in teractions [1]. Interactions within a 
+conversation are based on a message passing model. Every message that is exchanged during such interactions conveys a speech act , as by emitting it the sender wants to 
+influence the behaviour of the receiver [17]. In consequence, we identified additional methods that generate such speech acts as part  of their execution, given that the agent 
+is to act within a conversation. In much the same way, methods have been built, 
+which are activated when agents need to react  to a speech act with in the conversation, 
+i.e. which are executed when certain messages are received. 
+The first column of table 1 shows the most important methods that comprise 
+speech acts as well as the message types th at they generate du ring their execution 
+(column 2). In column three you see the agents’ reaction upon the reception of 
+messages, again in terms of methods to be activated. Note that for the problem at hand 
+just three speech acts were sufficient: DO directive acts, where the sender wants the 
+receiver to perform a certain  problem-solving activity; ASK FOR  directive acts, where 
+the sender wants the receiver to perform a cer tain activity, and to inform it about its 
+outcome; and ANSWER WITH  assertive acts, by means of wh ich the sender provides the 
+receiver of a message with a certain information. 
+ 
+Sender’s active method Message ty pes Receiver’s method activation 
+query agents for observable ASK FOR  observable reply with observable 
+query agents for acceptance ASK FOR  plan acceptance reply with acceptance 
+query agents for refinements ASK FOR plan refinements reply with refinements 
+notify agents to diagnose DO diagnosis and repair perform diagnosis and repair 
+notify agents to isolate problem DO isolation perform problem isolation 
+notify agents to repair DO repair perform repair 
+reply with observable ANSWER WITH  observable <continue with suspended method> 
+reply with acceptance ANSWER WITH  plan acceptance <continue with suspended method> 
+reply with refinements ANSWER WITH plan refinements <continue  with suspended method> 
+Table 1. Methods and Messages 
+Within conversations there are various degrees  of freedom for the involved agents, as 
+they usually may choose from several behaviour options (in the simplest case to 
+accept or to reject a request). This accounts for the autonomy of the network 
+administrator within the frame of the organisation. The behaviour of an administrator 
+in a conversation (i.e. his/her choice among the different options) is not just 
+determined by information respecting its local situation, but also by its knowledge and 
+experience with other nodes in the network. This knowledge is represented in the agent models  (this type of knowledge is also referred to as “acquaintance model” [7] 
+or “external description” [22]). 
+An agent maintains such local ag ent model of all acq uaintances th at it in teracts  
+with in a fram e-base d knowledge base. Frames consi st of three parts: the modelled 
+agent’s interest, its cap ability and its so cial relatio n. The interest  part of a local age nt 
+model descri bes the local reas oning results that the modelled age nt may be interested 
+in. It contains slots for the problems and plan pat terns of interest. The capability part 
+descri bes t he types of results of local reas oning t hat the m odelled a gent is capable of. 
+It contains slots for the observables, problems, and pl ans that others may be as ked to 
+obtain or pe rform. Finally the social rela tion part desc ribes the relation bet ween the 
+main tainer of the model and the modelled agent. Fo r instan ce, it might contain an 
+expressi on that determines the relativ e imp ortance (or au thority) of the latter. No te 
+that eve ry age nt is also endowe d with (reflectiv e) knowled ge about itself, wh ich it 
+main tains in a frame of similar stru cture. 
+Agent model knowledg e provides basic fu nctionalities th at are n eeded by the 
+methods o f table 1 in orde r to cope wi th the “non-determinism” within conve rsations. 
+These functionalities are exp ressed b y the following basic in feren ce meth ods: (1) 
+problem in terest:  checks whether t he modelled agent is believed t o be interested in 
+being notified  about a problem (e.g . because it is in directly affected  by that prob lem 
+and wants to isolate it in order to keep its effects as l ocal as possi ble); (2) plan 
+interest: checks wh ether the modelled agent is b elieved to be interest ed in being 
+notified about a gi ven pl an (either be cause it is involved in it or beca use i ts side-
+effects c oncern the modelled ag ent); (3)plan righ ts: checks whethe r there is a nee d to 
+obtain the agreement of the modelled agent for enacting a given plan; (4) observatio n 
+capability, checks whethe r the modelled agent is believed to be capabl e of acq uiring 
+the val ue of a given observable; (5) diagnosis ca pability, checks whet her the  
+modelled agen t is believed t o be abl e to perform diagnosi s for a gi ven sy mptom; (6) 
+plan repa ir cap ability, checks wh ether the modelled agent is b elieved to be able to 
+elaborate a plan for a gi ven problem ; (7) plan refin emen t capability, checks whethe r 
+the modelled agent is believed to be ca pable of refining a given abst ract plan for a 
+given problem. 
+It rem ains to be shown how the “social” methods  desc ribed in this section ar e 
+finally integrated wi th the local problem-solving methods  descri bed previously. For 
+this purpose, t he “sy mptom detection – diagnosis – repair” cycle that coped with t he 
+manage net work task (see  figure 3) is extended. The new top-level method for the 
+social deci sion support agents is given by the following steps: 
+ 
+1. Detect symptoms. 
+2. Inform agents interested in the symptoms, in order to diagnose them. 
+3. Diagnose problem (if the agent is responsible).  
+If there are missing observables, ask agents for acquiring the 
+corresponding value. 
+4. Inform agents interested in problems, in order to isolate them. 
+5. Inform agents interested in problems, in order to repair them. 
+6. Generate a repair plan (if the agent is responsible). 
+If necessary, asks agents for plan acceptance 
+ 
+4.4 Implementation 
+The abov e syste m has been implemented on top of the KSM k nowledge modelling 
+tool [8], developed at t he Artificial In telligence Departm ent of the Techn ical 
+University of Madrid, and has bee n applied to different test cases. T he final versi on of 
+this syste m, using efficient software c ompone nts, has been installe d at the end of 1998 
+at a p articular test site th at included several network  nodes in Ukraine [24]. The initial 
+expe rience showe d the validity of the present techn ical so lution, altho ugh further 
+trials with  a mo re ex tensive installatio n still n eed to be perform ed. 
+ 
+ 
+Figure 4.  KSM Interfa ce to an ExperNet  agent  model 
+5. An Example  
+This section  illustrates th e previous model on the basis of an example case. Th e case 
+comprises thre e age nts – Relco m Ukra ine, Technos oft and UACOM – corresponding to 
+three network nodes, and presents the interactio ns that arise fro m a certain  situation  in 
+the fram e of a recon figuration  task. Su ppos e that the adm inistrator at t he Technosoft  
+node is notified by an external obse rver that the FTP se rvice of t he node UACO M is 
+slow. This is notified  manually by the administrato r to the local ag ent at this n ode and 
+triggers the task for diagnosis and repair of this ag ent. Internally, th is ag ent activ ates 
+speci fic subtasks a nd concludes that an additional observable is neede d to 
+discriminate between t he hy potheses (state of ca rrier detect indicator of R elcom 
+Modem  on  Tech nosoft 
+channel). The  agent uses its  
+own social knowledge abou t 
+the othe r agents , and 
+determines th at only Relcom 
+Ukrai ne is capable acq uiring 
+the val ue. So, Technosoft 
+sends the m essage ASK F OR 
+observable to agent Relcom 
+Ukrai ne and  waits u ntil the 
+answer from  that age nt arrive s. 
+Upon arrival of the Techno soft 
+message, the  agent Relcom 
+Ukrai ne rep lies with  th e 
+message ANSWER WITH 
+observable after acquiri ng the 
+value of such a variable. Agent: 
+TechnosoftAgent: 
+Relcom UkraineAgent  
+UACOM
+ASK FOR observable
+ANSWER WITH observable
+DO diagnosis and repair
+DO diagnosis and repair
+ASK FOR plan acceptance
+ANSWER WITH plan acceptanceDO diagnosis and repair
+ASK FOR plan acceptance
+ANSWER WITH plan acceptanceDO repair
+ASK FOR plan acceptance
+ANSWER WITH plan acceptanceTime
+ 
+Figure 5.  Agent  Intera ction  in the example. 
+Once t his message arrives at  
+Technosoft , the diagnosis process c ontinues and concludes with a partial desc ription 
+of the problem (W AN problem b etween Relc om Ukrai ne and U ACOM), stating that 
+this type of problem  is unde r foreign re sponsibility. The agent Techno soft determines 
+which agent might continue the diagnosis concluding that both agents, UACOM  and 
+Relcom Ukr aine, are re sponsible for thi s problem. So, Techno soft sends the 
+corresponding DO di agnosi s & repair  messages a nd finishes its reas oning cycle. 
+Upon receivi ng the a bove message, the agent Relcom Ukrai ne con tinues with  the 
+diagnosis and detects that only UACOM  is respon sible for th is problem. So, Relcom 
+Ukrai ne also sends the m essage DO diagnosis & repai r to UACOM  and t erminates its  
+reasoning cycl e.  
+When the agent UAC OM receives the above m essages, it concludes the “final  
+cause” of the detected probl em (link pr oblem between Relco m Ukra ine and UACO M). 
+UACOM  tries to select th e agen ts to be notified  abou t the result of d iagnosis in  order 
+to isolate it. Fo r this, UAC OM determines th at no  agents need to  be informed for the 
+sake of problem iso lation. The next step  consists in  determining the agen ts that will 
+perform problem repai r. UACO M determines th at itself will p erform the rep air an d 
+thus sends no messages. It performs hierarchical planning to com pose a repair plan, 
+and c hecks whethe r it can be enacted directly or whet her the acce ptance of any 
+acquai ntance i s necessa ry. By looking up its soci al knowledge, it determines that this 
+plan affects agent Relcom Ukrai ne, so this agent needs to be as ked for plan 
+acceptance . In conseque nce, it sends  the message ASK FOR plan acceptance  to 
+Relco m Ukra ine. Still, in  its an swer Relcom Ukrai ne, rejects the plan. 
+As a co nsequence, p roblem-solving actions in UACO M are “redone” s uccessively 
+in order to generate an  alternativ e plan. Howev er, this proced ure do es not fin d a valid 
+plan and UAC OM determines that problem repai r need s to be delegated. Using the 
+social knowle dge UACO M determin es th at ag ent Relcom Ukra ine shou ld do this job, 
+so it se nds the message Do repair and finishes its reas oning cycle. Upon receiving t he 
+above m essage, the agent Relco m Ukra ine proposes a  new repai r plan and checks 
+whet her t he acceptance of any acquainta nce is necessa ry. By looki ng up its social 
+ 
+knowledge, it detects that this plan affects agent UACOM  as well as agent Technosoft . 
+In consequence, Relcom Ukraine  sends ASK FOR plan acceptance  messages to both 
+agents. Finally, both agents accept the proposed plan and return ANSWER  WITH  plan 
+acceptance  messages to the UACOM  agent, indicating that they accept the plan.  
+6. Conclusions 
+This paper has reported our experience in the development of a real-world distributed 
+decision support system. We have argued that a combination of knowledge based 
+systems technology and multiagent techniques is appropriate for this task, showed 
+how both approaches can be expressed homogeneously in a task-oriented knowledge 
+modelling framework, and sketched the impl ementation and operation of the system. 
+This paper claims to provide a pragmatic contribution in the area of multiagent 
+system design rather than a theoretical approach. We built our system around the 
+knowledge obtained during the knowledge elicitation phase of the project, whose 
+structure implied the “shape” of our agent model. By this, we have shown that, at the 
+time being, knowledge-based multiagent systems can be built in a principled fashion 
+on the basis of today’s knowledge engineering tools. Setting out from our experience in the ExperNet  project we argue that without our multiagent problem analysis and 
+knowledge-centred structuring approach the construction of the system would have 
+been much more difficult (or maybe even impossible given the available resources). 
+The key point for the success of our appro ach in the present cas e study lies in its 
+“parsimony” and “economic” efficiency. 
+Acknowledgements 
+This work has been supported by EU’s Inco-Copernicus project no. 960114 
+(ExperNet ). The partners from Ukraine, Technosoft and the Glushkov Cybernetics 
+Institute, provided expertise about network management. The partner Link S.A. from 
+Greece provided also expertise in networ k management and participate in the 
+knowledge elicitation process. The partner Ar istotle University of Thessaloniki from 
+Greece was the coordinator of the proj ect and, among others activities, was 
+responsible for the development software tools for knowledge representation and the 
+final implementation of the system (together with Link S.A). The partner from 
+Hungary, ML Consulting and Computing Ltd., provided a distributed logic 
+programming environment for the implementation of the final system. 
+References 
+1. Barbuceanu M., Fox S.: “COOL: A Language fo r Describing Coordination in Multi Agent 
+Systems”. Proc. ICMAS, 1995 
+2. Bassiliades N .; Vlahav as I.: “Processing Pr oduction Ru les in DEVICE, an Activ e 
+Knowledge Base S ystem”, Data  & Knowledge Engineering  24(2), pp. 117-155 , 1997 
+3. Brown, D.; Ch andras ekaran, B .: Design Prob lem-solving: Kn owledge Stru ctures and 
+Control Strateg ies, Morgan  Kauf man, 1989 
+4. Burmeister, B.: “Models and methodolog y for agent-or iented analy sis and design”.  Proc . 
+KI-96 Workshop on Ag ent-oriented Programming and Distributed Systems , DFKI, 1996 
+5. Chandrasekar an, B.; Johnson, T.; Smith, J.: “Task-Structure Analy sis for Knowledge 
+Modelling”. Communications of the ACM  35 (9), 1992 
+6. Clancey W.: “He uristic Classification”. Artificial Intell igence 27, 1985 
+7. Cockburn, D.; J ennings, N.: “ARCHON: A Distri buted Artificial Intellig ence Sy stem for  
+Industrial Applications”. In : Foun dations of DAI  (O’Hare & Jennings, eds.) , Wiley, 1996 
+8. Cuena J., Molina M.: "KSM:  An Environm ent for Design of Structured Knowledge 
+Models". In: Knowledge-based S ystems: Advan ced Concepts, Techniques and App lications  
+(Tzaf estas, ed .), World Scientific, 1997 . 
+9. Cuena J., Osso wski S.: “Distr ibuted Mode ls for Decision Support”. To ap pear in:  
+Introduction  to Distributed Artificial Intelligen ce (Weiß & Sen , eds.), MIT Press, 1998 
+10. Cuena, J .: “Los Sistem as m ultiagente b asados en el conocim iento: Una posible altern ativa 
+para la ingen iería del Software”. To  appear in  a special issue on DAI of Intelig encia  
+Artifi cial - Revista Iber oamerica na sobre I. A. (García-Serrano  & Ossowski, eds.) , 1998 
+11. George J. ; Schecht L.: “The NAS Hierar hical Network M anagement S ystem”. In:  
+Integrated  Netw ork management III , (Heger ing & Yemini, eds.), Elsev ier, 1993 
+12. Glaser, N.: Contribution to Kn owledge Mode lling in a Multi- Agent Framewo rk. Ph.D. 
+thesis, L’Univer sité Henr i Poin caré, Nacy Y, 1996 
+13. Gyires, T.: Inte lligen t Routing  Agents in W ide-Area Networ ks. Intell igent Agents fo r 
+Telecommunica tions Application s (Albay rak, ed.), IOS Press, 199 8  
+14. Matov A.: “The development of Inte rnet- like networks in Ukraine” . Netw orks and  
+Telecommunica tions,, no .2, 1997 , pp.4-11 
+15. McIntyre A.: KREST User Manual 2.5 . Vrije Universiteit Brussel, AI lab , Brussels, 1993 
+16. Moulin B., Br assard M.: “A scenario-b ased design method an d an environment for the 
+developm ent of  multiagent s ystems”. In: DAI Architectures and Modelling  (Zhang & 
+Lukose, eds.) , Springer, 1995 
+17. Müller, H.-J .: “Negotia tion Prin ciples”. In: Foun dations of DAI  (O’Hare & Jennings, eds.), 
+Wiley , 1996 
+18. Newell A .: "The Knowledge  Level". Artificial In telligence 18, 1982, pp . 87-127 
+19. Ossow ski S.: Social Structure  in Artifi cial Agent Socie ties. LNAI 1535, Springer , 1998 
+20. Puerta A.R. , Tu S.W ., Musen M.A.: “ Modelli ng Tasks with Mechanism s”. International 
+Journal of Intelligent S ystems, Vol. 8, 1993 . 
+21. Rao, A .; Georgeff, M. : “BDI Agents: From  Theo ry to Pra ctice”. Proc ICMAS-95 , 1995 
+22. Sichman J., De mazeau Y. : “Exploiting  Social Reasoning to deal wi th Agen cy Lev el 
+Inconsistenc ies”. Proc.  ECAI-94 , 1994 
+23. Somers, F.: HYBRID: Intel ligent Agents for Distributed ATM Network Management . 
+Intell igent Agents for Tele communications  Appl ications  (Albay rak, ed.), IOS Press, 1998  
+24. Vlahavas , I. et al.: “System Archite cture of  a Dis tributed  Expert S ystem for the  
+Management of  a National Data Network”. Proc. In t. Conf.  on Artif icial Intelligen ce – 
+Methodolog y, Systems, Applications ( AIMSA) , Springer, 1998 
+25. Wielinga B .J., Schreiber A.T., Br euker J.A.: "KADS: A Modelling Approach to  
+Knowledge Eng ineering" . Knowledge Acquisition , 1992 . 
+ 
+ 

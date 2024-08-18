@@ -1,0 +1,163 @@
+HOL-OCL
+A Formal Proof Environment for UML/OCL
+Achim D. Brucker1and Burkhart Wolﬀ2
+1SAPResearch, Vincenz-Priessnitz-Str. 1, 76131 Karlsruhe, Germany
+achim.brucker@sap.com
+2Information Security, ETH Zurich, 8092 Zurich, Switzerland
+bwolff@inf.ethz.ch
+Abstract We present the theorem proving environment HOL-OCL that
+is integrated in a Model-driven Engineering ( MDE) framework. HOL-OCL
+allows to reason over UMLclass models annotated with OCLspeciﬁca-
+tions. Thus, HOL-OCL strengthens a crucial part of the UMLto an object-
+oriented formal method. HOL-OCL provides several derived proof calculi
+that allow for formal derivations establishing the validity of UML/OCL
+formulae. These formulae arise naturally when checking the consistency
+of class models, when formally reﬁning abstract models to more concrete
+ones or when discharging side-conditions from model-transformations.
+Key words: HOL-OCL ,UML,OCL, Formal Method, Theorem Proving
+1 Introduction
+TheHOL-OCL system ( http://www.brucker.ch/projects/hol-ocl/ ) is an in-
+teractive proof environment for UML[5] and OCL[4] speciﬁcations that we devel-
+oped as a conservative, shallow embedding into Isabelle/ HOL. This construction
+ensures the consistency of the underlying formal semantics as well as the correct-
+ness of the derived calculi. Together with several automated proof-procedures,
+we provide an eﬀective logical framework supporting object-oriented modeling
+and reasoning with a particularly clean semantic foundation.
+2 The Architecture and its Components
+2.1 Overview
+HOL-OCL [1, 2] is integrated into a framework [3] supporting a formal, model-
+drivensoftwareengineeringprocess(seeFigure1).Technically, HOL-OCL isbased
+on a repository for UML/OCLmodels, called su4sml, and on Isabelle/ HOL; both
+are written in SML.HOL-OCL is based on the SMLinterface of Isabelle/ HOL.
+Moreover, HOL-OCL also reuses and extends the existing Isabelle front-end called
+Proof General well as the Isabelle documentation generator. Figure 2 gives an
+overview of the main system components of HOL-OCL , namely:
+–the data repository, called su4sml, providing XMIimport facilities,
+J. Fiadeiro and P. Inverardi (Eds.): fase2008, lncs4961,, pp. 97–100, 2008.
+c/circlecopyrtSpringer-Verlag Berlin Heidelberg 2008
+98 Achim D. Brucker and Burkhart Wolﬀ
+1..∗
+Role
+Class
++ Public Method
+# Protected Methodattribute: Type
+− Private MethodClass
++ Public Method
+# Protected Methodattribute: Type
+− Private MethodClass
++ Public Method
+# Protected Methodattribute: Type
+− Private Method
+ArgoUML
+...UML/OCL
+(XMI)orSecureUML/OCL AC
+ConfigC#
++OCL
+Code
+GeneratorRepositoryModel
+(su4sml)Model−Analysis
+and Verification
+(HOL−OCL)TransformationModelTest
+Harness
+HOL−TestGenValidationProof
+Obligations
+Test Data
+Figure1. A Toolchain Supporting a Formal Model-driven Engineering Process
+sml(Standard ml)su4sml Isabelle/holDatatypePackage hol-ocl Library TheoryMorpherhol-ocl UserInterface(basedonProofGeneral)HOL-OCL
+uml/ocl
+SpeciﬁcationimportProof
+Document
+(Theory Files)import
+Figure2. Overview of the HOL-OCL architecture.
+–thedatatypepackage,or encoder,whichencodes UML/OCLmodelsinto HOL;
+from a user’s perspective, it yields a semantic interface to the model,
+–theHOL-OCL librarywhichprovidesthecoretheoremsneededforveriﬁcation
+and also a formal semantics for the OCLbuilt-in operators, and
+–a suite of automated proof procedures based on rewriting and tableaux tech-
+niques.
+2.2 The Model Repository: su4sml
+The model repository su4sml[3] provides a data base for syntactic elements of
+UMLcore, namely class models and statemachines as well as OCLexpressions.
+HOL-OCL 99
+Moreover, su4sml provides an import mechanism based on the XMI, which is
+a standardized XMLﬁle format for UMLmodels. Most CASEtools for UMLcan
+export models in XMI.
+For class models, su4sml resembles the tree structure given by the contain-
+ment hierarchy. For example, a class contains attributes, operations, or statema-
+chines. OCLexpressions naturally translate into an abstract SMLdatatype in
+SML. This abstract datatype is modeled closely following the standard OCL2.0
+metamodel. In addition to these datatype deﬁnitions, the repository structure
+deﬁnes a couple of normalization functions, for example for converting associ-
+ation ends into attributes with corresponding type, together with an invariant
+expressing the cardinality constraint.
+2.3 The Encoder: An Object-oriented Datatype Package
+Encoding object-oriented data structures in HOLis a tedious and error-prone
+activity if done manually. We therefore provided a datatype package automating
+this task. In the theorem prover community, a datatype package is a module
+that allows one to introduce new datatypes and automatically derive certain
+properties over them.
+Ourdatatypepackagesextendsthegiventheorybya HOL-OCL -representation
+of the given UML/OCLmodel. This is done in an extensible way, i.e., classes can
+be added to an existing theory while preserving all proven properties. The theory
+extension comprises the following activities:
+1. declaration of HOLtypes for the classiﬁers of the model,
+2. encoding of type-casts, attribute accessors, and dynamic type and kind tests
+implicitly declared in the imported data model, and
+3. encode the OCLspeciﬁcation (including invariants and operation speciﬁca-
+tions) and combine it with the core data model.
+Overall, the datatype package encodes conservatively the user supplied model
+and derives the usual algebraic properties on object-oriented structures (up casts
+followed by down casts are idempotent, casts do not change the dynamic type,
+etc.; [1, 2] describe the details). The package also provides automatically proofs
+that the generated HOLmodel is a faithful representation of object-orientation;
+for example, inheritance is expressed as inclusion of the sets of objects along the
+subclass hierarchy of the model. This strategy, i.e., deriving properties of the
+UML/OCLmodel from generated conservative deﬁnitions in HOL, ensures two
+very important properties:
+1. our encoding fulﬁlls the required properties, otherwise the proofs fail, and
+2. doing all deﬁnitions conservatively ensures the consistency of our model.
+The time spent for all these proof activities during the import is typically below
+a minute; the approach is therefore feasible in a proof environment.
+100 Achim D. Brucker and Burkhart Wolﬀ
+2.4 The Library
+An important part of HOL-OCL is a collection of Isabelle theories describing the
+built-in operations of UML/OCL. This comprises over 10000 deﬁnitions and the-
+orems such as properties of basic types like Integer,Real, and Stringas well
+as collection types such as Bag,Sequence andSet, and also the common super-
+class OclAny. Besides the model-speciﬁc part covered by the datatype package
+described in Section 2.3, the library with its body of derived rules represents the
+generic part of data-structure related reasoning in OCL. Moreover, these theories
+also contain new proof tactics written in SML.
+2.5 Automated Proof Procedures
+The operations of OCLhave a certain representational distance to the operations
+ofHOL: for example, the logical connectives and,or,forAll,existsare based
+on a three-valued logic (i.e., a strong Kleene logic) with an additional element
+OclUndefined (⊥) and properties such as OclUndefined and false = false .
+Moreover, all operations are implicitly parametrized over the pre-sate and the
+post-state; OCLexpressions are assertions and not only logical formulae.
+The major Isabelle proof procedures, e.g., simpandauto, cannot handle this
+logic directly, except for a fairly trivial fragments. We therefore implemented our
+ownversionsofacontext-rewriterandatableaux-prover.Theselanguagespeciﬁc
+variants oﬀer a reasonably high degree of proof automation for OCL.
+3 Conclusion
+We provide a proof-environment for an object-oriented speciﬁcation method
+based on UMLclass models annotated with OCLconstraints. On this bases,
+we can formally reason over such UML/OCLmodels. For example, we can prove
+the satisfyability of class invariants, that postconditions do not contradict with
+class invariants, or proof-obligations arising from stating that one class-model
+is a reﬁnements from another.this The system has been used in several smaller
+and medium-sized case studies [1, 2].
+References
+[1] Achim D. Brucker. An Interactive Proof Environment for Object-oriented Spec-
+iﬁcations . Ph.d. thesis, ETHZurich, March 2007. ETHDissertation No. 17097.
+http://www.brucker.ch/bibliography/abstract/brucker-interactive-2007 .
+[2] Achim D. Brucker and Burkhart Wolﬀ. The HOL-OCL book. Technical Report 525,
+ETHZurich, 2006. http://www.brucker.ch/bibliography/abstract/brucker.
+ea-hol-ocl-book-2006 .
+[3] Achim D. Brucker, Jürgen Doser, and Burkhart Wolﬀ. An MDAframework sup-
+porting OCL.Electronic Communications of the EASST, 5, 2006. ISSN 1863-2122.
+http://www.brucker.ch/bibliography/abstract/brucker.ea-mda-2006-b .
+[4] Object Management Group. UML2.0OCLspeciﬁcation, October 2003. Available
+asOMGdocument ptc/03-10-14.
+[5] Object Management Group. Uniﬁed modeling language speciﬁcation (version 1.5),
+March 2003. Available as OMGdocument formal/03-03-01.

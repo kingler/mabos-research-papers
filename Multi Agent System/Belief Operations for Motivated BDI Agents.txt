@@ -1,0 +1,935 @@
+Belief Operations for Motivated BDI Agents
+Patrick Krümpelmann Matthias Thimm
+Manuela Ritterskamp Gabriele Kern-Isberner
+Information Engineering Group, Department of Computer Science, Dortmund University of Technology
+ABSTRACT
+The beliefs of an agent reﬂecting her subjective view of the
+world constitute one of the main components of a BDIagent.
+In order to incorporate new information coming from other
+agents, or to adjust to changes in the environment, the agent
+has to carry out belief change operations while taking meta-
+logical information on time and reliabilities into account.
+In this paper, we describe a framework for belief operations
+within a BDIagent, sketching the interactions of beliefs with
+desires and intentions, respectively. Furthermore, we illus-
+trate how motivations and know-how come into play in our
+agent model of this framework. We focus on the presenta-
+tion of a complex setting for belief change that makes use of
+techniques both from merging and update, and provides a
+BDIagent with advanced reasoning capabilities. Extended
+logic programs under the answer set semantics will serve as
+the basic knowledge representation formalism.
+Categories and Subject Descriptors
+I.2.11 [ Distributed Artiﬁcial Intelligence ]: Intelligent
+agents, Multiagent systems
+General Terms
+Design, Theory, Human Factors
+Keywords
+Multiagent System, BDI, Belief Revision, Motivation
+1. INTRODUCTION
+For realising agents, the BDImodel [16] has become a lead-
+ing paradigm of the ﬁeld. This model distinguishes between
+Beliefs ,Desires , and Intentions as the main components of
+an agent’s mind, the interactions of which determine her
+behaviour. Roughly, Beliefs comprise (plausible) knowledge
+the agent has concerning the current situation and how the
+world works in general, Desires encode what she wishes to
+achieve and hence represent possible goals, whereas Inten-
+tions focus on the next actions the agent should undertake to
+achieve the current goal. The role of Beliefs in this scenario
+is to provide the agent with useful information to evaluate
+Cite as: Belief Operations for Motivated BDI Agents, Patrick Krüm-
+pelmann, Matthias Thimm, Manuela Ritterskamp, Gabriele Kern-Isberner,
+Proc. of 7th Int. Conf. on Autonomous Agents and Multia-
+gent Systems (AAMAS 2008) , Padgham, Parkes, Müller and Parsons
+Copyright c/circlecopyrt2008, International Foundation for Autonomous Agents and
+Multiagent Systems (www.ifaamas.org). All rights reserved.
+the current situation and to ﬁnd reasonable and eﬀective
+ways to achieve her goals.
+In this paper we introduce the KiMAS framework and
+sketch the complete model of a KiMAS agent. The KiMAS
+project (Knowledge in Multiagent Systems ) [11] is a multi-
+agent system, that focuses on the representation of beliefs
+and on methods to process information exchanged among
+the agents. It has been implemented in a student project
+group using the Jadex framework [1] and DLV [3] as the un-
+derlying answer set reasoner. The model of a KiMAS agent
+bases on the BDI model. In addition it explicitly diﬀer-
+entiates between the logical belief about the world and the
+beliefs about how speciﬁc goals can be achieved ( know-how ),
+as the two types of belief inﬂuence the dynamics of the inter-
+nal state of the agent diﬀerently. Furthermore, we introduce
+motivations to emphasise the autonomy and personality of
+the agents and to model the eﬀect of their character on the
+selection of new goals.
+We focus the representation of the KiMAS framework on
+theBeliefs component which may be quite complex in itself.
+Besides the representation of generic and evidential beliefs,
+it must also dispose of methods to process information, be
+it for inference, updating, or merging beliefs. However, the
+agent should not believe everything she is told, the reliability
+of information depends on the reliability of the source that it
+came from. Moreover, in a multiagent environment, pieces of
+information coming from diﬀerent agents can be conﬂicting,
+so the agent should be provided with strategies to resolve
+such conﬂicts.
+In this paper, we present a complex picture of belief opera-
+tions, taking prior beliefs, new information, and metalogical
+information about time and credibility into account. We
+distinguish between belief bases, epistemic states, and belief
+sets, and realise dynamic belief changes via a combination of
+base merging and inductive inference by the aid of an update
+mechanism. Extended logic programs will serve as the basic
+medium to represent beliefs, and belief sets, as collections
+of most plausible beliefs, will be obtained via answer set se-
+mantics. This epistemic component will endow our agent
+with advanced reasoning capabilities.
+The rest of this paper is organised as follows: In Sec. 2 we
+start with some preliminaries for extended logic programs
+under the answer set semantics. Sec. 3 covers the epistemic
+capabilities of the agents and introduces an exemplary sce-
+nario to be modeled using our multiagent framework. In
+Sec. 4 we describe the environment and the communication
+within the system. In Sec. 5 we introduce the extensions
+we made to the BDImodel and the operations used to alter
+421(eds.),May,12-16.,2008,Estoril,Portugal,pp. 421-428.
+the internal state of the agent. Sec. 6 focuses on operations
+for revising the belief base of agents, particularly on one of
+our implemented belief base operators. Then we conclude
+in Sec. 7 with perspectives for further work.
+2. PRELIMINARIES
+We are working with extended logic programs under the
+answer set semantics [6] which are capable of dealing with
+incomplete information in open environments. An extended
+logic program consists of rules over a set of atoms Σ using
+strong negation¬and default negation not. A literal Lcan
+be an atom Aor a negated atom ¬A. The complement of
+a literal Lis denoted by¬Land is AifL=¬Aand¬Aif
+L=A. The set of literals is denoted by L.
+A rule ris written as H(r)←B where the head of the rule
+H(r) is either empty or consists of a literal Land the bodyB
+is a set of literals {L0, . . . , L m,notLm+1, . . . , notLn}. The
+body consists of a set of default negated literals denoted
+byB−={notLm+1, . . . , notLn}and a set of not default
+negated literalsB+={L0, . . . , L m}. Given this we can write
+a rule as H(r)←B+,B−. IfB=∅we call ra fact. If
+H(r) =∅we call ra constraint.
+A set of literals which is consistent, i. e. it does not contain
+complementary literals Land¬L, is called an interpretation
+I. A literal Listrue inI(I|=L) iﬀL∈Iandfalse
+otherwise. The body Bof a given rule ristrue inIiﬀ each
+L∈B+istrue inIand each L∈B−isfalse inI. A rule r
+istrue inI(I|=r) iﬀH(r) istrue inIwheneverBistrue
+in I. An interpretation is a model of a program P(I|=P)
+ifI|=rfor all r∈P.
+The reduct PSof a program Prelative to a set Sof literals
+is deﬁned as: PS:={H(r)←B+(r)|r∈P,B−(r)∩S=∅}
+An answer set of a program Pis an interpretation Iwhich
+is a minimal model of PI. In our framework an agents epis-
+temic state is represented by an extended logic program P.
+3. AGENTS AND BELIEFS
+3.1 The epistemic capabilities of agents
+We assume our agents to be equipped with an epistemic
+state in which both factual and conditional knowledge can
+be represented and which is provided with a basic infer-
+ence mechanism that allows the agent to draw logical and
+plausible conclusions. From a conceptual point of view, the
+distinction between evidential and generic beliefs is crucial.
+Whereas evidential knowledge or belief is often volatile and
+subject to changes, generic beliefs are usually deeper epis-
+temically entrenched and can be applied to diﬀerent situ-
+ations. Mostly, generic beliefs have the form of rules that
+establish meaningful relations between isolated pieces of in-
+formation and hence determine the intellectual capability of
+an agent.
+Moreover, in order to judge information more adequately
+and to solve conﬂicts between contradictory pieces of infor-
+mation, some metalogical formalism to allow for qualitative
+or quantitative comparisons must be provided. In belief re-
+vision theory, often degrees of epistemic entrenchment or
+degrees of disbelief [5] are used. For the evaluation of in-
+coming information, the agent will ﬁnd it quite useful to es-
+timate the degree of reliability of the corresponding source
+which will be the environment or another agent. We will
+usually assume that the agents can not be completely sureabout the truth of information they get. Other agents may
+be dishonest or simply stupid, observations from the envi-
+ronment may be fallacious. Nevertheless, each agent (as in
+reality) should be capable of judging incoming information
+with regard to credibility, combining her currently held be-
+liefs with the content and some meta-information about the
+corresponding message.
+The basic structure that we will use here to implement an
+agent’s epistemic state is given by extended logic programs
+under the answer set semantics [6]. Together with metalog-
+ical information on both time and credibility and a change
+mechanism, this framework will prove to be powerful enough
+to satisfy the requirements sketched above. To comply with
+the terminology of belief revision, logic programs will serve
+as basic ingredients for belief bases. A metalogical formalism
+will be provided by ranks of credibility that can be assigned
+to both rules and facts and turn the logic program into a
+ranked knowledge base. Any incoming information will also
+be assigned a rank in dependence of the reliability of its
+source. An update mechanism which is based on the ideas
+of [4] will make use of these ranks to incorporate the new in-
+formation. To be more precise, updating in this scenario will
+mean to compare ranks and give way to the most credible
+information which may yield quite a complex restructuring
+of the logic program. In this way, all available information
+is compiled into the resulting update logic program, which
+will be used as an epistemic state. From this, we obtain
+belief sets as representation of the most plausible beliefs via
+(credulous) answer set inference.
+The formal picture can be described as follows. Our up-
+date mechanism/diamondmathtakes any sequence of logic programs and
+yields a logic program, which represents as much informa-
+tion of the sequence as possible and solves conﬂicts by taking
+the order of the sequence into consideration:
+/diamondmath: (P1, . . . , P n)/mapsto→P∗
+We stick to the term “update” here, although this operation
+may also be looked upon as a kind of inductive reasoning
+for ranked knowledge bases. The update operator is the
+most important element within our framework of belief op-
+erations, as it tightens up loosely linked belief base informa-
+tions to return an epistemic state P∗. From this, the belief
+setBel(P∗) is computed by (credulous) answer set semantics
+as a set of literals. Please note that we give up the demand
+for deductive closure here which is usually imposed on belief
+sets.
+However, the result of update depends crucially on the
+input sequence of logic programs. Basically, this sequence is
+built up from the agent’s initial beliefs and from new pieces
+of information that the agent receives over time. Prior belief
+bases (represented as ranked logic program bases) and new
+information are merged via a non-prioritized base revision
+operation which yields a posterior ranked program base. In
+this way, ideas from both revision and update formalisms are
+used and interlaced in our approach, based on the unifying
+belief change framework developed in [8].
+We postpone further explanations and discussions to Sec-
+tion 6. First, we will present an example that will illustrate
+ideas and techniques and continue with a general represen-
+tation of our multiagent system.
+3.2 The Case of Evelyn
+For our implemented system we used an adaptation of a
+criminal story by Agatha Christie as a complex scenario.
+422
+The following typical fragment will be used to illustrate our
+multiagent system throughout this paper:
+Evelyn was murdered on Friday either by Bob
+(her husband) or by Carl (her ex-lover). On Sat-
+urday the police oﬃcer Alice is investigating this
+crime and with her are Bob, Carl and Dave, Eve-
+lyns brother, who lives in the same house as Eve-
+lyn and Bob and serves as a witness throughout
+the investigation.
+This scenario yields to a multiagent system which consists
+of four agents: Alice ,Bob,Carl, and Dave . In this system,
+the agent Alice tries to determine who is the murderer of
+Evelyn . All agents have speciﬁc beliefs, which will inﬂuence
+their behaviour in the system. The initial beliefs of the
+agents are informally given by
+•Alice’s beliefs:
+–Between Tuesday and Thursday Bob found out,
+that Evelyn had an aﬀair with Carl.
+–If someone threatens someone else to kill him and
+this one got killed during the next few days and
+the ﬁrst one has no alibi for the time of crime,
+then the ﬁrst one is the murderer.
+–Evelyn was jogging on Wednesday and on Friday.
+•Bob’s beliefs:
+–Evelyn told Bob on Thursday, that she had an
+aﬀair with Carl but quit the relationship.
+–Bobwas on a work trip the whole Wednesday.
+–Bobwas on a work trip the whole Friday.
+•Carl’s beliefs:
+–Carl murdered Evelyn on Friday.
+–Bobwas on a work trip the whole Wednesday.
+–Carl had a quarrel with Evelyn on Wednesday.
+He was angry, because she broke up with him.
+•Dave’s beliefs:
+–On Wednesday Dave overheard a quarrel between
+Evelyn and (apparently) her husband. During
+this quarrel (apparently) Bob told Evelyn , that
+he hates her and wishes she would be dead.
+–Each time Bob is on a work trip, Evelyn goes
+jogging that day in the morning (and only then).
+–A quarrel between two persons is a disharmony
+between them.
+–On Wednesday Dave sawCarl in the house.
+Figure 1 shows (informally) an exemplary dialog between
+the participating agents that might happen in this scenario
+(agent names are abbreviated by their ﬁrst letters). This
+dialog will be used in the upcoming sections to illustrate
+important properties of our multiagent system.
+We do not give a full representation of the beliefs as an
+answer set program but exemplary for some fragments.
+Example 1.The initial (logical) beliefs of Dave can be
+represented as:
+quarrel (bob, evelyn ). threatened (bob, evelyn ).
+jogging (evelyn, DAY )←worktrip (bob, DAY ).
+worktrip (bob, DAY )←jogging (evelyn, DAY ).
+disharmony (X, Y )←quarrel (X, Y ).
+Aasks C: “Did you murder Evelyn?”
+Canswers A: “No.”
+Aasks B: “Did you murder Evelyn?”
+Banswers A: “No.”
+Aasks D: “Did you notice any disharmony
+between Evelyn and Bob
+or Evelyn and Carl?”
+Danswers A: “I overheard a quarrel on Wednesday,
+where Bob wished Evelyn was dead.”
+(Alice now thinks, that Bob
+is the murderer)
+Aasks B “Where were you on Friday?”
+Banswers A “I was on a work trip.”
+Aasks D “Can you conﬁrm this statement?”
+Danswers A “I could, if you can tell me, if
+Evelyn was jogging on Friday.”
+Aanswers D “Evelyn was jogging on Friday.”
+Danswers A “Then I can conﬁrm this statement.”
+(Bob has an alibi)
+Aasks B “Where were you on Wednesday?”
+Banswers A “I was on a work trip.”
+Aasks D “Can you conﬁrm this statement?”
+Danswers A “I could, if you can tell me, if
+Evelyn was jogging on Wednesday.”
+Aanswers D “Evelyn was jogging on Wednesday.”
+Danswers A “Then I can conﬁrm this statement.”
+Aasks C “Did you meet Evelyn on Wednesday?”
+Canswers A “No.”
+Aasks D “Is that true?”
+Danswers A “No.”
+(Alice infers that Carl was the
+one who threatened Evelyn
+and therefore he is the murderer)
+Figure 1: Exemplary dialog in the Evelyn -scenario
+4. COMMUNICATION/INTERACTION
+Every action an agent performs in a given world situation
+results in a speciﬁc event in this situation. As possibly many
+diﬀerent agents may be present at this event, they each per-
+ceive it in a diﬀerent way. In our system this is realised using
+a special abstract entity as the environment, which monitors
+the world evolvement and notiﬁes present agents on occur-
+ring events. In general agents may perform many diﬀerent
+kinds of actions. As we focus our work in this paper on the
+belief component, we do not emphasise the description of a
+situation calculus. Therefore we restrain the set of possible
+actions to message actions, where one agent wants to com-
+municate an information to one or more other agents. Our
+communication protocol is loosely based on KQML [2] and
+thus follows the directives of speech act theory [12]. Mes-
+sage actions result in one or more messages which are sent
+to the present agents.
+Definition 1 (Message). AMessage is a quadruple
+(S, R, T, C ), where Sis the sender, Ris the set of receivers,
+Tis the type and Cis the content of the message. The set
+of all possible messages is denoted by M.
+In our system, the content of a message is represented as an
+extended logic program.
+Once an agent performs a message action, the resulting
+event is interpreted by the environment and translated into
+one or more messages to speciﬁc agents. This way the eaves-
+dropping of messages without notice of the participating
+agents is made possible. Furthermore the environment can
+423
+alter the content of the message if appropriate, e. g remov-
+ing the sender of the message if the communication channel
+is somehow distorted.
+Although speech act theory describes many types of mes-
+sages, we only use two: query (q) and general message (g).
+If an agent poses a query to another agent, she expects an
+answer from her which must be of type general message . In
+general the type general message is used to exchange infor-
+mation between agents.
+We distinguish three subtypes of queries:
+1.instantiate -queries: the querying agent wants the an-
+swering agent to instantiate a given non-fully-grounded
+predicate, e. g. the query of Alice toBob, in which Alice
+wants to know where Bobwas on Friday can be repre-
+sented as location (bob, X, friday ) and then the answer
+ofBobwould be location (bob, worktrip, friday ).
+2.element-info -queries: the querying agent wants to ob-
+tain some information about an individual or an ob-
+ject, e. g. Alice asks Dave what he knows about Bob.
+In this case the query would only contain the con-
+stant “ bob” and Dave could answer with honest (bob)
+orloves (bob, evelyn ) or both.
+3.yes/no -queries: the querying agents wants to know if
+the other agent believes the given ground instance of a
+speciﬁc predicate, e. g. Alice asks Carl if he murdered
+Evelyn , i. e. she asks murderer (carl, evelyn ), and he
+returns “ no”.
+Example 2.Consider the Evelyn -scenario of Section 3.
+Dave overheard a quarrel between Evelyn and apparently
+Bob. But the actual initiator of the message act was Carl.
+The message action of Carl contained the information, that
+he hates Evelyn (hate(carl, evelyn )). Then the environment
+sends the message (carl,{evelyn}, g, hate (carl, evelyn ))to
+Evelyn , because she was near Carl when he performed this
+action. Dave was in a room next to the room of the mes-
+sage action, so the communication channel has been dis-
+torted. The environment attends this distortion by alter-
+ing the message that is sent to Dave . Let xdenote an
+unknown constant, then Dave would receive the message
+(x,{evelyn}, g, hate (x, evelyn )). Internally Dave would as-
+sume that xmust be “ bob” (perhaps because he thinks Bob is
+at home) and appropriately update his beliefs.
+5. AGENT MODEL
+Our agent model is inspired by the commonly known BDI-
+model, see [16] for an overview. The BDI-model divides an
+agent’s interior state into three components: Beliefs ,Desires
+andIntentions . We denote Des as the set of all desires or
+possible goals an agent can have where a desire or a possible
+goal is an atom that an agent wants to become true in her
+beliefs. An agent maintains a subset D⊆Desof all possible
+goals, e. g. agent Alice in the running example (informally)
+has desires D={murder case solved, being healthy}. Ev-
+ery agent has at each moment one selected goal, which he
+currently pursuits, denoted selected (D). Thus agent Alice
+hasselected (D) =murder case solved . Similary an agent
+maintains a set of abstract intentions I⊆Int, where Intde-
+notes the set of all possible intentions. Intentions describe
+the aims of the agent he currently pursuits in order to fulﬁll
+her selected goal. They are represented as atoms as well
+but are easier to fulﬁll than desires. Everytime an agentselects a new goal to pursuit, this goal also becomes the
+next intention. In general at any time the set Icorrelates
+directly to the current pursuited goal selected (D) and con-
+tains the next subgoals the agent wants to become true in
+order to fulﬁll selected (D). Some intentions can be directly
+fulﬁlled by performing an atomic action. These intentions
+are called atomic intentions . The set Iis often seen as a
+stack [7], where the top element might be removed by an
+atomic action or be split up into more concrete intentions
+and stacked upon I. When the stack is empty, the selected
+goal is fulﬁlled.
+An agent in our framework interacts with her fellow agents
+by means of messages as deﬁned in Deﬁnition 1. In messages
+our agents exchange extended logic programs. When inter-
+acting they also keep track of the temporal order in which
+they receive messages and internally build up information
+objects .
+Definition 2 (Information Object). Aninforma-
+tion object is a tuple I= (P, S, T ), where Pis an extended
+logic program, Sis the source of PandTrepresents the
+point in time Phas been received.
+These information objects are then used to represent an
+agents belief base.
+Definition 3 ( KiMAS belief base). AKiMAS belief
+base of an agent Ais a set of information objects KBA=
+{IA
+0, . . . , IA
+n}containing all information objects maintained
+from received messages and the initial beliefs represented by
+a special information object IA
+0= (PA
+ini, A, t 0). LetKbe the
+set of all KiMAS belief bases.
+We further extend the agent model by introducing know-how
+[15, 14] and motivation [9, 10] as explicit components in the
+representation of an agent.
+Definition 4 ( KiMAS agent). AKiMAS agent is a
+tuple A= (KB, K h, D, I, C, M, ϕ ), where KB∈K is the
+belief base of the agent, Khis the know-how of the agent,
+D⊆Des, I⊆Int,Cis a set of atomic actions the agent
+can perform, Mis the (basic) motivation of the agent and
+ϕis a functional component.
+The functional component of a KiMAS agent describes the
+dynamics of the behaviour of the agent, e. g. belief revision
+or goal generation. In the following subsections we further
+discuss know-how, motivation and the functional component
+of aKiMAS agent.
+5.1 Know-How
+While in the BDI-model the whole belief of an agent is cap-
+sulated in one component, we explicitly distinguish between
+the logical belief, also called know-that, and know-how [14].
+In [14] know-that is described as the belief an agent has
+about the world, the current situation and her factual knowl-
+edge. Besides that, a reasonable agent also has beliefs about
+how to act to reach speciﬁc goals. For example, agent Al-
+icein our running example knows, that in order to deter-
+mine the murderer of Evelyn she ﬁrst has to determine the
+suspects and ﬁnd some evidence. Without some structural
+knowledge on goals and subgoals an agent can not relate her
+actions to her goals and therefore can not act goal-oriented.
+While in [14] know-how is discussed under a very theoret-
+ical point of view, we take here a more pragmatical view on
+424
+know-how, as we see it as a tool for an agent that gives him
+the capability of fundamental planning routines. Know-how
+structures intentions into hierarchies which helps an agent
+to split up abstract intentions into more concrete intentions,
+which can be fulﬁlled more easily, down to atomic intentions,
+which can be fulﬁlled by an atomic action. For the next def-
+inition let S∗denote all ordered sequences of elements of the
+ﬁnite set S.
+Definition 5 (Know-How). Know-how Khis a set of
+pairs (α, β), s. t. α∈Int and β∈Int∗. LetKHdenote the
+set of all possible know-how structures.
+Example 3.The intention murder case solved ofAlice
+could be split up into less abstract intentions
+β= (suspects found, evidences found ).
+Thus (murder case solved, β )might be in the know-how of
+Alice .
+Furthermore, there may be other pairs with the intention
+solve murder case as the ﬁrst component in the know-how
+ofAlice , which gives her the possibility to choose from dif-
+ferent alternatives to pursue her goals. Moreover, as the
+intentions suspects found andevidences found are proba-
+bly not atomic intentions, these should be further split up
+by appropriate pairs in the know-how of Alice .
+Know-how in our model is not an active component of an
+agent but a data structure. It is used by speciﬁc functions
+of an agent to deliberate what to do next. These functions
+will be presented in Section 5.3.
+5.2 Motivation
+The desires Desof autonomous agents correspond to the set
+of possible goals. An agent maintains a subset D⊆Des,
+but she might not be able to aim at several of these de-
+sires simultaneously. Thus a mechanism is needed to de-
+cide, which d∈Dwill be taken into consideration next. In
+this context we introduce motivations [9, 10]. The possible
+motivations Mot are non-derivative components that char-
+acterise the personality of an autonomous agent and provide
+the agent with a higher-level control.
+These components, e. g. greed or altruism, do not specify
+a state of aﬀairs to be achieved and can hardly be described
+in logical terms. Therefore they are not equal to the notion
+of goals in the classical sense of artiﬁcial intelligence. In-
+stead motivations provide reasons for a goal, which could be
+having someone else’s money or being generous. More pre-
+cisely, in our system a motivation Minduces a total preorder
+≤Mon the set of possible goals, which is a total, transitive
+and reﬂexive relation. Let d1, d2∈Dbe two desires, then
+d1≤Md2iﬀ the motivation Mford1is at least as strong
+as for d2. Thus the set of the agent’s desires is partitioned
+into several sets D= (DM
+0, . . . , DM
+k) with
+d1∈DM
+i∧d2∈DM
+j∧i≤j⇔d1≤Md2
+The next goal, selected (D), will be a randomly selected g∈
+DM
+0, as the set DM
+0contains the desires which are motivated
+the most.
+To simplify matters we let every agent be driven by only
+one motivation M, which forms the personality of the agent.
+In the case of Alice her motivation Mis the sense of justice:
+Example 4.LetM=sense ofjustice be the basic mo-
+tivation of Alice and let murder case solved andbeing healthy be her only desires. The set of desires will be
+partitioned into DM
+0={murder case solved}andDM
+1=
+{being healthy}, as Alice’s motivation provides a reason to
+solve the case while it does not amplify the volition to eat
+healthy food. Thus murder case solved will be selected as
+her next goal.
+5.3 The functional component
+Given an initial internal state of a KiMAS agent, namely
+KB,Kh,D,I,C,M, the agent acts and evolves in her
+environment and thus her internal state changes over time.
+The procedures that determine how an agent uses her cur-
+rent state to deliberate her next actions are described by
+herfunctional component . The functional component of a
+KiMAS agent is a set of functions, which revises her internal
+state in a particular situation or outputs an action that the
+agent wants to perform.
+Definition 6 (Functional component). We call a
+tuple ϕ= (αbel, αgoal, αsubgoal , αaction )afunctional com-
+ponent , ifαbelis a belief operation, αgoalis a goal gener-
+ation operation, αsubgoal is a subgoal generation operation
+andαaction is an action selection operation.
+At ﬁrst an agent has to handle incoming messages by revis-
+ing her beliefs of the world accordingly. A belief operation
+is a function, that revises (in an abstract manner) the log-
+ical belief base of an agent appropriately to a newly given
+evidence, i. e. a newly received message.
+Definition 7 (Belief base operation). Abelief op-
+eration is a functionK×M→K .
+A belief base operation incorporates a newly given evidence
+into an agents belief base. In our approach this is done by
+just merging the new information into the belief base and let
+an epistemic belief operation do the actual belief operation,
+e. g. revision or update. In the upcoming section we describe
+our solution of an epistemic belief operator, which follows
+the approach of causal rejection [4].
+The main purpose of an agent is to act in her environment.
+As our agents are goal-driven, they have to act according to
+their current goals and intentions. Suppose an agent has
+no intentions at a given time ( I=∅). This means, that
+the agent does not currently pursue any goal and therefore
+there is no need to act in any way. In this case the agent
+has to select a goal from her desires Dand make it her next
+intention. As described in Subsection 5.2 the motivation M
+of the agent is used for the determination of a new selected
+goal. A goal generation operation is a function, which uses
+an agent’s motivation to generate the newly selected goal,
+which is put onto her intentions stack. It is also inﬂuenced
+by the current belief of an agent, as some goals might only
+be triggered, if some outer circumstances hold.
+Definition 8 (Goal generation). Agoal generation
+operation is a functionK×Mot×P(Des)→Int.
+Intentions can be fulﬁlled directly by an atomic action or
+must be split up in less abstract intentions by using the
+agent’s know-how. So if the intentions of an agent are not
+empty ( I/negationslash=∅) but there is no intention directly executable
+by an atomic action, then a less abstract subgoal has to be
+generated. A subgoal generation operation uses the agents
+know-how to split up the current pursuited goal or the next
+intentions into more concrete intentions.
+425
+Definition 9 (Subgoal generation). Asubgoal
+generation operation is a functionK×KH× Int→P(Int).
+Intentions are split up recursively down to atomic intentions.
+If at least one intention is atomic, then the agent can select
+the appropriate atomic action, execute it and remove the
+intention from I. If in one situation more than one action is
+possible, then an agent has to select one of these actions ﬁrst.
+An action-selection operation chooses one action to perform
+from a set of actions. We abstract here from any preferences
+that the agent might have in order to decide which action
+to perform.
+Definition 10 (Action selection). Anaction
+selection operation is a function P(Int)×P(C)×K→ C.
+Figure 2 shows a graphical representation of a KiMAS agent.
+In this representation the functional dependencies are rep-
+resented by dashed lines and action ﬂow is represented by
+solid lines.
+Agent
+KB I
+Kh Dbelief base 
+operationi ∈ I atomic?
+I = ∅ ?new goal 
+operationsubgoal generation 
+operationaction selection 
+operation
+noyes
+yes no
+MCEnvironment
+Figure 2: A graphical representation of a KiMAS -
+Agent
+Example 5.
+In our example consider the situation, in
+which Alice asks Dave if he could conﬁrm that Bob was on
+a work trip on Friday. At ﬁrst Dave updates his beliefs KB
+with the information, that Alice wants to know the truth
+value of worktrip (bob, friday ). As Dave does not pursue
+any intentions at this time, he has to generate a new goal in
+order to react to this change of beliefs accordingly. The basic
+motivation of Dave here is family
+bond and this motiva-
+tion leads to the goal sisters
+murderer
+determined . Based
+on this goal and the information that providing Alice with
+the needed knowledge would help to fulﬁll that goal, Dave
+needs to know, whether jogging (evelyn, friday )is true (be-
+cause then he can apply the rule worktrip (bob, DAY )←
+jogging (evelyn, DAY )) in order to answer Alice ’s query.
+Observe that Dave could also just answer unknown (a valid
+answer in this situation) instead of a useful answer, but this
+is not compatible with Dave ’s motivation. So Dave brings
+up the new intentions was
+evelyn
+jogging
+on
+friday and
+answer
+to
+alice . The ﬁrst intention can be fulﬁlled by ask-
+ingAlice about the truth value of jogging (evelyn, friday ).
+After getting the answer true from Alice and integrating
+jogging (evelyn, friday )into his beliefs Dave now believes
+thatworktrip (bob, friday )is true. Now he can directly ful-
+ﬁll the intention answer
+to
+alice by conﬁrming the original
+statement.
+6. BELIEF OPERATIONS
+The epistemic capabilities of the agents in our framework
+were introduced in Section 3.1. We will now describe the
+actual belief operations. Each agent has her initial beliefs in
+form of evidential knowledge and generic beliefs which are
+deeper entrenched than knowledge acquainted from other
+agents. The agent has to deal with messages received from
+other agents and from the environment itself. As stated,
+agents are not necessarily honest nor impeccable and thus
+an agent has to be careful when dealing with information
+obtained from such, more or less credible, sources.
+Our agents obtain information by receiving and processing
+messages, which contain the sender of the message. Thus,
+for each piece of information the agents know its origin and
+can use this to evaluate the truthfulness of this particular
+information.
+Definition 11 (Assessment). Anassessment cis a
+function c:A→{ 0, . . . , N}assigning a credibility value
+from a linearly ordered scale to an agent.
+An assessment is used to represent the credibilities an agent
+gives to other agents known to her. These credibilities are
+kept in a separate structure to allow for a dynamic change
+of credibilities within time.
+The belief bases of our agents are structured as stated
+in Deﬁnition 3. If an agent wants to perform reasoning an
+epistemic operator is applied to the belief base to get her
+current epistemic state.
+Definition 12 (Epistemic Operator). A function
+β:K→P which generates an extended logic program from
+aKiMAS belief base is called an epistemic operator .
+The resulting epistemic state of the epistemic operator is
+given to an answer set reasoner e. g. DLV [3] or smodels [13]
+which computes answer sets representing the belief sets of
+the agent.
+The belief base structure is based on information objects,
+which include meta information about time and source of
+information. The sources of information again are connected
+to current credibility values by means of an assessment. This
+structure enables epistemic operators to include credibility
+and temporal information into the reasoning process. Our
+framework can deal with a variety of epistemic operators
+potentially varying between diﬀerent agents.
+In the following we will describe the epistemic operator we
+developed and implemented. It is based on and extending
+[4], utilizing the structure and possibilities of our framework.
+We are working on a KiMAS belief base KBA={IA
+0, . . . , IA
+n}
+which consists of a set of extended logic programs with meta
+information source sand time of reception tover the alpha-
+betL. We assume, that only one piece of information can
+be received at each point in time. Our goal is to compile this
+set into one single, consistent extended logic program P/diamondmath. In
+the agents assessment a credibility is assigned to each source
+known to her. A default credibility is assigned to unknown
+sources. Initial information or information coming directly
+from the perception of the environment can be modeled by
+426
+giving it the maximum credibility. These credibilities are,
+augmented by the time information, used to give priorities to
+the programs received from other agents. Instead of giving
+priorities to rules in a static manner like other approaches
+following the causal rejection principle we prioritize literals
+and take the priorities of the body literals of a rule into con-
+sideration to determine the priority of the associated head
+literal, giving a more truthful priority to inferred literals.
+The priority of the head literal is based on the body literals
+which originate directly from sources with varying credibil-
+ity, or are inferred within the program themselves. We use
+a cautious reasoning approach giving the head literal the
+minimum of the body literal priorities. However, we have
+to take the priority of the respective rule into consideration.
+We do this by not allowing the head literal to be prioritized
+higher than the rule is prioritized itself. At last we have to
+deal with the fact, that the same instances of literals can be
+inferred in diﬀerent ways or can come from diﬀerent sources
+and hence exist parallel with diﬀerent priorities. To take
+this into consideration in the determination of the head lit-
+eral priority we use the maximal priority that we have for a
+given literal. We accomplish this priority selection and prop-
+agation solely using aggregate functions available in answer
+set solvers but do not rely on them.
+We will denote the set of programs of KBAbyP. The
+original alphabet LofPis extended toL/primeby adding sev-
+eral new predicates and atoms, which we will introduce now.
+For each literal L(/vector xL) occurring in Pa prioritized version
+ˆL(/vector xL, µ) is added. Here, the variable µrepresents the pri-
+ority of the considered instance of the literal L. LetH(P)
+denote the set of literals occurring in the head of a rule r
+inP. Predicates named rejL(/vector xL, µ) are introduced for each
+literal L∈H(P).B(r) is the set of literals in the body of
+the rule r. Let the priority of program Pibe given by µ(Pi).
+In a preprocessing step we sort the set Plexicographically
+insandtofKBArespectively. Then we give priorities to
+the individual programs according to this ordering obtaining
+a sequence ( P0, . . . , P n) of logic programs. Now we are able
+to describe the construction of the program P/diamondmath=P0/diamondmath. . ./diamondmathPn
+in four steps by generating the following rules:
+1.for each rule r∈Pi,0≤i≤nwith head H(/vector xH):
+ˆH(/vector xH, µ)← B (r),min(MaxB (/vector xB, r)) =µ.
+MaxB (/vector xB, r) ={µmax(B(/vector xB))|
+ˆB(/vector xB, µ/prime)∈B+(r)}∪{µ(Pi)}
+µmax(B(/vector xB)) = max{µ/prime|ˆB(/vector xB, µ/prime)∈H(P)}
+2.for each literal L∈H(P):
+L(/vector xL)←ˆL(/vector xL, µ),notrejL(/vector xL, µ).
+3.for each literal L∈H(P):
+rejL(/vector xL, µ)←ˆL(/vector xL, µ),¬ˆL(/vector xL, µ/prime), µ < µ/prime.
+4.all constraints from Pi,0≤i≤n
+In the ﬁrst construction step the original rules from Pare
+adopted. Their literals are replaced by their correspond-
+ing prioritized versions and the rules are extended in a way
+to support the propagation of priorities. To determine the
+priority that should be propagated to the head literal the
+minimum of the maximum priorities of the body literals isused. A literal can be inferred in diﬀerent rules with diﬀerent
+priorities. That is why we consider the maximum priority
+of each literal. Only body literals are considered which are
+not default negated. This is done as the priority of a default
+negated literal should not give us any information about the
+priority we should assign to the head literal.
+The second construction step connects the prioritized to
+the unprioritized layer of literals. A literal Lholds if a prior-
+itized version of it holds and is not blocked due to conﬂicts.
+The third construction step introduces the rejpredicates
+which ensure that no prioritized literal is connected to its
+unprioritized equivalent if this would lead to an inconsis-
+tency. A literal is blocked if it is conﬂicting with a higher
+prioritized instance of itself. Through this, more reliable
+or more current information dominates less reliable or older
+information.
+The constructed program P/diamondmathis given to an answer set
+reasoner to compute answer sets for it. A resulting answer
+setS/primefor the program P/diamondmathis deﬁned over the alphabet L/prime
+and has to be projected to the original alphabet L.
+Definition 13.Sis an answer set of P= (P1, ...P n)iﬀ
+S=S/prime∩Lfor an answer set S/primeofP/diamondmath
+We illustrate this mechanism in our running example.
+Example 6.Consider the following belief base of Alice :
+KBAlice={({murdered (evelyn ).
+suspect (X)←threatened (X, Y ), murdered (Y).
+threatened (X, evelyn )←met(X, evelyn, wed ).
+murderer (X)←suspect (X),notalibi(X).
+}, Alice, t 0),
+({¬murderer (carl, evelyn )}, Carl, t 1),
+({¬murderer (bob, evelyn )}, Bob, t 2),
+({alibi(bob)}, Dave, t 3),
+({met(carl, evelyn, wed )}, Dave, t 4),
+({¬met(carl, evelyn, wed )}, Carl, t 5),}
+Looking at the belief base it is obvious that there are several
+conﬂicts. In addition to the belief base Alice has an assess-
+ment function c:A→{ 0, . . . , 10}(the interval might be any
+other limited interval).
+c(alice ) = 10 , c(carl) = 3 , c(bob) = 3 , c(dave) = 6
+AsAlice is self-conﬁdent she assigns the maximum credi-
+bility to herself, her initial beliefs respectively, and only to
+herself. Carl andBob are suspects and get small credibility.
+Dave , asEvelyn ’s brother, is more credible.
+Starting at this state the epistemic operator generates the
+epistemic state. As described earlier the programs are or-
+dered lexicographically in their assigned credibility and time.
+In the example this leads to the following order:
+P1:{¬murderer (carl, evelyn ).}
+P2:{¬murderer (bob, evelyn ).}
+P3:{¬met(carl, evelyn, wed ).}
+P4:{alibi(bob).}
+P5:{met(carl, evelyn, wed ).}
+P6:{murdered (evelyn ).}
+P7:{suspect (X)←threatened (X, Y ), murdered (Y).
+threatened (X, evelyn )←met(X, evelyn, wed ).
+murderer (X)←suspect (X),notalibi(X).}
+427
+Note that we separated Alices initial beliefs into factual and
+rule based knowledge. From these rules the program P/diamondmathis
+generated as described above and is given to an answer set
+solver. The resulting answer set is the following:
+S/prime={¬murderer (carl, 1),¬murderer (bob,2),
+¬met(carl, evelyn, wed, 3), alibi (bob,4),
+met(carl, evelyn, wed, 5), murdered (evelyn, 6),
+suspect (carl, 5), threatened (carl, evelyn, 5),
+murderer (carl, 5), murderer (carl), alibi (bob),
+met(carl, evelyn, wed ),¬murderer (bob),
+murdered (evelyn ), suspect (carl),
+threatened (carl, evelyn ), rej ¬murderer (carl, 1),
+rej¬met(carl, evelyn, wed, 3)}
+Here we can see how the solving of conﬂicts on the prioritised
+predicates worked. According to Deﬁnition 13 the projected
+answer set looks like this:
+S={murderer (carl), alibi (bob), suspect (carl),
+met(carl, evelyn, wed ),¬murderer (bob),
+murdered (evelyn ), threatened (carl, evelyn )}
+Given this answer set Alice beliefs that Carl was the one who
+metEvelyn on Wednesday and thus the one who threatened
+Evelyn . Given this and the fact, that Bob has an alibi she
+concludes, as desired, that Carl is the murderer of Evelyn .
+7. CONCLUSION AND FUTURE WORK
+The adequate processing of information received from the
+environment is a principal prerequisite for intelligent be-
+haviour. However, the agent should not simply believe what-
+ever she is told, but should be able to judge each new piece
+of information by its importance and reliability.
+In this paper, we presented belief change operations within
+aBDIagent in a multiagent setting. From the perspective
+of each agent, the other agents are assigned degrees of re-
+liability which determine the credibility of their utterances.
+In combination with a time stamp, the credibility is used on
+a meta-level to generate ranked knowledge bases as belief
+bases for each agent. From this belief base, an epistemic
+state is computed by update techniques for logic program-
+ming, and answer sets are taken to represent most plausible
+beliefs. In this way, a complete information processing mech-
+anism is described, taking prior beliefs of the agent as well
+as content and context of new information into account. We
+also implemented a motivation for each agent via preference
+relations on possible goals, helping her to pursue a personal
+line of goals. All this is embedded into the BDImodel, and
+we made interactions between the diﬀerent components ex-
+plicit by specifying a functional component.
+As part of our current work, we plan to extend the de-
+scribed belief component in order to realise substantially
+diﬀerent belief change operations; for instance, the agents
+should be able to distinguish between revision and update.
+We will also investigate the formal properties of our epis-
+temic operator according to well-known postulates for belief
+change and show the advantages of the propagation of prior-
+ities in comparison to other known mechanisms. As agents
+may have more than one motivation, we will study possi-
+ble interactions of diﬀerent motivations within one and the
+same agent, applying techniques from preference fusion.Acknowledgments We are thankful to the anonymous re-
+viewers for their helpful comments and to the students of
+the Project Group 491 at the Dortmund University of Tech-
+nology for their inspiring discussions.
+8. REFERENCES
+[1]L. Braubach, A. Pokahr, and W. Lamersdorf. Jadex:
+A BDI agent system combining middleware and
+reasoning. In R. Unland, M. Calisti, and M. Klusch,
+editors, Software Agent-Based Applications, Platforms
+and Development Kits . Birkh ¨auser Book, 2005.
+[2]H. Chalupsky, T. Finin, R. Fritzson, D. McKay,
+S. Shapiro, and G. Weiderhold. An overview of
+KQML. Technical report, KQML Advis. Group, 1992.
+[3]T. Eiter, W. Faber, C. Koch, N. Leone, and G. Pfeifer.
+DLV - A system for declarative problem solving. In
+C. Baral and M. Truszczynski, editors, Proc. of the 8th
+Int. Workshop on Non-Monotonic Reasoning , 2000.
+[4]T. Eiter, M. Fink, G. Sabbatini, and H. Tompits. On
+properties of update sequences based on causal
+rejection. Theory Pract. Log. Program. , 2(6), 2002.
+[5]P. G¨ardenfors and H. Rott. Belief revision. In D. M.
+Gabbay, C. J. Hogger, and J. A. Robinson, editors,
+Handbook of Logic in Artiﬁcial Intelligence and Logic
+Programming . Oxford University Press, 1995.
+[6]M. Gelfond and N. Leone. Logic programming and
+knowledge representation — The A-Prolog
+perspective. Artif. Intelligence , 138(1–2):3–38, 2002.
+[7]F. Ingrand, M. Georgeﬀ, and A. Rao. An architecture
+for real-time reasoning and system control. IEEE
+Expert , 7 (6), 1992.
+[8]G. Kern-Isberner. Conditionals in nonmonotonic
+reasoning and belief revision . Springer, Lecture Notes
+in Artiﬁcial Intelligence LNAI 2087, 2001.
+[9]M. Luck and M. d’Inverno. Motivated behaviour for
+goal adoption. In Zhang and Lukose, editors, Proc. of
+the 4th Australian Workshop on Distributed Artiﬁcial
+Intelligence , pages 58–73. Springer, 1998.
+[10]T. J. Norman and D. Long. Goal creation in motivated
+agents. In M. Wooldridge and N. R. Jennings, editors,
+Intelligent Agents: Theories, Architectures, and
+Languages , pages 277–290. Springer, 1995.
+[11]Projektgruppe 491. Endbericht der Projektgruppe
+491. Technical report, University of Dortmund, 2007.
+[12]J. R. Searle. Speech Acts: An Essay in the Philosophy
+of Language . Cambrige University Press, 1969.
+[13]P. Simons, I. Niemel ¨a, and T. Soininen. Extending
+and implementing the stable model semantics.
+Artiﬁcial Intelligence , 134(1-2):181–234, 2002.
+[14]M. Singh. Know-how. In A. Rao and M. Wooldridge,
+editors, Foundations of Rational Agency, Applied
+Logic Series , pages 105–132. Kluwer, 1999.
+[15]M. Singh, A. Rao, and M. Georgeﬀ. Formal methods
+in DAI: Logic-based representation and reasoning. In
+G. Weiss, editor, Multiagent Systems – A Modern
+Approach to Distributed Artiﬁcial Intelligence , pages
+331–376. MIT Press, Cambridge, Massachusetts, 1999.
+[16]G. Weiss, editor. Multiagent Systems: A Modern
+Approach to Distributed Artiﬁcial Intelligence . MIT
+Press, Cambridge, MA, USA, 1999.
+428

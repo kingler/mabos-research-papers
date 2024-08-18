@@ -1,0 +1,1438 @@
+See discussions, st ats, and author pr ofiles f or this public ation at : https://www .researchgate.ne t/public ation/283843323
+Agent oriented modelling of tactical decision making
+Article  · Januar y 2015
+CITATIONS
+2READS
+216
+4 author s, including:
+Some o f the author s of this public ation ar e also w orking on these r elat ed pr ojects:
+A Critic al R eview of T ransp arency and Explainability in A utonomous Ag ents View pr oject
+Agent Design V erific ation  View pr oject
+Rick Ev ertsz
+24 PUBLICA TIONS    255 CITATIONS    
+SEE PROFILE
+John Thang arajah
+RMIT Univ ersity
+100 PUBLICA TIONS    1,505  CITATIONS    
+SEE PROFILE
+Nitin Y adav
+Univ ersity of Melbourne
+23 PUBLICA TIONS    101 CITATIONS    
+SEE PROFILE
+All c ontent f ollo wing this p age was uplo aded b y John Thang arajah  on 14 June 2016.
+The user has r equest ed enhanc ement of the do wnlo aded file.
+The Journal of Systems and Software 110 (2015) 222–238
+Contents lists available at ScienceDirect
+The Journal ofSystems and Software
+journal homepage: www.elsevier.com/locate/jss
+A frameworkfor modelling tactical decision-making in autonomous
+systems
+Rick Evertsza, John Thangarajaha,∗, NitinYadava, ThanhLyb
+aSchool of Computer Science & IT, RMIT University, Australia
+bDefence Science and Technology Organisation, Australia
+article info
+Article history:
+Received30 January 2015Revised25 August2015Accepted 27August 2015Availableonline7September2015
+Keywords:Tactics modellingBehaviourmodellingMulti-agentsystemsabstract
+There is an increasing need for autonomous systems that exhibit effective decision-making in unpredictable
+environments. However, the design of autonomous decision-making systems presents considerable chal-
+lenges, particularly when they have to achieve their goals within a dynamic context. Tactics designed to
+handle unexpected environmental change, or attack by an adversary, must balance the need for reactivitywith that of remaining focused on the system’s overall goal. The lack of a design methodology and support-
+ingtoolsforrepresentingtacticsmakesthemdiﬃculttounderstand,maintainandreuse.Thisisasigniﬁcant
+problem in the design of tactical decision-making systems. We describe a methodology and accompanyingtool, TDF (Tactics Development Framework), based on the BDI (Beliefs, Desires, Intentions) paradigm. TDF
+supports structural modelling of missions, goals, scenarios, input/output, messaging and procedures, and
+generates skeleton code that reﬂects the overall design. TDF has been evaluated through comparison withUML, indicating that it provides signiﬁcant beneﬁts to those building autonomous, tactical decision-making
+systems.
+© 2015 Elsevier Inc. Allrights reserved.
+1. Introduction
+Fuelled by recent technological advances, there has been an in-
+creased interest in autonomous systems, whether for space ex-
+ploration ( Council, 2012 ), UUVs (Unmanned Underwater Vehicles)
+(Huntsberger and Woodward, 2011 ), or UAVs (Unmanned Aerial Ve-
+hicles) ( Dopping-Hepenstall, 2013 ). Full autonomy offers many ad-
+vantages, including allowing a system to venture into environments
+where teleoperated systems would perform poorly due to high com-
+municationslatency, forexample,deepspace.
+Despitetherecenttechnologicalfocusonautonomy,inareassuch
+asmining,agricultureandmilitaryapplications,thegeneralsoftware
+engineering community may not be aware of the recent progress theﬁeld has experienced. Although the Google self-driving car has per-
+haps been the most high proﬁle autonomy project, many others are
+underway.Autonomyisnowamajorfocusoftheoilandgasindustry,whereit promises to allow the exploration of previously inaccessible
+areasandreducehumanexposuretodanger( NFAAutonomyWorking
+Group,2012 ).Fullyautonomousrobotsarenowbeingusedbyspecial
+forces for live ﬁre training ( Evertsz et al., 2014 ). The UK-led ASTRAEA
+∗Correspondingauthor. Tel.:+61 399259535.
+E-mail addresses: rick.evertsz@rmit.edu.au (R. Evertsz), johthan@gmail.com ,john.
+thangarajah@rmit.edu.au ,johnt@rmit.edu.au (J. Thangarajah), nitin.yadav@rmit.edu.
+au(N.Yadav), thanh.ly@dsto.defence.gov.au (T. Ly).programme has been running for nine years and is working towards
+the goal of routine ﬂights of unmanned aircraft systems in all classes
+ofairspace( Mills,2011 ).
+Different applications require, or are best met by, different levels
+of autonomy. For example, because of the high power requirements
+and poor levels of transmission (e.g. radio waves) in the underwa-terenvironment,UUVscannotberemotelycontrolledunlesstheyareclose by. Thus the focus of UUV research and development has been
+onfullyautonomoussystems.Inotherdomains,ifhumanoversightis
+necessary, a semi-autonomous approach, where the system submitstothecommandauthority of ahuman,is preferable.
+Theobjectiveofthisresearchistodevelopandevaluateamethod-
+ology that supports the demands of designing autonomous tacti-cal decision-making systems. Our research is focused on supporting
+the design of autonomous systems that operate in dynamic domains
+requiring the application of sophisticated, tactical decision-making,such as that exhibited by human experts, e.g. submariners or ﬁghter
+pilots. Effective performance in such domains requires capabilities
+such as the balancing of reactivity with proactivity. The autonomoussystemmustnotonlybegoaldirected,butmustalsobeabletoswitchfocuswhentheenvironmentchangesinanimportantway,orwhenit
+discovers that one of the assumptions underlying its current tactical
+approach is invalid. It may also need to coordinate its activities withpeers who are working towards the same goal. It has been argued
+that these capabilities, namely autonomy, reactivity, proactivity and
+http://dx.doi.org/10.1016/j.jss.2015.08.046
+0164-1212/© 2015 ElsevierInc. Allrights reserved.
+R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238 223
+social ability, are characteristic of agent-based systems ( Wooldridge,
+2008), and that they are not well supported by most programming
+paradigms. With this in mind, we have adopted an AOSE (Agent Ori-ented Software Engineering) approach to the design of autonomous
+decision-makingsystems.
+AOSE is concerned with how to specify, design, implement, vali-
+date and maintain agent-based systems. There are now many AOSE
+methodologies; Akbar ( Akbari, 2010 ) lists 75, some dating back to
+the early 1990s. Of these, a number are still in regular use, includingANEMONA ( Botti and Giret, 2008 ), ASPECS ( Cossentino et al., 2010 ),
+Gaia (Wooldridge et al., 2000 ), INGENIAS ( Pavón and Gómez-Sanz,
+2003)O - M a S E( DeLoach and Garcia-Ojeda, 2010 ), PASSI ( Cossentino,
+2005), Prometheus ( Padgham and Winikoff, 2004 ), ROADMAP ( Juan
+et al., 2002 ) and Tropos ( Bresciani et al., 2004 ). Although there are
+important differences between these methodologies ( DeLoach et al.,
+2009), their common agent-based focus means that there is a large
+area of overlap, for example, they all facilitate the decomposition of
+the system into functionally distinct components. Although existing
+AOSE methodologies can support tactics modelling to some degree,the mapping is not straightforward. Our investigation of the require-
+ments for modelling tactical decision-making revealed a number of
+areasforimprovement.Theserelateto high-level tasking (termed mis-
+sions);whatthe autonomous system can achieve ( goals); and howit
+canachieveitsgoals(representedas plan diagrams ).
+During our analysis of the requirements of tactics modelling, it
+became apparent that previous AOSE methodologies do not provide
+a suﬃciently rich representation of goal controlstructures. Tropos
+(Bresciani et al., 2004 ) provides a wider range of goal typesthat
+are well suited to goal-oriented requirements analysis, such as soft
+goals, but these do not address the goal-oriented control structures
+required to express tactics at a high level of abstraction. Ideally, a
+goal-basedrepresentationoftacticaldecision-makingshouldencodereactive/deliberative goal considerations, such as the conditions un-
+der whicha goalshould besuspendedor resumed.Thesegoalcondi-
+tions and inter-goal relationships are important to tactical decision-making. Goal-related attributes are usually implicit, hidden deep in
+the system’s implementation. Our objective is to make these hidden
+dependencies explicit at the design level so that the designs are amore accurate reﬂection of the desired system behaviour, thereby
+promoting user comprehension and the potential for design reuse
+andsharing.
+To better address the need for autonomous, tactical decision-
+making, we have taken the Prometheus methodology as a starting
+point and have developed TDF (Tactics Development Framework) by
+adding missions, goal extensions, plan diagrams and tactics designpatterns. To this end, the Prometheus BDI agent design methodology
+hasbeenextendedwithexplicitsupportformodellingtactics.Among
+the more popular BDI agent design methodologies ( Federico et al.,
+2004), Prometheus was a natural choice given that PDT (Prometheus
+Design Tool) generates JACK ( Winikoff, 2005 ) code directly, a re-
+quirement of our user community which has been working withJACK for many years. A wide range of extensions/simpliﬁcations of
+PrometheuswereconsideredduringthedevelopmentofTDF.Theini-
+tialset ofextensions/simpliﬁcationswasinformedbythe15yearex-periencewehavehadinusingPrometheusforagent-basedmodellingandinusingBDIlanguagessuchasdMARS( d’Invernoetal.,1998 )and
+JACK (Winikoff, 2005 ) to model decision-making in domains such as
+autonomous robots, infantry tactics and air combat. This was reﬁned
+overthecourseofthecurrentUSW(UnderseaWarfare)project,based
+on requirements and feedback from our USW user community, who
+werealsofamiliarwithJACK andPrometheus.
+Under the direction given by our user community of USW an-
+alysts, a key objective in developing TDF was to offer a method of
+specifyingtacticsinamannerthatsupportsreuseandsharing.Thesetactics design patterns specify whatthe tactic does, howit does it
+and what it needsto achieve its objective. In software engineering,design patterns foster reuse by providing an abstraction that de-
+scribes effective solutions to common problems. Similarly, effectivetactics, if expressed appropriately, offer the potential for reuse andapplication to a range of similar problems. For example, the infantry
+pincertactic,inwhichbothﬂanksoftheenemyareattackedsimulta-
+neously, can also be applied to air combat. The abstraction of a tacticintoadesignpatternoffersthepotentialforsharingandreuse,rather
+than compelling the analyst to reimplement a tactic from scratch.
+Such behavioural design patterns are not currently offered by AOSEmethodologies.
+A mission expresses what the autonomous system needs to
+achieve as well as other ancillary information such as potential risks(seeSection4.1.1 ).Themissiondesignartefactwasaddedinresponse
+totherequirementsofourusercommunityofUSWanalysts,whorun
+multiple USW tactical scenarios to investigate study questions suchas“Will Sonar X improve tactical outcomes for this set of missions?” .
+The tactics that they develop and implement only make sense in the
+contextofoneormoremissionsthatareusedtoinvestigatethemod-
+elling question. Thus, it is important that these missions be speciﬁedat thebeginningofthetactics designprocess.
+Plan diagrams are a high-level, diagrammatic procedural repre-
+sentations of tactics that provide the added beneﬁt of enabling SMEs(SubjectMatterExperts)tocritiquethemodelearlyon.Althoughthe
+Prometheus methodology includes process speciﬁcations , which are
+similar to plan diagrams, the tool (PDT) does not. Furthermore, thePrometheusprocessspeciﬁcationnotationisfairlyminimal,andsoit
+was necessary to extend it to include goals, goal conditions, wait-for
+conditions,failurenodes,andasynchronousmerges(termedjoins).
+This work makes several contributions: (i) the state of the art in
+AOSEmethodologiesisextendedtofacilitatethemodellingoftactical
+decision-making systems by adding missions, a wider range of goal
+structures, plan diagrams and tactics design patterns ( Section 4 ); (ii)
+the extended methodology is implemented in a new application, the
+TDF tool, that builds on PDT ( Padgham et al., 2008 )(Section 5 ); and
+(iii) a preliminary evaluation is presented comprising an assessmentby USW analysts, and a UAV pilot study indicating that TDF provides
+signiﬁcantbeneﬁtstothoseengagedinbuildingautonomous,tactical
+decision-making systems ( Section 6 ). Although our work is based on
+the Prometheus methodology, we believe that these enhancements
+could be applied to other AOSE methodologies, for example, O-MaSE
+and Tropos. These methodologies have a number of similarities toPrometheus( DeLoachetal.,2009 ),andcouldbeextended,forexam-
+ple,toaugmenttheirconceptofgoaltoincludeTDF’sgoalconditions
+andgoalcontrolstructures.
+2. Background
+This section provides a brief overview of the requirements for au-
+tonomoustacticaldecision-makingsystems,followedbyanintroduc-tionto theBDI (Beliefs,Desires,Intentions)paradigmandAOSE.
+2.1. Tactics
+At their most basic, tactics are the means of achieving a goal. Mi-
+chon (Michon, 1985 ) presents a hierarchical control model for driver
+behaviour.Themodelcomprises(i)astrategiclevelinwhichanover-all plan is developed, (ii) a tactical level that reacts to the current sit-
+uation using manoeuvres, and (iii) a control level that handles low-
+level actions such as accelerating and braking. In Michon’s model,tactics handle short-term goals and responses to the immediate re-
+quirements of the situation. This view of strategy and tactics mir-
+rorsthatgenerallyemployedbythemilitary;strategyrelatestohigh-levelplanningandthegeneralapproachtoaproblem,whereastactics
+specifythemeansofachievingmoreshort-termgoals.
+TheOxfordEnglishDictionarydeﬁnestacticsas:
+224 R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238
+The art or science of deploying military or naval forces in order of
+battle and of performing warlike evolutions and manoeuvres .
+Thus, tactics are adversarial in nature. However, we have adopted
+alessrestrictivedeﬁnitionthat focusesontheirﬂexibility:
+A tactic is a speciﬁcation of responsive, goal-directed behaviour .
+From this perspective, tactical decision-making seeks to achieve
+an objective in a situation where the system may have to respondto unexpected change. The notion of responsiveness is what deﬁnes
+a tactic as something more speciﬁc, yet more ﬂexible, than a gen-
+eral behaviour speciﬁcation. For example, a behaviour speciﬁcationof how to follow a ﬂight plan to a destination would not be regarded
+as a tactic. However, a speciﬁcation of how to navigate to a destina-
+tion, in a way that can avoid unexpected adverse weather, is indeedtactical. An effective tactical decision-making system must do more
+than simply blindly execute a procedure; it must be able to respond
+in a timely manner to events that interfere with the achievement ofitsgoals.
+2.2. Autonomous systems
+Autonomous operation is an important requirement for un-
+manned vehicles, such as UAVs, UUVs and spacecraft. Taking UAVs
+as an example, although some functions operate autonomously, e.g.
+following a predetermined ﬂight proﬁle, ground crew perform allhigh-level decision-making. Fully autonomous UAVs have yet to beoperationally deployed. Nevertheless, increasing the level of auton-
+omy has been an active research area for some time, for exam-
+ple, the NASA Remote Agent Architecture for autonomous spacecraft(Muscettolaetal.,1998 ),autonomousUAV’sforairbornesciencemis-
+sions (Wegener et al., 2004 ), and NASA’s space technology roadmap
+(Council,2012 ).
+It is important to distinguish between automation and autonomy .
+In an automatic system, actions are independent of context – the
+system responds to its sensor input in a ﬁxed manner and does notengage in more ﬂexible behaviour, such as seeking further environ-
+mentalinputtodelineatethebestcourseofaction.Incontrast,anau-
+tonomoussystemisdesignedtoacquireknowledgeaboutthecontextand use it to make more situation-dependent and effective decisions(Doyle, 2003 ). Having said that the distinction between automation
+and autonomy is not hard and fast. Indeed, various levels of auton-
+omy can be discerned within the class of autonomous systems itself,for example, the Autonomy Control Levels outlined in Oﬃce of the
+SecretaryofDefense(2001) .
+Under certain circumstances, even a simple UAV reconnaissance
+scenario may require sophisticated decision-making capabilities. To
+illustrate, consider a photoreconnaissance mission in which a UAV is
+tasked to ﬂy across hostile territory and photograph an installation.In the simplest case, all it has to do is ﬂy to the location, photograph
+the target, and return to base. However, unexpected events may re-
+quirethatitreconsideritscurrentplanonhowtoachievethemissionobjective, or may even mean that the objective must be abandoned.Possibleeventsandrelevantvariablesinclude:
+–Unexpectedly low fuel level :Willtherebeenoughfuellefttoreturn
+to base after the target has been photographed? Is mid-air refu-elling an option? Is photographing the target so important that itis permissible to run out of fuel and crash once the images have
+beentransmittedtobase?
+–Icing (water freezing on the airframe) : Icing is an ever present
+threat that has been responsible for the loss of many aircraft and
+livesovertheyears.Isthereadangeroficing?Canthemissionbe
+completed by ﬂying around the icing threat? Could the changesin aircraft dynamics be explained by icing? If so, enable de-icing
+measures.Are theyprovingeffective?Ideally, the UAV’s decision-making capability should be compa-
+rable to that of a human pilot, and this is mandatory if it will beoperating in civilian airspace; see, for example, the development ofstandards for UAV certiﬁcation by the UK Civil Aviation Authority
+(Haddon and Whittaker, 2003 ), and more recently AMC UAS.1309
+(JARUS, 2011 ).
+Effective decision-making in an environment where unexpected
+eventscanariserequirescertainminimalcapabilities.
+– The autonomous system should be goal directed, i.e. its activity is
+focusedon theachievementof itsgoals.
+– It should balance goal-directed behaviour with an ability to ex-
+ploit opportunities or react to dangerous situations. This involvesa continual process of environmental monitoring to maintain sit-
+uationawareness( Endsley, 1988 ).
+– It should be able to drop goals that are no longer achievable and
+take action to circumvent a situation that is blocking the achieve-mentof one of its goals.
+Thesecapabilitiesarenotwellservedbytypicalprogramminglan-
+guages. Although languages such as Ada are well suited to program-ming aircraft avionics, for example on the Boeing 777, they are not a
+goodﬁtforautonomous tacticaldecision-making.
+2.3. The BDI paradigm
+Baseduponworkinphilosophyonintentionalsystemsandpracti-
+cal reasoning ( Dennett, 1987; Bratman, 1987 ), the BDI programming
+paradigm was developed to support the above-mentioned mix be-
+tween proactive and reactive behaviour. The ﬁrst implementation oftheapproach,PRS( GeorgeffandIngrand,1989 ),focusedonreal-time
+fault diagnosis for Space Shuttle missions. The BDI model of agents
+has been used for high-level decision-making on UAVs, e.g. ( Karim
+etal., 2004 ),andonQinetiQ’sBAC 1–11UAV surrogate
+1.
+A BDI agent is an autonomous computational entity that, unlike a
+typicalobjectintheobjectorientedparadigm,isconstantlyexecutingasense, decide, act loop. Whereas an object’s behaviour is invoked by
+externalmessages,aBDIagentismoreinternallydriven,persistently
+sensingitsenvironment,decidingwhattodonextandthenperform-
+ing an action if appropriate. A BDI agent continually reassesses itscourse ofactioninresponsetoincomingsensory information.
+BDI architectures vary in detail, but all share the core attributes
+illustrated in Fig. 1. A key element is that these systems have a pre-
+deﬁned set of plans (Plan Library) that is used to respond to exter-
+nal events from the environment as well as internal events. Internal
+eventsaretheproactivegoalsgeneratedwithinthesystem.
+In the schematic architecture in Fig. 1, sensory information from
+theenvironmentismappedto eventsthataccumulateinaqueue.The
+BDI Engine takes the next event from the Event Queue and selectsall relevant plans from the plan library that could be used to han-dle the event. The contextual information within each plan is then
+usedtodeterminetheplansthatareapplicableinthecurrentcontext
+and one of these plans is selected to be executed. The chosen planinstance is added to the agent’s intentions. In each cycle, the agent
+chooses one step of an intention (i.e. instantiated plan) to progress,
+which may produce an action that is passed to an actuator that ef-fectsachangeintheenvironment.
+Although there are no comparative studies of BDI applied to au-
+tonomous systems, a function point analysis over six projects en-compassing10person-yearsofdevelopmentfoundthat,forthecom-
+plex applications being developed, the beneﬁts of BDI were highly
+signiﬁcant:
+1http://www.theengineer.co.uk/news/autonomy-at-qinetiq/297140.article (lastac-
+cessed20 July2015)
+R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238 225
+Event Queueevents
+BDI Engine
+Plan LibraryIntention StackBeliefs
+actionsEnvironment
+ActuatorsSensors
+Fig. 1.BDI Architecture.
+In a wide range of complex business applications, we show that the
+use of Belief-Desire-Intention (BDI) technology incorporated withinan enterprise-level architecture can improve overall developer pro-
+ductivity by an average 350%. ( Benﬁeld et al., 2006 )
+2.4. Agent oriented software engineering
+The development of TDF was motivated by a community of users
+whohavebeenusingpaper-basedworkﬂowdiagramsandUMLtode-signtacticsmodelsforunderseawarfare.Asthelibraryofmodelshas
+grown in size, this approach has not scaled well. A key requirement
+inthisdomainisforSMEs(SubjectMatterExperts)tobeabletoviewbehaviour models at a design level which can then be systematically
+propagated into the implementation. The lack of an appropriate de-
+sign methodology (and tools) to capture the tactics makes this taskalmostimpossibleforlargesystems.
+UML (Uniﬁed Modeling Language) is the de facto standard no-
+tation for software modelling. UML focuses on syntactic rules for
+deﬁning models, leaving semantics informally deﬁned and open tointerpretation. Because of the similarities between agents and ob-
+jects, early approaches to AOSE are built upon OO (Object Oriented)
+methodologies, e.g. the AAII Methodology ( Kinny et al., 1996 )a n d
+Agent UML ( Bauer et al., 2001 ). AOSE methodologies and tools con-
+tinue to be used and enhanced, and although there is considerable
+overlap, each focuses on different aspects of the problem. For exam-ple,TroposisaBDI-basedmethodologythatfocusesonearlyrequire-
+ments analysis. O-MaSE uses UML notation to express agent-based
+design concepts and adds the notion of multi-agent organisations. AcomparativereviewofO-MaSE,TroposandPrometheuscanbefoundinDeLoachetal.(2009) .
+Prometheus forms the basis of TDF, and is a BDI methodology
+based upon over 15 years of development in partnership with com-mercial designers of agent-based systems and tools. It encourages a
+top-down approach to the design of multi-agent systems that com-
+prises three main stages: System Speciﬁcation, Architectural Designand Detailed Design. System Speciﬁcation deﬁnes the relationship
+between the system and its environment in terms of the overall sys-
+tem goals, typical scenarios that can occur, and inputs and outputs.Architectural Design ﬂeshes out the internal structure of the system,includingthedatastores,rolestobeﬁlledbyagentsandthecommu-nications protocols between them. Detailed Design speciﬁes the in-ternals of the agents in terms of their capabilities and the plans they
+canuse toachievetheirgoalsandrespondto theenvironment.
+3. Research method
+Before outlining the TDF methodology, we provide some back-
+ground to the research method used to develop and evaluate TDF.In developing our software engineering approach to modelling tac-
+tical decision-making, our main research methods were Conceptual
+Analysis and Concept Implementation ;accordingto Glassetal.(2002) ,
+these are the dominant approaches adopted by software engineer-
+ingresearchers.ThedevelopmentofourmethodologycomprisedRe-
+quirements Elicitation and Analysis ( Section 3.1 ), Conceptual Analy-
+sis(Section3.2 ),ConceptImplementation( Section5 ),andEvaluation
+(Section6 ).
+3.1. Requirements elicitation and analysis
+The original requirements for TDF came from a group of USW an-
+alysts who were interested in improving how they model subma-rine commander tactical decision-making, with a view to generatingquantitative predictions of how proposed capability will impact fu-
+ture submarine performance and operational effectiveness in USW
+scenarios. Requirements elicitation revealed the following key prob-lemsto address(indescendingorder ofimportance):
+R1 – Highlight reactive/deliberative decision-making. In designing
+and implementing USW tactics, the most problematic aspect foranalysts is how to represent the response to unexpected changes
+inthetacticalsituation.
+R2 –Facilitatereuseof tacticsacrossdifferentscenarios.R3 – Aid tactics validation. Validation should be supported by pro-
+vidingameansforSMEs tounderstandandcritiquethemodels.
+R4 – Capture scenario-speciﬁc constraints. The selection of the most
+appropriate tactic depends on the situation, and these situationalconstraintsneedtoberepresentedexplicitlysothatmatchingtac-
+ticscanbedevelopedand/orfound.
+R5 –GenerateskeletonJACKcode.Overaperiodof10years,theUSW
+analysts had amassed a substantial library of JACK-based tactics,
+andaninfrastructurethatintegratedJACKintotheirUSWsimula-
+tion platform.
+3.2. Conceptual analysis
+This stage began with the collection and analysis of deﬁnitions
+of the term tacticin various domains, including military and man-
+agement science. The distinction between tactics and strategy was
+clariﬁed, with the latter taken to denote a higher-level category thatgroupsrelatedtacticsintermsoftheirgeneralapproachtoachieving
+the goal. For example, stealthis a strategy, whereas in USW, restrict-
+ing oneself to passive sonar or transiting to a separate thermal layerare particular tactics for maintaining stealth. Our resulting concep-
+tualisation of tactics was discussed in Section 2.1 .T h ek e yf e a t u r eo f
+tactics is that they are not only primarily goal-directed but are alsoresponsive to changes in the tactical situation; this observation ledus to focus on agent-based modelling and AOSE methodologies in
+particular.
+A systematic review of the literature on hybrid reac-
+tive/deliberative reasoning (requirement R1) was undertaken,
+with a view to determining how changes in course of action have
+been represented in previous design methodologies. The reviewrevealed that, although there has been a lot of work on algorithms
+and architectures for balancing reactive/deliberative modes of rea-
+soning, design methodologies have not explicitly incorporated this
+226 R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238
+aspect. Consequently, we focused on developing a novel method of
+representing reactive/deliberative tactical decision-making, and intheinterestsofmodelvalidation,lookedathowtomakethenotationaccessibletoSMEs,bycastingitatthegoallevelandindiagrammatic
+form.
+The requirements for tactics reuse (requirement R2) were ini-
+tially addressed by reviewing the literature on design patterns, as
+well as cognitive modelling, to determine the degree of support for
+reuseinAOSEmethodologiesandbehaviourmodelling.Wealsocon-sidered which aspects of object-oriented design patterns could be
+repurposed to support tactics reuse. In the realm of software en-
+gineering, design patterns were ﬁrst proposed for object-orientedprogramming ( Gamma et al., 1995 ) to foster software reuse. Subse-
+quently, the notion of design pattern was successfully applied at the
+agent architecture level, for example, in the early days of the devel-opmentoftheJavamobileagentplatform,Aglets( LangeandMitsuru,
+1998). This successful mapping is not surprising, because at the sys-
+tem level, an agent can be viewed as an object, i.e. an encapsulation
+with internal state and a set of interaction methods, cf. ( Aridor and
+Lange,1998 ).
+However,theinternalfunctioningofagentsthatembodysophisti-
+cated military tactics is very different to that of typical objects. It hasbeenarguedthattacticsrequireﬂexible,goal-orientedexecutionthat
+can include concurrent tasks ( Taylor and Wray, 2004 ), necessitating
+the development of a different class of design pattern. Hence, in thiswork we directed our effort towards developing design patterns that
+encapsulategoals,tasks andcontextual information.
+With regard to validation (requirement R3), and based on previ-
+ous successes in having pilots validate diagrammatic, BDI-based aircombat tactics ( Murray et al., 1995 ), we opted to develop an easy-
+to-understand, diagrammatic representation of tactics. To determine
+the extent to which validation has been supported in previous be-haviour models, we surveyed existing modelling methodologies and
+tools, as well as diagrammatic procedural behaviour programming
+languagessuchasPRS( GeorgeffandLansky,1985 ),dMARS( d’Inverno
+et al., 1998 ), and JACK ( Winikoff, 2005 ). We have been working with
+these procedural, diagrammatic BDI languages for over 20 years, and
+our experience is that SMEs readily understand and can critique be-haviourmodelsimplementedinthisform,andindeed,thishassome
+supportintheliterature,e.g. Wallisetal.(2002) ,Murrayetal.(1995) .
+However, although this procedural view of tactical behaviour facili-tates validation of the steps performed during the execution of a tac-tic, it does not provide a high-level view of important dimensions
+of the tactic, including its goal-based decomposition, goal dynam-
+ics, scenario-speciﬁc constraints (requirement R4), and the types ofmission that the tactic relates to. A further review of the literature
+conﬁrmed that, on the whole, previous AOSE methodologies do not
+provide a means of capturing scenario-speciﬁc constraints (require-ment R4) in the early, high-level stages of the design process. Rather,
+this contextual information gets added later on, and at a procedural,
+rather than declarative level. For example, in Prometheus this infor-mation is represented in the context conditions of plans, during the
+ﬁnal Detailed Design stage (Padgham and Winikoff, 2004, p. 113) .I n
+Ali et al. (2009) , an extension to Tropos is proposed that combines
+contextual information with early, goal-based requirements in ordertomodelsoftwarevariability.
+Following the above reviews and analyses of current practice
+and its shortcomings, we developed the TDF methodology, usingPrometheus as a starting point, because of the requirement that the
+TDF tool generate JACK code (requirement R5). To heighten the gen-
+eral applicability of our methodology, we surveyed common prac-tice in tactics modelling. Areas examined included forest ﬁreﬁght-
+ing, UAVs, USW, air combat, infantry, attack helicopters teamed with
+UAVs, and tank battles. In general, tactics have been directly imple-mented either in a platform-speciﬁc language or a more platform-
+independent, AI-based (Artiﬁcial Intelligence) language such as Soar(Laird et al., 1994 ), dMARS or JACK. In the past, UML has been pro-
+posedforagent-basedmodelling( BauerandOdell,2005 ),andindeed
+all of the groups surveyed, who engaged in design-based modellingof tactics, used UML. Business Process Model and Notation (BPMN)
+(OMG, Business Process Modeling Notation, 2006 ) is also a candi-
+dateforagent-basedmodellingofproceduralbehaviour( Endertetal.,
+2007),andsoweconsidereditsuseinTDF.AlthoughUMLactivitydi-
+agrams and BPMN are suitable for modelling the procedural aspects
+of tactics, interruptibility must be expressed explicitly and it is rel-atively cumbersome to do so. This reﬂects the fact that activity di-
+agrams and BPMN were designed for processes where interruption
+is the exception rather than the rule. This diﬃculty could perhapsbe ameliorated by augmenting BPMN with a declarative, constraint-
+based, change handling mechanism, such as that discussed in van
+Der Aalst et al. (2009) . In contrast to UML and BPMN, BDI languages
+areintendedtomixreactivitywithproactivity,andsoarewellsuitedtotacticsmodellingwhereresponsivenessisthekeytoeffectiveness.
+Nevertheless, to improve the accessibility of the TDF notation, we
+adoptedthe iconographyof UMLactivity diagrams.
+4. Tactics development framework
+This section outlines the whole design process but focuses on
+the TDF extensions of the Prometheus methodology. TDF extends
+Prometheuswithmissions,arichergoalstructure,plandiagramsandtacticsdesignpatterns(inTDF,referredtoas tactics).
+InkeepingwiththePrometheusmethodology,TDFpartitionstac-
+ticsmodellinginto3mainstages:
+–System speciﬁcation : Identiﬁcation of system-level artefacts,
+namely missions, goals, scenarios, percepts, actions, data, actors
+androles.
+–Architectural design : Speciﬁcation of the internals of the system,
+namely the different agent types (by grouping roles), the interac-
+tionsbetweentheagents(viaprotocols),andmessages.
+–Detailed design : Deﬁnition of the internals of the agents, namely
+tactics,plandiagrams,internaleventsandcapabilities.
+Fig. 2illustrates the Prometheus methodology augmented with
+TDF extensions required to better represent tactical decision-making
+(shown in italics). The diagram updates and augments the original
+Prometheus methodology diagram ( Fig. 1) found in Padgham and
+Winikoff(2005) .Ithorizontallypartitionsthedesignprocessintothe
+three Prometheus stages: System Speciﬁcation, Architectural Design
+and Detailed Design. The ﬁrst of the three columns highlights design
+artefactsthatrelatetosystemdynamics,namelyscenarios,goals,pro-tocolsandplandiagrams.TheTDFtoolprovidesvariouseditabledia-
+grammaticoverviewsofthedesign(secondcolumn).Asthedesigner
+moves from system speciﬁcation through to detailed design, variousstructured forms accumulate (third column), for example, missions
+are deﬁned during system speciﬁcation, whereas plan diagrams wait
+untildetaileddesign.
+Thedirectedarcsdeﬁnethepropagationofinformationacrossthe
+design and the opportunity for crosschecking. For example, actions
+deﬁned during system speciﬁcation are propagated through to de-taileddesign,wheretheyareavailableforinclusioninplandiagrams.Crosscheckingensures,forexample,thataplancannotincludeaper-
+cept that is not also deﬁned as being handled by the agent the plan
+belongs to (in the System Overview). Crosschecking and propagationensurethat theoveralldesignremainsinternallyconsistent.
+ThefollowingoverviewofTDFisillustratedwiththehelpofanISR
+(Intelligence Surveillance Reconnaissance) vignette involving a UAVtasked with locating and photographing a suspected enemy convoy.
+TheUAVhasnooffensivecapabilitybutcanemploycountermeasures
+toevadeanattack.
+R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238 227
+Scenarios
+Protocols
+Plan 
+DiagramsAnalysis 
+Overview
+System 
+Overview
+Agent 
+Overview
+Capability 
+Overview
+CodeDescriptors
+missions , goals , 
+scenarios, 
+percepts, 
+actions, data, 
+actors, roles
+Descriptors
+As above plus: 
+agents, 
+protocols, 
+messages
+Descriptors
+As above plus:
+capabilities, 
+tactics , plan 
+diagrams , 
+events
+Architectural
+DesignSystem
+SpeciﬁcationDetailed
+Design
+Design 
+Artefact
+Legend
+propagates
+or
+crosschecksDynamics Diagrammatic
+OverviewStructured
+Forms
+GoalsMission 
+Overview
+Plan 
+Diagram 
+OverviewTactics 
+Overview
+Fig. 2.TDF augmentedPrometheusmethodology.
+4.1. System speciﬁcation
+The System Speciﬁcation deﬁnes the overall interface to the en-
+vironment, typical interactions and a high-level, goal-oriented view
+of the system’s capabilities. System Speciﬁcation typically beginswith the deﬁnition of the missions that the system is being de-
+signed to handle. The mission is central to the TDF design process.
+Each mission deﬁnes a macrointeraction between the system and
+its environment. Missions are a central driver in the tactics design
+process.
+Deﬁnition of the missions is followed by identiﬁcation of the ex-
+ternal human/software entities (actors) that will interact with thesystem, and how the interactions will unfold (scenarios). This is then
+ﬂeshed out by specifying the system inputs (percepts) and outputs(actions), data used, goals and roles. Each of these design artefacts
+can be deﬁned in whatever order best suits the designer’s preferredworkﬂow.
+Although the methodology refers to artefacts such as actors, sce-
+narios, percepts and actions, these are not instances; rather, they aretypes/classes, in the general sense that each is a term that denotes
+a set of instances. For example, a
+position percept would refer to
+the set of all percepts of type position , rather than a particular
+position datumthatisr ecei v edatruntime.
+4.1.1. Mission
+Missions form an important part of the TDF design process. To
+some extent, the mission design artefact speciﬁes system require-
+ments. However, it is in one sense narrower, and in another broader
+228 R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238
+than traditional requirements. It is more narrow to the extent that
+itspeciﬁesonepossibleinteractionbetweenthesystemanditsenvi-ronment.Itisbroadertotheextentthatitembodiesparticulardesignattributes(e.g.OperationalConstraints,Risks)thatdeﬁnethegeneral
+properties of the mission. Note that a TDF design typically contains a
+collection of missions, i.e. a speciﬁcation of the missions that its tac-tics can handle. The mission artefact does not substitute for require-
+ments, for example, goal-oriented requirements are represented in
+TDFusinggoalstructures, ratherthanmissions.
+Each mission deﬁnes one expected interaction between the sys-
+tem and its environment, but its usage differs from the scenario con-
+cept (see Section 4.1.6 ) in that it always relates to a top-level, macro-
+objective of the system, whereas scenarios can denote any arbitrary
+interaction. The structure of a mission is as follows and includes ex-
+amplevaluesforthe attributes:
+–Name: Each mission has a unique identiﬁer, e.g.
+Photographic
+Reconnaissance .
+–Objective :Everymissionhasaprimaryobjectivethatdeﬁnesmis-
+sionsuccess, e.g. Photograph Target .
+–Secondary objectives : Some missions may have secondary goals,
+to be achieved if an opportunity presents itself and it will notendanger the achievement of the primary objective. For exam-ple,
+Photograph Potential Enemy Camps . Although sec-
+ondaryobjectivescouldbeincludedintheMissionStatement,our
+userstellusthatasigniﬁcantnumberofthemissionstheymodelinclude some form of secondary objective. Therefore, this prop-
+erty was added to prompt the modeller to think about the sec-
+ondaryobjectivesofthemissiontobemodelled.
+–Mission statement :Adescriptionofthemissiontype,forexample:
+“youaretaskedwithlocatingandphotographingaconvoy.Thelo-
+cationoftheconvoyisroughlyknown,butyouwillneedtosearchtheareato locateit.”–Operational constraints : A state of the world to be maintained for
+thedurationofthemission,forexample:“Donotenteranyno-ﬂyzones.”
+–Risks: These help prompt the design of tactics to handle unex-
+pected but dangerous situations, for example: “the convoy is af-
+ﬁliated to a hostile group, so there is a possibility that you will beattacked.”
+–Opportunities :Aspectsofthesituationthatcouldbeexploited,for
+example: “the convoy is expected to be moving fast on dirt roads.Adust cloud couldindicate itslocation.”
+–Scenarios : A scenario is a sequence of episodes that can occur
+during the mission. Example scenarios for this mission mightinclude:
+Navigate to Area of Operation, Search
+for Target, Classify Target, Avoid Incoming
+Missile, Photograph Target .
+–Data: General mission-related data, for example: map, no-fly
+zones.
+4.1.2. Actors
+Although the term actorcan be taken to imply wilful intent, there
+is no need for this to be the case. Essentially, from the system’s
+perspective, actors are entities that generate percepts, whether wil-fully or otherwise. They can also be affected by system actions. From
+a modelling perspective, actors are opaque entities. In contrast to
+agents(Section4.2 ),actorsareexternaltothesystemandtheirinter-
+nal structure is not modelled – they are effectively black boxes thatproduce behaviour and respond to system actions. Actors are used
+to represent the UAV’s sensory and effector subsystems (see Sensor,
+CountermeasuresandNavigationSubsystems in Fig.3).
+4.1.3. Percepts and actions
+The system interacts with the actors in its environment by way
+of inputs (percepts) and outputs (actions). As the design is ﬂeshed
+Handle Incoming Missile
+Countermeasures
+Subsystemlaunch ﬂares
+enable infrared
+countermeasures
+change
+altitudechange
+speedchange
+bearing
+Navigation
+SubsystemSensor
+Subsystem
+incoming
+missile
+missile
+range
+missile
+bearing
+Fig. 3.Designartefacts: scenario, actors, perceptsand actions.
+R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238 229
+Handle Incoming
+Missile
+Evasive 
+Manoeuvres[no countermeasuresremaining]
+Evasive 
+ManoeuvresUse
+Countermeasuresor
+Launch FlaresEnable Infrared 
+Countermeasuresconcurrent
+Fig. 4.Goalstructure to handleincomingmissile.
+out, questions will arise regarding the information required from the
+environment, and how the system must act on the environment toachieve its goals. This will lead to the addition of further percepts
+(e.g.
+incoming missile )a n da c t i o n s( e . g . launch flares ), as
+illustratedin Fig.3.
+4.1.4. Goals
+The system is designed to meet its mission objectives, and those
+objectivesleadtothederivationofsub-goalsthathavetobeachieved.These goal/sub-goal relationships are expressed as a goal structure
+that deﬁnes the hierarchy using
+and,orandconcurrent con-
+nectives (see Fig. 4). Because tactics are inherently goal oriented, the
+goalstructuresformthescaffoldingaroundwhichthetacticsareulti-
+matelybuilt,andofferahigh-leveldescriptionofatactic’sfunctional
+decomposition.
+T h eg o a l si nt h eg o a ls t r u c t u r ed i a g r a m sa r eo r d e r e df r o ml e f t
+to right and the graph implicitly comprises andnodes, i.e. all goals
+must be achieved in left-to-right order. Tactics typically involve a se-quence of goals that have to be achieved one after another, thus, aleft-to-right conjunction makes the best default interpretation of a
+goal structure.
+TDFextendsthiswithcontrolstructuresthatbettercaptureinter-
+goal relationships that are important to tactical decision-making.
+These goal-related attributes are usually implicit, hidden deep in
+the autonomous system’s implementation. The objective in TDF isto make these hidden dependencies explicit at the design level so
+that the designs are a more accurate reﬂection of the desired system
+behaviour, thereby promoting user comprehension and the potentialfor designreuse and sharing.TDF providesthe followinggoal control
+structures:
+–Conditional :Aconditionalgoalisusedtodenoteagoalthatshould
+only be adopted if certain conditions are true. If the conditions
+are not met, the arc is skipped. (see
+[no countermeasures
+remaining] example, Fig. 4).Effectivetacticaldecision-making
+is very context-dependent, but contextual information is usually
+embedded inside the procedures (plans) that implement the tac-tic. Conditional goals allow such implicit contextual informationtobeexpressedatthegoallevelduringtheearlystagesofthede-
+signprocess.
+–Concurrent : Sibling sub-goals that are to be adopted con-
+currently and independently. The parent goal will only
+succeed once the concurrent goals have been successfully
+achieved. See Fig. 4,
+Launch Flares andEnable Infrared
+Countermeasures .
+–Unordered : In TDF, sub-goals that are not concurrent are implic-
+itly attempted from left to right. This default ordering can becircumventedbyspecifyingthatparticulargoalscanbeattemptedinanyorder.
+–Anonymous node : Used to partition the goal structure into sub-
+trees that have a different logical relationship to one another.
+For example, in Fig. 4the anonymous node (empty circle) par-
+titions the goal structure into a disjunctive (ﬁrst
+Evasive
+Manoeuvres goalandanonymousnode)andaconjunctive( Use
+Countermeasures and the second Evasive Manoeuvres
+goal) sub-tree. Its diagrammatic role is the same as that of paren-
+thesesincomposite,textual logicalexpressions.
+–Asynchronous : Operationally, an asynchronous goal’s parent does
+notwaitforittosucceed.Thisisusefulincaseswhereasequenceof tasks needs to be performed asynchronously, without waiting
+forthemtocompletesuccessfully.
+–Maintenance : Expressed as a guard on a goal that spans all child
+goals. If the guard becomes untrue, the system will attempt tomake it true again. This behaviour is an important component of
+tactics that must deal with a world that changes unexpectedly.
+Notethatthisconstructreﬂectsthereactivebehaviourofmainte-nance goals but not the proactive behaviour, as described in Duff
+etal.(2014) .
+–Preserve: Expressed with a guard labelled “while”, the sub-goal is
+p u r s u e da sl o n ga st h eg u a r di st r u e .I ft h eg u a r db e c o m e sf a l s e ,
+t heg oalshou ldbedr opped.
+To illustrate some of these goal control structures, consider the
+objectiveofevadinganincomingmissile( Fig.4).Thisexampleshows
+anapplicationofconditionalandconcurrentgoals,andthecombina-tion of
+andandorsub-trees via an anonymous node. If there are
+no countermeasures remaining, the Evasive Manoeuvres goal
+is tried (a conditional goal). Otherwise, countermeasures are used,which involves launching ﬂares and using infrared countermeasures(concurrent goals) to interfere with the missile’s ability to maintain
+a lock on the UAV. As soon as countermeasures have been deployed,
+the second branch emanating from the empty circle (an anonymousnode)istried,i.e.evasivemanoeuvresbegin.
+Withouttheinclusionofaconditionalgoal,itwouldnotbeappar-
+ent that the UAV immediately adopts the
+Evasive Manoeuvres
+goal if there are no countermeasures available. Without the
+concurrent inter-goalrelation,onecoulderroneouslysurmisethat
+the UAV launches ﬂares and then enables its infrared countermea-sures. In fact, when there is an incoming missile, it is vital that these
+two actionsareperformedas soonaspossible,i.e.concurrently.
+4.1.5. Roles
+As the goal structures are developed, it soon becomes appar-
+ent that they perform particular functions within the overall sys-
+tem. Each function can be expressed as a role.P e r c e p t sa n da c -
+tions required by the goals in a role are grouped within thatrole. Roles ultimately encapsulate agent functionality and are used
+to guide the decomposition of the system into agents. Fig. 5
+shows the
+Situation Awareness role that is responsible for
+theMaintain Situation Awareness goal. The role involves
+actions such as enable radar and percepts such as missile
+bearing .
+4.1.6. Scenarios
+Scenariosareusedtomapoutkeysequencesoftask-relatedactiv-
+ity inthesystem (akinto use cases).A givenscenariowillcomprisea
+sequence whose members include goals, actions, percepts and sub-scenarios. As each scenario is mapped out, new goals, actions and
+percepts will crop up, leading to the development of variations as
+well as completely new scenarios. This iterative process completeswhen the designer feels that there are enough scenarios to indicate
+the overall behaviour of the system. It is better to develop a few im-
+portantscenariosratherthantrytocoverallcases,whichcanleadtoa
+230 R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238
+Situation Awarenessdesignate contact
+to track
+enable
+radar
+incoming
+missilemissile
+range
+missile
+bearingcurrent
+speedMaintain
+Situation Awareness
+Fig. 5.SituationAwarenessrole.
+cluttered design. In any event, variations can be documented in the
+design. Ideally, all of the percepts, actions and goals should be in-volved in at least one scenario (see Fig. 3for a diagrammatic repre-
+sentationofthe
+Handle Incoming Missile scenario’srelation-
+shipto actors,perceptsandactions).
+4.2. Architectural design
+In the Architectural Design stage, the main tasks are to deﬁne
+agent types (in terms of roles) and the inter-agent communication
+that needs to occur (protocols and messages). The allocation of func-tionality(roles)toagentscanbebasedonanumberoffactors,includ-
+ingpreferringhighcohesionandlowcoupling.Cohesionreferstothe
+extent to which the components are related, either by function or interms of time. Coupling is the degree to which components dependupon one anotherfordata.
+4.3. Detailed design
+The main purpose of the Detailed Design stage is to specify the
+different ways that the system can achieve the functionality deﬁnedintheSystemSpeciﬁcationstage.OneofthepowerfulfeaturesofBDI
+is its support for the representation of multiple ways of responding
+to a percept or satisfying a goal. Each method typically applies in adifferentcontext andisrepresentedasaseparateprocedure(plan).
+The System Speciﬁcation deﬁnes whatthe system does, but not
+how; the latter is the purpose of the DetailedDesign. In TDF, the how
+isspeciﬁedusingadiagrammaticplanrepresentationthatisbasedon
+UML activity diagrams. TDF plan diagrams are a level of abstraction
+above the implementation, and should be viewed as diagrammaticpseudo-code rather than an executable implementation. A TDF plan
+diagram speciﬁes the general steps of a plan without getting bogged
+downinimplementationdetail.
+4.3.1. Capabilities
+In the Detailed Design, capabilities are deﬁned that encapsulate
+the tactics, goals, plans, messages, percepts, actions and data re-
+quired to perform a particular function within the system. Capabil-
+ities are reusable pieces of functionality that can be assigned to dif-ferent agents in the system, and are analogous to Abstract Classes in
+object oriented programming. They may correspond to roles, com-
+bine a number of roles, or implement part of a role. A capability canalsobedecomposedintoahierarchyofsub-capabilities,allowingthereuseofmoreﬁnegrainedfunctionswithintheDetailedDesign. Fig.6
+shows the goal/plan tree of the
+MissileEscaping capability. The
+goal/plan tree shows what goals the capability can achieve and the
+various ways (plans) that it can achieve those goals. The incoming
+missile detected message triggers the MissileDetected
+plan, and the Handle Incoming Missile goal, in turn, triggers
+theIncomingMissile plan, and so on. The HowLongToArrive
+plan computes the missile ETA and updates the data store (top
+right,Fig.6).
+4.3.2. Agents
+Agents are autonomous, computational entities, and are assigned
+thecapabilitiesneededtoperformtheirfunction.Althoughtheyhavethe same structure as capabilities (i.e. they contain tactics, goals,
+plans,etc.),unlikecapabilitiestheycanbeinstantiatedintherunning
+system to performcomputation.
+4.3.3. Plan diagrams
+There is a long tradition of using diagrams to represent proce-
+dures,whetherasﬂowcharts( GilbrethandGilbreth,1921 ),PetriNets
+(Petri, 1966 ), recursive transition networks (e.g. PRS ( Georgeff and
+Lansky, 1985 )), UML activity diagrams ( Heaton, 2005 ), BPMN ( OMG,
+Business Process Modeling Notation, 2006 ) or countless variations.
+BecauseUMLiswidelyusedfordiagrammaticsoftwarespeciﬁcation,we adopted it as the basis for the representation of plan diagrams in
+TDF,modifyingwherenecessarytoreﬂectBDIsemanticsandPDTno-
+tationalconvention.AnothermotivationfortheadoptionofUMLdia-grammaticnotationwastheearlierrelatedworkonunifyingexisting
+AOSEnotationsthroughtheuseofUMLiconography( Padgham et al.,
+2009). The overriding goal is to foster tactics designs that are easy
+to understand and modify. The plan diagram representation encour-
+ages this by reducing some of the complexity that can be expressed
+inUMLactivitydiagrams,excludingelementsthatarenotrelevanttoBDI models, e.g. parameter passing via input/output pins, and excep-
+tionhandlernodes.
+Despite the similarities in notation between plan diagrams and
+UML activity diagrams, the underlying semantics have very little incommon due to the fundamental differences between the BDI and
+objected oriented paradigms. For example, in BDI, each node either
+succeeds or fails. If it fails, the invocation of the plan fails and theexecution engine will try an alternative way of achieving the goal if
+one is available. Another important difference is that a plan may be
+suspended if a higher priority task has to be performed; a plan mayalsobeabandonedifcertainconditionsnolongerholdtrue.
+Fig. 7lists the node icons used in TDF plan diagrams. The node
+typesare:
+–Initial: Plan diagrams have a unique initial node, preceded by ei-
+ther a goal, percept or message that acts as a trigger for the plan.Optionally,theinitialnodecanhaveaguardthatspeciﬁesthecon-
+text inwhichtheplanisapplicable.
+–Action:Performedon theagent’senvironment.
+–Activity:Denotesasequenceofcomputationalsteps.
+–Data:Dataaccessandupdate.
+–Decision/Merge : A decision node represents a conditional choice
+between options. A merge node transitions to its outgoing arc assoon asone of itsincomingarcscompletes.
+–Failure:Terminatesthe planwithfailure.
+–Fork/Join : A fork node denotes concurrent threads. A join node
+synchronisesitsincomingthreads.
+–Goal:Agoaltobeachieved.
+–Asynchronous goal :Agoaltoachievewithoutwaitingforittosuc-
+ceed.
+–Message: Amessagesenttoanotheragent.
+–Note: Fordocumentation.
+R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238 231
+incoming missile detected
+MissileDetected
+Handle Incoming Missile
+IncomingMissile
+Calculate ETA Deploy Countermeasures Evade Missile
+DeployCountermeasures(Command)
+deploy countermeasuresEvadeMissile
+TurnChange AltitudeAccelerate
+TurnAwayFromFlares(Command)
+turn away from ﬂaresChangeAltitude(Command)AccelerateRapidly(Command)
+change altitude rapidly accelerate rapidlyHowLongToArrive
+missile
+ETAMissileEscaping
+Capability
+Fig. 6.MissileEscapingcapability.
+Initial Action
+Activity
+Data
+Decision/Merge
+Failure
+Fork/Join
+Goal
+Asynchronous GoalNote
+Percept
+Success
+WaitMessagelabel
+label
+label
+label
+labellabel
+labellabel
+label
+Fig. 7.Plandiagram nodeicons.
+–Percept: Precedesinitialnode.Denotesareactiveplan.
+–Success:Terminatestheplansuccessfully.
+–Wait: Waits for a condition to become true.
+The plan diagram in Fig. 8incorporates a percept, initial node, ac-
+tion, fork, three asynchronous goals, join, a goal and a success node.
+Theplanistriggeredbya low oil pressure percept,andimme-
+diately reduces the load on the engine. It then sets up three asyn-chronous goals to monitor related engine indicators; these goals arepursuedintheirownseparatethreads,andtheplandoesnotwaitfor
+them to succeed. Finally, it adopts the goal to reconsider the viability
+of thecurrent missioninthecontext ofthe engineproblem.
+Note that, because of the underlying BDI model, each plan step
+is interruptible to the extent that the execution of other (higher pri-
+ority) plans can be interleaved with this one. So, for example, if anincoming missile is detected and there is a higher priority plan for
+dealing with that event, this plan will effectively be suspended until
+t hecrisisisa v ert ed.reduce
+engine load
+monitor
+oil temperaturemonitor
+cylinder head
+temperaturemonitor
+oil pressure
+reconsider
+viability of current 
+missionlow
+oil pressure
+Fig. 8.Plandiagram to handle potential engineproblem.
+4.3.4. Tactics design patterns
+A key objective for TDF is to offer a high-level representation that
+supports reuse and sharing by providing the developer with an ex-
+tensible library of tactics design patterns. Tactics design patterns,termed tacticsin TDF, encode general-purpose tactical solutions that
+canbecustomisedformorespecialisedapplications.Anumberofap-
+proaches to the provision of re-usable design templates have been
+232 R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238
+investigated, particularly in the ﬁeld of Knowledge-Based Systems.
+Generic Tasks ( Chandrasekaran, 1986 ) are a means of representing
+high-level problem solving in a way that captures the strategy usinga vocabulary that is relevant to the task. In a similar vein, Problem-
+SolvingMethods(PSMs)( McDermott,1988 )havebeenproposedasa
+way of expressing domain-independent, reusable strategies for solv-ingcertainclassesofproblem.APSMcomprisesadeﬁnitionof whatit
+achieves, howto achieve it and what it needsto perform its function.
+Thesearetermedrespectivelyits competence ,operational speciﬁcation
+and requirements/assumptions .Inourapproach,the whatisexpressed
+asthe objective and outcomes ,the howasthe goal structure and plans,
+andthe needsasthe information required .
+This section outlines the properties of tactics design patterns. In
+developing TDF, an effort was made to use property names that are
+meaningful to analysts and SMEs; for example objective rather than
+top-level goal ,and goal structure ratherthan goal graph .
+–Objective : The objective is the top-level goal that the tactic is de-
+signed to achieve. An objective is usually named either with ref-
+erence to what it does or what it achieves, for example,
+land
+(what it does) or landed (what it achieves). An example tacti-
+cal objective in the UAV domain is Escape from Incoming
+Missile .
+–Trigger:Aperceptthattriggerstheuseofthetactic,e.g. low oil
+pressure . This is used to model a reactive tactic, i.e. one that is
+triggeredbyanenvironmentaleventratherthanagoal.
+–Problem description : A description of the types of problem the
+tactic applies to. For example “an incoming missile has been de-
+tected”.
+–Solution description : A description of how the tactic achieves its
+objective. For example, “this tactic uses countermeasures to dis-
+tractthemissileandthenevadesbyturning,climbing/descending
+andaccelerating”.
+–Context:Atacticisonlyapplicableinaparticularcontext,i.e.ifits
+precondition is true. A precondition is a boolean test of the state
+oftheworld, e.g.“havesuﬃcient countermeasuresremaining”.
+–Outcomes : A description of how the world has changed after the
+tactichasachieveditsgoal,e.g.“havefewercountermeasures”.
+–Restriction : A situation that must be maintained for the duration
+ofthetactic’s execution, e.g.“do notenterno-ﬂy zones”.
+–Information required : Information that the tactic requires to per-
+form its function. These include the products of perception
+(percepts), e.g. missile detected, missile bearing,
+missile range .
+–Information updated : Agent beliefs (data) updated by the tac-
+tic, e.g. location, speed, altitude, number of
+countermeasures remaining .
+–Goal structure : A reference to the top-level goals underlying the
+tactic, e.g. Handle Incoming Missile .
+–Plans: A collection of references to plan diagrams, specifying pro-
+cedural methods of achieving the goals in the goal structure.
+For example: EvadeMissile, DeployCountermeasures,
+TurnAwayFromFlares .
+–Source:Referencestosourcematerialusedtocreatethetactic,e.g.
+“DraftedfromDoctrine ManualUAV-2-10”.
+In TDF, plans are grouped in terms of the tactics design patterns
+they contribute to and are represented at an abstract level indepen-dent of the particular implementation language. This encourages the
+designer to think in terms of high-level tactics and promotes proce-
+dural abstraction. Thinking in terms of tactics, rather than low-levelprocedures, also facilitates merging, reuse and maintenance of tac-
+tics sets. A tactics design pattern makes the important attributes ex-
+plicit. For example, if a tactic requires that the UAV remain above acertaincruisealtitude,thisisdeﬁnedasanexplicitrestriction.When
+considering merging this tactic with one that involves dropping un-
+der low cloud, it is obvious that there is a potential conﬂict. In ourexperience, this type of conﬂict is usually not apparent at the imple-mentationlevel;forexample,a
+descend actionmightbeembedded
+deep down in the plan/goal graph and might not be noticed wheninspectingatthetop-levelplans.
+5. The TDF tool
+The TDF plugin extends PDT with graphical tool support for the
+TDF methodology. The main purpose of the tool is to empower ana-
+lysts with a mechanism to capture behaviour speciﬁcations such as
+tactics.
+5.1. Prometheus design tool (PDT)
+PDT is an Eclipse-based plugin used for designing BDI soft-
+ware systems. The PDT plugin supports all three Prometheus designphases, namely, System Speciﬁcation, Architectural Design, and De-
+tailed Design. PDT utilises the multi-editor architecture of Eclipse to
+provide multiple tabbed editors, such as Analysis Overview, ScenarioOverview, Goal Overview, etc., in a single plugin. All of these editors,
+except for Capability Overview, Agent Overview and Plan Diagram,
+are accessed by clicking their respective tabs (present at the bottomof the content pane). The outline panel provides a tree view of the
+design hierarchy consisting of both static elements (common to all
+design instances), such as Goal and Analysis Overview, and dynamicelements (that depend on the particular design instance) such as ca-pabilitiesandagents.Generally,anon-trivialdesignwillcontainmul-
+tiple capabilities, agents and plans, and therefore the editors associ-
+atedwiththeseentities,thatis,CapabilityOverview,AgentOverview,and Plan Diagram, respectively, get activated by clicking the relevant
+entities in the Detailed Design portion of the outline panel. Finally,
+t h ep a l e t t ec o n s i s t so fe n t i t i e ss u c ha sg o a l sa n dp l a n st h a tc a nb eaddedto relevantdiagrams.
+5.2. TDF tool
+Core elements of the PDT plugin are shown in Fig. 9.T h eT D Fp l u -
+gin providesthefollowingextensionsto thePDT tool:
+– missions;
+– additionalgoaltypesandcontrolstructures;– plandiagrams;and
+–t a c t i c s .
+5.2.1. Tactics and missions
+TheTacticsOvervieweditor( Fig.10)allowsthedesignofnewtac-
+ticsbyrelatingthemtogoalsandcapabilities.Thegraphicaldepiction
+of tactics in the plugin is through a red, head-shaped icon. To main-
+tain consistency with PDT we retain the icons for entities that aresharedbetweenPDTandTDFsuchascapabilities,goals,etc.TheMis-
+sionOvervieweditor( Fig.11)isusedforlinkingmissionswithtactics
+andscenarios.
+5.2.2. Additional goal types
+The TDF plugin supports the modelling of additional goal types
+andcontrolstructuresbeyondstandardPDT’sachievementgoalsand
+and/or control structures. For their graphical representation, the
+TDF plugin provides variations of PDT’s oval look for goals to show
+different goal types. In the goal overview palette (see Fig. 12), main-
+tenancegoalsaredepictedbythecharacter“M”insidetheoval,asyn-chronousgoalshaveadashedline,andanonymousgoalsarecircular.
+Maintenance goals are associated with maintenance conditions
+that are shown within square brackets. In terms of graphical rep-resentation, ordered goals are linked with solid lines whereas un-
+orderedgoalsarelinkedwithdashedlines.Thegoaltype,thatis,
+AND,
+OR,CON, isshownjust belowtheparentgoal.
+R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238 233
+Fig. 9.TDF Eclipseplugin.
+Fig. 10. Tactics overviewinTDF plugin.
+5.2.3. Plan diagrams
+In PDT the internals of a plan are speciﬁed using informal text.
+Plan procedures are described as pseudocode but this is optional for
+designers.TheTDFtoolpresentsamorestructuredapproachforspec-ifying the internals of the plan in the form of detailed plan diagramsasdescribedin Section4.3.3 .
+Since a plan can be shared across different agents, plans exist at
+the same level as agents in the detailed design. Clicking a plan iconin the outline panel opens the plan diagram editor. By dragging and
+droppingvariousentitiesfromthepaletteonecandeﬁnethestepsof
+theprocedure,including:
+– theplan’striggeringgoal;
+– entry and exit points, including success and failure outcomes, for
+aplan;
+– internallogic oftheplanbody;– datadependenciesoftheplan;
+– planeffects,suchasactionsandmessages.Fig. 13shows an example of a plan from the UAV domain. As out-
+lined earlier, the TDF methodology provides a conceptual frameworkto capture procedural knowledge such as plans in a principled way.
+The TDF plugin supports the accompanying methodology by provid-
+ing an effective visualisation of the procedural and contextual knowhowassociatedwithplans.
+5.3. Features of the tool
+The TDF plugin has desirable features such as type safety, auto-
+matic propagation, batch image export ,and code generation .Thesefea-
+tures play a signiﬁcant role in ensuring that design artefacts createdby the TDF tool are sound, and that the design maps to executable
+code.
+1.Type safety : To add an entity to a diagram, a user may either se-
+lect an existing entity from a list or create a new one. For exam-
+ple, when a user adds a maintenance goal to a diagram, she is
+234 R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238
+Fig. 11. MissionoverviewinTDF plugin.
+Fig. 12. Goal overviewinTDF plugin.
+Fig. 13. Plandiagram inTDF plugin.
+presented with a dialog box showing a list of all maintenance
+goals. She can then select an existing maintenance goal from the
+list,orcreateanewgoal(bytypingauniquename).Thisapproachnot only provides ﬁltered entity-speciﬁc lists but also avoids typ-
+ingerrors.
+2.Automatic propagation : Entities that span across multiple editors
+are automatically propagated. For example, when a new goal is
+added to the Analysis Overview, it is automatically propagated to
+theGoalOvervieweditor.3.Code generation : The plugin comes with an extension capa-
+ble of generating skeleton code for JACK ( Winikoff, 2005 )a n d
+GORITE ( Rönnquist, 2008 ). The code generation feature pro-
+vides a predeﬁned structuring, in the form of JAVA packages,
+to the system. This facilitates and enforces good software en-
+gineering practices. In addition, the code generation is builtto allow an iterative design and coding approach. The gener-
+ated ﬁles are marked with areas that are affected by automatic
+code generation. Any changes outside of these marked areas are
+R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238 235
+preserved when generating code after updating an existing TDF
+design.
+4.Batch image export : The plugin allows batch exporting of images
+of all the editors. These images can then be used to either create
+reports or share with other team members.
+Overall, providing the TDF tool as an Eclipse plugin integrates the
+designanddevelopmentoftacticswithinauniﬁedenvironment.Oneof the future directions for the tool is to extend the code generation
+abilities to cover agent-oriented programming languages other than
+JACKandGORITE.ThiswillencouragedifferentcommunitiestoadopttheTDFmethodologyfordesigningtacticaldecision-makingsystems.
+In parallel, we are also working on developing an automatic report
+generator that will combine the export image functionality with ad-ditional information that can be processed from properties deﬁned
+forvariousentities.
+6. Evaluation
+To evaluate TDF, we selected UML as a baseline for compari-
+son because it is regularly employed by our user community to de-
+sign tactics, and our experience in various tactical domains suggests
+that UML is a natural choice for those with a standard softwareengineering background who are faced with building a tacticaldecision-makingsystem.Theobjectiveoftheevaluationistotestthe
+prediction that, relative to UML, TDF improves the level of compre-
+hension of a tactical decision-making system’s design. The underly-ing assumption is that a tactics design that is easier to understand
+willfacilitatereuseandsharingbetweendevelopers.
+6.1. Initial assessment by domain experts
+An initial assessment of TDF was undertaken by a group of ana-
+lysts who have been modelling USW tactics for many years, using a
+combinationofUMLandinformaldiagrams.TheUSWdomainisvery
+interestingfromatacticaldecision-makingperspective–thesubma-rine commander spends much time developing an understanding of
+thetacticalsituation.Thishastobedonestealthily,mostlyrelyingon
+passivesonartoavoiddetectionbyanadversary.Consequently,tacti-caldecisionsmaybebaseduponlimitedanduncertaininformation.
+BecausetheUSWanalysts’tacticslibraryisclassiﬁed,wewerenot
+given access to any information about it. However, they gave a pos-
+itive assessment of TDF, indicating that an experimental evaluationwould be worthwhile. Their feedback was that TDF will be beneﬁcial
+in the context of their Monte Carlo constructive tactical simulations,
+becausethesegenerateaverylargenumberofoutcomes,makingval-idation by visual inspection of the implementation impractical. The
+USW analysts believe that TDF’s high-level design view of tactics fa-
+cilitates analysis of the aggregated result of the many thousands ofsimulations they routinely run. Although the feedback they can give
+usistightlyconstrainedbytheprevalenceofclassiﬁedinformationin
+the data set, the TDF project has been extended twice by our stake-holder, and this is a strong indication that TDF is working well for
+them. These are real military users, working on real, classiﬁed tacti-
+calproblems.
+6.2. A participant-based TDF/UML comparison study
+Themethod,resultsandanalysisforthisstudy areasfollows:
+6.2.1. Method
+A photoreconnaissance scenario was used to evaluate how well
+thedesignswereunderstoodbytheparticipants.
+ParticipantsTheparticipantscomprised10computersciencestudents,allvery
+familiarwithUML.Theywerenotcompensatedfortheirinvolvement
+intheevaluation.Experimental designThe participants were randomly assigned to the two experimen-
+tal conditions (TDF and UML) in equal numbers using a between-subjects design.
+Procedure
+In order to minimise the need to learn the mechanics of the TDF
+and UML tools, the tactics designs were presented as a collection of
+static diagrams. All sessions were run by the same experimenter. Be-
+cause the TDF group were unfamiliar with TDF, they were given a 15min overview of the notation. Both groups were encouraged to ask
+questions about any notation they were unsure off. All subjects were
+allowed unlimited time to peruse the tactics and could ask ques-tions related to syntax but not the behavioural implications of the
+tactics.
+The participants completed a 15-item multiple choice ques-
+tionnaire (see Appendix ) immediately after studying the tactics.
+The questionnaire tested the subjects’ understanding of the UAV’s
+behaviour in speciﬁc situations addressed by the tactics design.
+The subjects could consult the design at any time while completingthe questionnaire. Time taken to complete the questionnaire was
+recorded.
+6.2.2. Results
+As predicted (H
+1:μ1>μ2), the mean number of questions an-
+swered correctly was higher for the TDF group: TDF μ1=82.4%,
+UML μ2=66.4%. A one-tailed, independent t-test rejects the null hy-
+pothesis,H 0:μ1=μ2,p<0.025.
+There was no signiﬁcant difference in the time taken to complete
+the questionnaire between the two groups: μ1=13.4, μ2=13.6
+(minutes).
+6.2.3. Analysis
+The experimental evaluation indicates that TDF’s approach to
+tactics representation is more readily understood than equivalent
+UML versions. The effect is surprisingly large, given that the designswere deliberately simpliﬁed so as not to disadvantage UML. The BDIparadigm allows for a simpler representation of interruptible be-
+haviour, because an executing plan can be interrupted at any time
+by another, higher priority one. In contrast, potential interruptionsmust be explicitly represented in UML activity diagrams. If there are
+more than a few such interruptions, the activity diagram can quickly
+become very complex. This TDF/BDI advantage was ameliorated bykeepingthepotentialinterruptionstojusttwo,andthisonlyoccurred
+inoneactivity diagram.
+We suspect that the experimental effect would have been
+even larger if the design had included a more sophisticated reac-
+tive/deliberative mix of behaviour, such as that represented in TDF
+by maintenance goals. A maintenance goal comprises a mainte-nance condition that speciﬁes a particular state of the world thatthe agent must maintain, for example, ensuring that there is enough
+fuel to return to base. If the maintenance condition becomes un-
+true, then a goal is adopted to bring the world back into com-pliance, for example, by refuelling. Maintenance goals can be suc-
+cinctly expressed in TDF, but are not straightforward to specify in
+UML because it does not provide a speciﬁc goal maintenance designartefact.
+7. Discussion
+TDF supports the design of autonomous, tactical decision-making
+systems that operate in dynamic domains. Such systems must be
+able to balance goal-directed behaviour with an ability to respond toimportantenvironmentalchange.IthasbeenarguedthatAOSEmaps
+well to such problems; however with regard to tactical decision-
+making,previousapproachestoAOSEfallshortintermsofhigh-level
+236 R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238
+tasking (missions), goal structures and specifying how to achieve
+goals.
+The original motivation for the development of TDF came from
+a team of analysts who have been using UML to model USW tactics
+overaperiodofmanyyears.Thisapproachdidnotscaletolargertac-
+tics libraries, and sharing and reuse across analysts was problematic.Indeed, our experience of modelling military tactics over the last 20
+yearssuggeststhatmodelreusecausesdiﬃculties,particularlywhen
+sharingacrossteammembers.Itisnotunusualforadevelopertopre-fer to implement a new tactical model from scratch, rather than try
+tounderstandandreuseanother’smodel.
+TDF extends Prometheus with missions, a wider range of goals
+structures, plan diagrams and tactics design patterns. These exten-
+sions are intended to make autonomous decision-making designs
+easiertounderstandandshare.Easeofcomprehensionwasevaluatedin the context of a UAV photoreconnaissance scenario. The results oftheevaluationindicatethatTDFdesignsareeasiertounderstandthan
+corresponding UML versions. This effect was signiﬁcant, despite the
+fact that the designs were deliberately simpliﬁed to reduce the in-herent advantage that TDF has with regard to activities that can be
+interruptedbyenvironmentalevents.
+We believe that TDF will also be useful in applications that
+rely upon behaviour models in the form of “virtual actors” that
+mustbeembeddedinsimulationenvironmentsincorporatinghuman
+trainees,aswellascomputergamesandso-calledseriousgames(ap-plications other than entertainment, e.g. training). With humans in-
+volved, there is increased scope for variation which means that the
+behaviour models must provide broad coverage to handle less fre-quent use cases. This makes attention to tactics at a design level allthe more important. There are plenty of such applications, for exam-
+ple, disaster management or search-and-rescue. Tactics design pat-
+terns will help with reuse, for example, if models of a doctor anda nurse have already been built, their design patterns can form the
+starting point for specifying a paramedic virtual actor. To this end,
+we have recently integrated the TDF tool with VBS (Virtual Bat-tlespace), the leading military 3D, photo-realistic virtual environ-
+ment. As is common with virtual environments that focus on visual
+realism,VBS’sinbuiltmodelsofhumanbehaviourarefairlyrudimen-tary, and its scripting language is not well suited to the task of im-
+plementing dynamic and ﬂexible tactics. Our TDF/SIM infrastructure
+usesTDF’sJACKcodegenerationcapabilitytointerfacetoVBS,andal-lowsthedesignandimplementationofdynamictacticsthatdrivethebehavioural entities in VBS. Further details can be found in Evertsz
+etal.(2015) .
+A major contribution of this research has been the investiga-
+tion of the requirements for modelling tactical decision-making,
+and what is lacking in existing AOSE methodologies. Tactics have
+to mix reactive and proactive modes of computation, and an ef-fective design methodology should provide a means of highlight-
+ing this aspect in the early stages of the system’s speciﬁcation. TDF
+achievesthisthroughitsprovisionofconditionalgoals,thatallowre-active/proactive behaviour to be expressed at the goal level rather
+than at the procedural level; the latter occurring during the later de-
+tailed design, rather than system speciﬁcation. TDF’s application ofthe concept of design pattern to tactics is another novel contribution
+to the ﬁeld that promises to foster the creation of large, reusable and
+platform-independent tactics libraries. This is a pressing need in the
+ﬁeld of autonomous decision-making systems, and in the more gen-eral area of behaviour modelling. TDF’s mission concept provides an
+important context for the design and development of tactics, as well
+asapotentialmeansofcategorisingthetacticslibraryintermsofthemissions that can be handled. Finally, the provision of plan diagrams
+allows procedural aspects to be expressed at a high level of abstrac-
+tion, one that has the potential to be understood and critiqued bySMEs.7.1. The way forward
+There is considerable scope for extending the TDF methodology
+and tool to handle a wider range of modelling requirements. Areas
+forfurtherwork include:
+–Formalisation of descriptors :Currently, TDF is mainly a descrip-
+tive design tool, although it can also generate skeleton JACK and
+GORITE code. In the future, a number of TDF properties could beformalised. For example, the Outcomes property of tactics design
+patterns could be changed from a natural language description to
+a formal, logical expression that deﬁnes how the world changesduringandaftertheexecutionofthetactic.Thiswouldprovidean
+opportunity for automated detection of conﬂicts, for example, a
+tacticwiththeoutcomeofsurfacingwouldconﬂictwithamissionthat has the restriction that the submarine remain submerged atall times. However, caution should be exercised when moving in
+thedirectionofformalisation.Ourexperiencewithuserssuggests
+that, for many developers, the inclusion of such formal elementsin the design is a burden. There is a delicate trade-off between
+using natural language descriptions of property values vs. formal
+expressions.Thiscouldbeovercomebyallowingtheexpressionofbothformalandinformalpropertyvalues.Theusercoulduse for-
+mal expressions if automated design analysis is required, falling
+backonnaturallanguagedescriptionsifautomatedanalysisisnotrequiredorifformalisationwouldsigniﬁcantlyslowdownthede-
+signprocess.
+–Team modelling :Because TDF was originally developed to model
+individual submarine commander tactics, it does not explicitlymodel team structures. Nevertheless, teams can be modelled
+through the use of the role and message design artefacts. We are
+planning to extend TDF to handle team-based modelling of ex-plicitteam structures.
+–Completeness checking :In BDI systems, the goal structure is im-
+plicitly represented by plans. The mapping of goals to plans inTDFcouldbeautomaticallycheckedtoensurethatthegoalstruc-
+tures are reﬂected by the set of plan diagrams, highlighting goals
+that have no procedural embodiment as plans. This could be im-plemented via some form of abstract interpretation ( Cousot and
+Cousot, 1977 ) of the plan graphs to derive the implicit goal struc-
+ture.Relatedworkontheautomatedveriﬁcationofplandiagramsagainstscenariosandgoalstructures( Abusharketal.,2015 )could
+beappliedhere.
+–Tactics ontology :Tactics reuse would be enhanced by providing an
+editable ontology for tactics. Reasoners in modern ontology ed-itors allow set membership to be automatically determined via
+classproperties.Withanappropriateontology,tacticsdesignpat-
+terns could be automatically classiﬁed based on their properties.For example, automatically identifying tactics that involve “lethal
+force”.
+–Environment modelling :Following Prometheus, TDF models the
+environment in terms of actors, percepts and actions. However,
+this could be extended to encompass more recent AOSE-based
+research on artefacts , which treats environmental entities as ﬁrst
+class abstractions, to be modelled in similar detail to agents, e.g.Belardinelli et al. (2013) . Furthermore, the development of an on-
+tology for the environment would facilitate the design of tactics
+at a level that abstracts away the low-level details of the environ-ment,facilitatingintegrationwithdifferentplatforms.
+–Broader code generation targets :Currently, the TDF tool generates
+JACK and GORITE codes, which through the use of appropriateplugins, can interface to sensor and actuator APIs, as well as sim-
+ulationplatformAPIs(e.g.theVBSintegrationreferredtoearlier).
+The automated link from design to implementation is an impor-tant one, and extending TDF’s code generation capabilities will
+R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238 237
+broaden its applicability, allowing it to be used, for example, for
+safety-critical applications that must conform to RTCA/DO-178A(currently,themoststringentsoftwarecertiﬁcationrequirementsforairbornesystems).
+–Knowledge elicitation :Most tactical decision-making systems are
+designed to emulate the reasoning of human experts, for ex-ample, pilots or infantry commanders. This entails a period of
+knowledge elicitation with SMEs before the required tactics can
+be designed. We are currently extending the TDF methodol-ogy to encompass knowledge elicitation in a way that provides
+traceability from elicitation, through requirements, to design and
+implementation.
+Acknowledgements
+This work was supported by the Defence Science and Technology
+Organisation,andtheDefenceScienceInstitute.
+Appendix
+Multiple choice questionnaire
+1.If the mission speciﬁes the route, will the UAV determine the
+no ﬂy zones?
+– Yes, No, Only if the Use Mission Route goal succeeds, Unde-
+ﬁned
+2.What happens if the UAV is not told that it has reached the next
+waypoint?
+– Returns to base if fuel is low, Keeps ﬂying in the same direc-
+tion,Requestspositionupdate,Undeﬁned
+3.The UAV would choose a Creeping Line search pattern when:
+– Target is far away, Never, Target is travelling in a straight line,
+Targetdirectionisknown, Undeﬁned
+4.Why would the UAV suddenly start to climb?
+– Avoidturbulence,Convoyfound,Incomingmissile,Undeﬁned
+5.I n c o m i n gm i s s i l e .W h a td o e st h eU A Vd oi ft h e r ea r en oc o u n -
+termeasures remaining?
+– Launch ﬂares, Enable infrared countermeasures, Evasive ma-
+noeuvres, Handles incoming missile, Uses countermeasures,
+Undeﬁned
+6.If there is low cloud and a missile is detected, the UAV:
+– Climbs,Descends,Neither, Undeﬁned
+7.W h e nc a nt h eU A Ve n t e raN oF l yZ o n e ?
+– WhenattackedfromtheNoFlyZone,Whenlowonfuel,Never,
+Undeﬁned
+8.If attacked from above, the UAV turns before it descends:
+– True,False,Sometimes
+9.If attacked from the ground, the UAV completes evasive ma-
+noeuvres when the following actions have been completed:
+– Turn,Climb,Accelerate, Any ofthese,All three,Undeﬁned
+10.When there is an incoming missile, which is done ﬁrst?
+– Launch ﬂares, Enable infrared countermeasures, Simultane-
+ous, Undeﬁned
+11.While following the route, what does the UAV do if low on fuel?
+– Descends, Climbs, Stops following route, Returns to base, Un-
+deﬁned
+12.If descending below low cloud, what happens if the UAV is be-
+low 500m?
+– Levels off, Fails to descend below low cloud, Descends until
+belowlowcloud, Undeﬁned
+13.If the UAV does not determine a route, which route does it fol-
+low?
+– Mission route, Navigates in general direction of target, Does
+notfollowroute, Undeﬁned
+14.What is the outcome of photo reconnaissance?
+– UAV returns to base, Photograph taken, UAV has less fuel, Un-
+deﬁned15.If an incoming missile is detected, does the UAV abandon the
+mission objective?
+– Yes, No,Only untilthemissilehasbeenevaded,Undeﬁned
+References
+Abushark,Y.,Thangarajah,J.,Miller,T.,Harland,J.,Winikoff,M.,2015.Earlydetectionof
+designfaultsrelativetorequirementspeciﬁcationsinagent-basedmodels.In:Pro-
+ceedings of the 2015 International Conference on Autonomous Agents and Multi-
+agent Systems. International Foundation for Autonomous Agents and Multiagent
+Systems,pp.1071–1079.
+Akbari,O.Z.,2010.Asurveyofagent-orientedsoftwareengineeringparadigm:towards
+its industrial acceptance. J. Comput.Eng.Res.1 (2), 14–28.
+Ali,R.,Chitchyan,R.,Giorgini,P.,2009.Contextforgoal-levelproductlinederivation.In:
+3rd International Workshop on Dynamic Software Product Lines (DSPL). Carnegie
+MellonUniversity, Pittsburgh, PA,pp.8–17.
+Aridor, Y., Lange, D.B., 1998. Agent design patterns: elements of agent application
+design. In: Proceedings of the Second International Conference on Autonomous
+Agents. ACM,pp.108–115.
+Bauer, B., Müller, J.P., Odell, J., 2001. Agent UML: a formalism for specifying multia-
+gent interaction. In: Agent-oriented software engineering, 1957. Springer, Berlin,
+pp.91–103.
+Bauer, B., Odell, J., 2005. Uml 2.0 and agents: how to build agent-based systems with
+the new umlstandard. Eng.Appl.Artif.Intell. 18 (2), 141–157.
+Belardinelli, F., Lomuscio, A., Patrizi, F., 2013. Veriﬁcation of agent-based artifact sys-
+t ems.J.Art if.In t ell.R es.5 1 ,3 3 3–3 7 7.
+Benﬁeld,S.S.,Hendrickson,J.,Galanti,D.,2006.Makingastrongbusinesscaseformul-
+tiagent technology. In: Proceedings of the Fifth International Joint Conference on
+AutonomousAgentsand MultiagentSystems. ACM,pp.10–15.
+Botti,V.,Giret,A.,2008.ANEMONA:AMulti-agentMethodologyforHolonicManufac-
+turingSystems, 1st editionSpringerPublishingCompany, Incorporated.
+Bratman, M.E., 1987. Intention, Plans, and Practical Reasoning. Harvard University
+Press,Cambridge,MA(USA).
+Bresciani, P., Perini, A., Giorgini, p., Giunchiglia, F., Mylopoulos, J., 2004. Tropos: an
+agentoriented softwaredevelopmentmethodology.AAMAS8(3), 203–236.
+Chandrasekaran, B., 1986. Generic tasks in knowledge-based reasoning: high-level
+buildingblocks forexpert systemdesign.IEEEExpert1 (3),23–30.
+Cossentino, M., 2005. From requirements to code with the PASSI methodology. In:
+Agent-Oriented Methodologies,3690. Springer, pp.79–106.
+Cossentino, M., Gaud, N., Hilaire, V., Galland, S., Koukam, A., 2010. ASPECS: an agent-
+oriented software process for engineering complex systems. Auton. Agents Multi-
+AgentSyst. 20 (2), 260–304.
+Council,N.R.,2012.NASASpaceTechnologyRoadmapsandPriorities:RestoringNASA’s
+Technological Edge and Paving the Way for a New Era in Space. Technical Report.
+NationalResearch Council.
+Cousot,P.,Cousot,R.,1977.Abstractinterpretation:auniﬁedframeworkforstaticanal-
+ysis of programs by construction or approximation of ﬁxpoints. In: Proceedings of
+the Fourth Annual ACM Symposium on Principles of Programming Languages. Los
+Angeles,California, pp.238–252.
+DeLoach,S.,Padgham,L.,Perini,A.,Susi,A.,2009.UsingthreeAOSEtoolkitstodevelop
+asampledesign.Int. J.Agent-Oriented Softw.Eng. 3(4), 416–476.
+DeLoach, S.A., Garcia-Ojeda, J.C., 2010. O-MaSE: a customisable approach to designing
+and building complex, adaptive multi-agent systems. Int. J. Agent-Oriented Softw.
+Eng.4(3), 244–280.
+Dennett, D.C., 1987. The Intentional Stance. MITpress.
+vanDerAalst,W.M.,Pesic,M.,Schonenberg,H.,2009.Declarativeworkﬂows:balancing
+betweenﬂexibilityand support.Comput.Sci.-Res.Dev.23(2), 99–113.
+d’Inverno, M., Kinny, D., Luck, M., Wooldridge, M., 1998. A formal speciﬁcation of
+dMARS.IntelligentAgents IVAgent Theor.,Archit. Lang. 1365, 155–176.
+Dopping-Hepenstall, L., 2013. Integrating UAS into airspace 2014 – the view from AS-
+TRAEA. In: IET Seminar on UAVs in the Civilian Airspace. The Institution of En-
+gineering and Technology, London, UK, pp. 1–29. doi: 10.1049/ic.2013.0064. URL
+http://ieeexplore.ieee.org/xpl/articleDetails.jsp ?arnumber =6616086
+Doyle, R.J., 2003. Autonomy Needs and Trends in Deep Space Exploration. Technical
+R eport.D TICDocument.
+Duff,S.,Thangarajah,J.,Harland,J.,2014.Maintenancegoalsinintelligentagents.Com-
+put.Intell 30 (1), 71–114.
+Endert, H., Küster, T., Hirsch, B., Albayrak, S., 2007. Mapping BPMN to agents: an anal-
+ysis. Agents, Web-Services, and Ontologies Integrated Methodologies. MALLOW,
+pp.43–58.
+Endsley,M.R.,1988.Designandevaluationforsituationalawarenessenhancement.In:
+Proceedings of the Human Factors Society 32nd Annual Meeting. Human Factors
+Society,SantaMonica, CA, pp.97–101.
+E v e r t s z ,R . ,L u c a s ,A . ,S m i t h ,C . ,P e d r o t t i ,M . ,R i t t e r ,F . E . ,B a k e r ,R . ,B u r n s ,P . ,2 0 1 4 .
+Enhanced behavioral realism for live ﬁre targets. In: St. Amant, R.S., Reitter, D.,
+Stacy,E.W.(Eds.),In:Proceedingsofthe23rdAnnualConferenceonBehaviorRep-
+resentationinModelingand Simulation.BRIMSSociety,Washington DC.
+Evertsz, R., Thangarajah, J., Ambukovski, N., 2015. Using agent-based tactics models to
+controlvirtualactorsinVBS3(demonstration).In:Proceedingsofthe14thInterna-
+tionalConferenceonAutonomousAgentsandMultiagentSystems,pp.1929–1930.
+Federico,B.,Marie-Pierre,G.,Franco,Z.(Eds.),2004.MethodologiesandSoftwareEngi-
+neering for Agent Systems: The Agent-Oriented Software Engineering Handbook.
+Springer.
+Gamma, E., Helm, R., Johnson, R., Vlissides, J., 1995. Design patterns: Elements of
+reusableobject-oriented design.Addison-WesleyReading.
+238 R. Evertsz et al. / The Journal of Systems and Software 110 (2015) 222–238
+Georgeff, M.P., Ingrand, F.F., 1989. Monitoring and control of spacecraft systems us-
+ingproceduralreasoning.In:ProceedingsoftheSpaceOperationsAutomationand
+Robotics Workshop.
+Georgeff, M.P., Lansky, A.L., 1985. Development of an Expert System for Representing
+ProceduralKnowledge.FinalReport,forNASAAMESResearchCenter,MoffetField,
+California, USA. Artiﬁcial Intelligence Center, SRI International, Menlo Park, Cali-
+fornia, USA.
+Gilbreth, F.B., Gilbreth, L.M., 1921. Process Charts - First Steps in Finding the One Best
+Way to doWork. AmericanSocietyofMechanicalEngineers,New York.
+Glass, R.L., Vessey, I., Ramesh, V., 2002. Research in software engineering: an analysis
+ofthe literature. Informat. Softw.Technol. 44 (8), 491–506.
+Haddon, D.R., Whittaker, C.J., 2003. Aircraft airworthiness certiﬁcation standards for
+civiluavs. Aeronaut. J.107(1068), 79–86.
+Heaton, L., 2005. Uniﬁed Modeling Language (UML): Superstructure Speciﬁcation, v2.
+0. Tech. Rep.ObjectManagementGroup.
+Huntsberger, T., Woodward, G., 2011. Intelligent autonomy for unmanned surface and
+underwatervehicles.In: OCEANS 2011,pp.1–10.
+JARUS, 2011. JARUS II: AMC UAS.1309, Draft, Issue B. Technical Report. UAS Systems
+SafetyAnalysis1309 Group.
+Juan, T., Pearce, A., Sterling, L., 2002. Roadmap: extending the gaia methodology for
+complex open systems. In: Proceedings of the First International Joint Conference
+onAutonomousAgents and MultiagentSystems:Part 1. ACM,pp.3–10.
+Karim, S., Heinze, C., Dunn, S., 2004. Agent-based mission management for a UAV.
+In: Intelligent Sensors, Sensor Networks and Information Processing Conference,
+2004. Proceedingsofthe 2004.IEEE,pp.481–486.
+Kinny, D., Georgeff, M., Rao, A., 1996. A methodology and modelling technique for sys-
+tems of BDI agents. In: Proceedings of the European workshop on Modelling au-
+tonomousagentsinamulti-agentworld:Agents BreakingAway,pp.56–71.
+Laird, J.E., Jones, R.M., Jones, O.M., Nielsen, P.E., 1994. Coordinated behavior of com-
+puter generated forces in tacair-soar. In: In Proceedings of the Fourth ConferenceonComputerGenerated Forcesand BehavioralRepresentation. Citeseer.
+Lange, D.B., Mitsuru, O., 1998. Programming and Deploying Java Mobile Agents Aglets.
+Addison-WesleyLongmanPublishingCo., Inc.
+McDermott, J., 1988. Preliminary steps toward a taxonomy of problem-solving meth-
+ods. In: Automating knowledge acquisition for expert systems. Springer, pp. 225–
+256.
+Michon, J.A., 1985. A critical view of driver behavior models: What do we know,
+what should we do? Human Behavior and Traﬃc Safety. Plenum Press, New York,
+pp.485–520.
+Mills, N., 2011. Opening the airspace for UAVs – ASTRAEA progress report. In:
+Knörzer,D.,Szodruch,J.(Eds.),InnovationforSustainableAviationinaGlobalEnvi-
+ronment: Proceedings of the Sixth European Aeronautics Days. IOS Press, Madrid,
+pp.394–398.
+Murray, G., Steuart, D., Appla, D., McIlroy, D., Heinze, C., Cross, M., Chandran, A.,
+Raszka, R., Tidhar, G., Rao, A., Pegler, A., Morley, D., Busetta, P., 1995. The challenge
+of whole air mission modelling. In: Proceedings of the Australian Joint Conference
+onArtiﬁcialIntelligence. Melbourne,Australia
+Muscettola, N., Nayak, P.P., Pell, B., Williams, B.C., 1998. Remote agent: to boldly go
+where no AI system has gone before. Artif.Intell. 103(1), 5–47.
+NFA Autonomy Working Group, 2012. Autonomous Systems: Opportunities and Chal-
+lenges forthe Oil &Gas Industry. Technical Report.
+Oﬃce of the Secretary of Defense, 2001. Unmanned Aerial Vehicles Roadmap 2000-
+2025. Technical Report.Washington DC.OMGBusinessProcessModelingNotation,2006.Version1.0,OMGFinalAdoptedSpec-
+iﬁcation. ObjectManagementGroup.
+Padgham, L., Thangarajah, J., Winikoff, M., 2008. Prometheus design tool. In: Proceed-
+ingsofthe 23rd AAAIConference onAI,pp.1882–1883.
+Padgham, L., Winikoff, M., 2004. Developing Intelligent Agent Systems: A Practical
+Guide.Wiley.
+Padgham,L.,Winikoff,M.,2005.Prometheus:Apracticalagent-orientedmethodology.
+In: Henderson-Sellers, B., Giorgini, P. (Eds.), Agent-Oriented Methodologies. Idea
+Group,Hershey, PA,pp.107–135.
+Padgham, L., Winikoff, M., DeLoach, S., Cossentino, M., 2009. A uniﬁed graphical nota-
+tionfor AOSE.In: Agent-Oriented Software EngineeringIX. Springer, pp.116–130.
+Pavón, J., Gómez-Sanz, J., 2003. Agent oriented software engineering with INGENIAS.
+In: Multi-AgentSystemsand ApplicationsIII.Springer,pp.394–403.
+Petri, C.A., 1966. Communication with automata: Volume 1 supplement 1. Technical
+Report. DTICDocument.
+Rönnquist, R., 2008. The goal oriented teams (GORITE) framework. In: Programming
+Multi-AgentSystems. Springer,pp.27–41.
+Taylor, G., Wray, R.E., 2004. Behavior design patterns: Engineering human behavior
+models. In: Proceedings of the Behavior Representation in Modeling and Simu-
+lationConference.
+Wallis,P.,Rönnquist,R.,Jarvis,D.,Lucas,A.,2002.Theautomatedwingman-usingJACK
+intelligent agents for unmanned autonomous vehicles. In: Aerospace Conference
+Proceedings,2002.IEEE,5. IEEE,pp.5–2615.
+Wegener, S.S., Schoenung, S.M., Totah, J., Sullivan, D., Frank, J., Enomoto, F., Frost, C.,
+Theodore, C., 2004. UAV autonomous operations for airborne science missions. In:
+Proceedings of the American Institute for Aeronautics and Astronautics 3rd Un-
+manned UnlimitedTechnical Conference.
+Winikoff, M., 2005. JACK intelligent agents: an industrial strength platform. Multi-
+AgentProgramming. Springer,pp.175–193.
+Wooldridge,M., 2008.AnIntroductionto MultiagentSystems. Wiley.Wooldridge, M., Jennings, N.R., Kinny, D., 2000. The Gaia methodology for agent-
+oriented analysisand design.Auton. Agents Multi-AgentSyst. 3(3), 285–312.
+Rick Evertsz iscurrentlyatRMITUniversity,andhasover20yearexperienceinagent-
+oriented analysis, design and development in areas including real-time optimisation
+ofairtraﬃcﬂow,networkfaultdiagnosis,andmilitarybehaviourmodelling.Heisalso
+interested incognitivemodellingand the developmentofcognitive architectures.
+John Thangarajah is an Associate Professor in Artiﬁcial Intelligence at RMIT Univer-
+sity, Australia. His main research interests are in Agent Oriented Software Develop-
+ment, Agent Reasoning, Intelligent Conversation Systems, Agent Testing, and Intelli-
+gentGames.
+Nitin Yadav received his PhD in Computer Science from RMIT University in 2014.
+His current research interests include: behaviour composition, temporal logics, model
+checking, agent-oriented programminglanguages,and BDI-style logics.
+Thanh Ly is with the Defence Science and Technology Organisation’s Joint and Opera-
+tions Analysis Division. His research interests include agent-based modelling, tactical
+simulation,and evolutionarycomputing.
+View publication statsView publication stats

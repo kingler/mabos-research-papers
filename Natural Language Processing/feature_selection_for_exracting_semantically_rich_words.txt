@@ -1,0 +1,423 @@
+Feature Selection for Extracting
+Semantically Rich Words
+Young-WooSeo AnupriyaAnkolekar KatiaSycara
+CMU-RI-TR-04-18
+March 2004
+Robotics Institute
+CarnegieMellonUniversity
+Pittsburgh,Pennsylvania15213
+c/ADCarnegieMellonUniversity
+
+Abstract
+The utility of semantic knowledge, in the form of ontologies, is widely acknowl-
+edged. In particular, semantic knowledge facilitates integration, visualization, and
+maintenance of information from various sources. However, the majority of previous
+work in this ﬁeld has tried to learn ontologies for relatively constrained domains. In
+otherwords,to date,therehasbeenrelativelylittle workontryingtoconstructontolo-gies for an open domain, where there are enormousneeds for such ontologies. More-
+over, there have been few studies that empirically examine the value of text learning
+techniquestoextractasetofcandidatewordsforconceptwordsina domainontology.Thegoalofthisworkistoexaminetheusefulnessofexistingfeatureselectionmethods
+for the extraction of a set of good candidate words for concept words in an ontology.
+Fromtheexperimentalresults,we foundthattheexistingwordfeatureselectionmeth-
+ods are quite useful for ontology learning, in that there is a good overlap between the
+word sets identiﬁed by feature selection methods and the words in a manually builtdomainontology. Finally,fromourexperienceofworkingonthispaper,weenumerate
+thedesideratafora domainontologylearningsystem.
+I
+
+Contents
+1 Introduction 1
+2 FeatureSelectionMethods 2
+2 . 1 M u t u a l I n f o r m a t i o n........................... 2
+2.2 Ꜹ
+/BES t a t i s t i c ............................... 2
+2 . 3 M a r k o v B l a n k e t............................. 32 . 4 I n f o r m a t i o n G a i n............................ 3
+3 Experiments 4
+3 . 1 T e x t D a t as e t .............................. 43 . 2 O n t o l o g i e s................................ 5
+3 . 3 E x p e r i m e n t a l R e s u l t s.......................... 6
+4 Discussion 95 Conclusionsand FutureWork 10
+III
+
+1 Introduction
+Given the rampant amount of textual data these days, it is becoming increasingly im-
+portant to be able to extract domain-speciﬁc semantic content from such texts. Such
+semantic knowledge, in the form of ontologies, can facilitate integration of informa-
+tion from varioussources. Additionally,ontologiesenablethe visualisation and main-
+tenanceofknowledge.
+However, in most cases, ontology building is still conducted by hand. It is time-
+consuming,error-prone,and labor-intensive. Moreover,manualontologybuildinghas
+a critical weakness, in that the ontology usually reﬂects the inherent knowledge andbiases of its creator, which may not be shared across people. If the ontology were
+created(semi-)automatically,thensuchbiaseswill besigniﬁcantlyreduced. Therefore
+it would be very desirable to have a (semi or fully) automatic method for acquiring adomainontology.
+One of the early attempts at ontology learning was by Faure and Nedellec [3],
+whoproposedapplyingtwo techniquesfromtheﬁeld ofNaturalLanguageProcessing
+(NLP), namely verb-subcategorizationand noun-clusteringfor ontologylearning. Ki-etzandhiscolleagues[5]developedamethodforsemi-automaticontologyacquisition
+for a corporate intranet (e.g., insurance company). They essentially used a number of
+heuristics to organize a concept hierarchy for the target ontology. While constructingan ontology, a human domain expert was expected to be on hand to intervene in this
+process by comparing the resulting ontology with a reference ontology. Navigli et al.
+[11] made use of techniques from InformationRetrieval and Machine Learning to re-solve ambiguity in the meaning of words and their semantic relationships, which is
+crucial to building a domain ontology. The performance of their method was evalu-
+ated with respectto a numberofweb pageson travel. Other techniquesfromMachine
+LearningandInformationRetrievalforbuildingontologieshavebeenoutlinedin[8].
+However,the majorityof this work hastried to learn ontologiesfor relativelycon-
+strained domains. To date, there has been relatively little work on trying to construct
+ontologies for an open domain. Furthermore,/D8/CU /A1 /CX/CS /CUis typically used to determine
+words for the domain ontology concepts. Since /D8/CU /A1 /CX/CS /CUpurely reﬂects the frequency-
+based importance of words, it cannot capture dependencies, such as those between a
+conceptinthe domainandthewordsthatcorrespondtothatconcept.
+Textlearningtechniques,suchasstatisticalfeatureselectionmethods,haveproven
+to be useful in extracting more informative words from a given text for a given text
+learningtask. However,therehavebeenfewstudiesthatempiricallyexaminethevalue
+of textlearning techniquesto extracta set of candidate words for conceptwords in anontologyforontologylearning.
+The goal of this work is to examine the use of existing feature selection methods
+for the extraction of a set of good-candidate words for concept words in an ontology.
+In order to do this, we use a number of existing feature selection methods to identify
+setsofcandidateconceptwords. Thesesetsarethenevaluatedwithrespecttomanuallycreateddomainontologies[1].
+Inthenextsection,wepresentthefeatureselectionmethodsusedinthispaper. The
+feature selection experiments and results in detail are in the following section. Then,
+we discuss the results and desiderata for a domain ontology learning system. Finally
+1
+wepresentpossiblebeneﬁtsandextensionsofthiswork.
+2 Feature Selection Methods
+Feature selection generally refers to the way of selecting a set of features which is
+moreinformativeinexecutingagivenmachinelearningtaskwhileremovingirrelevant
+orredundantfeatures. Thisprocessultimatelyleadstothereductionofdimensionality
+of the original feature space, but the selected feature set should contain sufﬁcient or
+more reliable informationaboutthe originaldata set. For the textdomain, this will beformulated into the problem of identifying the most informative word features within
+asetofdocumentsfora giventextlearningtask.
+Featureselection methodshavereliedheavilyontheanalysisofthecharacteristics
+of a given data set through statistical or information-theoretical measures. For text-
+learningtasks, forexample,theyprimarilycountonthe vocabulary-speciﬁccharacter-
+istics of given textual data set to identify good word features. Although the statistics
+itself does not care about the meaning of text, these methods have been proved to be
+usefulfortextlearningtasks(e.g.,classiﬁcationandclustering).
+Inourstudy,weconsideredfourmethods,mutualinformation,Ꜹ
+/BEstatistic,Markov
+blanket, and information gain. Each of these methods uses its own criterion to win-
+now a subset of the original feature space that seems to best capture characteristicsof a given data set. Then the word features selection is done by selecting ones with
+the highest computation values. For text representation, we employed a multino-
+mial model [10]. Speciﬁcally, a text document,/BW/CXis a sequence of word events,/BW/CX
+/BP /CU /CG/BD
+/BN /BM/BM/BM/BN /CG/D8
+/BN /BM/BM/BM/BN /CG/CY /BW/CX
+/CY
+/CV, drawn from a multinomial distribution of words in the
+identiﬁedvocabulary, /CE. /CG/D8isa randomvariablefor /D8th wordina document. Eachof
+documentswasassignedtooneofthefollowingclasslabels, /BV /BP /CU /BV/BD
+/BN /BM/BM/BM/BN /BV/CY
+/BN /BM/BM/BM/BN /BV/D2
+/CV.
+2.1 Mutual Information
+The mutual information /C1 /B4 /CG/D8
+/BN/BV/CY
+/B5of two random variablesis the relative entropybe-
+tweenthejointdistributionandtheproductdistribution /C8 /B4 /CG/D8
+/B5 /C8 /B4 /BV/CY
+/B5[2]./C1 /B4 /CG/D8
+/BN/BV/CY
+/B5 /BP /C0 /B4 /BV/CY
+/B5 /A0 /C0 /B4 /BV/CY
+/CY /CG/D8
+/B5/AP /D0/D3 /CV
+/C8 /B4 /BV/CY
+/CM /CG/D8
+/B5/C8 /B4 /BV/CY
+/B5 /A2 /C8 /B4 /CG/D8
+/B5
+Inparticular,itisthereductionintheuncertaintyofonerandomvariable /BV/CYdueto
+knowledgeof another, /CG/D8. The less dependent /CG/D8and /BV/CYare, the closer /C1 /B4 /CG/D8
+/BN/BV/CY
+/B5is
+to zero. This is commonlyused in identifyingword associations in Natural LanguageProcessing.
+2.2 Ꜹ
+/BEStatistic
+The Ꜹ
+/BEstatistic measuresthe lack of independencebetween /CG/D8and /BV/CYby comparing
+theobservedco-occurrencefrequenciesina2-waycontingencytablewiththefrequen-
+2
+ciesexpectedforindependence.Ꜹ
+/BE/B4 /CG/D8
+/BN/BV/CY
+/B5/BP
+/CY /BW /CY/A2 /B4 /CP/CS /A0 /CR/CQ /B5
+/BE/B4 /CP /B7 /CR /B5 /A2 /B4 /CQ /B7 /CS /B5 /A2 /B4 /CP /B7 /CQ /B5 /A2 /B4 /CR /B7 /CS /B5
+where /CPis the number of times /CG/D8and /BV/CYco-occur, /CQis the number of times /CG/D8
+occurs without /BV/CY, /CRis the number of times /BV/CYoccurs without /CG/D8, /CSis the number
+of times neither /BV/CYnor /CG/D8occurs, and /CY /BW /CYis the total number of documents. /BV/CYand/CG/D8aredependentifthedifferencebetweenobservedandexpectedfrequenciesislarge
+whereastheyareindependentif the Ꜹ
+/BEstatisticsscoreisclose tozero[9].
+Thescoresderivedfrommutualinformationand Ꜹ
+/BEstatisticsshouldbeinterpreted
+with care. In the case of mutual information, low-frequency word features can have
+higher scores than more common ones whereas scores computed from the Ꜹ
+/BEstatistic
+areknownnottobereliableforlow-frequencywordfeatures[13].
+2.3 Markov Blanket
+Markovblankethasbeenusedtoremovethosewordfeaturesfromtheoriginalfeature
+set, whose power to discriminate between classes is subsumed by other features inthe set (i.e., their Markov blanket) [6]. The Markov blanket of/CG/D8is deﬁned by the
+features within the Markov boundary of /CG/D8. In a directed acyclic graph (DAG), the
+Markov boundary of /CG/D8is deﬁned as /CG/D8’s parents, children, and other parents of its
+children. Therefore,removing /CG/D8fromthe featuresetshouldnotmakeanydifference
+if the Markov blanket of /CG/D8is already in the feature set. Since the information /CG/D8
+providesissubsumedbyits Markovblanket,insome sense /CG/D8isredundant.
+Let /C5/D8betheMarkovblanketfor /CG/D8. Eliminating /CG/D8isnotharmfuliftheexpected
+crossentropy Æ/D8betweena feature /CG/D8anditsMarkovblanket /C5/D8isminimized.Æ/CX
+/BP /C8 /B4 /CG/CX
+/B5 /BW /B4 /C8 /B4 /BV/CY
+/CY /CG/CX
+/B5 /CY/CY /C8 /B4 /BV/CY
+/CY /C5/CX
+/B5/B5
+where, /BW /B4 /D4 /CY/CY /D5 /B5 /BP
+/C8/DC /BE /CG
+/D4 /B4 /DC /B5 /D0/D3 /CV
+/D4 /B4 /DC /B5/D5 /B4 /DC /B5is called a relative entropy or Kullback-
+Leibler divergence that measures the difference between two probability distribution
+over the same event space [2]. As it is very hard to ﬁnd a full Markov blanket for a
+feature,we madeuse ofanapproximatealgorithmproposedin [6].
+2.4 InformationGain
+The last method we used for feature selection uses the informationgain of each word
+feature. The informationgain /C1/BZ /B4 /CG/D8
+/B5of a word feature /CG/D8is deﬁned as an expected
+reductionin entropybyselecting /CG/D8./C1/BZ /B4 /CG/D8
+/B5/BP /A0
+/CZ/CG/CY /BP/BD
+/C8 /B4 /CR/CY
+/B5 /D0/D3 /CV /C8 /B4 /CR/CY
+/B5
+3
+/B7 /C8 /B4 /CG/D8
+/B5
+/CZ/CG/CY /BP/BD
+/C8 /B4 /CR/CY
+/CY /CG/D8
+/B5 /D0/D3 /CV /C8 /B4 /CR/CY
+/CY /CG/D8
+/B5/B7 /C8 /B4
+/DI/CG/D8
+/CZ/CG/CY /BP/BD
+/C8 /B4 /CR/CY
+/CY
+/DI/CG/D8
+/B5 /D0/D3 /CV /C8 /B4 /CR/CY
+/CY
+/DI/CG/D8
+/B5
+It is considered a global measure because it averages the reduction of uncertainty
+thatoccursbythe selectionoffeature /CG/D8overall classes.
+3 Experiments
+Our objective is to compare the set of word features identiﬁed by statistics-based fea-
+ture selection methods with the concept words in an ontology. Here, we model the
+domainofanontologyasthetargetclassforthefeatureselectionmethods. Toachieve
+this objective, we measured the overlap between words that occurred in the ontology
+and their ranking in descending order by the four feature selection methods: mutual
+information, Ꜹ
+/BEstatistics,markovblanketandinformationgain. Theoverlapwasmea-
+sured as follows: we used the automatic feature selection methods to ﬁrst rank all the
+wordsinthevocabularysetofacategory. Then,wenotedtherankforthosewordsthat
+alsoappearedintheontology. Thiswasdoneforfourdifferentcategories,asexplainedinthenextsection.
+Assumingthatthetargetclasslabelisthecoreconceptinadomainontology,words
+(i.e., concepts) in the ontology have a natural rank based on their distances from the
+core concept. However we do not consider their distance as ranks for comparison be-
+causethisdoesnotaddressourobjectivewhichistoinvestigatehowusefultheexisting
+methodsforfeatureselectionareforourtaskofontologybuilding.
+3.1 TextData set
+WeusedthepubliclyavailableReuters-21578dataset[7],whichconsistsofworldnews
+stories from 1987 and has become a benchmark in text learning evaluations. While it
+ismoredifﬁculttocreateontologiesforsuchdata,wefeel,correspondsmuchbetterto
+real-worldcontextsforontologylearning.
+The data set hasbeen labelledby humanwith respect to a list ofcategories. These
+categories have been grouped into super-categories of people, topics, places, organi-zations etc. The category distribution is skewed: the most common category has a
+training-setfrequencyof2,877,but82%ofthecategorieshavelessthan100instances
+and33%ofthe categorieshaveless than10instances.
+We use the “ModLewis” split of Reuters-21578, which contains 13,625 training
+documents and 6,188 testing documents leaving 1,765 unused documents. There are
+135 overlapping topic categories, but we used only those 4 for which there exists a
+relatively large set of documents across the training set: cocoa,copper,cotton,
+andnat-gas (natural-gas). We limited ourselves to four categories for this paper
+becausemanualbuildingcorrespondingontologiesistime-consumingtask [1].
+4
+COCOA
+ROTPODSBEANSINSECTICIDE
+FARMPLANTATIONAGRICULTURE
+EL SALVADOR RIO JANEIROBRAZILCOMMODITY
+HARVEST
+CHOCOLATE POWDERCAKESUGARCROP
+Figure1: Partofontologymanuallyconstructedforthe cocoacategory.
+3.2 Ontologies
+Inorderto evaluatethe resultsoffeatureselectionforthe fourdifferentcategories,we
+constructedmanuallyontologiesforeachofthecategories cocoa,copper,cotton
+andnat-gas .
+Thiswasdoneasfollows: ﬁrst,foreachcategory,alexiconofallthedistinctwords
+that appeared in documents within that category after eliminating stop words1was
+compiled. Next,thelexiconassociatedwiththecategorywasexaminedmanuallyandasubsetofthewordsinthelexiconpickedasbeingmostcloselyassociatedsemantically
+withthe category. Thislist wasthenusedtocreateanontology.
+Animportantchoicethatwasmadeconcernedhowexactlyaportionofanontology
+is used to provide word features for evaluation of the feature selection methods. A
+straightforward idea is to use the ontological concept labels as word features. Sincethe concept labels are primarily words contained in the text collection, they can be
+easily compared with word features identiﬁed by feature selection methods. Our text
+representationmodelassumeunigram(singleword)wordfeatures. Thereforeitcannotcapture bigram (two-word) concept labels. However, since the majority of concept
+labelsareunigrams,thisdoesnotposeasevererestriction.
+Apartoftheontologyconstructedfor cocoaisshowninFigure1. Theovalsrep-
+resentconceptsandthelinesconnectingthemrepresentpropertiesorrelationsbetween
+concepts. This is a highly simpliﬁed version of the actual ontology. In particular, we
+do not consider the differentkinds of relations connectingthe concepts. Furthermore,
+we are primarily making use of the ontological structure, as opposed to the deductive
+capabilitiesa fullontologyenables.
+1Alist ofstop words isdeﬁned ascommonfunctional words suchas “and”, “of”, “or”, “the”, etc., which
+are irrelevant to represent the content of text. [12]
+5
+Ontology MI Ꜹ
+/BEMB IG
+cocoa patterson tonnes temporao lt
+chocolate vengeance sugar alleviating qtr
+powder eshleman production carnival stock
+crushed melicias mln diﬁculties bank
+butter muscles export comissaria company
+bean roldan prices covertible shares
+agriculture ﬂex imports liquor vs
+commodity ﬂaws cocoa arroba unproc
+harvest nastro pct origins type
+cake maccia week bahian dlrs
+sugar demico total undeclared cts
+crop barros traders pollinates net
+plantation wrangles report doubly dollar
+pods practised oil swollen dividend
+...............
+Table 1: Word features extracted by the various feature selection methodsfor the cat-
+egorycocoa. (MI: mutual information; MB: Markov blanket; Ꜹ
+/BE: Ꜹ
+/BEstatistics; IG:
+informationgain)
+3.3 Experimental Results
+Thefeatureselectionexperimentforthe Reuters-21578data setresultedin thekindofdatashowninTable1. Thetableshowstypicalwordfeaturesextractedforthe cocoa
+categoryby the four featureselection methods. The variousfeature selection methods
+selectedverydifferentwordfeaturesandtheirindividualbiasesareclearlyvisible.
+Figures2to5 presenttheresultsofthefeatureselectionmethodsforthefourcate-
+goriescocoa,cotton,copper andnat-gas ,showingthenumberofwordsiden-
+tiﬁed that were in the ontology. The horizontal axis indicates the rank of words that
+were present in the category lexicon, and the vertical axis represents the cumulative
+numberof wordsthat occurredin the ontology. Thus, the graphsare to be read as fol-lows. For any rank/DCon the horizontal axis, the graph shows the number of words in
+the ontology that occurred in the top /DCnumber of features as determined by the four
+featureselectionmethods.
+As can be seen from the graphs, the performance of the feature selection is rela-
+tively good, as in, a large number of words in the ontologyshow up relatively high in
+the ranking by both automatic feature selection methods. The results are best for the
+copper category,thenthe cocoacategory, cotton categoryandﬁnallythe cocoa
+category. Generally, in order to ﬁnd half of the words in the ontology,one needsonly
+gothroughabout200wordsinthe wordlistidentiﬁedbyfeatureselectionmethods.
+The results for the nat-gas category were not as good as that of either of the
+other three categories. There are a number of possible reasons that can account forthe bad performance. Firstly, the nat-gas categorywas a difﬁcult case, because the
+lexiconforthatcategoryhadasigniﬁcantoverlapwiththelexiconsforothercategories
+6
+0 500 1000 1500 2000 25000510152025303540
+Words in Lexicon (total: 1753 words)Words in Ontology (total: 40 words)Chi−square
+Mutual InformationInformation GainMarkov Blanket
+Figure2: Thefourfeatureselectionmethodsforthe cocoacategory.
+0 500 1000 1500 2000 25000510152025303540
+Words in Lexicon (total: 1202 words)Words in Ontology (total: 39 words)Chi−square
+Mutual InformationInformation GainMarkov Blanket
+Figure3: Thefourfeatureselectionmethodsforthe copper category.
+7
+0 500 1000 1500 2000 250005101520253035404550
+Words in Lexicon (total: 1336 words)Words in Ontology (total: 50 words)Chi−square
+Mutual InformationInformation GainMarkov BLanket
+Figure4: Thefourfeatureselectionmethodsforthe cotton category.
+0 500 1000 1500 2000 25000510152025303540
+Words in Lexicon (total: 2199 words)Words in Ontology (total: 38 words)Chi−square
+Mutual InformationInformation GainMarkov Blanket
+Figure5: Thefourfeatureselectionmethodsforthe nat-gas category.
+8
+in the corpus, such as oilandpet-chem (pertrochemicals). This lead to the terms
+included in the ontology having less discriminating power. Also, the manually con-
+structed ontology for natural gas itself is suspect, as its construction required domain
+knowledgewhichwasnotpresent.
+Of thefourfeatureselectionmethods,informationgainhasthe worstperformance
+in identifying word features in the ontology. This is perhaps unsurprising, as it is the
+onlyglobalmeasureofthefourandwasincludedprimarilyasa baseline.
+The Markov blanket feature selection method performs better than information
+gain. However, it is also limited in that it can only identify a relatively small set ofrelevant word features. The curves for Markov Blanket feature selection ﬂatten rela-
+tivelyquicklyatthesizeoftheoverlapoftheMarkovBlanketforthatcategoryandthe
+wordsintheontology.
+The mutual information andꜸ
+/BEmethods are far superior to the other two feature
+selectionmethods. Betweenthetwo,thereisnoclearwinnerasfarasselectingseveral
+word featuresin the ontologygoes. These two methodsare recognizedin information
+retrieval for their ability to capture dependenciesbetween word features and the class
+label. Therefore, they were able to identify words with high semantic content for theclass,asrequiredforontologies. Sincetheyrequireaclasslabeltobeeffective,though,
+theyareonlyusefulforbuildingdomain-speciﬁcontologies.
+4 Discussion
+Inordertoplaceourcontributionswithinthebroadercontextofdomainontologylearn-
+ing, we need to ﬁrst understand what domain ontology learning refers to. A domainontology identiﬁes and deﬁnes a set of relevant concepts that characterize a given do-
+main. Itcontainsasetofgenericconceptstogetherwiththeirdeﬁnitionsandinterrela-
+tionships. Domain ontology learning refers to the acquisition of such domain ontolo-
+gies from given information about the domain. In particular, the kind of information
+we aredealingwithhereisa collectionoftextualdocuments.
+Fromourexperienceofworkingonthispaper,webelievethefollowingareimpor-
+tantcomponentsofdomainontologylearning:/AFA component for any domain ontology learning method is the identiﬁcation of
+a set of candidate words for concept words in the domain ontology and their
+interrelationships. The contributions described in this paper are located in this
+step. We used existing feature selection methods for the extraction of conceptwordsforvariousdomainontologies. OtherNaturalLanguageProcessing(NLP)
+techniquescouldalsobeusefulforthisstep./AFAnother component is some kind of reference ontology, like WordNet, which
+speciﬁes basic relationship between concepts. The WordNet [4], for example,
+speciﬁes taxonomicalrelationshipsbetweenwords, which is usefulto providea
+hierarchicalstructureforidentiﬁedconceptwords./AFSinceanydomainontologylearningmethodinvolvesacertaindegreeofinaccu-racy, ideally, a method should provide a conﬁdence degree for each component
+oftheontology,conceptsandrelationships.
+9
+/AFThe creation of a domain ontology is the initial step in the life cycle of the on-
+tology. Asthedatacollectionchangesdynamically,theontologywillneedtobe
+constantlyupdatedtoaccuratelyreﬂectthecontentofthecollection./AFWeexpectthatdomainontologylearningcannotbeachievedfullyautomatically.
+Somemeasureofhumaninterventionwillprovetobenecessarybecausebuildinga domain ontology requires the context of data set and the context of usage of
+theontology.
+5 Conclusions and Future Work
+We setoutwiththehypothesisthata wordfeaturesetidentiﬁedbytheexistingfeature
+selection methods would be useful for domain ontology learning. In this paper, we
+presented an experimentto evaluate the goodnessof ﬁt of word feature sets identiﬁed
+byfeatureselectionmethodsforontologylearning.
+Theexperimentalresultsonfeatureselectionshowedthattherewasagoodoverlap
+between the word feature set identiﬁed by existing feature selection methods and thewordfeaturesetderivedfromadomainontology. Withthesoleexceptionofthe nat-
+gascategory,halfof the wordsin the categoryontologieswere placedapproximately
+in the top 200 word features identiﬁed by the statistics-based feature selection. Themutual information andꜸ
+/BEstatistics were particularly good at identifying candidate
+concept words. This indicates that the existing feature selection methods could be
+usefulforidentifyingasetofcandidatewordsforadomainontology. Insummary,the
+experimental results seem to support our hypothesis on the usefulness of the existing
+featureselectionmethodsforontologylearning.
+Our future work will include the developmentof other componentsof domainon-
+tologylearningasoutlinedintheDiscussionsection. Inparticular,wewillexploreNLP
+techniques to identify interrelationships between identiﬁed concept words. Further-more, we will investigate the maintenance of domain ontologies for dynamic streams
+ofdata.
+Acknowledgments
+TheresearchwasfundedbytheDefenseAdvancedResearchProjectsAgencyaspartof
+theDARPA AgentMarkupLanguage(DAML)programundertheAirForceResearch
+LaboratorycontractF30601-00-2-0592toCarnegieMellonUniversity.
+10
+References
+[1] A. Ankolekar, Y.-W. Seo, and K. Sycara. Investigating semantic knowledge for
+textlearning. In ProceedingsofACMSIGIRWorkshoponSemanticWeb , 2003.
+[2] T.CoverandJ. Thomas. ElementsofInformationTheory . Wiley,1991.
+[3] D.FaureandC.Nedellec. Acorpus-basedconceptualclusteringmethodforverb
+frames and ontology acquisition. In LREC Workshop on adapting lexical and
+corpusresourcestosublanguagesandapplications ,1998.
+[4] C. Fellbaum. WordNet: AnElectronicLexicalDatabase . MITPress, 1998.
+[5] J.-U. Kietz, A. Maedche, and R. Volz. A method for semi-automatic ontology
+acquisition from a corporate intranet. In Proceedings of EKAW-2000 Workshop
+onOntologiesandText , 2000.
+[6] D. Koller and M. Sahami. Toward optimal feature selection. In Proceedings
+of International Conference on Machine Learning (ICML-96) , pages 284–292,
+1996.
+[7] D. Lewis. The reuters-21578 data set, 1987.
+http://www.daviddlewis.com/resources/testcollections/-reuters21578/.
+[8] A. MaedcheandS.Staab. Ontologylearningforthesemanticweb. IEEEIntelli-
+gentSystems ,pages72–79,March/April2001.
+[9] C. Manning and H. Schutze. Foundations of Statistical Natural Language Pro-
+cessing. MITPress, 1999.
+[10] A. McCallumandK. Nigam. A comparisonofeventmodelsfornaivebayestext
+classiﬁcation. In AAAI 98 Workshop on Learning for Text Categorization , pages
+41–48,1998.
+[11] R. Navigli, P. Velardi, and A. Gangemi. Ontology learnig and its application to
+automatedterminologytranslation. IEEEIntelligentSystems ,pages22–31,2003.
+[12] G. Salton. Automatic Text Processing: The Transformation, Analysis, and Re-
+trievalofInformationbyComputer . AddisonWesley,1989.
+[13] Y. Yang and J. O. Pederson. A comparative study on feature selection in text
+categorisation. In ProceedingsofInternationalConferenceonMachineLearning
+(ICML),pages412–420.MorganKaufmannPublishers,1997.
+11

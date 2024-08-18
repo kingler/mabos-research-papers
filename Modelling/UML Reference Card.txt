@@ -1,0 +1,255 @@
+UML REFERENCE CARD
+© 1998 Allen I. Holub. All Rights Reserved.
+Available from <http://www.holub.com>.
+Static Model Diagrams
+Packages
+•C + +  namespace .
+• Group together functionally-similar classes.
+• Derived classes need not be in the same package.
+• Packages can nest. Outer packages are sometimes 
+called domains. (In the diagram, “Tools” is arguably 
+an outer package, not a domain).
+• Package name is part of the class name (e.g. given the 
+class fred in the flintstone package, the fully-qualified  
+class name is flintstone.fred ).
+• Generally needed when entire static-model won’t fit 
+on one sheet.
+Classes (Box contains three compartments)
+1. The name compartment (required) contains the class 
+name and other documentation-related information: E.g.:
+                Some_class  «abstract»
+                  { author:      George Jetson
+                     modified:    10/6/2999
+                     checked_out: y
+                  }
+• Guillemets identify stereotypes. E.g.: «static», 
+«abstract» «JavaBean». Can use graphic instead of 
+word.
+• Access privileges (see below) can precede name.
+• Inner (nested) classes identify outer class as prefix 
+of class name: ( Outer.Inner  or Outer::Inner ).
+2. The attributes compartment  (optional):
+•During Analysis : identify the attributes (i.e. defin-
+ing characteristics) of the object.
+•During Design : identify a relationship to a stock 
+class.
+This:
+is a more compact (and less informative) version of 
+this:
+Everything, here, is private. Always. Period.
+3. The operations compartment  (optional) contains 
+method definitions. Use implementation-language 
+syntax, except for access privileges :
+• Abstract operations (C++ virtual, Java non-final) 
+indicated by italics (or underline ).
+•Boldface  operation names are easier to read.
+If attributes and operations are both omitted, a more com-
+plete definition is assumed to be on another sheet.
+1Java, unfortunately, defaults to “package” a ccess when no modifier is present. In my 
+“flavor” of UML, a missing access privilege means “public”.Associations (relationships between classes)
+• Associated classes are connected by lines.
+• The relationship is identified, if necessary, with a < or 
+> to indicate direction (or use solid arrowheads).
+• The role that a class plays in the relationship is identi-
+fied on that class's side of the line. 
+• Stereotypes (like «friend») are appropriate.
+• Unidirectional message flow can be indicated by an 
+arrow (but is implicit in situations where there is only 
+one role):
+• Cardinality:
+•E x a m p l e :
+class Company
+{
+   private Employee[] peon = new Employee[n];                   public void give_me_a_raise( Employee e ) { ... }
+}
+class Employee
+{
+   private Company  employer;
+   private Employee boss;
+   private Vector   flunkies = new Vector();   public  void     you_re_fired() { ... }
+}
+(A Java Vector is a variable-length array. In this case it 
+will hold Employee objects) Implementation Inheritance
+Outline arrows identify derivation relationships: extends, 
+implements, is-a, has-properties-of, etc. Variations include:
+Interface Inheritance
+In C++, an interface is a class containing nothing but pure 
+virtual methods. Java supports them directly (c.f. “abstract 
+class,” which can contain method and field definitions in 
+addition to the abstract declarations.)
+My extension to UML: rounded corners identify interfaces. 
+If the full interface specification is in some other diagram, I 
+use:
+Strict UML uses the «interface»  stereotype in the name 
+compartment of a standard class box:
+Interfaces contain no attributes, so the attribute compart-
+ment is always empty.Java.awtcom.hulub
+Application
+Database
+InterfacesOracle
+SybaseTools
+Class name
+Attributes:
+Operations:+ public
+# protected- private
+~ package (my extension to UML)
+1Person
+String name;
+Person String
+name1 Usually omitted if 1:1
+n Unknown at compile time, but bound.
+0..1 (1..2  1..n)
+1..* 1 or more
+*0  o r  m o r e1..* 1..*
+relationship
+A’s role in B B’s role in A A B
+Sender Receiver
+Company
+give_me_a_raise(Employee e)
+Employee
+you_re_fired()1
+employer peon<works for 1..nboss
+1
+1..* flunkiesSuperClass
+- void concrete();
++ int override();
+SubClass
++ int override();
++ int additional();
+User
+f() { x.operation() }
+Iface Nameoperation()Implementer
+operation()relationship
+x
+User Name Implementer
+InterfaceName
+«interface»
+Operations
+Aggregation (comprises)
+• Destroying the “whole” does not destroy the parts.
+• Cardinality is allowed.
+Composition (has) relationship
+• The parts are destroyed along with the whole.
+• Doesn’t really exist in Java.
+• In C++:
+class Container
+{
+     Obj item1;     Obj *item2;
+   public:
+     Whole() { item2 = new Obj; }     ~Whole(){ delete item2;    }
+};
+Constraint
+• A constrained relationship requires some rule to be 
+applied (e.g. {ordered}). Often combined with aggre-
+gation, composition, etc.
+• In the case of {or}, only one of the indicated relation-
+ships will exist at any given moment (a C++ union, or 
+reference to a base class).
+• {subset} does the obvious.• In official UML, put arbitrary constraints that affect 
+more than one relationship in a “comment” box, as 
+shown. I usually leave out the box.
+Qualified Association
+• Hash tables, associative arrays, etc.
+class User
+{   // A Hashtable is an associative array, indexed
+   // by some key and containing some value.
+   private Hashtable bag = new HashTable();
+   private void add(String key, Item value) {
+      bag.put(key, value);
+   }
+}
+Association Class
+• Use when a class is required to define a relationship.
+• Somewhere, an additional relationship is required to 
+show ownership. (The one between person and Ticket 
+in the current example).
+Dynamic-Model (Sequence) Diagrams
+Objects and Messages (new style)• Top boxes represent objects, not classes. You may 
+optionally add “ :class” to the name if desired.
+• Vertical lines represent the objects “life line”, or exist-
+ence. 
+• Broken lifeline indicates the object is inactive, a rect-
+angle indicates the object is active.
+• represent messages being sent.
+•  (optional if synchronous) represent method 
+return. (May label arrow with name/type of returned 
+object).
+• Sending object’s class must have:
+1. An association of some sort with the receiving 
+objects class.
+2. The receiver-side class’s “role” must be the same as 
+the name of the receiving object.
+Object Creation
+• The new instance appears at end of creation message 
+arrow.
+• Destruction is accomplished by terminating the lifeline 
+with a large X:
+Conditions
+• Message sent only if conditional expression is true.
+•T h e  cond_expr  is typically expressed in the imple-
+mentation language.Loops (extension to UML)
+• Don’t think loops, think what the loop is accomplish-
+ing.
+• Typically, you need to send some set of messages to 
+every element in some collection. Do this with every.
+• You can get more elaborate (every receiver where x<y)
+• The diagram above comes from:
+and maps to the following code:
+class sender_class
+{
+   receiver_class receiver[n];
+   public do_it() {
+      for(int i = 0; i < n; ++i)
+         receiver[i].message();   }
+}
+Arrow Styles for Messages
+Asynchronous Callbacks
+• Callback occurs while Sender is potentially executing 
+something else.Part Whole
+Item Container
+role
+ContainerItem
+Identity key(){ordered}
+role
+Collection{or}Container
+Container
+Comittee Person {subset}member-of *
+**
+1chair-of
+Comittee Comittee
+{person.employer ==
+ Person.boss.employer}0..1 *
+boss peonemployee employer
+* 0..1User
+add(String key,
+    Item value)key Itembag
+TicketPerson Airline
+Date when;
+Seat where;Airport to;
+Airport from;carrier passenger<travels on<buys
+Sender Receiver
+message()
+message()Sender
+Receivernew
+Sender
+Receivernew
+message()
+Sender Receiver
+[cond_expr] message()Symbol Type Description
+Simple Don’t care. Usually read as the 
+same as synchronous.
+Synchronous Sender blocks until return.
+Asynchronous Handler returns immediately and 
+both sender and receiver work 
+simultaneously.Sender
+Receiver
+message()Every
+do_it()
+sender_class
+void do_it()receiver_class
+void message()1 n
+sender receiver
+x
+Sender Receiver
+message()
+callback()

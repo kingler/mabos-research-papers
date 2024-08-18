@@ -1,0 +1,877 @@
+Maximally Permissive Reward Machines
+Giovanni Varricchionea,*, Natasha Alechinab,a, Mehdi Dastaniaand Brian Loganc,a
+aUtrecht University
+bOpen University
+cUniversity of Aberdeen
+Abstract. Reward machines allow the definition of rewards for tem-
+porally extended tasks and behaviors. Specifying “informative” re-
+ward machines can be challenging. One way to address this is to gen-
+erate reward machines from a high-level abstract description of the
+learning environment, using techniques such as AI planning. How-
+ever, previous planning-based approaches generate a reward machine
+based on a single (sequential or partial-order) plan, and do not allow
+maximum flexibility to the learning agent. In this paper we propose a
+new approach to synthesising reward machines which is based on the
+set of partial order plans for a goal. We prove that learning using such
+“maximally permissive ” reward machines results in higher rewards
+than learning using RMs based on a single plan. We present experi-
+mental results which support our theoretical claims by showing that
+our approach obtains higher rewards than the single-plan approach in
+practice.
+1 Introduction
+Reward machines were introduced in [21] as a way of defining tem-
+porally extended (i.e., non-Markovian relative to the environment)
+tasks and behaviors. A reward machine (RM) is a Mealy machine
+where states represent abstract ‘steps’ or ‘phases’ in a task, and tran-
+sitions correspond to observations of high-level events in the envi-
+ronment indicating that an abstract step/phase in the task has (or has
+not) been completed [2, 23]. The RM-based algorithm proposed in
+[2] has been shown to out-perform state-of-the-art RL algorithms,
+especially in tasks involving temporally extended behaviours. How-
+ever, while learning with a reward machine is guaranteed to converge
+to an optimal policy with respect to the reward machine , in general
+RMs provide no guarantees that the resulting policy is optimal with
+respect to the task encoded by the reward machine. For example, a
+reward machine may specify that event ashould be observed before
+event b, while in some environment states, it may be more efficient to
+achieve bbefore a. In general, for an RM-based policy to be optimal
+with respect to a task, the reward machine for the task must encode
+all possible ways the task can be achieved.
+Another problem with reward machines is how to to generate
+them. While a declarative specification in terms of abstract steps or
+phases in a task is often easier to write than a conventional reward
+function, specifying a reward machine for a non-trivial task is chal-
+lenging and prone to errors. Reward machines can be computed from
+task specifications expressed in a range of goal and property specifi-
+cation languages, including LTL and LTL f, in a straightforward way
+[2]. However, reward machines generated from an abstract temporal
+∗Corresponding Author. Email: g.varricchione@uu.nlformula may not expose significant task structure. Writing more “in-
+formative” specifications can be challenging, and, moreover, may in-
+advertently over-prescribe the order in which the steps are performed.
+One way to address this problem, is to generate a reward machine
+from a high-level abstract description of the learning environment,
+using techniques such as AI planning [11, 12], or (in a multi-agent
+setting) ATL model checking [24]. For example, Illanes et al. [11]
+consider a high-level model, in the form of a planning domain, of
+the environment in which the agent acts. They show how planning
+techniques can be used to synthesise a plan for a task, which is then
+used to generate a reward machine for that task. The reward machine
+is used to train a meta-controller for a hierarchical RL agent. The
+controller chooses which option (corresponding to an abstract action
+in the planning domain) to execute next. Their results indicate that
+an agent trained using a plan-based reward machine outperforms (is
+more sample efficient than) a standard HRL agent. They also show
+that reward machines based on partial-order plans outperform reward
+machines generated from sequential plans, arguing that this is be-
+cause partial-order plans allow more ways of completing a task.
+While the results presented by Illanes et al. are encouraging, their
+approach does not allow maximum flexibility to the agent, and thus
+cannot ensure learning an optimal policy for the task. The reward ma-
+chine they generate is based on a single partial-order plan. In many
+cases, a goal may be achieved by different plans and each plan might
+be more appropriate in different circumstances, e.g., depending on
+the agent’s location, or the resources available.
+In this paper we propose a new approach to synthesising reward
+machines which is based on the set of partial-order plans for a goal .
+We present an algorithm which computes the set of partial-order
+plans for a planning task, and give a construction for synthesising a
+maximally permissive reward machine (MPRM) from a set of partial-
+order plans. We prove that the expected discounted future reward of
+optimal policies learned using an MPRM is greater than or equal
+to that obtained from optimal policies learned using a RM synthe-
+sised from any single partial-order plan. We introduce a notion of the
+adequacy of planning domain abstractions, which intuitively charac-
+terises when a planning domain captures all the relevant features of
+an MDP, and prove that the expected reward of an optimal policy
+learned using an MPRM synthesised from a goal-adequate planning
+domain is the same as that of an optimal policy for the underlying
+MDP. Finally, we evaluate MPRMs using three tasks in the C RAFT -
+WORLD environment [1] used in [11, 12], and show that the agent
+obtains higher reward than with RMs based either on a single partial-
+order plan or on a single sequential plan.arXiv:2408.08059v1  [cs.LG]  15 Aug 2024
+2 Preliminaries
+In this section, we provide formal preliminaries for both reinforce-
+ment learning and planning.
+2.1 Reinforcement Learning
+In RL the model in which agents act and learn is generally assumed
+to be a Markov Decision Process (MDP) M=⟨S, A, r, p, γ ⟩, where
+Sis the set of states, Ais the set of actions, r:S×A×S→Ris
+the reward function, p:S×A→∆(S)is the transition function,
+andγ∈[0,1]is the discount factor. It is assumed that the agent does
+not have access to the model in which it acts, i.e., randpare hidden
+to it. The agent’s goal in RL is to learn a policy ρ:S→∆(A),
+i.e., a map from each state of the MDP to a probability distribution
+over the set of actions. In particular, we are mostly interested in so-
+called “ optimal policies ”, i.e., policies that maximise the expected
+discounted future reward from any state s∈S:
+ρ∗= arg max
+ρX
+s∈Svρ(s)
+where vρ(s)is the “ value function ”, i.e., the expected discounted
+future reward obtained from state sby following policy ρ:
+vρ(s) =Eρ"∞X
+t=0γtrt|s0=s#
+where rtis the reward obtained at timestep t.
+As the MDP’s dynamics and reward are hidden, the agent is sup-
+posed to learn a policy by trial and error. This is achieved by the
+agent taking an “exploratory” action ain a state s, and observing
+which state s′(sampled from p(s, a)) is reached and the reward
+r′=r(s, a, s′)that is obtained. By collecting these experiences
+(s, a, s′, r′)∈S×A×S×R, or “ samples ”, the agent can learn a
+policy ρvia RL algorithms, such as Q-learning [25].
+2.2 Labelled MDPs
+As in this work we assume the presence of planning domains and
+reward machines, we also assume that we are given a so-called “ la-
+belling function ”L. This function will be the link between the low-
+level MDP, in which agents learn how to act, and the high-level plan-
+ning domain and reward machine, which describe how agents can
+achieve a task using high-level symbols and actions.
+Definition 2.1 (Labelled MDP) .LetPbe a set of propositional sym-
+bols. Then, a labelled MDP is a tuple M=⟨S, A, r, p, γ, L ⟩, where
+S, a, r, p andγare as in an MDP, and L:S→2Pis the labelling
+function, mapping each state of the MDP to a set of propositional
+symbols.
+2.3 Reward Machines
+Reward machines [23] are a tool recently introduced in the RL lit-
+erature to define non-Markovian reward functions via finite state au-
+tomata. Let M=⟨S, A, r, p, γ, L ⟩be a labelled MDP for some set
+of propositional symbols P.
+Definition 2.2 (Reward Machine) .A reward machine (RM) is a tuple
+R=⟨U, u 0,Σ, δu, δr⟩, where Uis the set of states of the RM, u0
+is the initial state, Σ⊆2Pis the input alphabet, δu:U×Σ→U
+is the state transition function, and δr:U×U→Ris the reward
+transition function.When using RMs, training is usually done over the so-called
+“product ” between the labelled MDP and the RM, also known as
+a “Markov Decision Process with a Reward Machine ” (MDPRM)
+[23].
+Definition 2.3 (MDPRM) .AMarkov Decision Process
+with a Reward Machine (MDPRM) is a tuple M =
+⟨S, A, p, γ, L, U, u 0, δu, δr⟩, where S, A, p, γ, L are as in the
+definition of a labelled MDP, and U, u 0,Σ, δuandδrare as in the
+definition of a reward machine.
+At each timestep, the RM is in some state u. As the agent moves
+the MDP into state s′, the RM updates its internal state via the obser-
+vation L(s′), i.e., the new RM state is u′=δu(u, L(s′)). Accord-
+ingly, the RM also outputs the reward δr(u, u′), which is the reward
+the agent obtains. As in “vanilla” MDPs, the agent learns a policy
+by taking exploratory actions and collecting rewards from the RM’s
+reward function δr. Thus, samples include also the states of the RM,
+i.e., each sample is a tuple (s, u, a, s′, u′, r′)∈S×U×R×S×U.
+For this reason, any RL algorithm that works with standard MDPs
+can also be used in MDPRMs. Moreover, algorithms exploiting ac-
+cess to the RM have also been proposed, e.g., CRM [23].
+2.4 Symbolic Planning
+Aplanning domain D=⟨F,A⟩, is a pair where F ⊆ P is a set of
+fluents (propositions), and Ais a set of planning actions .Planning
+states are subsets S ⊆ F , where a proposition is in Sif and only if it
+is true in S. Actions a∈ A are tuples a=⟨pre+,pre−,eff+,eff−⟩
+such that each element of ais a subset of F,pre+∩pre−=∅and
+eff+∩eff−=∅. The “ pre” sets are the sets of “ preconditions ”,
+whereas the “ eff” are the sets of “ effects ”, or “ postconditions ”.pre+
+are the propositions that must be true to perform the action, whereas
+pre−those that must be false. Analogously, eff+are the proposi-
+tions that are made true by the action, whereas eff−those that are
+made false. Thus, an action acan be executed from a planning state
+Sif and only if pre+⊆ S andpre−∩ S=∅. Executing action a
+in state Sresults in the new state S′= 
+S \eff−
+∪eff+. Given
+an MDP Mand a planning domain D, we assume that A∩ A=∅,
+i.e., the planning actions are not the same as the actions the agent can
+perform in the MDP. Intuitively, the planning actions can be seen as
+high-level or abstract actions which correspond to sequences of ac-
+tions in the MDP. For example, in a Minecraft-like scenario where
+the agent can move up, down, left, and right on a grid, a planning ac-
+tion might be “ get wood ” corresponding to a sequence of movement
+actions ending in a cell containing wood.
+As an example of a planning domain, consider the C RAFT WORLD
+environment [1] in which an agent moves in a grid and has to gather
+resources which can then be used to produce items.1For example, the
+agent can build a bridge in order to reach the gold ore. We assume
+the agent can build two different types of bridge: an iron bridge or
+a rope bridge. The iron bridge requires gathering wood and iron and
+then processing them in a factory. The rope bridge requires gathering
+grass and wood and processing them in a toolshed. The correspond-
+ing planning domain Dcan be formalised as:
+⟨F={has-wood ,has-grass ,
+has-iron ,has-bridge },
+A={get-wood ,get-grass ,get-iron ,
+use-factory ,use-toolshed }⟩
+1CRAFT WORLD is based on the popular video game Minecraft, and was
+used as a test domain in [11, 12].
+Theget-x actions have no preconditions, and only one positive
+postcondition, i.e., that has-x is true. The use-factory ac-
+tion has the preconditions has-wood andhas-iron , the pos-
+itive postcondition has-bridge , and the negative postcondi-
+tions, has-wood andhas-iron , i.e., the use-factory ac-
+tion makes a bridge, “consuming” the resources collected by the
+agent in the process. The use-toolshed action has has-wood
+andhas-grass as preconditions, the positive postcondition
+has-bridge , and the negative postconditions, has-wood and
+has-grass .
+Aplanning task is a triple T=⟨D,SI,G⟩, where Dis a planning
+domain, SIis the initial planning state, and G=⟨G+,G−⟩is a pair
+containing two subsets of Fwhich are disjoint. Any planning state
+Ssuch that G+⊆ S andS ∩ G−=∅is agoal state . For example,
+the planning task to build a bridge is given by the domain Dwe
+have previously defined, the initial state SI=∅, and the goal G=
+⟨{has-bridge },∅⟩.
+Asequential plan π= [a0, . . . , a n]for a planning task Tis a
+sequence of planning actions ai∈ A such that: (i) it is possible to
+execute them sequentially starting from SI, and (ii) by doing so, the
+planning domain reaches a goal state. For example, the following
+sequential plan allows the agent to produce a rope bridge:
+[get-wood ,get-grass ,use-toolshed ]
+Apartial-order plan (POP) π=⟨A′,≺⟩is a pair where A′is a
+multiset of actions from Aand≺is a partial order over A′[3, 16].
+We write a≺a′to denote (a, a′)∈≺, meaning that action amust be
+performed before action a′. For example, the following partial-order
+plan allows the agent to produce an iron bridge:
+πiron-bridge =
+⟨{get-wood ,get-iron ,use-factory },
+{get-wood ≺use-factory ,
+get-iron ≺use-factory }⟩
+Sequential plans are a special case of partial-order plans where ≺is
+a total order. In general, a partial-order plan corresponds to a setof
+sequential plans, i.e., the set of all sequential plans that can be ob-
+tained by extending the partial order ≺to a total order (referred to
+as a “ linearisation ” of the partial-order plan). Compared to sequen-
+tial plans, partial-order plans allow the agent greater flexibility in
+choosing the order in which actions are executed. While a sequential
+plan constrains the agent to follow the total order of the plan, with a
+partial-order plan the agent can perform any action a, so long as all
+actions a′such that a′≺ahave already been executed.
+Typically, given a planning task, a partial-order planner, e.g., [18],
+returns a single partial-order plan π=⟨A′,≺⟩. However, in general,
+a planning task can be achieved using multiple partial-order plans,
+i.e., plans π′where the actions in A′are ordered differently, or which
+use different multisets of actions.
+Definition 2.4 (Set of all partial-order plans) .Theset of all partial-
+order plans for a planning task ⟨D,SI,G⟩,Π, is the set of plans
+⟨A′,≺⟩where A′⊆ A and any linearisation [a0, . . . , a n]ofA′
+consistent with ≺results in a goal state S, i.e.,G+⊆ S andG−∩
+S=∅.
+It is straightforward to give an algorithm that returns the set of all
+partial-order plans Πfor a planning task, see Algorithm 1. We as-
+sume the following definitions. steps (π)is the multiset of actions in
+the plan πandord(π)is the set of ordering constraints. In addition,Algorithm 1 Compute the set of all partial-order plans
+1:π← ⟨{ start,finish},{start≺finish}⟩
+2:Π← ∅
+3:procedure POP-PLAN (π)
+4: open←open preconditions ∈steps (π)
+5: ifopen =∅then
+6: Π←Π∪ {⟨steps (π)\ {start,finish},ord(π)\
+{start≺finish}⟩}
+7: else
+8: fora∈steps (π)s.t.p∈pre(a)∧p∈open do
+9: fora′∈ A ∪ steps (π)s.t.p∈eff(a′)do
+10: ifa′is new then
+11: π← ⟨steps (π)∪ {a′},
+ord(π)∪ {start≺a′≺finish}⟩
+12: ord(π)←ord(π)∪ {a′≺a}
+13: links(π)←links(π)∪ {(a′, p, a)}
+14: ORDER (π, a′, p, a )
+15:procedure ORDER (π, a′, p, a )
+16: threats ← {(ai, aj)|(ai,¬p, aj)∈links (π)}
+17: ifthreats ̸=∅then
+18: cons← {{ o1, . . . , o n} |(aj, ak)i∈threats ∧
+oi=a≺ajoroi=ak≺a′}
+19: forc∈cons do
+20: iford(π)∪cis consistent then
+21: ord(π)←ord(π)∪c
+22: POP-PLAN (π)
+23: else
+24: POP-PLAN (π)
+the algorithm maintains a set links (π)ofcausal links of the form
+(a′, p, a)where a′andaare steps and pis a literal in the postcondi-
+tion of a′and in the precondition of a. Causal links record the reason
+for adding step a′to the plan (in order to establish precondition of
+a), and are used to generate ordering constraints. A step a′′threatens
+a causal link (a′, p, a)ifa′′makes pfalse. To resolve the threat a′′
+should be placed either before a′in the order, or after a. An ordering
+isconsistent if it is transitive and does not contain cycles, i.e., there
+is noai, ajsuch that (ai≺aj),(aj≺ai)∈ord. Given a planning
+action a,pre(a)is the set containing the positive and negative literals
+of the propositional symbols appearing in the sets pre+andpre−of
+a, and eff(a)is the set of positive and negative literals in eff+and
+eff−. A precondition pof a step ais termed open if there is no causal
+link(a′, p, a)∈links (π)establishing p. A plan is complete if it has
+no open preconditions. Initially, the set of plans is empty, and πis
+initialised to a plan consisting of two steps: start andfinish :start has
+no preconditions and the initial state SIas a postcondition; finish has
+no postconditions and the goal Gas a precondition. ordcontains the
+single ordering constraint {start≺finish}, andlinks is empty.
+The procedure POP-PLAN takes a partial-order plan πas input. If π
+has no open preconditions, i.e., the plan is complete, then we remove
+the steps start andfinish , add it to the set of plans, and POP-PLAN re-
+turns (lines 5-6). Otherwise, we iterate over each open precondition
+in the set of open preconditions, open (lines 8-14). For each open
+precondition p, an action a′from the set of actions Aof the planning
+domain is chosen which establishes p(line 9; if there are no actions
+which establish p, i.e., the plan cannot be extended to a complete
+plan, this branch of the computation terminates and πis discarded).
+The procedure ORDER is then called (line 14) to resolve any threats
+introduced by the addition of a′. If there are no threats, then POP-
+PLAN is called again with the updated πcontaining a′(lines 23-24).
+Instead, if there exists at least a threat, the set of sets of ordering
+constraints cons (line 18) contains all possible ways of safeguarding
+each threatened link (ai,¬p, aj). For each such set of ordering con-
+straints c, ifcis consistent with the current ordering constraints in
+ord(π), they are added to ord(π), and POP-PLAN is called to extend
+the plan for each possible ordering of actions (lines 19-22). When a
+plan is found, we backtrack and continue from the ‘closest’ enclos-
+ingforloop (which may be iterating over sets of ordering constraints
+inORDER , or actions a′and open preconditions pinPOP-PLAN ) to
+search for alternative ways of extending the incomplete plan π. Al-
+gorithm 1 runs in EXPSPACE, as the set of partial order plans is in
+the worst case exponential in the number of actions in A. In practice,
+this is often not an issue: the planning domain is an abstraction of the
+underlying MDP, and the number of actions is typically small.
+For the bridge task, the algorithm would produce another partial-
+order plan, in which the agent builds a rope bridge using grass:
+πrope-bridge =
+⟨A={get-wood ,get-grass ,use-toolshed },
+≺={get-wood ≺use-toolshed ,
+get-grass ≺use-toolshed }⟩
+Thus giving us the set of all partial-order plans for the bridge task:
+Πbridge ={πiron-bridge ,πrope-bridge }. In the Appendix, we also
+provide all sequential plans that can be obtained by linearising the
+POPs in Πbridge .
+3 Maximally Permissive Reward Machines
+In this section, we show how the set of all partial-order plans, Π,
+for a planning task T=⟨D,SI,G⟩, can be used to synthesise a
+reward machine RΠthat is maximally permissive , i.e., which allows
+the agent maximum flexibility in learning a policy.
+LetΠbe the set of all linearisations πof all the partial-order plans
+inΠ. We denote by pref(π)the set of all proper prefixes (of arbitrary
+length) of π∈Π. Note that the prefixes are finite, as the set of ac-
+tions in Πis finite. Then, let states (pref(π))be the set of sequences
+of planning states that is induced by the prefixes in pref(π), assum-
+ing that the initial planning state is SI. We denote with steps (π)the
+set of actions in a sequential plan, and with post(A′)the set con-
+taining post(a), as defined in Section 2.4, for each planning action
+a∈ A′. For an arbitrary sequence of planning states u, we denote
+withlast(u)the last element of the sequence. For sets of literals P,
+we, respectively, denote with P+andP−the sets of propositional
+symbols with positive and negative literals in P.
+Construction 1 (Maximally Permissive Reward Machine (MPRM)) .
+Fix the set of all partial-order plans Π ={π1, . . . , πn}for some
+planning task T=⟨D,SI,G⟩. Then, RΠ, the maximally permissive
+RM corresponding to Π, is defined as follows:
+•U=S
+π∈Πstates (pref(π))
+∪ {ug};
+•u0= [SI];
+•Σ =S
+π∈Πpost(steps (π));
+•δu(u, P) =uS, where S= 
+last(u)\P−
+∪P+anduS ∈
+states (pref(π))for some linearisation π∈Π, or=ugifG+⊆
+SandG−∩ S=∅;
+•δr(u, u′) =(
+0 ifu′=ug
+−1otherwise .In the construction of the MPRM, the set of states correspond to
+the set of all possible prefixes of planning states across all POPs
+in the set used to build the reward machine. Then, the RM transi-
+tions from a state uto a state u′=uSwhen it observes the set of
+propositional symbols Pwhich are exactly the conditions such that
+S= 
+last(u)\P−
+∪P+and, most importantly, uSis a prefix of
+some linearisation of a POP in Π. As soon as the RM “reaches” a
+sequence of states such that the last state is a goal state for the task
+(meaning also that a linearisation has been “completed”), it gives a
+reward of 0 to the agent and terminates in state ug, while for all other
+transitions the agent gets a reward of −1. Note that if uSis not the
+prefix of any linearisation of a POP in Π, orSis not a goal state, then
+δu(u, P) =u. Figure 1 shows the MPRM synthesised from the set
+Πbridge of all partial-order plans for the bridge example we gave in
+Section 2.4.
+Figure 1. MPRM for the bridge task. Positive and negative postconditions
+are respectively denoted with a superscript +and−.
+In the remainder of this section, we provide a theoretical analy-
+sis linking the optimal policies that can be learned by an agent de-
+pending on the kind of reward machine it is equipped with. We con-
+sider RMs that can be built from the set of all partial-order plans
+(RM- Π), a single partial-order plan (RM- π), and a single sequential
+plan (RM- π), over the same planning domain D. All RMs issue a
+non-negative reward only in the final state. We denote the optimal
+policy learnt using the set of all partial-order plans by ρ∗
+RM-Π, using a
+single partial-order plan by ρ∗
+RM-π, and using a single sequential plan
+byρ∗
+RM-π.
+Theorem 3.1. LetMbe a labelled MDP , Da planning domain
+overM, and RM- Π, RM- πand RM- πfinal state reward machines
+generated from Dfor the same task. Then,
+ρ∗
+RM-Π≥ρ∗
+RM-π≥ρ∗
+RM-π
+where ρ1≥ρ2if and only if v(ρ1(s))≥v(ρ2(s))for all states
+s∈SofM.
+Proof. The proof follows from the fact that any policy that can be
+learned using an RM synthesised from a single sequential plan can
+also be learned using an RM synthesised from a partial-order plan
+which has the sequential plan as its linearisation (if it remains an
+optimal policy). Similarly, a policy learned using an RM synthesised
+from a single partial-order plan can also be learned using an RM that
+is synthesised from the set of all partial-order plans.
+Theorem 3.1 shows that MPRMs allow an agent to learn an op-
+timal policy with respect to the planning domain and the planning
+task. A natural question to ask is whether it learns a goal-optimal
+policy ρ∗, i.e., a policy that achieves the goal using the smallest num-
+ber of actions in the underlying MDP. For example, an agent using
+Q-learning is guaranteed to learn a goal-optimal policy on an MDP
+where the agent is always given the same negative reward and the
+discount factor γis exactly 1.
+An agent using an MPRM will learn a goal-optimal policy if the
+planning domain and labelling are “ adequate ” for the goal.
+Definition 3.2. Given a labelled MDP, planning domain D, and goal
+G, we say that Disadequate forGif, and only if:
+• G corresponds to a set of planning domain fluents, i.e., G ⊆ F ;
+•a goal-optimal policy encounters all the state labels in some plan
+π∈ΠforG, in the order consistent with the order in π.
+For example, if any policy to build a bridge has to encounter la-
+bels corresponding to getting wood, getting iron and using a factory,
+a planning domain and labelling containing only these fluents is ad-
+equate for the goal of having a bridge. However, if there is an al-
+ternative way of building a bridge that involves getting grass, and
+this label is missing in the planning domain, then the domain is not
+adequate for the goal of building a bridge.
+Theorem 3.3. ρ∗=ρ∗
+RM-Πif RM- Πis synthesized from a goal-
+adequate planning domain.
+Proof. From the definition of a planning domain adequate for the
+goal, any goal-optimal policy has to go through the way-points en-
+coded in the reward machine.
+4 Empirical Evaluation
+In this section, we evaluate maximally permissive reward machines
+in three tasks in the C RAFT WORLD environment, and show that
+the agent obtains higher reward with an MPRM than with RMs
+based on a single partial-order plan or a single sequential plan. In
+the first task, the agent has to build a bridge, as in the example
+in Section 2.4 For the second task, the agent has to collect gold.
+In the third task, the agent has to collect gold or a gem, and the
+task is considered achieved when the agent collects at least one of
+the two items. For the gold-or-gem task we have to slightly modify
+the definition of goal states in planning tasks: the goal is the pair
+G=⟨G+={has-gold ,has-gem },G−=∅⟩, and a planning
+stateSis agoal state if and only if G+∩ S ̸=∅andG−∩ S=∅.
+The gold and the gem are collected as described in [1]: gold is col-
+lected by using a(ny) bridge, whereas the gem is collected using an
+axe. To produce an axe, the agent must combine a stick, which can
+be obtained by processing wood at the workbench, with iron at the
+toolshed. We refer to these, respectively, as the “ bridge task ”, “gold
+task”, and “ gold-or-gem task ”. In the planning domain, we add the
+following fluents:
+•For the gold task: has-gold ;
+•For the gold-or-gem task: has-gold ,has-stick ,has-axe ,
+has-gem ;
+and the following planning actions:
+•For the gold task:
+–get-gold , with one positive precondition, has-bridge ,
+and one positive postcondition, has-gold ;
+•For the gold-or-gem task:
+–use-workbench , with one positive precondition,
+has-wood , one positive postcondition, has-stick ,
+and one negative postcondition, has-wood ;
+–use-toolshed-for-axe , with positive preconditions,
+has-stick andhas-iron , one positive postcondition,
+has-axe , and two negative postcondition, has-stick and
+has-iron ;–get-gem , with one positive precondition, has-axe , and one
+positive postcondition, has-gem ;
+The set of partial-order plans for the bridge task Πbridge =
+{πiron-bridge ,πrope-bridge }is given in Section 2.4. For the gold
+task, we extend πiron-bridge andπrope-bridge by adding the
+get-gold action, and by having use-factory ≺get-gold
+anduse-toolshed ≺get-gold . For the gold-or-gem task, the
+set of partial-order plans consists of πiron-bridge ,πrope-bridge and
+πgemin which the agent makes an axe and uses it to mine the gem.
+πgemis defined as follows:
+πgem=
+⟨A={get-wood ,get-iron ,use-workbench ,
+use-toolshed-for-axe ,get-gem },
+≺={get-wood ≺use-workbench ,
+get-iron ≺use-toolshed-for-axe ,
+use-workbench ≺
+use-toolshed-for-axe ,
+use-toolshed-for-axe ≺get-gem }⟩
+For each task, we also generate all sequential plans that can be ob-
+tained by linearising the POPs that can be used to achieve the task.
+Thus, for both the bridge and gold tasks, there are a total of 4 sequen-
+tial plans and 2 partial-order plans. For the gold-or-gem task, there
+are a total of 7 sequential plans and 3 partial-order plans. In the Ap-
+pendix2, we provide formal definitions of the planning domains, and
+give also the plans for the gold and gold-or-gem tasks.
+4.1 Experimental Setup
+The maximally permissive RMs for each task were synthesised using
+the construction given in Section 3. The RMs for each partial-order
+and sequential plan were generated using the approach presented in
+[11]. Training is carried out by using Q-learning over the resulting
+MDPRMs [23].3
+For each task we generated 10 different maps of size 41 by 41
+cells. The maps and initial locations were chosen so that from some
+locations a task can be completed more quickly by following a par-
+ticular sequential plan. For example, in the first map for the bridge
+task, if the agent starts from a location in the upper half of the map
+(i.e., in the first 20 rows) it is more convenient to build an iron bridge,
+while in the lower half of the map it is more convenient to build a rope
+bridge. The MDP reward function rreturns −1 for each step taken by
+the agent, until it achieves the task or the episode terminates. When
+the task is completed, the map and agent are “re-initialised”: the
+agent is placed on a random starting cell and its “inventory” is emp-
+tied, i.e., it contains no items. For each set of plans and single partial-
+order/sequential plan for a task, and for each of the 10 maps for the
+task, an agent was trained with the corresponding RM for 10,000,000
+training steps. Training was carried out in episodes, lasting at most
+1,000 steps, after which the environment was re-initialised regardless
+of whether the agent has achieved the task or not. Every 10,000 train-
+ing steps the agent was evaluated on the same map used for training
+from 5 (predetermined) starting positions. We set the learning rate
+α= 0.95, the discount rate γ= 1, and the exploration rate ε= 0.1.
+2The extended version of this paper with the appendix can be found on arXiv.
+3Note that we do not provide results for a baseline that does not employ
+reward machines (e.g., Q-learning): as shown in [23], C RAFT WORLD is a
+complex environment with sparse rewards, making it infeasible for an agent
+to learn an effective policy without having access to a reward machine.
+Our implementation, largely based off of that of [11], is available
+in the following GitHub repository.
+4.2 Results
+For each approach, we plot the median and the 25thand the 75thper-
+centiles (shaded areas) of the rewards obtained across all maps by
+the agents in the evaluations during training for each task. To make
+the plots more readable, we have “aggregated” results for the se-
+quential and partial-order plan-based RMs: for each kind of plan we
+plot the median and the 25thand the 75thpercentiles of all agents
+trained with an RM generated using that type of plan. In the plots,
+“QRM-MPRM ” denotes the performance of the agent trained with a
+maximally permissive RM, while “ Aggregated-QRM-Seq ” and
+“Aggregated-QRM-POP ” are, respectively, the aggregated per-
+formance of agents trained with sequential plan RMs and partial-
+order plan RMs. On the x-axis we plot the number of steps (in mil-
+lions), while on the y-axis we plot the performance obtained during
+the evaluations run at the corresponding timestep.
+Figure 2. Results for the bridge task.
+Figure 3. Results for the gold task.
+Figure 2 shows the results for the bridge task, Figure 3 shows the
+results for the gold task, and Figure 4 shows the results for the gold-
+or-gem task. As can be seen, in all tasks the agent trained with the
+MPRM outperforms the aggregated results for the agents trained us-
+ing RMs based on a single partial-order or sequential plan. This is
+as expected given Theorem 3.1. In addition, the agent trained using
+an RM based on a single partial-order plan outperforms the agent
+trained using an RM based on a single sequential plan. Again, this
+Figure 4. Results for the gold-or-gem task.
+is consistent with Theorem 3.1 and the results in [11]. However, in
+all experiments, the agent trained with the maximally permissive RM
+converges more slowly than the other agents (particularly in the gold-
+or-gem task). Intuitively, increasing the flexibility of the RM trades
+solution quality for sample complexity. Note that, as the planning
+domain used is adequate in the sense defined in Section 3 for all the
+tasks, the MPRM agent can learn an optimal policy for each task.
+Figure 5 illustrates the behaviour of the agent trained using the
+MPRM and the agents trained using the RMs generated from each of
+the partial-order plans on a map for the gold-or-gem task. For read-
+ability, we have decided to not include agents trained with a sequen-
+tial plan-based RM: note that none of them achieved the task in fewer
+steps than the agents shown in the figure. In the supplementary ma-
+terial we provide, for each agent, a file containing its trajectory (i.e.,
+the ordered sequence of coordinates of the cells it visited) in the test,
+also for agents trained with a sequential plan-based RM. Given the
+initial position of the agent, the optimal plan for the task is to col-
+lect a gem (POP-2). As can be seen, both the agent trained using
+the POP-2-based RM and the MPRM agent achieve the goal by col-
+lecting a gem and complete the task in 60 steps. The agent trained
+using the RM based on the POP to collect gold using a rope bridge
+(POP-1) is also able to achieve the task, but in 63 steps. However, the
+agent trained using the RM based on the POP to collect gold using an
+iron bridge (POP-0) is unable to complete the task after 10,000,000
+timesteps. This illustrates that the MPRM agent is able to choose the
+“correct” plan for the agent’s position, and the inherent problems of
+training agents using an RM based on a single plan.
+5 Related Work
+Reward machines have been used both in single-agent RL [21, 6, 4,
+7] and multi-agent RL [17, 10]. As mentioned in the Introduction,
+approaches to synthesise reward machines from high-level specifica-
+tions have also been proposed; however, to the best of our knowledge,
+only [11, 12] and our work generate reward machines from plans.
+Another line of research focuses on learning reward machines
+from experience. In [22] an approach is proposed that uses Tabu
+search to update the RM hypothesis, by searching through the trace
+data generated by the agent exploring the environment. [27] pre-
+sented an approach where the RM hypothesis is updated whenever
+traces that are inconsistent with the current one are detected. In [9]
+RM-learning is reduced to SAT solving, and solved using DPLL.
+While these approaches do not require an abstract model of the envi-
+ronment in the form of a planning domain, they focus on learning a
+reward machine for a single task. In [22] and [27] the agent learns a
+Figure 5. Illustration of the behaviour of the MPRM and POP-trained agents on the gold-or-gem task.
+policy for each state of the RM hypothesis. However, when the latter
+is updated, it has to re-learn such policies from scratch ([27] tries to
+mitigate this issue by transferring a subset of the policies, but this is
+not always possible). Moreover, all these approaches assume that the
+agent is able to generate “positive” traces, i.e., traces in which the
+task is achieved. While in simple environments this is a reasonable
+assumption, for more complex environments with sparse rewards it
+may be difficult to generate positive traces.
+Planning has been applied to reinforcement learning since at least
+[8], which combined Q-learning with STRIPS planning. More re-
+cently, [28] proposed an approach integrating planning with options
+[20, 5]. In [15] a framework is introduced that exploits planning to
+improve sample efficiency in deep RL. In both of these approaches
+the RL experience is then used to improve the planning domain, sim-
+ilarly to what happens in model-based RL. Then, the new plan ob-
+tained using the updated domain is used to train again the RL agent.
+In [19, 13, 26] abstract models for the low-level MDP and/or its ac-
+tions are learned so that planning can be leveraged to improve learn-
+ing. However, all of these approaches assume that learning is guided
+by a single (sequential) plan.
+6 Conclusions
+We have proposed a new planning-based approach to synthesising
+maximally permissive reward machines which uses the set of partial-
+order plans for a goal rather than a single sequential or partial-order
+plan as in previous work. Planning-based approaches have the ad-
+vantage that it is straightforward to train agents to achieve new tasks
+— given a planning domain, we can automatically generate a re-
+ward machine for a new task. We have provided theoretical results
+showing how agents trained using maximally permissive reward ma-
+chines learn policies that are at least as good as those learned by
+agents trained with a reward machine built from an individual se-quential or partial-order plan, and the expected reward of an optimal
+policy learned using an MPRM synthesised from a goal-adequate
+planning domain is the same as that of an optimal policy for the un-
+derlying MDP. Experimental results from three different tasks in the
+CRAFT WORLD environment suggest that these theoretical results ap-
+ply in practice. However, our results also show that agents trained
+with maximally permissive RMs converge more slowly than agents
+trained using RMs based on a single plan. We believe this is because
+the increased flexibility of maximally permissive RMs trades solu-
+tion quality for sample complexity. Our approach is therefore most
+useful when the quality of the resulting policy is paramount.
+A limitation of our approach is that, in the worst case, the set of
+all partial order plans for a task may be exponential in the number
+of actions in the planning domain. In future work we would like to
+investigate the use of top-k planning techniques, e.g., [14], to sample
+a diverse subset of the set of all plans. Intuitively, such an approach
+could allow the quality of the resulting policy to be traded off against
+the number of plans in the sample.
+Another line of future work is to investigate option-based ap-
+proaches to learning [20, 5] as in [12], where each abstract action
+in a plan is “implemented” as an option. We expect results similar to
+the ones in this paper, where the agent trained with all partial-order
+plans is able to achieve a better policy but converging slower.
+Finally, the experiments in Section 4 are limited to discrete en-
+vironments. However, our approach is applicable to environments
+with continuous action and state spaces. Reward machines have pre-
+viously been successfully applied in such environments [23, 7], and
+planning domains, which form the basis our approach, are agnostic
+about the underlying environment, as they are defined in terms of
+states resulting from (sequences of) MDP actions rather than the ac-
+tions themselves. Nevertheless, learning in continuous environments
+is more challenging than learning in discrete ones, and evaluating the
+benefits of our approach in such environments is future work.
+References
+[1] J. Andreas, D. Klein, and S. Levine. Modular multitask reinforcement
+learning with policy sketches. In International conference on machine
+learning , pages 166–175. PMLR, 2017.
+[2] A. Camacho, R. Toro Icarte, T. Q. Klassen, R. Valenzano, and S. A.
+McIlraith. LTL and beyond: Formal languages for reward function
+specification in reinforcement learning. In Proceedings of the 28th In-
+ternational Joint Conference on Artificial Intelligence, IJCAI-19 , pages
+6065–6073. IJAI, 2019.
+[3] D. Chapman. Planning for conjunctive goals. Artificial Intelligence , 32
+(3):333–377, 1987.
+[4] J. Corazza, I. Gavran, and D. Neider. Reinforcement learning with
+stochastic reward machines. In Proceedings of the 36th AAAI Confer-
+ence on Artificial Intelligence , volume 36, pages 6429–6436, 2022.
+[5] T. G. Dietterich. Hierarchical reinforcement learning with the maxq
+value function decomposition. Journal of artificial intelligence re-
+search , 13:227–303, 2000.
+[6] T. Dohmen, N. Topper, G. Atia, A. Beckus, A. Trivedi, and A. Ve-
+lasquez. Inferring probabilistic reward machines from non-markovian
+reward signals for reinforcement learning. In Proceedings of the In-
+ternational Conference on Automated Planning and Scheduling , vol-
+ume 32, pages 574–582, 2022.
+[7] D. Furelos-Blanco, M. Law, A. Jonsson, K. Broda, and A. Russo. Hier-
+archies of reward machines. In A. Krause, E. Brunskill, K. Cho, B. En-
+gelhardt, S. Sabato, and J. Scarlett, editors, Proceedings of the 40th In-
+ternational Conference on Machine Learning , volume 202 of Proceed-
+ings of Machine Learning Research , pages 10494–10541. PMLR, 2023.
+[8] M. Grounds and D. Kudenko. Combining reinforcement learning with
+symbolic planning. In European Symposium on Adaptive Agents and
+Multi-Agent Systems , pages 75–86. Springer, 2005.
+[9] M. Hasanbeig, N. Y . Jeppu, A. Abate, T. Melham, and D. Kroening.
+Deepsynth: Automata synthesis for automatic task segmentation in deep
+reinforcement learning. In Proceedings of the 35th AAAI Conference on
+Artificial Intelligence , volume 35, pages 7647–7656, 2021.
+[10] J. Hu, Z. Xu, W. Wang, G. Qu, Y . Pang, and Y . Liu. Decentralized
+graph-based multi-agent reinforcement learning using reward machines.
+Neurocomputing , 564:126974, 2024.
+[11] L. Illanes, X. Yan, R. Toro Icarte, and S. McIlraith. Symbolic plan-
+ning and model-free reinforcement learning: Training taskable agents.
+InProceedings of 4th Multidisciplinary Conference on Reinforcement
+Learning and Decision Making (RLDM) , 2019.
+[12] L. Illanes, X. Yan, R. Toro Icarte, and S. A. McIlraith. Symbolic plans
+as high-level instructions for reinforcement learning. Proceedings of
+the International Conference on Automated Planning and Scheduling ,
+30(1):540–550, Jun. 2020.
+[13] M. Jin, Z. Ma, K. Jin, H. H. Zhuo, C. Chen, and C. Yu. Creativity of
+ai: Automatic symbolic option discovery for facilitating deep reinforce-
+ment learning. In Proceedings of the 36th AAAI Conference on Artificial
+Intelligence , volume 36, pages 7042–7050, 2022.
+[14] M. Katz and J. Lee. K ∗search over orbit space for top-k planning.
+InProceedings of the Thirty-Second International Joint Conference on
+Artificial Intelligence, (IJCAI 2023) , pages 5368–5376. ijcai.org, 2023.
+[15] D. Lyu, F. Yang, B. Liu, and S. Gustafson. Sdrl: interpretable and data-
+efficient deep reinforcement learning leveraging symbolic planning. In
+Proceedings of the 33rd AAAI Conference on Artificial Intelligence , vol-
+ume 33, pages 2970–2977, 2019.
+[16] D. A. McAllester and D. Rosenblitt. Systematic nonlinear planning. In
+Proceedings of the 9th National Conference on Artificial Intelligence ,
+pages 634–639. AAAI Press, 1991.
+[17] C. Neary, Z. Xu, B. Wu, and U. Topcu. Reward machines for coopera-
+tive multi-agent reinforcement learning. In Proceedings of the 20th In-
+ternational Conference on Autonomous Agents and MultiAgent Systems ,
+AAMAS ’21, page 934–942. International Foundation for Autonomous
+Agents and Multiagent Systems, 2021. ISBN 9781450383073.
+[18] X. Nguyen and S. Kambhampati. Reviving partial order planning. In
+Proceedings of the Seventeenth International Joint Conference on Ar-
+tificial Intelligence (IJCAI 2001) , pages 459–466. Morgan Kaufmann,
+2001.
+[19] J. Schrittwieser, I. Antonoglou, T. Hubert, K. Simonyan, L. Sifre,
+S. Schmitt, A. Guez, E. Lockhart, D. Hassabis, T. Graepel, et al. Master-
+ing atari, go, chess and shogi by planning with a learned model. Nature ,
+588(7839):604–609, 2020.
+[20] R. S. Sutton, D. Precup, and S. Singh. Between MDPs and semi-MDPs:
+A framework for temporal abstraction in reinforcement learning. Artifi-
+cial intelligence , 112(1-2):181–211, 1999.
+[21] R. Toro Icarte, T. Klassen, R. Valenzano, and S. McIlraith. Using re-
+ward machines for high-level task specification and decomposition inreinforcement learning. In J. Dy and A. Krause, editors, Proceedings of
+the 35th International Conference on Machine Learning , volume 80 of
+Proceedings of Machine Learning Research , pages 2107–2116. PMLR,
+10–15 Jul 2018.
+[22] R. Toro Icarte, E. Waldie, T. Klassen, R. Valenzano, M. Castro, and
+S. McIlraith. Learning reward machines for partially observable re-
+inforcement learning. In Advances in Neural Information Processing
+Systems , volume 32, 2019.
+[23] R. Toro Icarte, T. Q. Klassen, R. Valenzano, and S. A. McIlraith. Re-
+ward machines: Exploiting reward function structure in reinforcement
+learning. Journal of Artificial Intelligence Research , 73:173–208, 2022.
+[24] G. Varricchione, N. Alechina, M. Dastani, and B. Logan. Synthesis-
+ing reward machines for cooperative multi-agent reinforcement learn-
+ing. In European Conference on Multi-Agent Systems , pages 328–344.
+Springer, 2023.
+[25] C. J. Watkins and P. Dayan. Q-learning. Machine learning , 8:279–292,
+1992.
+[26] Z. Wu, C. Yu, C. Chen, J. Hao, and H. H. Zhuo. Plan to predict:
+Learning an uncertainty-foreseeing model for model-based reinforce-
+ment learning. Advances in Neural Information Processing Systems ,
+35:15849–15861, 2022.
+[27] Z. Xu, I. Gavran, Y . Ahmad, R. Majumdar, D. Neider, U. Topcu, and
+B. Wu. Joint inference of reward machines and policies for reinforce-
+ment learning. In Proceedings of the International Conference on Au-
+tomated Planning and Scheduling , volume 30, pages 590–598, 2020.
+[28] F. Yang, D. Lyu, B. Liu, and S. Gustafson. PEORL: integrating
+symbolic planning and hierarchical reinforcement learning for robust
+decision-making. In Proceedings of the 27th International Joint Con-
+ference on Artificial Intelligence , pages 4860–4866, 2018.
+Appendix
+Sequential plans for the bridge task
+Recall that the set of POPs for the bridge task is Πbridge =
+{πrope-bridge ,πiron-bridge }. By linearising them, we obtain the fol-
+lowing sequential plans:
+π0= [get-wood ,get-iron ,use-factory ]
+π1= [get-wood ,get-grass ,use-toolshed ]
+π2= [get-iron ,get-wood ,use-factory ]
+π3= [get-grass ,get-wood ,use-toolshed ]
+Planning domain and plans for the gold task
+The planning domain Dgold=⟨F,A⟩is the following:
+F={has-wood ,has-grass ,
+has-iron ,has-bridge ,
+has-gold }
+A={get-wood ,get-grass ,get-iron ,
+use-factory ,use-toolshed ,
+get-gold }
+where each action has the following pre- and postconditions (recall
+that each tuple includes, in order, the set of positive and negative
+preconditions, and the set of positive and negative postconditions of
+the action):
+get-wood =⟨∅,∅,{has-wood },∅⟩
+get-grass =⟨∅,∅,{has-grass },∅⟩
+get-iron =⟨∅,∅,{has-iron },∅⟩
+use-factory =
+⟨{has-wood ,has-iron },∅,
+{has-bridge },{has-wood ,has-iron }⟩
+use-toolshed =
+⟨{has-wood ,has-grass },∅,
+{has-bridge },{has-wood ,has-grass }⟩
+get-gold =⟨{has-bridge },∅,{has-gold },∅⟩
+For the planning task we have SI=∅, and G=
+⟨{has-gold },∅⟩. The set of POPs Πgold for this task is the fol-
+lowing:
+πiron-gold =
+⟨A={get-wood ,get-iron ,
+use-factory ,get-gold },
+≺={get-wood ≺use-factory ,
+get-iron ≺use-factory ,
+use-factory ≺get-gold }⟩
+πrope-gold =
+⟨A={get-wood ,get-grass ,
+use-toolshed ,get-gold },
+≺={get-wood ≺use-toolshed ,
+get-grass ≺use-toolshed ,
+use-toolshed ≺get-gold }⟩
+By linearising the POPs in Πgold, we obtain the following sequen-
+tial plans:π0=[get-wood ,get-iron ,
+use-factory ,get-gold ]
+π1=[get-wood ,get-grass ,
+use-toolshed ,get-gold ]
+π2=[get-iron ,get-wood ,
+use-factory ,get-gold ]
+π3=[get-grass ,get-wood ,
+use-toolshed ,get-gold ]
+Planning domain and plans for the gold-or-gem task
+The planning domain Dgold-or-gem =⟨F,A⟩is the following:
+F={has-wood ,has-grass ,
+has-iron ,has-bridge ,
+has-stick ,has-axe ,
+has-gold ,has-gem }
+A={get-wood ,get-grass ,get-iron ,
+use-factory ,use-toolshed ,
+use-workbench ,
+use-toolshed-for-axe ,
+get-gold ,get-gem }
+where each (new) action is defined as follows:
+use-workbench =
+⟨{has-wood },∅,
+{has-stick },{has-wood }⟩
+use-toolshed-for-axe =
+⟨{has-stick ,has-iron },∅,
+{has-axe },{has-stick ,has-iron }⟩
+get-gem =⟨{has-axe },∅,{has-gold },∅⟩
+For the planning task, we have SI=∅, and G=
+⟨{has-gold ,has-gem },∅⟩. As described in Section 4, the task
+is considered achieved as soon as the agent collects one between
+the gold ore and the gem. Notice that there are no planning ac-
+tions that allow the agent to collect the gold ore and the gem
+at the same time. Then, finding partial-order plans for this task
+is equivalent to taking the union of the partial-order plans for
+the planning tasks Tgold =⟨Dgold-or-gem ,SI,⟨{has-gold ,∅⟩⟩
+andTgem =⟨Dgold-or-gem ,SI,⟨{has-gem ,∅⟩⟩. Thus, we
+have that the set of partial-order plans is Πgold-or-gem =
+{πrope-gold ,πiron-gold ,πgem}, where the first two POPs are as they
+were for the gold task, and the third POP is as it was presented in Sec-
+tion 4. The only POP that adds new sequential plans compared to the
+gold task is πgem; by linearising it we obtain the following sequential
+plans:
+π4=[get-wood ,use-workbench ,
+get-iron ,use-toolshed-for-axe ,
+get-gem ]
+π5=[get-iron ,get-wood ,
+use-workbench ,
+use-toolshed-for-axe ,get-gem ]
+π6=[get-wood ,get-iron ,
+use-workbench ,
+use-toolshed-for-axe ,get-gem ]

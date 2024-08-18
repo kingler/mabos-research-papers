@@ -1,0 +1,598 @@
+OBA: An Ontology-Based Framework for
+Creating REST APIs for Knowledge Graphs
+Daniel Garijo and Maximiliano Osorio
+Information Sciences Institute, University of Southern California
+fdgarijo,mosorio,gil g@isi.edu
+Abstract. In recent years, Semantic Web technologies have been in-
+creasingly adopted by researchers, industry and public institutions to
+describe and link data on the Web, create web annotations and consume
+large knowledge graphs like Wikidata and DBPedia. However, there is
+still a knowledge gap between ontology engineers, who design, popu-
+late and create knowledge graphs; and web developers, who need to
+understand, access and query these knowledge graphs but are not fa-
+miliar with ontologies, RDF or SPARQL. In this paper we describe the
+Ontology-Based APIs framework (OBA), our approach to automatically
+create REST APIs from ontologies while following RESTful API best
+practices. Given an ontology (or ontology network) OBA uses standard
+technologies familiar to web developers (OpenAPI Specication, JSON)
+and combines them with W3C standards (OWL, JSON-LD frames and
+SPARQL) to create maintainable APIs with documentation, units tests,
+automated validation of resources and clients (in Python, Javascript,
+etc.) for non Semantic Web experts to access the contents of a target
+knowledge graph. We showcase OBA with three examples that illustrate
+the capabilities of the framework for dierent ontologies.
+Resource type : Software
+License : Apache 2.0
+DOI : https://doi.org/10.5281/zenodo.3686266
+Repository : https://github.com/KnowledgeCaptureAndDiscovery/OBA/
+Keywords: OntologyAPIRESTJSONdata accessibility knowl-
+edge graph.
+1 Introduction
+Knowledge graphs have become a popular technology for representing structured
+information on the Web. The Linked Open Data Cloud1contains more than
+1200 linked knowledge graphs contributed by researchers and public institutions.
+Major companies like Google,2Microsoft,3or Amazon [16] use knowledge graphs
+1https://lod-cloud.net/
+2https://developers.google.com/knowledge-graph
+3https://www.microsoft.com/en-us/research/project/
+microsoft-academic-graph/arXiv:2007.09206v1  [cs.AI]  17 Jul 2020
+2 Daniel Garijo and Maximiliano Osorio
+to represent some of their information. Recently, crowdsourced knowledge graphs
+such as Wikidata [15] have surpassed Wikipedia in the number of contributions
+made by users.
+In order to create and structure these knowledge graphs, ontology engineers
+develop vocabularies and ontologies dening the semantics of the classes, object
+properties and data properties represented in the data. These ontologies are then
+used in extraction-transform-load pipelines to populate knowledge graphs with
+data and make the result accessible on the Web to be queried by users (usually as
+an RDF dump or a SPARQL endpoint). However, consuming and contributing
+to knowledge graphs exposed in this manner is problematic for two main reasons.
+First, exploring and using the contents of a knowledge graph is a time consuming
+task, even for experienced ontology engineers (common problems include lack
+of usage examples that indicate how to retrieve resources, the ontologies used
+are not properly documented or without examples, the format in which the
+results are returned is hard to manipulate, etc.). Second, W3C standards such
+as SPARQL [12] and RDF [2] are still unknown to a major portion of the web
+developer community (used to JSON and REST APIs), making it dicult for
+them to use knowledge graphs even when documentation is available.
+In this paper we address these problems by introducing OBA, an Ontology-
+Based API framework that given an ontology (or ontology network) as input,
+creates a JSON-based REST API server that is consistent with the classes and
+properties in the ontology; and can be congured to retrieve, edit, add or delete
+resources from a knowledge graph. OBA's contributions include:
+{A method for automatically creating a documented REST OpenAPI
+specication4from an OWL ontology [10], together with the means to
+customize it as needed (e.g., ltering some of its classes). Using OBA, new
+changes made to an ontology can be automatically propagated to the corre-
+sponding API, making it easier to maintain.
+{A framework to create a server implementation based on the API speci-
+cation to handle requests automatically against a target knowledge graph.
+The implementation will validate posted resources to the API and will deliver
+the results in a JSON format as dened in the API specication.
+{A method for converting JSON-LD returned by a SPARQL endpoint [6]
+into JSON according to the format dened in the API specication.
+{A mechanism based on named graphs5for users to contribute to a knowl-
+edge graph through POST requests.
+{Automatic generation of tests for API validation against a knowledge graph.
+OBA uses W3C standards widely used in Web development (JSON) for
+accepting requests and returning results, while using SPARQL and JSON-LD
+frames to query knowledge graphs and frame data in JSON-LD. We consider
+that OBA is a valuable resource for the community, as it helps bridging the
+4http://spec.openapis.org/oas/v3.0.3
+5https://www.w3.org/2004/03/trix/
+The Ontology Based API Framework (OBA) 3
+gap between ontology engineers who design and populate knowledge graphs and
+application and service developers who can benet from them.
+The rest of the paper is structured as follows: Section 2 discusses eorts from
+the Semantic Web community to help developers access knowledge graphs, while
+Section 3 describes the architecture and rationale of the OBA framework. Section
+4 shows the dierent features of OBA through three dierent examples, Section
+5 discusses adoption, potential impact and current limitations of the tool, and
+Section 6 concludes the paper.
+2 Related Work
+The Semantic Web community has developed dierent approaches for helping
+developers access and manipulate the contents of knowledge graphs. On the one
+hand, some approaches rely on mechanisms that are familiar to developers for
+helping them consume Linked Data. For instance, the W3C Linked Platform [8]
+proposes a platform for handling HTTP requests over RDF data using containers
+for HTTP operations. Closer to our scope, Basil [3], GRLC [11] and r4r6propose
+to create REST APIs from SPARQL queries for accessing knowledge graphs. The
+limitations of these approaches are that knowledge engineers have to dene the
+queries that need to be supported by hand. In addition, API paths are edited
+manually and, as a result, the resultant REST API specications do not often
+follow the standard practices promoted by the OpenAPI specication.
+On the other hand, researchers have attempted to improve the serializa-
+tion of SPARQL results. For example, SPARQL transformer [7] and SPARQL-
+JSONLD7both present approaches for transforming SPARQL to user-friendly
+JSON results by using a custom mapping language and JSON-LD frames [6] re-
+spectively. In [14] the authors use GraphQL,8which is gaining popularity among
+the developer community, to generate SPARQL queries and serialize the results
+in JSON. While these approaches share in their aim the ability to facilitate ob-
+taining JSON from a knowledge graph, developers still need to be familiar with
+the underlying ontologies used to query the data in those knowledge graphs.
+Finally, [4] proposes to dene REST APIs to access the classes and prop-
+erties of an ontology. This is dierent from our scope, which uses the ontology
+as a template to create an API to exploit the contents of a knowledge graph.
+To the best of our knowledge, our work is the rst end-to-end framework for
+creating REST APIs from OWL ontologies to provide access to the contents of
+a knowledge graph.
+3 The Ontology Based APIs Framework (OBA)
+OBA is a framework designed to help ontology engineers create RESTful APIs
+from ontologies. Given an OWL ontology or ontology network and a knowledge
+6https://github.com/oeg-upm/r4r
+7https://github.com/usc-isi-i2/sparql-jsonld
+8https://graphql.org/
+4 Daniel Garijo and Maximiliano Osorio
+Fig. 1. Overview of the OBA Framework.
+graph (accessible through a SPARQL endpoint), OBA automatically generates
+a documented standard API specication and creates a REST API server that
+can validate requests from users, test all API calls and deliver JSON objects
+following the structure described in the ontology.
+Figure 1 shows an overview of the workow followed by the OBA framework,
+depicting the target input ontology on the left and the resultant REST API on
+the right. OBA consists of two main modules: the OBA Specication Generator ,
+which creates an API specication template from an input ontology; and the
+OBA Service Generator , which produces a server with a REST API for a target
+SPARQL endpoint. In this section we describe the dierent features of OBA for
+each module, along with the main design decisions and assumptions adopted for
+conguring the server.
+3.1 OBA Specication Generator
+One of the drivers for the development of OBA was the need to use standards
+and le formats commonly used by web developers (who may not necessarily fa-
+miliar with Semantic Web technologies). Hence, we decided to use the OpenAPI
+specication9for representing REST APIs and JSON as the main interchange
+le format.
+There are three reasons why we chose the OpenAPI specication (OAS):
+First, it \denes a standard, programming language-agnostic interface descrip-
+tion for REST APIs, which allows both humans and computers to discover and
+understand the capabilities of a service without requiring access to source code,
+additional documentation, or inspection of network trac"10. Second, OAS is
+an open source initiative backed up by industry and widely used by the devel-
+oper community, with more than 17.000 stars in GitHub and over 6.000 forks.
+9https://github.com/OAI/OpenAPI-Specification
+10http://spec.openapis.org/oas/v3.0.3
+The Ontology Based API Framework (OBA) 5
+Finally, by adopting OAS we gain access to a wide range of tools11that can
+be leveraged and extended (e.g., for generating a server) and are available in
+multiple programming languages.
+3.1.1 Generating an OAS from OWL
+OAS describes how to dene operations (GET, POST, PUT, DELETE) and
+paths (i.e., the dierent API calls) to be supported by a REST API; together
+with the information about the schemas that dene the structure of the objects
+to be returned by each call. OAS also describes how to provide examples, docu-
+mentation and customization through parameters for each of the paths declared
+in an API.
+Typically, an OAS would have two paths for each GET operation; and one
+for POST, PUT and DELETE operations. For instance, let us consider a sim-
+ple REST API for registering and returning regions around the world. An
+OAS would have the paths ` /regions ' (for returning all available regions) and
+`/regions/{id} ' (for returning the information about a region in particular) for
+the GET operation; the ` /regions ' path for POST;12and the ` /regions/{id} '
+path for PUT and DELETE operations .
+In OAS, the schema to be followed by an object in an operation is described
+through its properties. For example, we can dene a Region as a simple object
+with a label, atype and a partOfRegion property which indicates that a region
+is part of another region. The associated schema would look as follows in OAS:
+Region:
+description: A region refers to an extensive, continuous
+part of a surface or body.
+properties:
+id:
+nullable: false
+type: string
+partOfRegion:
+description: Region where the region is included in.
+items:
+$ref: '#/components/schemas/Region'
+nullable: true
+type: array
+label:
+description: Human readable description of the resource
+items:
+type: string
+nullable: true
+type: array
+type:
+11https://github.com/OAI/OpenAPI-Specification/blob/master/
+IMPLEMENTATIONS.md
+12Alternatively, ` /regions/id ' may be used to allow developers to use their own ids
+6 Daniel Garijo and Maximiliano Osorio
+description: type of the resource
+items:
+type: string
+nullable: true
+type: array
+type: object
+Note that the partOfRegion property will return objects that follow the Re-
+gion schema (as identied by ` /#/components/schemas/Region '). The nullable
+parameter indicates that the target property is optional.
+The main OAS structure maps naturally to the way classes and properties
+are specied in ontologies and vocabularies. Therefore, in OBA we map13each
+ontology class to a dierent path in the API specication; and we add each ob-
+ject property and data type property in the target ontology to the corresponding
+schema by looking into its domain and range (complex class restrictions consist-
+ing on multiple unions and intersections are currently not addressed). Docu-
+mentation for each path and property is included in the description eld of
+the OAS by looking at the available ontology denitions (e.g., rdfs:comment
+annotations on classes and properties). Unions in property domains are handled
+by copying the property into the respective class schemas (e.g., if the domain of
+a property is `Person or Cat' , the property will be added in the Person and
+Catschemas); and properties declared in superclasses are propagated to their
+child class schemas. Properties with no domain or range are by default excluded
+from the API, although this behavior can be congured in the application. By
+default, all properties are nullable (optional). The full mapping between OAS
+and OWL supported by OBA is available online.14
+Finally, we also dened two ltering features in OBA when generating the
+OAS to help interacting with the API. First, we allow specifying a subset of
+classes of interest to include in an API, since ontologies may contain more classes
+than the ones we may be interested in. Second, by default OBA will dene a
+parameter on each GET path to allow retrieving entities of a class based on their
+label.
+As a result of executing the OBA specication generator, we create an OAS
+in YAML format15that can be inspected by ontology engineers manually or
+using an online editor.16This specication can be implemented with the OBA
+server (described in Section 3.2) or by alternative means (e.g., by implementing
+the API by hand).
+3.1.2 Generating SPARQL Query Templates and JSON-LD Context
+13We follow the best practices for RESTful API design: paths are in non-capital letters
+and always in plural (e.g., /regions ,/persons , etc.)
+14https://oba.readthedocs.io/en/latest/mapping/
+15https://yaml.org/
+16https://editor.swagger.io/
+The Ontology Based API Framework (OBA) 7
+The OBA Specication Generator also creates a series of templates with the
+queries to be supported by each API path. These queries will be used by the
+server for automatically handling the API calls. For example, the following query
+is used to return all the information of a resource by its id ( ?_resource_iri ):
+#+ summary: Return resource information by its resource_iri
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+CONSTRUCT {
+?_resource_iri ?predicate ?prop .
+?prop a ?type .
+?prop rdfs:label ?label
+}
+WHERE {
+?_resource_iri ?predicate ?prop
+OPTIONAL {
+?prop a ?type
+OPTIONAL {
+?prop rdfs:label ?label
+}
+}
+}
+The individual id ?_resource_iri acts as a placeholder which is replaced
+with the URI associated with the target path (we reuse GRLC [11] to dene
+parameters in a query17). Returned objects will have one level of depth within
+the graph (i.e., all the outgoing properties of a resource), in order to avoid
+returning very complex objects. This is useful in large knowledge graphs such as
+DBpedia [1], where returning all the sub-resources included within an instance
+may be too costly. However, this default behavior can be customized by editing
+the proposed resource templates or by adding a custom query (further explained
+in the next section).
+Together with the query templates, OBA will generate a JSON-LD context
+le from the ontology, which will be used by the server to translate the obtained
+results back into JSON. We have adapted owl2jsonld [13] for this purpose.
+3.2 OBA Service Generator
+Once the OAS has been generated, OBA creates a script to set up a functional
+server with the API. We use OpenAPI generator,18one of the multiple server
+implementations for OAS made available by the community; to generate a server
+with our API as a Docker image.19Currently, we support the Python implemen-
+tation, but the architecture is exible enough to change the server implementa-
+tion in case of need. OBA also includes a mechanism for enabling pagination,
+which allows limiting the number of resources returned by the server.
+17https://github.com/KnowledgeCaptureAndDiscovery/OBA_sparql/
+18https://github.com/OpenAPITools/openapi-generator
+19https://oba.readthedocs.io/en/latest/server/#execute-server-generation-scripts
+8 Daniel Garijo and Maximiliano Osorio
+OBA handles automatically several aspects that need to be taken into ac-
+count when setting up a server, including how to validate and insert complex
+resources in the knowledge graph, how to handle authentication; how to gen-
+erate unit tests and how to ease the access to the server by making clients for
+developers. We briey describe these aspects below.
+3.2.1 Converting SPARQL results into JSON
+We designed OBA to generate results in JSON, one of the most popular inter-
+change formats used in web development. Figure 2 shows a sequence diagram
+with the steps we follow to produce the target JSON in GET and POST requests.
+For example, for the GET request, we rst create a SPARQL CONSTRUCT
+query to retrieve the result from a target knowledge graph. The query is cre-
+ated automatically using the templates generated by OBA, parametrizing them
+with information about the requested path. For example, for a GET request
+to/regions/id , the idwill replace ?_resource_iri in the template query as
+described in Section 3.1.2.
+As shown in Figure 2, the construct query returns a JSON-LD le from the
+SPARQL endpoint. We frame the results to make sure they follow the structure
+dened by the API and then we transform the resultant JSON-LD to JSON.
+In order to transform JSON-LD to JSON and viceversa, we keep a mapping le
+with the API path to ontology class URI correspondence, which is automatically
+generated from the ontology. The URI structure followed by the instances is
+stored in a separate conguration le.
+3.2.2 Resource Validation and Insertion
+OBA uses the specication generated from an input ontology to create a server
+with the target API. By default, the server is prepared to handle GET, POST,
+PUT and DELETE requests, which are addressed with CONSTRUCT, INSERT,
+UPDATE and DELETE SPARQL queries respectively. However, POST, PUT
+and DELETE requests need to be managed carefully, as they modify the contents
+of the target knowledge graph.
+For POST and PUT, one of the main issues to address is handling complex
+objects , i.e., objects that contain one or multiple references to other objects
+that do not exist in the knowledge graph yet. Following our above example
+with regions, what would happen if we received a POST request with a new
+region where partOfRegion points to other regions that do not exist yet in our
+knowledge graph? For example, let us consider that a developer wants to register
+a new region Marina del Rey that is part of Los Angeles , and none of them
+exist in the knowledge graph. One way would be requiring the developer to issue
+a new request to register each parent region before registering the child one (e.g.,
+a POST request rst to register Los Angeles region and then another POST
+request for Marina del Rey ); but this makes it cumbersome for developers to
+use API. Instead, OBA deals with this issue in a recursive manner: If a resource
+The Ontology Based API Framework (OBA) 9
+Fig. 2. Sample GET and POST request through the OBA server.
+does not have an id, OBA tries to insert all the resources it points to, validates
+the resource against the corresponding schema and inserts it in the knowledge
+graph. Hence, in the previous example OBA would register Los Angeles region
+rst, and then Marina del Rey . If a resource already has an id, then it will
+not be registered as a new resource. When a new resource is created, the server
+assigns its id with a uuid, and returns it as part of the JSON result.
+This recursive behavior is not desirable for DELETE requests, as we could
+potentially remove a resource referenced by other resources in the knowledge
+graph. Therefore, OBA currently deletes only the resource identied by its id in
+the request.
+Finally, OBA denes a simple mechanism for dierent users to contribute
+and retrieve information from a knowledge graph. By default, users are assigned
+anamed graph in the target knowledge graph. Each named graph allows users
+submitting contributions and updates independently of each other (or collab-
+oratively, if they share their credentials). User authentication is supported by
+default through Firebase,20which leverages standards such as OAUth2.021for
+easy integration. However, we designed authentication to be extensible to other
+authentication methods, if desired. OBA may also be congured so users can
+retrieve all information from all available graphs; or just their own graph. User
+management (i.e., registering new users) is out of the scope of our application.
+3.2.3 Support for Custom Queries
+20https://firebase.google.com/docs/auth/
+21https://oauth.net/2/
+10 Daniel Garijo and Maximiliano Osorio
+OBA denes common template paths from an input ontology, but knowledge
+engineers may require exposing more complex queries to web developers. For ex-
+ample, knowledge engineers may want to expose advanced ltering (e.g., return
+regions that start with \Eu"), have input parameters or complex path patterns
+(e.g., return only regions that are part of another region). These paths are im-
+possible to predict in advance, as they depend on heterogeneous use cases and
+requirements. Therefore, in OBA we added a module to allow supporting cus-
+tom queries and let knowledge engineers expand or customize any of the queries
+OBA supports by default.
+To add a custom query, users need to follow two main steps. First, create a
+CONSTRUCT query in a le with the target query; and second, edit the OAS
+with the path where the query needs to be supported. OBA reuses GRLC's query
+module [11] to support this feature, as GRLC is an already a well established
+application for creating APIs from SPARQL queries. An example illustrating
+how to add custom queries to an OAS in OBA can be found online.22
+3.2.4 Generating Unit Tests
+OBA automatically generates unit tests for all the paths specied in the gen-
+erated OAS (using Flask-Testing,23a unit test toolkit for Flask servers24in
+Python). Units tests are useful to check if the data in a knowledge graph is
+consistent with the classes and properties used in the ontology, and to iden-
+tify unused classes. By default, OBA supports unit tests for GET requests only,
+since POST, PUT and DELETE resources may need additional insight of the
+contents stored in the target knowledge graph. However, this is a good starting
+point to test the dierent API calls to be supported to the API and detect any
+inconsistencies. Knowledge engineers may extend the test les with additional
+tests required by their use cases. Unit tests are generated as part of the server,
+and may invoked before starting up the API for public consumption.25
+3.2.5 Generating Clients for API Exploitation
+The OpenAPI community has developed tools to generate clients to support an
+OAS in dierent languages. We use the OpenAPI generator in OBA to create
+clients (software packages) to ease API management calls for developers. For
+example, below is an example of a code snippet using the Python client for one
+of the APIs we generated with OBA26and available through pip. The client
+retrieves the information of a region (with id ` Texas ') and returns the result as
+a JSON object in a python dictionary without the need of issuing GET requests
+or writing SPARQL:
+22\url{https://oba.readthedocs.io/en/latest/adding\_custom\_queries/}
+23https://pythonhosted.org/Flask-Testing/
+24https://flask.palletsprojects.com/en/1.1.x/
+25https://oba.readthedocs.io/en/latest/test/
+26https://model-catalog-python-api-client.readthedocs.io/en/latest/
+The Ontology Based API Framework (OBA) 11
+import modelcatalog
+# modelcatalog is the python package with our API
+api_instance = modelcatalog.ModelApi()
+region_id = "Texas"
+try:
+# Get a Region by its id
+region = api_instance.regions_id_get(region_id)
+print(region)
+# Result is a JSON object with the region properties in a dictionary
+except ApiException as e:
+print("Exception when calling ModelApi->regions_id_get: %s\n" % e)
+4 Showcasing OBA's Features through Examples
+In this section we demonstrate the full capabilities of OBA in an incremental
+manner through three dierent examples of increasing complexity. All the OBA
+conguration les required to generate the OAS described in this section are
+accessible online.27We describe these examples below:
+Drafting an API for an ontology network: The simplest way in which OBA can
+be used is by generating a draft OAS from a given ontology (without generating
+a server). We have tested OBA with ten dierent ontologies28from dierent
+domains to generate draft specications, and we have found this feature very
+useful in our work. Drafting the API allows knowledge engineers discuss potential
+errors for misinterpretation, as well as easily detect errors on domains and ranges
+of properties.
+Generating a GET API for a large ontology: DBPedia [1] is a popular knowledge
+graphs with millions of instances over a wide range of categories. The DBPedia
+ontology29contains over 680 classes and 2700 properties; and creating an API
+manually to support them becomes a time consuming task. We demonstrated
+OBA by creating two dierent APIs for DBPedia. The rst API contains all
+the paths associated with the classes in the ontology, showing how OBA can be
+used by default to generate an API even when the ontology has a considerable
+size. Since the resultant API is too big to browse manually, we created a Python
+client30and a notebook31demonstrating its use. The second API has just a
+selected group of classes by using a lter, as in some cases not all the classes
+may need to be supported in the desired API. OBA does a transitive closure on
+the elements that are needed as part of the API. For example, if the lter only
+27https://oba.readthedocs.io/en/latest/examples/
+28https://github.com/KnowledgeCaptureAndDiscovery/OBA/tree/master/
+examples
+29https://wiki.dbpedia.org/services-resources/ontology
+30https://github.com/sirspock/dbpedia_api_client
+31https://github.com/sirspock/dbpedia_example/blob/master/scientists_get.
+ipynb
+12 Daniel Garijo and Maximiliano Osorio
+contains \Band", and it has a relationship with \Country" (e.g., origin ), then by
+default OBA will import the schema for \Country" into the API specication
+to be validated accordingly. In the DBPedia example, selecting just 2 classes
+(dbpedia:Genre anddbpedia:Band ) led to the inclusion of more than 90 paths
+in the nal specication.
+Generating a full Create, Delete, Update, Delete (CRUD) API: OKG-Soft [5] is
+an open knowledge graph with scientic software metadata, developed to ease
+the understanding and execution of complex environmental models (e.g., in hy-
+drology, agriculture or climate sciences). A key requirement of OKG-Soft was
+for users to be able to contribute with their own metadata in collaborative man-
+ner, and hence we used the full capabilities of OBA to support adding, editing
+and deleting individual resources. OKG-Soft uses two ontologies to structure
+the knowledge graph, which have evolved over time with new requirements. We
+used OBA to maintain an API release after each ontology version, generating an
+OAS, updating it with any required custom queries and generating a server with
+unit tests, which we executed before deploying the API in production. Having
+unit tests helped detecting and xing inconsistencies in the RDF, and improved
+the overall quality of the knowledge graph. Authenticated users may use the
+API for POST, PUT and DELETE resources;32and we use the contents of the
+knowledge graph for model exploration, setup and execution in dierent envi-
+ronments. An application for browsing the contents of the knowledge graph is
+available online.33
+The three examples described in this section demonstrate the dierent fea-
+tures of OBA for dierent ontologies: the ability to draft API specications, the
+capabilities of the tool to be used for large ontologies and to lter classes when
+required; and the support for GET, POST, PUT and DELETE operations while
+following the best practices for RESTful design.
+5 Adoption, Impact and Limitations
+We developed OBA to help developers (not familiar with SPARQL) accessing
+the contents of knowledge graphs structured by ontologies. Figure 3 shows an
+overview of the dierent ways that OBA supports user access to the contents
+of a knowledge graph (using a SPARQL endpoint). Non-expert web developers
+may use clients in the languages they are more familiar with (e.g., Python,
+JavaScript, etc.); generated with the OBA Service Generator. Web developers
+with more knowledge on using APIs may use the API created with the OBA
+server. Knowledge engineers may choose to query the SPARQL endpoint directly.
+OBA builds on the work started by tools like Basil [3] and GRLC [11] -
+pioneers in exposing SPARQL queries as APIs- to help involve knowledge en-
+gineers in the process of data retrieval from their knowledge graphs with their
+32https://model-catalog-python-api-client.readthedocs.io/en/latest/
+endpoints/
+33https://models.mint.isi.edu
+The Ontology Based API Framework (OBA) 13
+Fig. 3. OBA: Client side architecture
+ontologies. In our experience, generating a draft API from an ontology has helped
+our developer collaborators understand how to consume the information of our
+knowledge graphs, while helping the ontology engineers in our team detect po-
+tential problems in the ontology design.
+In fact, similar issues have been raised in the Semantic Web community for
+some time. For example, the lack of guidance when exploring existing SPARQL
+endpoints34has led to the development of tools such as [9] to help nding pat-
+terns in SPARQL endpoints in order to explore them. The Semantic Web com-
+munity has also acknowledged the diculties developers experience to adopt
+RDF,35which have resulted in ongoing eorts to improve materials and intro-
+ductory tutorials.36
+We believe OBA helps addressing these problems by exploiting Semantic Web
+technologies while exposing the information to developers following the REST
+standards they familiar with. OBA allows prototyping APIs from ontologies,
+helps maintainability of the APIs (having an API per version of the ontology),
+helps validation of the API paths and contents of the knowledge graph assist-
+ing in the creation of unit tests and includes documentation for all of the API
+schemas automatically. In addition, the tool is thoroughly documented, with
+usage tutorials and examples available online.37
+We end this section by discussing assumptions and limitations in OBA. For
+instance, OBA assumes that the target endpoint is modeled according to the
+ontology used to create the API; and changes in the ontology version will lead
+to a new version of the API (hence keeping track of which version supports
+which operations). OBA also assumes that two classes in an ontology network
+don't have the same local name, as each class is assigned a unique path. As
+per current limitations, OBA simplies some restrictions in the ontology, such
+34https://lists.w3.org/Archives/Public/semantic-web/2015Jan/0087.html
+35https://lists.w3.org/Archives/Public/semantic-web/2018Nov/0036.html
+36https://github.com/dbooth-boston/EasierRDF
+37https://oba.readthedocs.io/en/latest/quickstart/
+14 Daniel Garijo and Maximiliano Osorio
+as complex axioms in property domains and ranges (e.g., having unions and
+intersections at the same time as a property range), to help creating the OAS.
+In addition, for large ontologies the resultant APIs may be large, which will work
+appropriately handling requests, but may be slow to render in a browser (e.g., to
+see documentation of a path). OBA is proposed as a new resource, and therefore
+we don't have usage metrics from the community so far.
+6 Conclusions and Future Work
+In this paper we have introduced the Ontology-Based APIs framework (OBA),
+a new resource for creating APIs from ontologies by using the OpenAPI Spec-
+ication. OBA has demonstrated to be extremely useful in our work, helping
+setting up and maintaining API versions, testing and easy prototyping against a
+target knowledge graph. We believe that OBA helps bridging the knowledge gap
+between ontology engineers and developers, as it provides the means to create
+a guide (a documented API) that illustrates how to exploit a knowledge graph
+using the tools and standards developers are used to.
+We are actively expanding OBA to support new features. First, we are work-
+ing towards supporting additional mappings between OWL and OAS, such as
+complex domain and range axiomatization. Second, we are working to support
+accepting and delivering JSON-LD requests (instead of JSON only), which is
+preferred by some Semantic Web developers. As for future work, we are explor-
+ing the possibility of adding support for GraphQL, which has gained popularity
+lately, as an alternative to using SPARQL to retrieve and return contents. Fi-
+nally, an interesting approach worth exploring is to use combine an ontology
+with existing tools to mine patterns from knowledge graphs to expose APIs with
+the most common data patterns.
+Acknowledgements
+This work was funded by the Defense Advanced Research Projects Agency with
+award W911NF-18-1-0027 and the National Science Foundation with award
+ICER-1440323. The authors would like to thank Yolanda Gil, Paola Espinoza,
+Carlos Badenes and Oscar Corcho for their thoughtful comments and feedback.
+References
+1. Auer, S., Bizer, C., Kobilarov, G., Lehmann, J., Cyganiak, R., Ives, Z.G.: Dbpedia:
+A nucleus for a web of open data. In: The Semantic Web, 6th International Seman-
+tic Web Conference, 2nd Asian Semantic Web Conference, ISWC 2007 + ASWC
+2007, Busan, Korea, November 11-15, 2007. Lecture Notes in Computer Science,
+vol. 4825, pp. 722{735. Springer (2007). https://doi.org/10.1007/978-3-540-76298-
+052
+The Ontology Based API Framework (OBA) 15
+2. Cyganiak, R., Lanthaler, M., Wood, D.: RDF 1.1 concepts and abstract syn-
+tax. W3C recommendation, W3C (Feb 2014), http://www.w3.org/TR/2014/REC-
+rdf11-concepts-20140225/
+3. Daga, E., Panziera, L., Pedrinaci, C.: A BASILar approach for building Web APIs
+on top of SPARQL endpoints. In: Proceedings of the Third Workshop on Services
+and Applications over Linked APIs and Data. vol. 1359, pp. 22{32 (2015), co-
+located with the 12th Extended Semantic Web Conference (ESWC 2015)
+4. Dirsumilli, R., Mossakowski, T.: RESTful encapsulation of OWL API. In: Proceed-
+ings of the 5th International Conference on Data Management Technologies and
+Applications. p. 150157. DATA 2016, SCITEPRESS - Science and Technology Pub-
+lications, Lda, Setubal, PRT (2016). https://doi.org/10.5220/0005987201500157
+5. Garijo, D., Osorio, M., Khider, D., Ratnakar, V., Gil, Y.: OKG-Soft: An Open
+Knowledge Graph with Machine Readable Scientic Software Metadata. In: 2019
+15th International Conference on eScience (eScience). pp. 349{358. IEEE, San
+Diego, CA, USA (Sep 2019). https://doi.org/10.1109/eScience.2019.00046
+6. Kellogg, G., Champin, P.A., Longley, D.: JSON-LD 1.1. Candidate recommenda-
+tion, W3C (Apr 2020), https://www.w3.org/TR/2020/CR-json-ld11-20200417/
+7. Lisena, P., Mero~ no-Pe~ nuela, A., Kuhn, T., Troncy, R.: Easy web API development
+with SPARQL transformer. In: The Semantic Web { ISWC 2019. pp. 454{470.
+Springer International Publishing, Cham (2019)
+8. Malhotra, A., Arwe, J., Speicher, S.: Linked data platform 1.0. W3C recommen-
+dation, W3C (Feb 2015), http://www.w3.org/TR/2015/REC-ldp-20150226/
+9. Mihindukulasooriya, N., Poveda-Villal on, M., Garc a-Castro, R., G omez-P erez, A.:
+Loupe - An Online Tool for Inspecting Datasets in the Linked Data Cloud. In:
+Proceedings of the ISWC 2015 Posters & Demonstrations Track co-located with
+the 14th International Semantic Web Conference (ISWC-2015), Bethlehem, PA,
+USA. CEUR Workshop Proceedings, vol. 1486. CEUR-WS.org (2015)
+10. Patel-Schneider, P., Motik, B., Parsia, B.: OWL 2 web ontology language structural
+specication and functional-style syntax (second edition). W3C recommendation,
+W3C (Dec 2012), http://www.w3.org/TR/2012/REC-owl2-syntax-20121211/
+11. Mero~ no Pe~ nuela, A., Hoekstra, R.: GRLC Makes GitHub Taste Like Linked Data
+APIs. In: The Semantic Web, vol. 9989, pp. 342{353. Springer International Pub-
+lishing, Cham (2016). https://doi.org/10.1007/978-3-319-47602-5 48
+12. Seaborne, A., Harris, S.: SPARQL 1.1 query language. W3C recommendation,
+W3C (Mar 2013), http://www.w3.org/TR/2013/REC-sparql11-query-20130321/
+13. Soiland-Reyes, S.: Owl2Jsonld 0.2.1 (Jun 2014).
+https://doi.org/10.5281/ZENODO.10565
+14. Taelman, R., Vander Sande, M., Verborgh, R.: GraphQL-LD: Linked Data
+querying with GraphQL. In: Proceedings of the 17th International Semantic
+Web Conference: Posters and Demos (Oct 2018), https://comunica.github.io/
+Article-ISWC2018-Demo-GraphQlLD/
+15. Vrandei, D., Krtzsch, M.: Wikidata: a free collaborative knowledgebase. Commu-
+nications of the ACM 57(10), 78{85 (Sep 2014). https://doi.org/10.1145/2629489
+16. Zhu, Q., Wei, H., Sisman, B., Zheng, D., Faloutsos, C., Dong, X.L., Han, J.: Col-
+lective multi-type entity alignment between knowledge graphs. In: Proceedings of
+The Web Conference 2020. p. 22412252. WWW 20, Association for Computing
+Machinery, New York, NY, USA (2020). https://doi.org/10.1145/3366423.3380289

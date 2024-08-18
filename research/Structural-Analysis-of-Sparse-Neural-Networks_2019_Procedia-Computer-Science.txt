@@ -1,0 +1,410 @@
+ScienceDirect
+Available online at www.sciencedirect.com
+Procedia Computer Science 159 (2019)  107–116
+1877-0509 © 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.
+10.1016/j.procs.2019.09.165
+10.1016/j.procs.2019.09.165 1877-0509© 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+Structural Analysis of Sparse Neural Networks
+Julian Stiera,∗, Michael Granitzera
+aUniversity of Passau, Innstrasse 42, 94032 Passau, Germany
+Abstract
+Sparse Neural Networks regained attention due to their potential of mathematical and computational advantages. We give moti-
+vation to study Artiﬁcial Neural Networks (ANNs) from a network science perspective, provide a technique to embed arbitraryDirected Acyclic Graphs into ANNs and report study results on predicting the performance of image classiﬁers based on the struc-
+tural properties of the networks’ underlying graph. Results could further progress neuroevolution and add explanations for the
+success of distinct architectures from a structural perspective.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords: artiﬁcial neural networks; sparse network structures; small-world neural networks; scale-free; architecture performance estimation
+1. Introduction
+Artiﬁcial Neural Networks (ANNs) are highly successful machine learning models and achieve human performance
+in various domains such as image processing and speech synthesis. The choice on architecture is crucial for their
+success – but ANN architectures, seen as network structures, have not been extensively studied from a network science
+perspective, yet. The motivation of studying ANNs from a network science perspective is manifold:
+First of all, ANNs are inspired from biological neural networks (notably the human brain) which have scale-free
+properties and “are shown to be small-world networks” [25]. This is contradictory to most successful models in various
+machine learning problem domains. However, with respect to their required neurons, those successful models have
+shown to be redundant by a magnitude. For example, Han et al. claim “on the ImageNet dataset, our method reduced
+the number of parameters of AlexNet by a factor of 9×” and “VGG-16 can be reduced by 13×”[ 8] through pruning.
+Thus, biology and structural searches such as e.g. pruning suggest to develop sparse neural network structures [24].
+Secondly, a look on the history of ANNs shows that, after major breakthroughs in the early 90s, the research
+community already tried to ﬁnd characteristic networks structures by e.g. constructive and destructive approaches.However, network structures have only been studied in graph theory by then and the major remaining architectures
+∗Corresponding author
+E-mail address: julian.stier@uni-passau.de
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+Structural Analysis of Sparse Neural Networks
+Julian Stiera,∗, Michael Granitzera
+aUniversity of Passau, Innstrasse 42, 94032 Passau, Germany
+Abstract
+Sparse Neural Networks regained attention due to their potential of mathematical and computational advantages. We give moti-
+vation to study Artiﬁcial Neural Networks (ANNs) from a network science perspective, provide a technique to embed arbitraryDirected Acyclic Graphs into ANNs and report study results on predicting the performance of image classiﬁers based on the struc-
+tural properties of the networks’ underlying graph. Results could further progress neuroevolution and add explanations for the
+success of distinct architectures from a structural perspective.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords: artiﬁcial neural networks; sparse network structures; small-world neural networks; scale-free; architecture performance estimation
+1. Introduction
+Artiﬁcial Neural Networks (ANNs) are highly successful machine learning models and achieve human performance
+in various domains such as image processing and speech synthesis. The choice on architecture is crucial for their
+success – but ANN architectures, seen as network structures, have not been extensively studied from a network science
+perspective, yet. The motivation of studying ANNs from a network science perspective is manifold:
+First of all, ANNs are inspired from biological neural networks (notably the human brain) which have scale-free
+properties and “are shown to be small-world networks” [25]. This is contradictory to most successful models in various
+machine learning problem domains. However, with respect to their required neurons, those successful models have
+shown to be redundant by a magnitude. For example, Han et al. claim “on the ImageNet dataset, our method reduced
+the number of parameters of AlexNet by a factor of 9×” and “VGG-16 can be reduced by 13×”[ 8] through pruning.
+Thus, biology and structural searches such as e.g. pruning suggest to develop sparse neural network structures [24].
+Secondly, a look on the history of ANNs shows that, after major breakthroughs in the early 90s, the research
+community already tried to ﬁnd characteristic networks structures by e.g. constructive and destructive approaches.However, network structures have only been studied in graph theory by then and the major remaining architectures
+∗Corresponding author
+E-mail address: julian.stier@uni-passau.de
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+108 Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116
+2 Stier et al. /Procedia Computer Science 00 (2019) 000–000
+from this research period are notably Convolutional Neural Networks (CNNs) [16 ] and Long Short-Term Memory
+Networks (LSTMs) [12]. New breakthroughs in the early 21st century led to recent trends of new architectures such as
+Highway Networks [23] and Residual Networks [9]. This suggests that further insights from revisiting and analysingthe topology of sparse neural networks could be gained, particularly from a network science perspective as done inMocanu et al. [19], which also “argue that ANNs, too, should not have fully-connected layers”.
+Last but not least, many researchers reported various advantages of sparse structures over unjustiﬁed densely
+stacked layers. Glorot et al. argued, that sparsity is one of the factors for the success of Rectiﬁed Linear Units (ReLU)as activation functions because “using a rectifying non-linearity gives rise to real zeros of activations and thus trulysparse representations” [7]. The optimization process with ReLUs might not only ﬁnd good representations but alsobetter structures through sparser connections. Sparser connections can also decrease the number of computations andthus time and energy consumption. Not only exists biological motivation but also mathematical and computational
+advantages have been reported for sparse neural network structures.
+Looking at the structural design and training of ANNs as a search problem, one can argue to apply structural
+regularisation when postulating distinct structural properties. CNNs exploit sparsely connected neurons due to spatial
+relationships of the input features, which leads in conjunction with weight-sharing to very successful models. LSTMs
+overcome analytical issues in training by postulating structures with slightly changed training behaviour. We argue,
+that there can be new insights gained from studying ANNs from a network science perspective.
+Sparse Neural Networks (SNNs), which we deﬁne as networks not being fully connecteted between layers, form
+another important, yet not well-understood structural regularisation. We mention three major approaches to study theinﬂuence of structural regularisation to properties of SNNs: 1) studying ﬁxed sparse structures with empirical success
+or selected analytical advantages, 2) studying sparse structures obtained in search heuristics and 3) studying sparsestructures with common graph theoretical properties.
+The ﬁrst approach studies selected models with ﬁxed structure analytically or within empirical works. Exemplarily,
+LSTMs arose from analytical work [11] on issues in the domain of time-dependent problems and have also beenstudied empirically since then. In larger network structures, LSTMs and CNNs provide ﬁxed components which have
+been proven to be successful due to analytical research and much experience in empirical work. These insights provide
+foundations to construct larger networks in a bottom-up fashion.
+On larger scale, sparse network structures can be approached by automatic construction, pruning, evolutionary
+techniques or even as a result of training regularisation or the choice of activation function. Despite the common
+motivation to ﬁnd explanations for resulting sparse structures, a lot of those approaches indeed obtain sparse structures
+but fail to ﬁnd an explanation for them.
+Studying real-world networks has been addressed by the ﬁeld of Network Science. However, as of now, Network
+Science has been hardly used to study the structural properties of ANNs and to understand the regularisation eﬀectsintroduced by sparse network structures.
+This article reports results on embedding sparse graph structures with characteristic properties into feed-forward
+networks and gives ﬁrst insights into our study on network properties of sparse ANNs. Our Contributions comprise
+•a technique to embed Directed Acyclic Graphs into Artiﬁcial Neural Networks (ANN)
+•a comparison of Random Graph Generators as generators for structures of ANNs
+•a performance estimator for ANNs based on structural properties of the networks’ underlying graph
+Related Work
+A lot of related works in ﬁelds such as network science, graph theory, and neuroevolution give motivation to study
+Sparse Structured Neural Networks (SNNs). From a network science perspective, SNNs are Directed Acyclic Graphs
+(DAGs) in case of non-recurrent and Directed Graphs in case of Recurrent Neural Networks. Directed acyclic and
+cyclic graphs are built, studied and characterized in graph theory and network science. Notably, already Erd ¨os “aimed
+to show [..] that the evolution of a random graph shows very clear-cut features” [6]. Graphs with distinct degreedistributions have been characterised as small-world and scale-free networks with the works of Watts & Strogatz
+[25] and Barab ´asi & Albert [1]. Both phenomens are “not merely a curiosity of social networks nor an artefact of
+ Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116 109
+Stier et al. /Procedia Computer Science 00 (2019) 000–000 3
+an idealized model – it is probably generic for many large, sparse networks found in nature” [25]. However, from a
+biological perspective, the question of how the human brain is organised, still remains open: According to Hilgetag etal. “a reasonable guess is that the large-scale neuronal networks of the brain are arranged as globally sparse hierarchicalmodular networks” [10].
+Concerning the combination of ANNs and Network Science Mocanu et al. claim that “ANNs perform perfectly
+well with sparsely-connected layers” and introduce a training procedure SET, which induces sparsity by magnitude-
+based pruning and randomly adding connections within the training phase [19]. While their method is driven by thesame motivation and inspiration, it is conceptually fundamentally diﬀerent from our idea of ﬁnding characteristicproperties of SNNs.
+The work of Bourely et al. can be considered very close to our idea of creating SNNs before the training phase.
+They “propose Sparse Neural Network architectures that are based on random or structured bipartite graph topologies”
+[4] but do not seem to base their construction on existing work in Network Science when transforming their randomly
+generated structures into ANNs.
+There exists a vast amount of articles on automatic methods which yield sparsity. Besides well-established regular-
+isation methods (e.g. L
+1-regularisation), new structural regularisation methods can be found: Srinivas et al. “introduce
+additional gate variables to perform parameter selection” [22] and Louizos et al. “propose a practical method for L0
+norm regularisation” in which they “prune the network during training by encouraging weights to become exactlyzero” [18]. Besides regularisation one can also achieve SNNs through pruning, construction and evolutionary strate-
+gies. All of those domains achieve successes to some extent but seem to fail in providing explanations for why certain
+found architectures succeed and others do not.
+The idea of predicting the model performance can already be found in a similar way in the works of Klein et al.,
+Domhan et al. and Baker et al.. Klein et al. exploit “information in automatic hyperparameter optimization by meansof a probabilistic model of learning curves across hyperparameter settings” [15]. They compare the idea with a human
+expert assessing the course of the learning curve of a model. Domhan et al. also “mimic the early termination of bad
+runs using a probabilistic model that extrapolates the performance from the ﬁrst part of a learning curve” [5]. Both are
+concerned with predicting the performance based on learning curve, not on structural network properties.
+Baker et al. are closest to our method by “predicting the ﬁnal performance of partially trained model conﬁgurations
+using features based on network architectures, hyperparameters, and time-series validation performance data” [2].They report good R
+2values (e.g. 0.969 for Cifar10 with MetaQNN CNNs) for predicting the performance and did
+so on slightly more complex datasets such as Cifar10, TinyImageNet and Penn Treebank. However, our motivationis to focus only on architecture parameters and include more characteristic properties of the network graph than only
+“including total number of weights and number of layers” which is independent of other hyperparameters and savesconducting an expensive training phase.
+In the following chapters we give an introduction to Network Science, illustrate how Directed Acyclic Graphs are
+embedded into ANNs, provide details on generated graphs and their properties and visualize results from predicting
+the performance of built ANNs only with features based on structural properties of the underlying graph.
+2. A Network Science Perspective: Random Graph Generators
+A graph G=(V,E) is deﬁned by its naturally ordered vertices Vand edges E⊂V×V. The number of edges
+containing a vertex v∈Vdetermines the degree of v. The “distribution function P(k) [..] gives the probability that a
+randomly selected node has exactly kedges” [1]. It can be used as a ﬁrst characteristic to diﬀer between certain types
+of graphs. For a “random graph [it] is a Poisson distribution with a peak at P(/angbracketleftk/angbracketright)”, with /angbracketleftk/angbracketrightbeing “the average degree
+of the network” [1]. Graphs with degree distributions following a power-law tail P(k)∼k
+−γare called scale-free
+graphs. Graphs with “relatively small characteristic path lengths” are called small-world graphs [25].
+Graphs can be generated by Random Graph Generators (RGG). Various RGGs can yield very distinct statistical
+properties. The most prominent model to generate a random graph is the Erd˝ os-R´ enyi- /Gilbert -model (ERG-model)
+which connects a given number of vertices randomly. While this ERG-model yields a Poisson distribution for the
+degree distribution, other models have been developed to close the gap of generating large graphs with distinct char-
+110 Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116
+4 Stier et al. /Procedia Computer Science 00 (2019) 000–000
+(a) Sketched graph from Random Graph
+Generator (RGG).(b) Transformed Directed Acyclic Graph(DAG) from RGG. (c) Embedded DAG between input and out-put layers of an Artiﬁcial Neural Network
+classiﬁer.
+Figure 1. Random (possibly undirected) graph, a directed transformation of it and the ﬁnal embedding of the sparse structure within a Neural
+Network Classiﬁer. In this example the classiﬁer would be used for a problem with four input and two output neurons.
+acterstics found in nature. Notably, the ﬁrst RGGs producing such graphs have been the Watts-Strogatz-model [25]
+and the Barab´ asi-Albert -model [1].
+3. Embedding Arbitrary Structures into Sparse Neural Networks
+After obtaining a graph with desired properties by a Random Graph Generator, this graph is embedded into a
+Sparse Neural Network with following steps:
+1.Make graph directed (if not directed, yet),
+2.compute a layer indexing for all vertices,
+3.embed layered vertices between an input and output layer meeting the requirements of the dataset.
+The ﬁrst step conducts a transformation into a Directed Acyclic Graph following an approach in Barak et al. [3]
+which “consider the class Aof random acyclic directed graphs which are obtained from random graphs by directing
+all the edges from higher to lower indexed vertices”. Given a graph and a natural ordering of its vertices, a DAG is
+obtained by directing all edges from higher to lower ordered vertices. This can be easily computed by setting the upper
+(or lower) triangle of the adjacency matrix to zero.
+Next, a layer indexing is computed to assign vertices into diﬀerent layers within a feed-forward network. Vertices in
+a common layer can be represented in a uniﬁed layer vector. The indexing function indl(v):V →Nis recursively
+deﬁned by v/mapsto→max({indl(s)|(s,v)∈Ein
+v} ∪ {−1}) +1 which then deﬁnes a set of layers Land a family of neurons
+indexed by Ilfor each layer l∈L.
+Finally, the layered DAG can be embed into an ANN for a given task, e.g. a classiﬁcation task such as MNIST with
+784 input and 10 output neurons. All neurons of the input layer are connected to neurons representing the vertices of
+the DAG with in-degree equal to zero (layer index zero). Succedingly, each vertex gets represented as a neuron and is
+connected according to the DAG. The build process ﬁnishes by connecting all neurons of the last layer of the DAGwith neurons of the output layer. Following this approach, each resulting ANN has at least two fully connected layersin size depending on the DAG vertices of in-degree and out-degree equalling zero.
+Figure 1 visualizes the steps from a random generated graph to a DAG and embedded into an ANN classiﬁer.
+ Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116 111
+Stier et al. /Procedia Computer Science 00 (2019) 000–000 5
+4. Performance Estimation Through Structural Properties
+In order to analyse the impact of the diﬀerent structural elements, we conducted a supervised experiment predicting
+network performances on the structural properties only. We then analysed the most important features involved in the
+decision along with the prediction quality.
+For this experiment we created an artiﬁcial dataset graphs10k based on two Random Graph Generators (RGG).
+Each graph in the dataset is transformed into a Sparse Neural Network (SNN), implemented in PyTorch [20]. Theresulting model is then trained and evaluated on MNIST [17]. Based on obtained evaluation measures, three esti-mator models – Ordinary Linear Regression, Support Vector Machine and Random Forest – are trained by splittinggraphs10k into a training and test set. The estimator models give opportunity to discuss inﬂuence of structural prop-
+erties to the SNN performances.
+4.1. The graphs10k dataset
+To investigate which structural properties inﬂuence the performance of an Artiﬁcial Neural Network most, we
+created a dataset of graphs generated by Watts-Strogatz- and Barab´ asi-Albert -models. The dataset comprises 10,000
+graphs, randomly generated by having between 50 and 500 vertices. An exemplary property frequency distribution of
+the number of edges is shown in 2a. The non-uniform distribution visualizes the diﬃculty of uniformly sampling in
+graph space
+1.
+The dataset contains 5018 Barab ´asi-Albert-graphs and 4982 Watts-Strogatz-graphs. The graphs have between 97
+and 4,365 edges and on average 1,399.17 edges with a standard deviation of 954,12. In estimating the model per-
+formances the number of source and sink vertices are very prominent. Source vertices are those with no incoming
+edges, sink vertices those with no outgoing edges. On average the graphs have 79.75 source vertices with a standard
+deviation of 80.69 and 9.56 sink vertices with a standard deviation of 17.53.
+Distributions within the graphs are reduced to four properties, namely minimum, arithmetic mean, maximum and
+standard deviation or variance. For the mean degree distribution, a vertex has on average 10.36 connected edges andthis arithmetic mean has a standard deviation of 4.47. The variance of the degree distributions is on average 174.46
+with a standard deviation of 259.08.
+After each graph was embedded in a SNN, its accuracy value for test and validation set was obtained and added to
+the dataset. More detailed statistics on other properties are given in Table 2.
+With the presented embedding technique it could be found, that graphs based on the Barab ´asi-Albert model could
+not achieve comparable performances to graphs based on the Watts-Strogatz model. Only 2618 of Barab ´asi-Albert
+models achieved over 0.3 in accuracy (less than 50%). Excluding the Barab ´asi-Albert model did not change the
+estimation results in subsection 4.2, therefore statistics are reported for all graphs combined. In future, the dataset will
+be enhanced to comprise more RGGs.
+The test accuracy has three major peeks at arond 0.15, 0.3 and 0.94 as can be seen in the frequency distribution on
+the x-axis of 2b, depicting a joint plot of the test accuracy and the variance of a graphs’ eccentricity
+2distribution.
+4.2. Estimators on graphs10k
+Ordinary Linear Regression (OLS), Support Vector Machine (SVM) and Random Forest (RF) are used to estimate
+model performance values given their underlying structural properties.
+The dataset was split into a train and test set with a train set size ratio of 0.7. In case of considering the whole
+dataset of 10,000 graphs the estimator models are trained on 7000 data points. The train-test-split was repeated 20
+times with diﬀerent constants used as initialization seed for the random state.
+Diﬀerent feature sets are considered to assess the inﬂuence of single features.
+1Note, that according to Karrer et al. “we do not at present know of any way to sample uniformly from the unordered ensemble” in the context
+of samling from possibile orderings of random acyclic graphs [14].
+“Bayesian networks are composed of directed acyclic graphs, and it is very hard to represent the space of such graphs. Consequently, it is not easy
+to guarantee that a given method actually produces a uniform distribution in that space.” [13]
+2The eccentricity of a vertex in a connected graph is the maximum distance to any other vertex.
+112 Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116
+ 6 Stier et al. /Procedia Computer Science 00 (2019) 000–000
+(a) Frequency distribution of number of edges. (b) Jointplot of eccentricity variance vs. test accuracy
+Figure 2. 2a: An exemplary frequency distribution of graphs10k. With a uniformly distributed number of vertices, very diﬀerent frequency
+distributions occur for other structural properties. 2b: Correlation between variance in eccentricity and accuracy shown in a joint plot. Axes
+contain distributions of each feature. The test accuracy distribution (on the top y-axis) shows that there only exist few graphs between 0.4 and 0.85
+but three peaks at around 0.2, 0.35 and 0.95. For high accuracies an increasing variance in eccentricity can be observed. A low eccentricity variance,
+however, does not explain good performance on its own.
+The set Ωdenotes all possible features as listed in Table 1, Ωnpcontains all features except for the number of
+vertices, number of edges, number of source vertices and the number of sink vertices. These four features directly
+indicate numbers of trainable parameters in the model (features with no direct indication to the number of parameters).
+Ωopcontains only those four properties.
+Features with variance information only are considered in Ωvar, namely the variances of the degree, eccentricity,
+neighborhood, path length, closeness and edge betweenness distributions. Compared to other properties of the distri-butions – such as the average, minimum or maximum – features with variance information have shown in experiments
+to have some inﬂuence on the network performance.
+A manually selected set Ω
+small contains a reduced set of selected features, namely number source vertices,
+number sink vertices, degree distribution var, density, neighborhood var, path length var, closeness std,
+edge betweenness std, eccentricity var. Table 1 provides an overview of used feature sets and resulting feature
+importances for the RF estimator.
+OLS achieved a R2score of 0.8631 on average for feature set Ωover 20 repetitions with a standard deviation of
+0.0042. Pearson’s r for OLS is on average ρ=0.9291. SVM with RBF kernel achieved on average 0.9356 with 0.0018
+in standard deviation. RF achieved a R2score of 0.9714 on average with a standard deviation of 0.0009. None of the
+other considered estimators reaches the RF-estimator predicting the model performances.
+The feature importances of the RF estimator are calculated with sklearn [21] where “each feature importance is
+computed as the (normalized) total reduction of the criterion brought by that feature”3. They are listed in Table 1
+for each used feature in scope of the used feature set. The number of sink vertices clearly have most inﬂuence to theperformance of a MNIST-classiﬁer.
+3Taken from http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor.html which refer-
+ences Breiman, Friedman, Classiﬁcation and regression trees, 1984
+ Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116 113Stier et al. /Procedia Computer Science 00 (2019) 000–000 7Model Ω Ωnp Ωop Ωvar Ωsmall Ωmin
+Random Forest R20.9714 +−0.0009 0.9314 +−0.00310.9664 +−0.00100.9283 +−0.00320.9710 +−0.00110.9706 +−0.0009
+OLS R20.8631 +−0.00420.8476 +−0.00530.6522 +−0.00890.5968 +−0.01030.7211 +−0.00720.6907 +−0.0077
+SVM linR20.8620 +−0.0045 0.8463 +−0.00540.6432 +−0.01140.5551 +−0.01640.6943 +−0.01010.6676 +−0.0111
+SVM rb fR20.9356 +−0.00180.9235 +−0.00280.8561 +−0.00410.7827 +−0.00920.8781 +−0.00450.8604 +−0.0033
+SVM polR20.9174 +−0.00250.8998 +−0.00320.5668 +−0.00650.6839 +−0.01170.8421 +−0.00530.7543 +−0.0083
+Property RF Feature Importance
+number vertices 0.0009 0.0045 +−0.0002
+number edges 0.0013 0.0071 +−0.0002
+number source vertices 0.0636 0.0720 +−0.00180.0643 +−0.00190.0659 +−0.0019
+number sink vertices 0.9124 0.9164 +−0.00190.9137 +−0.00190.9139 +−0.0020
+degree distribution mean 0.0004 0.0083 +−0.0054
+degree distribution var 0.0009 0.4582 +−0.0973 0.3685 +−0.08660.0024 +−0.00020.0069 +−0.0002
+diameter 0.0003 0.0008 +−0.0001
+density 0.0007 0.0030 +−0.0007 0.0072 +−0.00070.0023 +−0.0002
+eccentricity mean 0.0015 0.0047 +−0.0006
+eccentricity var 0.0022 0.3025 +−0.10060.3401 +−0.0994
+eccentricity max 0.0003 0.0009 +−0.0002
+neighborhood mean 0.0004 0.0050 +−0.0046
+neighborhood var 0.0011 0.1417 +−0.06460.2434 +−0.08830.0025 +−0.0001
+neighborhood min 0.0005 0.0272 +−0.0104
+neighborhood max 0.0017 0.0071 +−0.0035
+path length mean 0.0011 0.0045 +−0.0013
+path length var 0.0013 0.0052 +−0.00090.0133 +−0.00180.0034 +−0.00010.0067 +−0.0002
+closeness min 0.0014 0.0067 +−0.0028
+closeness mean 0.0010 0.0030 +−0.0003
+closeness max 0.0013 0.0034 +−0.0003
+closeness std 0.0021 0.0064 +−0.00120.0166 +−0.00170.0039 +−0.00020.0066 +−0.0002
+edge betweenness min 0.0001 0.0008 +−0.0003
+edge betweenness mean 0.0011 0.0041 +−0.0005
+edge betweenness max 0.0015 0.0038 +−0.0004
+edge betweenness std 0.0011 0.0027 +−0.00030.0109 +−0.00110.0036 +−0.0001
+Table 1. Structural properties for the SNNs’ underlying graphs from the graphs10k dataset and their inﬂuence as features for the Random Forest model under diﬀerent feature sets.
+114 Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116
+8 Stier et al. /Procedia Computer Science 00 (2019) 000–000
+Features, which do not directly indicate the number of parameters, can be seen in the second column for Ωnpand the
+three most important ones are highlighted in boldface. The three most important features are the variances of degree,
+eccentricity and neighborhood distributions of the graph. Considering six variance features together with the numberof source and sink vertices leads to a R
+2value for RF of 0.9710 +−0.0011, only deviating by 0.0004 from the best
+average R2value of 0.9714 +−0.0009. Variance features alone already achieve an average R2of 0.9283 +−0.0032 (see
+Ωvar). This gives indication, that e.g. in the case of eccentricity a higher diversity leads to better performance. Higher
+variances in those distributions imply diﬀerent path lengths through the network which can be found in architectures
+such as Residual Networks.
+5. Conclusion & Future Work
+This work presented motivations and approaches to study Artiﬁcial Neural Networks (ANNs) from a network
+science perspective. Directed Acyclic Graphs with characteristic properties from network science are obtained by
+Random Graph Generators (RGGs) and embedded into ANNs. A dataset of 10,000 graphs with Watts-Strogatz- and
+Barab´ asi-Albert -models as RGGs was created to base experiments on. ANN models are trained on the presented
+structural embedding technique and performance values such as the accuracy on a validation set were obtained.
+With both, structural properties and resulting performance values, three estimator models, namely an Ordinary
+Linear Regression, a Support Vector Machine and a Random Forest (RF) model are built. The Random Forest model
+is most successful in predicting ANN model performances based on the structural properties. Inﬂuence of the structural
+properties (features of the RF) on predicting ANN model performances is measured.
+Clearly, the most important feature is the number of vertices and edges, directly determining the number of trainable
+parameters. There is, however, indication that the variance of distributions of properties such as the eccentricity,vertex degrees and path lengths of networks have inﬂuence for high performant models. This insight goes along with
+successful models such as Residual Networks and Highway Networks, which introduce more variance and thus leadto a more ensemble-like behaviour.
+More such characteristic graph properties will help explain diﬀerences of various architectures. Understanding the
+interaction of graph properties could also be exploitet in the form of structural regularization – designing architectures
+or searching for them (e.g. in evolutionary approaches) could be driven by network scientiﬁc knowledge.
+In future work, insights into the inﬂuence of structural properties on model performance will be hardened by more
+complex problem domains which assumably have more potential of revealing stronger diﬀerences. The approach
+with structural properties will be extended to recurrent architectures to reduce the gap between DAGs used in this
+work and directed cyclic networks, as they are found in nature. The performance prediction will also be integrated into
+neuroevolutionary methods, most likely leading to a performance boost by early stopping and improved regularized
+search.
+References
+[1]R´eka Albert and Albert-L ´aszl´o Barab ´asi. 2002. Statistical mechanics of complex networks. Reviews of modern physics 74, 1 (2002), 47.
+[2]Bowen Baker, Otkrist Gupta, Ramesh Raskar, and Nikhil Naik. 2018. Accelerating neural architecture search using performance prediction.
+(2018).
+[3]Amnon B Barak and Paul Erd ¨os. 1984. On the maximal number of strongly independent vertices in a random acyclic directed graph. SIAM
+Journal on Algebraic Discrete Methods 5, 4 (1984), 508–514.
+[4]Alfred Bourely, John Patrick Boueri, and Krzysztof Choromonski. 2017. Sparse Neural Networks Topologies. arXiv preprint arXiv:1706.05683
+(2017).
+[5]Tobias Domhan, Jost Tobias Springenberg, and Frank Hutter. 2015. Speeding Up Automatic Hyperparameter Optimization of Deep Neural
+Networks by Extrapolation of Learning Curves.. In IJCAI, Vol. 15. 3460–8.
+[6]Paul Erd ¨os and Alfr ´ed R´enyi. 1960. On the evolution of random graphs. Publ. Math. Inst. Hung. Acad. Sci 5 (1960), 17–61.
+[7]Xavier Glorot, Antoine Bordes, and Yoshua Bengio. 2011. Deep sparse rectiﬁer neural networks. In Proceedings of the Fourteenth International
+Conference on Artiﬁcial Intelligence and Statistics. 315–323.
+[8]Song Han, Jeﬀ Pool, John Tran, and William Dally. 2015. Learning both weights and connections for eﬃcient neural network. In Advances in
+neural information processing systems. 1135–1143.
+[9]Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. 2016. Deep residual learning for image recognition. In Proceedings of the IEEE
+conference on computer vision and pattern recognition. 770–778.
+ Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116 115 Stier et al. /Procedia Computer Science 00 (2019) 000–000 9
+(a) Correlation between test accuracy and number of vertices of the
+underlying graph.(b) Correlation between test accuracy and number of edges of the un-derlying graph.
+Figure 3.
+[10] Claus C Hilgetag and Alexandros Goulas. 2016. Is the brain really a small-world network? Brain Structure and Function 221, 4 (2016),
+2361–2366.
+[11] Sepp Hochreiter. 1991. Untersuchungen zu dynamischen neuronalen Netzen. Diploma, Technische Universit¨ at M¨ unchen 91 (1991), 1.
+[12] Sepp Hochreiter and J ¨urgen Schmidhuber. 1997. Long short-term memory. Neural computation 9, 8 (1997), 1735–1780.
+[13] Jaime S Ide and Fabio G Cozman. 2002. Random generation of Bayesian networks. In Brazilian symposium on artiﬁcial intelligence. Springer,
+366–376.
+[14] Brian Karrer and Mark EJ Newman. 2009. Random graph models for directed acyclic networks. Physical Review E 80, 4 (2009), 046110.
+[15] Aaron Klein, Stefan Falkner, Jost Tobias Springenberg, and Frank Hutter. 2016. Learning curve prediction with Bayesian neural networks.
+(2016).
+[16] Yann LeCun, Bernhard E Boser, John S Denker, Donnie Henderson, Richard E Howard, Wayne E Hubbard, and Lawrence D Jackel. 1990.
+Handwritten digit recognition with a back-propagation network. In Advances in neural information processing systems. 396–404.
+[17] Yann LeCun, Corinna Cortes, and Christopher JC Burges. 1998. The MNIST database of handwritten digits. (1998).
+[18] Christos Louizos, Max Welling, and Diederik P Kingma. 2017. Learning Sparse Neural Networks through L
+0 Regularization. arXiv preprint
+arXiv:1712.01312 (2017).
+[19] Decebal Constantin Mocanu, Elena Mocanu, Peter Stone, Phuong H Nguyen, Madeleine Gibescu, and Antonio Liotta. 2017. Evolutionary
+training of sparse artiﬁcial neural networks: a network science perspective. arXiv preprint arXiv:1707.04780 (2017).
+[20] Adam Paszke, Sam Gross, Soumith Chintala, Gregory Chanan, Edward Yang, Zachary DeVito, Zeming Lin, Alban Desmaison, Luca Antiga,
+and Adam Lerer. 2017. Automatic diﬀerentiation in PyTorch. (2017).
+[21] F. Pedregosa, G. Varoquaux, A. Gramfort, V. Michel, B. Thirion, O. Grisel, M. Blondel, P. Prettenhofer, R. Weiss, V. Dubourg, J. Vanderplas,
+A. Passos, D. Cournapeau, M. Brucher, M. Perrot, and E. Duchesnay. 2011. Scikit-learn: Machine Learning in Python. Journal of Machine
+Learning Research 12 (2011), 2825–2830.
+[22] Suraj Srinivas, Akshayvarun Subramanya, and R Venkatesh Babu. 2017. Training sparse neural networks. In Computer Vision and Pattern
+Recognition Workshops (CVPRW), 2017 IEEE Conference on. IEEE, 455–462.
+[23] Rupesh Kumar Srivastava, Klaus Greﬀ, and J ¨urgen Schmidhuber. 2015. Highway networks. arXiv preprint arXiv:1505.00387 (2015).
+[24] Julian Stier, Gabriele Gianini, Michael Granitzer, and Konstantin Ziegler. 2018. Analysing Neural Network Topologies: a Game Theoretic
+Approach. Procedia Computer Science 126 (2018), 234–243.
+[25] Duncan J Watts and Steven H Strogatz. 1998. Collective dynamics of ‘small-world’networks. nature 393, 6684 (1998), 440.
+116 Julian Stier  et al. / Procedia Computer Science 159 (2019) 107–116
+10 Stier et al. /Procedia Computer Science 00 (2019) 000–000
+(a) Correlation between test accuracy and density of the underlying
+graph.(b) Correlation between test accuracy and path length variance of theunderlying graph.
+Figure 4.
+Property Min Mean Max Std
+number vertices 50 269.66 490 129.56
+number edges 97 1399.17 4365 954.12
+number source vertices 1 79.7501 306 80.6862
+number sink vertices 1 9.5550 125 17.5298
+diameter 3 8.72 54 4.86
+density 0.0041 0.0277 0.1653 0.0256
+degree distribution mean 3.88 10.36 17.82 4.47
+degree distribution var 0.4638 174.46 1274.97 259.08
+eccentricity mean 1.7800 4.4104 29.2400 2.4913
+eccentricity var 0.2784 4.6160 146.8862 9.6251
+eccentricity max 3 8.7211 54 4.8585
+neighborhood mean 4.8800 11.3557 18.8163 4.4670
+neighborhood var 0.4571 173.7798 1272.3148 258.3377
+neighborhood min 1 5.7161 14 2.8536
+neighborhood max 7 75.8607 312 72.7306
+path length mean 1.3008 2.7941 14.2195 1.4005
+path length var 0.2229 1.9988 53.2144 3.8514
+closeness min 0.0020 0.3229 0.5698 0.1275
+closeness mean 0.0476 0.4007 0.6150 0.1132
+closeness max 0.0514 0.5324 0.9672 0.1824
+closeness std 0.0090 0.0306 0.1137 0.0151
+edge betweenness min 1 1.0034 3 0.0467
+edge betweenness mean 1.8272 45.2005 1531.7422 101.3437
+edge betweenness max 8.3333 441.7764 12259.0184 782.9232
+edge betweenness std 1.0408 51.3070 1781.8689 117.5626
+Table 2. Considered properties and their statistical distributions across the graphs10k dataset.

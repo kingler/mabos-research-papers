@@ -1,0 +1,875 @@
+ScienceDirect
+Available online at www.sciencedirect.com
+Procedia Computer Science 159 (2019)  524–533
+1877-0509 © 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.
+10.1016/j.procs.2019.09.207
+10.1016/j.procs.2019.09.207 1877-0509© 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International. Available online at www.sciencedirect.com  
+ScienceDirect  
+Procedia Computer Science 00 (20 19) 000 –000  
+www.elsevier.com/locate/procedia  
+ 
+1877 -0509  © 2019 The Author(s). Published by Elsevier B.V.   
+This is an open access article under the CC BY -NC-ND license  (https://creativecommons.org/licenses/by -nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International .  23rd International Conference on Knowledge -Based and Intelligent Information & Engineering 
+Systems   
+Overlapping Chromosome Segmentation using U -Net: 
+Convolutional Networks with Test Time Augmentation   
+ 
+Hariyanti Mohd Saleha,b, Nor Hidayah Saada,b, Nor Ashidi Mat Isaa* 
+aImaging and Intelligent System Research Team, School of Electrical and Electronic Engineering Campus,  
+Universiti Sains Malaysia, Nibong Tebal 14300, Malaysia  
+bSchool of  Microelectronic Engineering, Universiti Malaysia Perlis, Pauh Putra Campus, 02600 Arau, Perlis, Malaysia.  
+Abstract  
+An effective human metaphase chromosome analysis system can be used by doctors as a second opinion during diagnosis. 
+Segmentation is necessary in developing this system to identify and distinguish between individual chromosomes . The main 
+challenge in chromosome segmentation is the separation of overlapping chromosomes. Deep convolutional neural networks  have 
+been widely used for medical  segmentation, especially with U -Net. This study  investigated how Test time  augmentation  with a 
+suitable number of U-Net layers can improve the design for this semantic segmentation problem.  The proposed architecture was 
+trained, validated and tested with 13,434 gr eyscale image s with 88 × 88 pixels of overlapping chromosome pairs. With the 
+implementation of the proposed method, the training result bec ame more  accurate without any mislabelling and additional pre -
+processing  became unnecessary . An improved  segmentation accuracy of 99.68% was obtained, which was higher than the 
+99.22% obtained using the method of Hu et al. 
+ 
+ 
+© 2019 The Author(s). Published by Elsevier B.V.    
+This is an open access article under the CC BY -NC-ND license  (https://creativecommons.org/licenses/by -nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International . 
+ 
+Keywords: Overlapping chromosome segmentation ; U-Net; Convolutional neural networks; Test time  augmentation ; Deep learning  
+ 
+ 
+ 
+* Corresponding author. Tel.: +6045996051 ; fax: +6045941023 . 
+E-mail address:  hariyanti@unimap.edu.my , ashidi@usm.my   Available online at www.sciencedirect.com  
+ScienceDirect  
+Procedia Computer Science 00 (20 19) 000 –000  
+www.elsevier.com/locate/procedia  
+ 
+1877 -0509  © 2019 The Author(s). Published by Elsevier B.V.   
+This is an open access article under the CC BY -NC-ND license  (https://creativecommons.org/licenses/by -nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International .  23rd International Conference on Knowledge -Based and Intelligent Information & Engineering 
+Systems   
+Overlapping Chromosome Segmentation using U -Net: 
+Convolutional Networks with Test Time Augmentation   
+ 
+Hariyanti Mohd Saleha,b, Nor Hidayah Saada,b, Nor Ashidi Mat Isaa* 
+aImaging and Intelligent System Research Team, School of Electrical and Electronic Engineering Campus,  
+Universiti Sains Malaysia, Nibong Tebal 14300, Malaysia  
+bSchool of  Microelectronic Engineering, Universiti Malaysia Perlis, Pauh Putra Campus, 02600 Arau, Perlis, Malaysia.  
+Abstract  
+An effective human metaphase chromosome analysis system can be used by doctors as a second opinion during diagnosis. 
+Segmentation is necessary in developing this system to identify and distinguish between individual chromosomes . The main 
+challenge in chromosome segmentation is the separation of overlapping chromosomes. Deep convolutional neural networks  have 
+been widely used for medical  segmentation, especially with U -Net. This study  investigated how Test time  augmentation  with a 
+suitable number of U-Net layers can improve the design for this semantic segmentation problem.  The proposed architecture was 
+trained, validated and tested with 13,434 gr eyscale image s with 88 × 88 pixels of overlapping chromosome pairs. With the 
+implementation of the proposed method, the training result beca me more  accurate without any mislabelling and additional pre -
+processing  became unnecessary . An improved  segmentation accuracy of 99.68% was obtained, which was higher than the 
+99.22% obtained using the method of Hu et al. 
+ 
+ 
+© 2019 The Author(s). Published by Elsevier B.V.    
+This is an open access article under the CC BY -NC-ND license  (https://creativecommons.org/licenses/by -nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International . 
+ 
+Keywords:  Overlapping chromosome segmentation ; U-Net; Convolutional neural networks; Test time  augmentation ; Deep learning  
+ 
+ 
+ 
+* Corresponding author. Tel.: +6045996051 ; fax: +6045941023 . 
+E-mail address:  hariyanti@unimap.edu.my , ashidi@usm.my  Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ 1. Introduction  
+     A healthy human cell image contains 46 chromosomes. The first 22 pairs of chromosomes are called autosomes 
+and the 23rd pair are sex chromosomes called X and Y [1]. The presence of two X chro mosomes represents a 
+female, whilst XY represents a male. During metaphase, chromosomes align on the metaphase plate in the middle of 
+the cell where the chromosome centromere, telomere and nucleolar organiser regions are located. On the basis of the 
+centro mere position of each chromosome pair which represents the relative length of the chromosome, 44 autosomes 
+are numbered from 1 to 22 in descending order of length of each karyotype test (one exception is chromosome 21, 
+which is shorter than chromosome 22).  Fig. 1(a) shows a metaphase Giemsa -stained microscopic image, and Fig. 
+1(b) shows the karyotyping result of paired and ordered chromosomes. Karyotyping is the main method used to 
+identify and evaluate the size, shape and number of chromosomes in a body ce ll. Major genetic disorders and 
+chromosomal abnormalities can be diagnosed from karyotyped images. Cells divide and reproduce in two ways: 
+mitosis and meiosis. A chromosomal abnormality sparks from a chromosomal mutation which can occur before, 
+during and after mitosis and meiosis [2]. Klinefelter syndrome is a trisomy disorder characterised by an extra X 
+chromosome in males. Klinefelter can stop sperm production. Other examples of trisomy are Patau syndrome 
+(trisomy 13), Edward’s syndrome (trisomy 18) and Down syndrome (trisomy 21). Down syndrome causes mental 
+retardation. Conventional karyotyping is a difficult and time -consuming task manually performed by cytologists [3], 
+wherein chromosomes are classified from cut paper pictures. The tediousness of this process led to the development 
+of automatic karyotyping, also known as the chromosome classification system. Automatic karyotyping is a process 
+of ordering and classifying chromosomes into their respective classes using computers [3]. However, cytologists 
+need to manually drag each chromosome image to the target position. This process can still can be improved in 
+terms of time and costs through machine learning systems. Automatic karyotyping includes four processing stages, 
+namely image enhancement, chromos ome segmentation and alignment, feature extraction and chromosome 
+classification [4]. One of the most crucial stages during karyotyping is segmentation, which involves grouping the 
+important features of chromosomes. The main objective of segmentation is to  extract chromosomes from the 
+background and disentangle them. However, some chromosomes overlap, which makes the separation process 
+difficult. Overlapping chromosomes should be separated to ensure that the physical characteristics of any individual 
+chromo some can be segmented correctly. This procedure ensures zero loss of information during feature extraction 
+and accurate extraction of physical chromosome characteristics, such as chromosome size, centromeric index, shape 
+profile and banding patterns.  
+ 
+Fig. 1. (a): A metaphase Giemsa -stained microscopic image ; Fig. 1. (b): Karyotyping result of paired and ordered chromosomes . 
+ a b 
+ Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533 525 Available online at www.sciencedirect.com  
+ScienceDirect  
+Procedia Computer Science 00 (20 19) 000 –000  
+www.elsevier.com/locate/procedia  
+ 
+1877 -0509  © 2019 The Author(s). Published by Elsevier B.V.   
+This is an open access article under the CC BY -NC-ND license  (https://creativecommons.org/licenses/by -nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International .  23rd International Conference on Knowledge -Based and Intelligent Information & Engineering 
+Systems   
+Overlapping Chromosome Segmentation using U -Net: 
+Convolutional Networks with Test Time Augmentation   
+ 
+Hariyanti Mohd Saleha,b, Nor Hidayah Saada,b, Nor Ashidi Mat Isaa* 
+aImaging and Intelligent System Research Team, School of Electrical and Electronic Engineering Campus,  
+Universiti Sains Malaysia, Nibong Tebal 14300, Malaysia  
+bSchool of  Microelectronic Engineering, Universiti Malaysia Perlis, Pauh Putra Campus, 02600 Arau, Perlis, Malaysia.  
+Abstract  
+An effective human metaphase chromosome analysis system can be used by doctors as a second opinion during diagnosis. 
+Segmentation is necessary in developing this system to identify and distinguish between individual chromosomes . The main 
+challenge in chromosome segmentation is the separation of overlapping chromosomes. Deep convolutional neural networks  have 
+been widely used for medical  segmentation, especially with U -Net. This study  investigated how Test time  augmentation  with a 
+suitable number of U-Net layers can improve the design for this semantic segmentation problem.  The proposed architecture was 
+trained, validated and tested with 13,434 gr eyscale image s with 88 × 88 pixels of overlapping chromosome pairs. With the 
+implementation of the proposed method, the training result bec ame more  accurate without any mislabelling and additional pre -
+processing  became unnecessary . An improved  segmentation accuracy of 99.68% was obtained, which was higher than the 
+99.22% obtained using the method of Hu et al. 
+ 
+ 
+© 2019 The Author(s). Published by Elsevier B.V.    
+This is an open access article under the CC BY -NC-ND license  (https://creativecommons.org/licenses/by -nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International . 
+ 
+Keywords:  Overlapping chromosome segmentation ; U-Net; Convolutional neural networks; Test time  augmentation ; Deep learning  
+ 
+ 
+ 
+* Corresponding author. Tel.: +6045996051 ; fax: +6045941023 . 
+E-mail address:  hariyanti@unimap.edu.my , ashidi@usm.my   Available online at www.sciencedirect.com  
+ScienceDirect  
+Procedia Computer Science 00 (20 19) 000 –000  
+www.elsevier.com/locate/procedia  
+ 
+1877 -0509  © 2019 The Author(s). Published by Elsevier B.V.   
+This is an open access article under the CC BY -NC-ND license  (https://creativecommons.org/licenses/by -nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International .  23rd International Conference on Knowledge -Based and Intelligent Information & Engineering 
+Systems   
+Overlapping Chromosome Segmentation using U -Net: 
+Convolutional Networks with Test Time Augmentation   
+ 
+Hariyanti Mohd Saleha,b, Nor Hidayah Saada,b, Nor Ashidi Mat Isaa* 
+aImaging and Intelligent System Research Team, School of Electrical and Electronic Engineering Campus,  
+Universiti Sains Malaysia, Nibong Tebal 14300, Malaysia  
+bSchool of  Microelectronic Engineering, Universiti Malaysia Perlis, Pauh Putra Campus, 02600 Arau, Perlis, Malaysia.  
+Abstract  
+An effective human metaphase chromosome analysis system can be used by doctors as a second opinion during diagnosis. 
+Segmentation is necessary in developing this system to identify and distinguish between individual chromosomes . The main 
+challenge in chromosome segmentation is the separation of overlapping chromosomes. Deep convolutional neural networks  have 
+been widely used for medical  segmentation, especially with U -Net. This study  investigated how Test time  augmentation  with a 
+suitable number of U-Net layers can improve the design for this semantic segmentation problem.  The proposed architecture was 
+trained, validated and tested with 13,434 gr eyscale image s with 88 × 88 pixels of overlapping chromosome pairs. With the 
+implementation of the proposed method, the training result bec ame more  accurate without any mislabelling and additional pre -
+processing  became unnecessary . An improved  segmentation accuracy of 99.68% was obtained, which was higher than the 
+99.22% obtained using the method of Hu et al. 
+ 
+ 
+© 2019 The Author(s). Published by Elsevier B.V.    
+This is an open access article under the CC BY -NC-ND license  (https://creativecommons.org/licenses/by -nc-nd/4.0/ ) 
+Peer-review under responsibility of KES International . 
+ 
+Keywords:  Overlapping chromosome segmentation ; U-Net; Convolutional neural networks; Test time  augmentation ; Deep learning  
+ 
+ 
+ 
+* Corresponding author. Tel.: +6045996051 ; fax: +6045941023 . 
+E-mail address:  hariyanti@unimap.edu.my , ashidi@usm.my  Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ 1. Introduction  
+     A healthy human cell image contains 46 chromosomes. The first 22 pairs of chromosomes are called autosomes 
+and the 23rd pair are sex chromosomes called X and Y [1]. The presence of two X chro mosomes represents a 
+female, whilst XY represents a male. During metaphase, chromosomes align on the metaphase plate in the middle of the cell where the chromosome centromere, telomere and nucleolar organiser regions are located. On the basis of the centro mere position of each chromosome pair which represents the relative length of the chromosome, 44 autosomes 
+are numbered from 1 to 22 in descending order of length of each karyotype test (one exception is chromosome 21, which is shorter than chromosome 22).  Fig. 1(a) shows a metaphase Giemsa -stained microscopic image, and Fig. 
+1(b) shows the karyotyping result of paired and ordered chromosomes. Karyotyping is the main method used to identify and evaluate the size, shape and number of chromosomes in a body ce ll. Major genetic disorders and 
+chromosomal abnormalities can be diagnosed from karyotyped images. Cells divide and reproduce in two ways: 
+mitosis and meiosis. A chromosomal abnormality sparks from a chromosomal mutation which can occur before, 
+during and after mitosis and meiosis [2]. Klinefelter syndrome is a trisomy disorder characterised by an extra X 
+chromosome in males. Klinefelter can stop sperm production. Other examples of trisomy are Patau syndrome (trisomy 13), Edward’s syndrome (trisomy 18) and Down syndrome (trisomy 21). Down syndrome causes mental 
+retardation. Conventional karyotyping is a difficult and time -consuming task manually performed by cytologists [3], 
+wherein chromosomes are classified from cut paper pictures. The tediousness of this process led to the development 
+of automatic karyotyping, also known as the chromosome classification system. Automatic karyotyping is a process of ordering and classifying chromosomes into their respective classes using computers [3]. However, cytologists need to manually drag each chromosome image to the target position. This process can still can be improved in terms of time and costs through machine learning systems. Automatic karyotyping includes four processing stages, namely image enhancement, chromos ome segmentation and alignment, feature extraction and chromosome 
+classification [4]. One of the most crucial stages during karyotyping is segmentation, which involves grouping the 
+important features of chromosomes. The main objective of segmentation is to  extract chromosomes from the 
+background and disentangle them. However, some chromosomes overlap, which makes the separation process 
+difficult. Overlapping chromosomes should be separated to ensure that the physical characteristics of any individual chromo some can be segmented correctly. This procedure ensures zero loss of information during feature extraction 
+and accurate extraction of physical chromosome characteristics, such as chromosome size, centromeric index, shape profile and banding patterns.  
+ 
+Fig. 1. (a): A metaphase Giemsa -stained microscopic image ; Fig. 1. (b): Karyotyping result of paired and ordered chromosomes . 
+ a b 
+526 Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533
+Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000 –000 
+      Artificial neural network (ANN) is a mathematical biology model consisting of a group of artificial neurons. 
+Multi ple layers of these neurons are called the multilayer perceptron [5]. ANN can learn from data through a 
+training process. It is often categorised as a supervised machine learning algorithm because the training is usually done based on the labels assigned t o the data. ANNs are applied to solve various classification, prediction and 
+control problems because of its powerful learning ability. However, as the pattern complexity increases, the pattern recognition ability of ANN worsens, especially when numerous p atterns need to be trained [6]. A large structure 
+demands extensive computation and pushes the model to memorise the training instead of generalising from it. This 
+condition leads to overfitting during the learning [6], thereby decreasing the training accu racy.  
+     On the contrary, ANN can recognise patterns excellently when used for deep learning (DL) because DL can 
+break complex patterns into simpler ones [7]. In the past, insufficient resources hindered the fast completion of training, but nowadays, as  technology advances, central and graphics processing units have become more efficient 
+and high -performing at affordable costs. Therefore, DL can be trained more quickly and effectively within just a few 
+hours. DL carries a convolutional neural network (CN N), which is a class of deep neural networks commonly used 
+for image processing. CNN is simple and easy to use. When dealing with multi -dimensional computer vision 
+problems or meeting complex patterns such as a thousand human faces, CNN can break down the processing task 
+[8]. For example, CNN can detect simple features such as edges and combine them to form facial features, like a nose and eyes to construct a face. With this capability, CNN is the best choice for achieving improved generalisation performanc e and accuracy compared to its peer.  The three main types of CNNs layers are convolutional, pooling 
+and fully connected (FC) layers. CNN drops FC layers from the main body of the architectures and introduces a mixture of convolutional and pooling layers [9]. These two layers are stacked, and  the convolutional layers carry out 
+convolutions to extract the features from the inputs to produce the feature maps.  
+1.1. Related Work  
+          Numerous  segmentation methods have been developed for metaphase chromosome analysis. Special 
+segmentation methods must be  applied in touching and overlapping chromosome separation owing to its  
+complex ity. Several existing methods are based on the detection of the medial axis, detecting the centerline and 
+partitioning the centromere. Th ese methods  are performed  by calc ulating the chromosome thickness [10]. However, 
+if chromosome bend ing exists, the width tightening on higher banded chromosomes can be easily overlooked.  
+Inaccurate c alculations near the telomeric region of chromosomes  can be committed w hile chromosome s are 
+separated from their  sister chromatid s. Ji [11] proposed a rule  based on contour analysis to force the image to 
+contain a reasonable number of chromosomes. However, the method was only able to segment a limited profile in an 
+image. Somasundaram and Kumar  [12] separate d overlapping chromosomes by estimating a cut point on an image 
+to cut the overlapping region , but this  separation caused loss of details. Watershed transform [13 –14] can also be 
+applied but only after the segmentation of the noise is increas ed. Madian et al.  [15] identified  the concave points on 
+the image contour and developed heuristics for chromosome separation. Cao et al. [16] developed an adaptive fuzzy 
+c-means to segment the chromosomes. This method had the advantage of correcting  the non -uniform illumination 
+caused by the microscope imaging system  and a  good segmentation algorithm that can  segment the touching and 
+overlapping chromosomes in different illumination region s. However,  this method is limited only to  the analysis of 
+multicolour fluorescence in situ hybridisation ( M-FISH ) image s. Given the combinatorial nature of reassembling 
+pieces, Grisan et al.  [17] segment ed chromosomes using a space -variant thresholding scheme and developed a tree 
+search of choices to resolve touchin g and overlapping chromosomes. However, the high variability in chromosome 
+fluorescence intensity rendered  the threshold impractical [17]. When histograms were plotted for two overlapping 
+chromosomes, a substantial  overlap appeared between the histograms. Thus, threshold pixel is not an appropriate 
+measure for segmenting overlapping chromosome s [18].  
+     DL has been widely used in image segmentation. As chromosome s are part of human cells, cell segmentation is 
+the closest topic to image segmentation and it s related work s will be discussed in this section. Accurate cell 
+information is very important because one small discrepancy  will affect disease analysis. Thus, researchers have 
+utilised  deep CNN for cell segmentation [19]. Song et al.  modelled cell segmen tation with a multi-scale CNN [20]. Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ Yang et al. successfully us ed Fully convolutional neural network (FCNN) with an iterative k -terminal cut algorithm 
+for glial cell segmentation [21]. Akram et al.  demonstrated a cell bounding box proposal and used FCNN for cell 
+segmentation [23]. Spatial information is essential for  achieving good cell segmentation accuracies . Thus, Hatipoglu 
+et al.  [22] us ed the spatial and contextual relationships of extracellular and cellular pixels  to conduct  cell 
+segmentation by  creating various pixel s in a window structure to contain the neighbours of a pixel [22]. Cell 
+segmentation in breast tissue ha s also been studied using  DL algorithms [24, 25]. Olaf successfully modelled a cell 
+segmentation using U -Net with deformation aug mentation [26]. To create a U -shaped network architecture, the U -
+Net architecture extended the fully convolutional  network (FCN) by adding a symmetric upsampling to a down -
+sampling path.  
+     Several researchers have conducted  touching and overlapping chro mosome segmentation with CNN. Esteban et 
+al. [27] used FC N for semantic segmentation to segment the M-FISH of chromosome images. The architecture 
+scored a coordinated cluster representation of 87.41%. Pommier et al.  [28] [29] successfully generated the 13 ,434-
+groundtruth and gr eyscale of overlapping chromosome pairs. They performed prediction segmentation and 
+compared it with the groundtruth. Pommier’s dataset w as then utili sed by two  other  researchers [18] [30]. Ghosh et 
+al. [30] applied U -Net by mixing bo th categories of pixels belonging to non -overlapping chromosomes. Originally, 
+they divide d the labels into four classes : a background, two non -overlapping pixels and an overlapping pixel . Their 
+analysis  obtain ed a prediction result of 81%. Then , they combin ed two non -overlapping pixels  to decrease the 
+classes to three. With the labels  combin ed, the result of predicted mask accuracy was 97%. Hu et al.  [18] reduced U -
+Net layers to match the input. Inputs in gr eyscale pairs were converted to three channel checkpoints and groundtruth 
+labels were generated by adding mask s and labelling them as chromosome 1, chromosome 2 and overlapping. The 
+prediction results achieved an intersection over union (IOU) score of 94.7% for the overlapping region and 88 %–
+94% for the non-overlapping regions. The current work utilises the U -Net architecture because of its success in cell 
+imaging and chromosome segmentation.   
+2. Proposed Method  
+2.1. Dataset and Groundtruth Segmentation Process  
+     A dataset of overlapping chromosome is buil t to obtain a large number of datasets. A set of human metaphases is 
+collected using a Cy3 fluorescent telomeric probe. Blue 4′,6 -Diamidino -2-phenylindole, which is a chromosome, 
+and Orange Cy3, which focuses on telomere images of the chromosome image, are  combined into a greyscale 
+image. The resolution is decreased by two because images with a smaller resolution are easier to analyse. 
+Chromosome overlapping is done by selecting a pair of two greyscale chromosome images. One of the greyscale 
+chromosome imag es is rotated either vertically or horizontally to accommodate its pair. Masks are added to each 
+chromosome to generate a groundtruth. The greyscale pairs are labelled to three channel checkpoints, value 1 for the 
+first chromosome, value 2 for the mask of the other chromosomes and value 3 for the overlapping region. A total of 
+13,434 greyscale images with 94 × 93 pixels are generated to demonstrate overlapping chromosome segmentation. 
+Raw images of dataset are available in Kaggle and Github [28] [29]. Howev er, the present study applies Pommier’s 
+new clean dataset which produced different results from the analysis of the previous method.  
+      We assign an object class for each pixel in the image for semantic segmentation. However, before semantic 
+segmentati on, greyscale image pairs are reshaped and standardised to 88 × 88 pixels to match the pooling layers 
+with strides of two and make the dimensions divisible by two. Fig. 2 shows the groundtruth segmentation process 
+from the full -resolution image. In the seg mentation map, blue represents the background, which is labelled as 0. 
+Label 1 in yellow represents the non -overlapping region of the first chromosome, whilst Label 2 represents the non -
+overlapping region of the second chromosome. Red areas labelled as 3 r epresent the overlapping region.  
+ 
+ 
+ Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533 527Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000 –000 
+      Artificial neural network (ANN) is a mathematical biology model consisting of a group of artificial neurons. 
+Multi ple layers of these neurons are called the multilayer perceptron [5]. ANN can learn from data through a 
+training process. It is often categorised as a supervised machine learning algorithm because the training is usually 
+done based on the labels assigned t o the data. ANNs are applied to solve various classification, prediction and 
+control problems because of its powerful learning ability. However, as the pattern complexity increases, the pattern 
+recognition ability of ANN worsens, especially when numerous p atterns need to be trained [6]. A large structure 
+demands extensive computation and pushes the model to memorise the training instead of generalising from it. This 
+condition leads to overfitting during the learning [6], thereby decreasing the training accu racy.  
+     On the contrary, ANN can recognise patterns excellently when used for deep learning (DL) because DL can 
+break complex patterns into simpler ones [7]. In the past, insufficient resources hindered the fast completion of 
+training, but nowadays, as  technology advances, central and graphics processing units have become more efficient 
+and high -performing at affordable costs. Therefore, DL can be trained more quickly and effectively within just a few 
+hours. DL carries a convolutional neural network (CN N), which is a class of deep neural networks commonly used 
+for image processing. CNN is simple and easy to use. When dealing with multi -dimensional computer vision 
+problems or meeting complex patterns such as a thousand human faces, CNN can break down the processing task 
+[8]. For example, CNN can detect simple features such as edges and combine them to form facial features, like a 
+nose and eyes to construct a face. With this capability, CNN is the best choice for achieving improved generalisation 
+performanc e and accuracy compared to its peer.  The three main types of CNNs layers are convolutional, pooling 
+and fully connected (FC) layers. CNN drops FC layers from the main body of the architectures and introduces a 
+mixture of convolutional and pooling layers [9]. These two layers are stacked, and  the convolutional layers carry out 
+convolutions to extract the features from the inputs to produce the feature maps.  
+1.1. Related Work  
+          Numerous  segmentation methods have been developed for metaphase chromosome analysis. Special 
+segmentation methods must be  applied in touching and overlapping chromosome separation owing to its  
+complex ity. Several existing methods are based on the detection of the medial axis, detecting the centerline and 
+partitioning the centromere. Th ese methods  are performed  by calc ulating the chromosome thickness [10]. However, 
+if chromosome bend ing exists, the width tightening on higher banded chromosomes can be easily overlooked.  
+Inaccurate c alculations near the telomeric region of chromosomes  can be committed w hile chromosome s are 
+separated from their  sister chromatid s. Ji [11] proposed a rule  based on contour analysis to force the image to 
+contain a reasonable number of chromosomes. However, the method was only able to segment a limited profile in an 
+image. Somasundaram and Kumar  [12] separate d overlapping chromosomes by estimating a cut point on an image 
+to cut the overlapping region , but this  separation caused loss of details. Watershed transform [13 –14] can also be 
+applied but only after the segmentation of the noise is increas ed. Madian et al.  [15] identified  the concave points on 
+the image contour and developed heuristics for chromosome separation. Cao et al. [16] developed an adaptive fuzzy 
+c-means to segment the chromosomes. This method had the advantage of correct ing the non -uniform illumination 
+caused by the microscope imaging system  and a  good segmentation algorithm that can  segment the touching and 
+overlapping chromosomes in different illumination region s. However,  this method is limited only to  the analysis of 
+multicolour fluorescence in situ hybridisation ( M-FISH ) image s. Given the combinatorial nature of reassembling 
+pieces, Grisan et al.  [17] segment ed chromosomes using a space -variant thresholding scheme and developed a tree 
+search of choices to resolve touchin g and overlapping chromosomes. However, the high variability in chromosome 
+fluorescence intensity rendered  the threshold impractical [17]. When histograms were plotted for two overlapping 
+chromosomes, a substantial  overlap appeared between the histograms. Thus, threshold pixel is not an appropriate 
+measure for segmenting overlapping chromosome s [18].  
+     DL has been widely used in image segmentation. As chromosome s are part of human cells, cell segmentation is 
+the closest topic to image segmentation and it s related work s will be discussed in this section . Accurate cell 
+information is very important because one small discrepancy  will affect disease analysis. Thus, researchers have 
+utilised  deep CNN for cell segmentation [19]. Song et al.  modelled cell segmen tation with a multi-scale CNN [20]. Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ Yang et al. successfully used  Fully convolutional neural network (FCNN) with an iterative k -terminal cut algorithm 
+for glial cell segmentation [21]. Akram et al.  demonstrated a cell bounding box proposal and used FCNN for cell 
+segmentation [23]. Spatial information is essential for  achieving good cell segmentation accuracies . Thus, Hatipoglu 
+et al.  [22] us ed the spatial and contextual relationships of extracellular and cellular pixels  to conduct  cell 
+segmentation by  creating various pixel s in a window structure to contain the neighbours of a pixel [22]. Cell 
+segmentation in breast tissue ha s also been studied using  DL algorithms [24, 25]. Olaf successfully modelled a cell 
+segmentation using U -Net with deformation aug mentation [26]. To create a U -shaped network architecture, the U -
+Net architecture extended the fully convolutional  network (FCN) by adding a symmetric upsampling to a down -
+sampling path.  
+     Several researchers have conducted  touching and overlapping chro mosome segmentation with CNN. Esteban et 
+al. [27] used FC N for semantic segmentation to segment the M-FISH of chromosome images. The architecture 
+scored a coordinated cluster representation of 87.41%. Pommier et al.  [28] [29] successfully generated the 13 ,434-
+groundtruth and gr eyscale of overlapping chromosome pairs. They performed prediction segmentation and 
+compared it with the groundtruth. Pommier’s dataset w as then utili sed by two  other  researchers [18] [30]. Ghosh et 
+al. [30] applied U -Net by mixing bo th categories of pixels belonging to non -overlapping chromosomes. Originally, 
+they divide d the labels into four classes : a background, two non -overlapping pixels and an overlapping pixel . Their 
+analysis  obtain ed a prediction result of 81%. Then , they combin ed two non -overlapping pixels  to decrease the 
+classes to three. With the labels  combin ed, the result of predicted mask accuracy was 97%. Hu et al.  [18] reduced U -
+Net layers to match the input. Inputs in gr eyscale pairs were converted to three channel checkpoints and groundtruth 
+labels were generated by adding mask s and labelling them as chromosome 1, chromosome 2 and overlapping. The 
+prediction results achieved an intersection over union (IOU) score of 94.7% for the overlapping region and 88 %–
+94% for the non-overlapping regions. The current work utilises the U -Net architecture because of its success in cell 
+imaging and chromosome segmentation.   
+2. Proposed Method  
+2.1. Dataset and Groundtruth Segmentation Process  
+     A dataset of overlapping chromosome is buil t to obtain a large number of datasets. A set of human metaphases is 
+collected using a Cy3 fluorescent telomeric probe. Blue 4′,6 -Diamidino -2-phenylindole, which is a chromosome, 
+and Orange Cy3, which focuses on telomere images of the chromosome image, are  combined into a greyscale 
+image. The resolution is decreased by two because images with a smaller resolution are easier to analyse. 
+Chromosome overlapping is done by selecting a pair of two greyscale chromosome images. One of the greyscale 
+chromosome imag es is rotated either vertically or horizontally to accommodate its pair. Masks are added to each 
+chromosome to generate a groundtruth. The greyscale pairs are labelled to three channel checkpoints, value 1 for the first chromosome, value 2 for the mask of the other chromosomes and value 3 for the overlapping region. A total of 
+13,434 greyscale images with 94 × 93 pixels are generated to demonstrate overlapping chromosome segmentation. Raw images of dataset are available in Kaggle and Github [28] [29]. Howev er, the present study applies Pommier’s 
+new clean dataset which produced different results from the analysis of the previous method.  
+      We assign an object class for each pixel in the image for semantic segmentation. However, before semantic 
+segmentati on, greyscale image pairs are reshaped and standardised to 88 × 88 pixels to match the pooling layers 
+with strides of two and make the dimensions divisible by two. Fig. 2 shows the groundtruth segmentation process from the full -resolution image. In the seg mentation map, blue represents the background, which is labelled as 0. 
+Label 1 in yellow represents the non -overlapping region of the first chromosome, whilst Label 2 represents the non -
+overlapping region of the second chromosome. Red areas labelled as 3 r epresent the overlapping region.  
+ 
+ 
+528 Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533
+Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000 –000 
+ 
+  
+Fig. 2: Sample of groundtruth segmentation process  
+2.2 Proposed Network Structure  
+     The implemented model is the modified version of the U-Net architecture constructed by Olaf et al.  [26]. The 
+proposed architecture is used to train the image dataset.  The architecture of U -Net consists of two paths . The first 
+path builds an abstract representation of the image by iteratively convolving and subsampling the image s, and t he 
+second one cre ates the target segmentation map by iterative upsampling and convolving the abstract feature maps 
+[26]. These paths are symmetrical and connected by concatenating the corresponding upsampling and 
+downsampling layers. The U -Net network is known as highly in variant (never change s), and it  provides a stable and 
+precise segmentation result because of  its shape, wherein the feature s of images are merged to give high -resolution 
+results. Moreover, pooling operators are replaced by upsampling operators to increase the resolution of  the output. 
+Adding more layers will help  extract additional  features for input data and eventually increase accuracy. However, 
+there are limits at some point ; specifically, instead of extracting features, overfitting can occur and lead to  system 
+error [31] [32]. The result may show sign s of overfitting while U -Net conducts  the training. One way of fixing this  
+problem  is by using test time augmentation (TTA) .  
+ 
+1 64 64 64 64 4
+Input Output
+segmentation segmentation
+tile map
+128 128 128
+Legend
+256 256 256 Convolution (3x3, ReLu)
+Maxpool (2x2)
+Deconv (3x3)Copy and concatenate
+512 Convolution (1x1, Softmax)128
+256
+512
+ 
+ 
+Fig. 3: Proposed U -Net architecture for chromosome segmentation. Each blue box corresponds to a multi -channel feature map ,  
+while  the white boxes are the copied feature map s. 
+ 
+     For the proposed method, the repeated convolutional network is used in  the contracting path. This  network is 
+characterised by  a repeated application o f two 3  × 3 unpadded convolutions . Each convolution is followed by a 
+rectified unit and a 2  × 2 max pooling operation and is supported with stride 2. The purpose of the contracting path 
+is to capture the input image. The information feature increases by go ing through each layer. Four concatenations Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ are performed in this architecture. Except for the concatenation axis, a concatenate layer requires inputs with 
+matching shapes. For example, layer s with 22 × 22 pixels (none, 22, 22, 512) can  only concatenate with another . 
+The batch size is 2, padding is set to be the ‘same’ and there is one optional softmax layer at the end. Cropping can 
+be done , but for this case , it is not given the small input image ; thus, remov ing the  pixels  is undesirable . The 
+proposed method is an improvised version of Hu et al. ’s [18] method with additional CNN layers and TTA. As 
+shown in Table 1, the proposed architecture has more  multi -channel feature map number s and layers compared to  
+Hu et al.’s architecture  [18]. Howeve r, the proposed architecture  has less multi -channel feature map number s and 
+layers to match the input compared to the original U -net architecture [26]. The proposed architecture has a 
+maximum of  512 channels before deconvolution compared to the 256 channel s in Hu et al.’s  [18] architecture , 
+whilst the original U -Net architecture has 1024 channels [26].  
+      
+     TTA was implemented in the proposed model on the basis of  work done by [33]. However, we only applied 
+horizontal and vertical image flipping to l imit the training time duration. In general, implementing TTA increas es 
+the chances o f capturing a variety of object s because the model has been fed with overlapping chromosome s in 
+different shapes. Thus, the model can learn more cases with different size s, angle s and location s. With the help of 
+TTA, m odels become more  intelligen t in captur ing and generalising overlapping chromosome s because of their  
+expos ure to more aspects of the data.  
+ 
+     TTA modif ies and multipl ies the training data during the training. The number of different images will increase 
+but the number of additions is unknown because  image augment ation happens while training. Owing  to this 
+phenomenon , the total number of images per epoch stays the same. Augmentation  is randomly applied after every 
+epoch . Hence, an  epoch does not  look the same as the epoch before because the model has never seen the image as 
+the same image twice. A total of 15  epochs are used for training  and K eras Python library using Tenso rFlow 
+backend  is used for DL. 
+ 
+Table 1. Summary of the network structure  of overlapping chromosome by Olaf et al.  [26], Hu et al.  [18], Hu et al. with TTA  and the proposed 
+method.  
+ 
+Method  Architecture  
+Olaf et al.  [26] Multi -channel feature map is up to 1024 channels before deconvolution process.  
+Hu et al.  [18] Multi -channel feature map is up to 256 channels before deconvolution process.  
+Hu et al. + TTA  Multi -channel feature map is up to 256 channels before deconvolution process.  
+Proposed method  Multi -channel feature map is up to 512 channels before deconvolution process.   
+Architecture has less multi -channel feature map number s and layers compared to the original U -net 
+architecture [26] but more  multi -channel feature map number s and layers compare d to Hu et al.’s 
+architecture [18]. TTA also being implemented.  
+ 
+3. Results  
+     This section presents the experimental results in three parts: (1) training result of overlapping chromosome 
+training which runs with 15 epochs each, (2) segmentation result of overlapping chromosome prediction and 
+groundtruth comparison and (3) the score of segmentation results. Hu et al.’s methods (with and without TTA)  and 
+the proposed method are implemented. The comparison of the proposed method with the previous method is 
+discussed along the way.  
+     Fig. 4 shows the examples of overlapping chromosome  training results by Hu et al. [18] without (a) and with 
+TTA (b) and the proposed method (c). The first column is the background image, followed by the first chromosome 
+at the second column, the second chromosome at the third and the overlap region at the fourth. The rows represent 
+the four pairs of overlapping chromosomes. The image on the first row focuses mainly on a single pair of 
+chromosomes. The first pair on the first row and the second pair on the second row have no significance differences. 
+However , the pair on the third and fourth rows shows a mislabelled area for the second chromosome which can be 
+seen in the third column [Figs. 4(a) and 4(b)]. Fig. 4(c) illustrates how the proposed method solves the issue. The 
+ Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533 529Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000 –000 
+   
+Fig. 2: Sample of groundtruth segmentation process  
+2.2 Proposed Network Structure  
+     The implemented model is the modified version of the U-Net architecture constructed by Olaf et al.  [26]. The 
+proposed architecture is used to train the image dataset.  The architecture of U -Net consists of two paths . The first 
+path builds an abstract representation of the image by iteratively convolving and subsampling the image s, and t he 
+second one cre ates the target segmentation map by iterative upsampling and convolving the abstract feature maps 
+[26]. These paths are symmetrical and connected by concatenating the corresponding upsampling and 
+downsampling layers. The U -Net network is known as highly in variant (never change s), and it  provides a stable and 
+precise segmentation result because of  its shape, wherein the feature s of images are merged to give high -resolution 
+results. Moreover, pooling operators are replaced by upsampling operators to increase the resolution of  the output. 
+Adding more layers will help  extract additional  features for input data and eventually increase accuracy. However, 
+there are limits at some point ; specifically, instead of extracting features, overfitting can occur and lead to  system 
+error [31] [32]. The result may show sign s of overfitting while U -Net conducts  the training. One way of fixing this  
+problem  is by using test time augmentation (TTA) .  
+ 
+1 64 64 64 64 4
+Input Output
+segmentation segmentation
+tile map
+128 128 128
+Legend
+256 256 256 Convolution (3x3, ReLu)
+Maxpool (2x2)
+Deconv (3x3)Copy and concatenate
+512 Convolution (1x1, Softmax)128
+256
+512
+ 
+ 
+Fig. 3: Proposed U -Net architecture for chromosome segmentation. Each blue box corresponds to a multi -channel feature map ,  
+while  the white boxes are the copied feature map s. 
+ 
+     For the proposed method, the repeated convolutional network is used in  the contracting path. This  network is 
+characterised by  a repeated application o f two 3  × 3 unpadded convolutions . Each convolution is followed by a 
+rectified unit and a 2  × 2 max pooling operation and is supported with stride 2. The purpose of the contracting path 
+is to capture the input image. The information feature increases by go ing through each layer. Four concatenations Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ are performed in this architecture. Except for the concatenation axis, a concatenate layer requires inputs with 
+matching shapes. For example, layer s with 22 × 22 pixels (none, 22, 22, 512) can  only concatenate with another . 
+The batch size is 2, padding is set to be the ‘same’ and there is one optional softmax layer at the end. Cropping can 
+be done , but for this case , it is not given the small input image ; thus, remov ing the  pixels  is undesirable . The 
+proposed method is an improvised version of Hu et al. ’s [18] method with additional CNN layers and TTA. As 
+shown in Table 1, the proposed architecture has more  multi -channel feature map number s and layers compared to  
+Hu et al.’s architecture  [18]. Howeve r, the proposed architecture  has less multi -channel feature map number s and 
+layers to match the input compared to the original U -net architecture [26]. The proposed architecture has a 
+maximum of  512 channels before deconvolution compared to the 256 channel s in Hu et al.’s  [18] architecture , 
+whilst the original U -Net architecture has 1024 channels [26].  
+      
+     TTA was implemented in the proposed model on the basis of work done by [33]. However, we only applied 
+horizontal and vertical image flipping to l imit the training time duration. In general, implementing TTA increas es 
+the chances o f capturing a variety of object s because the model has been fed with overlapping chromosome s in 
+different shapes. Thus, the model can learn more cases with different size s, angle s and location s. With the help of 
+TTA, m odels become more  intelligen t in captur ing and generalising overlapping chromosome s because of their  
+expos ure to more aspects of the data.  
+ 
+     TTA modif ies and multipl ies the training data during the training. The number of different images will increase 
+but the number of additions is unknown because  image augment ation happens while training. Owing  to this 
+phenomenon , the total number of images per epoch stays the same. Augmentation  is randomly applied after every 
+epoch. Hence, an  epoch does not  look the same as the epoch before because the model has never seen the image as 
+the same image twice. A total of 15  epochs are used for training  and K eras Python library using Tenso rFlow 
+backend  is used for DL. 
+ 
+Table 1. Summary of the network structure  of overlapping chromosome by Olaf et al.  [26], Hu et al.  [18], Hu et al. with TTA  and the proposed 
+method.  
+ 
+Method  Architecture  
+Olaf et al.  [26] Multi -channel feature map is up to 1024 channels before deconvolution process.  
+Hu et al.  [18] Multi -channel feature map is up to 256 channels before deconvolution process.  
+Hu et al. + TTA  Multi -channel feature map is up to 256 channels before deconvolution process.  
+Proposed method  Multi -channel feature map is up to 512 channels before deconvolution process.   
+Architecture has less multi -channel feature map number s and layers compared to the original U -net 
+architecture [26] but more  multi -channel feature map number s and layers compare d to Hu et al.’s 
+architecture [18]. TTA also being implemented.  
+ 
+3. Results  
+     This section presents the experimental results in three parts: (1) training result of overlapping chromosome 
+training which runs with 15 epochs each, (2) segmentation result of overlapping chromosome prediction and 
+groundtruth comparison and (3) the score of segmentation results. Hu et al.’s methods (with and without TTA)  and 
+the proposed method are implemented. The comparison of the proposed method with the previous method is discussed along the way.  
+     Fig. 4 shows the examples of overlapping chromosome  training results by Hu et al. [18] without (a) and with 
+TTA (b) and the proposed method (c). The first column is the background image, followed by the first chromosome at the second column, the second chromosome at the third and the overlap region at the fourth. The rows represent 
+the four pairs of overlapping chromosomes. The image on the first row focuses mainly on a single pair of chromosomes. The first pair on the first row and the second pair on the second row have no significance differences. 
+However , the pair on the third and fourth rows shows a mislabelled area for the second chromosome which can be 
+seen in the third column [Figs. 4(a) and 4(b)]. Fig. 4(c) illustrates how the proposed method solves the issue. The 
+530 Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533
+Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000 –000 
+ training result is accurate and cont ains no mislabelling. Therefore, additional pre-processing is not necessary after 
+implementing the proposed method.  
+ 
+ 
+ 
+Fig. 4. (a): An example of overlapping chromosome training result obtained by Hu et al. [18]; (b): An example of overlapping chromosome 
+training result obtained by Hu et al.  with TTA ; (c): An example of overlapping chromosome training result obtained by the proposed method  
+ 
+ 
+ 
+ 
+ 
+Fig. 5:  The f irst row show s the segmentation results of overlapping chromosome prediction and groundtruth comparison by Hu et al.  [18]. The 
+second row show s the segmentation result of overlapping chromosome prediction and groundtruth comparison obtained by Hu et al.  with TTA . 
+The third row show s the segmentation results of overlapping chromosome prediction and groundtruth comparison obtained by the proposed 
+method . 
+ 
+     Fig . 5 show s the segmentation results of Hu  et al.  [18] (with and without  TTA ) and the proposed method from  a 
+visuali sed perspective. The images consist of the background s and images of the firs t and  second chromosome s and 
+the overlap region. The predicted multilabel can be obtained b y combining all four images and regions . The initial 
+output of Hu  et al. [18] is found to be noisy and inaccurate for the predicted multilabel because  of the  huge region of a b c Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ mislabel ling in the segment ation of  the first and second chromosome s. A big  part of the second chromosome is 
+mistakenly segmented as the first chromosome. At the thir d row, after the implementation of TTA and additional 
+layers, the result of predicted multilabel significantly improves and becomes more spatially consistent when 
+compared to the groundtruth , whereas when the proposed method is applied, an even  smoother and more accurate 
+segmentation is obtained . 
+ 
+     Table 2 show s the segmentation results of Hu et al. [18] (with and without  TTA ) and the proposed method on the 
+percentage of training and testing IOU for overlapping pixel s. IOU is calculated to a ccess the result quanti tatively  
+and is defined as the area of overlap divided by the area of union (between the prediction and the groundtruth) [11]  
+(Fig. 6). The achievable range of IOU for overlapping pixels (90.63% –99.94%) i s significantly better in the  
+proposed method  than in the methods of Hu et al . (78.93% –99.93%).   
+ 
+ 
+Fig.6: Definition of intersection of union  
+ 
+Table 2:  IOU ranges for training and testing obtained by the three methods  
+ 
+Method  Training IOU 
+Range (%)  Testing IOU 
+Range (%)  
+Hu et al.  [18] 88.87 –99.94  78.93 –99.93  
+Hu et al.  + TTA  90.86 –99.94  80.10 –99.94  
+Proposed method  91.49 –99.95  90.63 –99.94  
+ 
+          Table 3 presents the quantitative evaluations for the three methods. The initial output s of overlapping 
+chromosome training and testing segmentation are 99.57% and 99.22% , respectively. After using TTA , the scores 
+become  99.63% and 99.27% , respectively. When  the proposed method  is used , higher accuracies are obtained, 
+99.79% for training and 99.68% for testing.    
+     In conclusion,  the proposed architecture design with additional  layers and feature extraction channel extract s 
+more features for input data and eventually enhance s the accuracy  compared with the previous  designs . When TTA  
+is applied  for the training dataset, the transformation of images gives  the model higher chances of capturing the 
+target shape  of overlapping chromosomes, thereby  improving the prediction process or test images and the te sting  
+accuracy. This is how it wor ks in improving the semantic segmentation accuracy of Hu et al. ’s result.  
+ 
+Table 3: Segmentation results of overlapping chromosome training and testing accuracy  
+ 
+Method  Training accuracy 
+(%) Testing accuracy 
+(%) 
+Hu et al.  [18] 99.57  99.22  
+Hu et al.+ TTA  99.63  99.27  
+Proposed method  99.79  99.68  
+ 
+4. Conclusion and Future Work  
+In this work, U -Net architecture was modified by adding a suitable number of layers and implementing TTA to 
+perform the overlapping chromosome semantic segmentation task. The proposed method can fix mislabelling issues 
+while carrying out the training. As a  result, additional pre -processing is not necessary and the accuracy of 
+segmentation increases compared to that of Hu et al.’s previous work The proposed architecture improves the 
+ Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533 531Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000 –000 
+ training result is accurate and cont ains no mislabelling. Therefore, additional pre-processing is not necessary after 
+implementing the proposed method.  
+ 
+ 
+ 
+Fig. 4. (a): An example of overlapping chromosome training result obtained by Hu et al. [18]; (b): An example of overlapping chromosome 
+training result obtained by Hu et al.  with TTA ; (c): An example of overlapping chromosome training result obtained by the proposed method  
+ 
+ 
+ 
+ 
+ 
+Fig. 5:  The f irst row show s the segmentation results of overlapping chromosome prediction and groundtruth comparison by Hu et al.  [18]. The 
+second row show s the segmentation result of overlapping chromosome prediction and groundtruth comparison obtained by Hu et al.  with TTA . 
+The third row show s the segmentation results of overlapping chromosome prediction and groundtruth comparison obtained by the proposed 
+method . 
+ 
+     Fig. 5 show s the segmentation results of Hu  et al.  [18] (with and without  TTA ) and the proposed method from  a 
+visuali sed perspective. The images consist of the background s and images of the firs t and  second chromosome s and 
+the overlap region. The predicted multilabel can be obtained b y combining all four images and regions . The initial 
+output of Hu  et al. [18] is found to be noisy and inaccurate for the predicted multilabel because  of the  huge region of a b c Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ mislabel ling in the segment ation of  the first and second chromosome s. A big  part of the second chromosome is 
+mistakenly segmented as the first chromosome. At the thir d row, after the implementation of TTA and additional 
+layers, the result of predicted multilabel significantly improves and becomes more spatially consistent when 
+compared to the groundtruth , whereas when the proposed method is applied, an even  smoother and more accurate 
+segmentation is obtained . 
+ 
+     Table 2 show s the segmentation results of Hu et al. [18] (with and without  TTA ) and the proposed method on the 
+percentage of training and testing IOU for overlapping pixel s. IOU is calculated to a ccess the result quanti tatively  
+and is defined as the area of overlap divided by the area of union (between the prediction and the groundtruth) [11]  
+(Fig. 6). The achievable range of IOU for overlapping pixels (90.63%– 99.94%) i s significantly better in the  
+proposed method  than in the methods of Hu et al . (78.93%– 99.93%).   
+ 
+ 
+Fig.6: Definition of intersection of union  
+ 
+Table 2:  IOU ranges for training and testing obtained by the three methods  
+ 
+Method  Training IOU 
+Range (%)  Testing IOU 
+Range (%)  
+Hu et al.  [18] 88.87 –99.94  78.93 –99.93  
+Hu et al.  + TTA  90.86 –99.94  80.10 –99.94  
+Proposed method  91.49 –99.95  90.63 –99.94  
+ 
+          Table 3 presents the quantitative evaluations for the three methods. The initial output s of overlapping 
+chromosome training and testing segmentation are 99.57% and 99.22% , respectively. After using TTA , the scores 
+become  99.63% and 99.27% , respectively. When  the proposed method  is used , higher accuracies are obtained, 
+99.79% for training and 99.68% for testing.    
+     In conclusion,  the proposed architecture design with additional  layers and feature extraction channel extract s 
+more features for input data and eventually enhance s the accuracy  compared with the previous  designs.  When TTA  
+is applied  for the training dataset, the transformation of images gives  the model higher chances of capturing the 
+target shape  of overlapping chromosomes, thereby  improving the prediction process or test images and the te sting  
+accuracy. This is how it wor ks in improving the semantic segmentation accuracy of Hu et al. ’s result.  
+ 
+Table 3: Segmentation results of overlapping chromosome training and testing accuracy  
+ 
+Method  Training accuracy 
+(%) Testing accuracy 
+(%) 
+Hu et al.  [18] 99.57  99.22  
+Hu et al.+ TTA  99.63  99.27  
+Proposed method  99.79  99.68  
+ 
+4. Conclusion and Future Work  
+In this work, U -Net architecture was modified by adding a suitable number of layers and implementing TTA to 
+perform the overlapping chromosome semantic segmentation task. The proposed method can fix mislabelling issues 
+while carrying out the training. As a  result, additional pre -processing is not necessary and the accuracy of 
+segmentation increases compared to that of Hu et al.’s previous work The proposed architecture improves the 
+532 Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533
+Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000 –000 
+ performance of chromosome segmentation in all areas: visualisation, quantita tive training and testing (IOU and 
+accuracy). For future work, we aim to further improve the accuracy. An opportunity to use instance segmentation 
+and dedicated algorithm for the model may also arise.  
+Acknowledgements  
+This work was supported by the Univers iti Sains Malaysia Research University (Individual) Research Grant Scheme 
+under Grant 1001/PELECT/8014030 entitled “Development of Automatic Intelligent Karyotyping System of 
+Classifying Abnormal Chromosome”.  
+References  
+[1] Jean McGowan -Jordan, Annet Simon s, Michael Schmid, ISCN .2016. An International System for Human Cytogenomic Nomenclature,      
+      Karger  
+[2] Susan  Mahler Zneimer, 2014. Cytogenetic Abnormalities (Chromosomal, FISH and Microarray -Based Clinical Reporting), Wiley Blackwell.  
+[3] Harold  Chen, 2006. Atlas of Genetic Diagnosis and Counseling Humana Press.  
+[4] Marilyn  S.Arsham, Margaret J.BArch, Helen J.LAwce . 2017. The AGT Cytogenetics Laboratory Manual (4th Edition), Wiley Blackwell  
+[5] Sodhi, S. S. and Chandra, P.2014. Bi -modal Derivative Activation Function for Sigmoidal Feedforward Networks. Neurocomputing. 143:   
+     182–196. 
+[6] Almási, A. -D., Woz´niak, S., Cristea, V., Leblebici, Y. and Engbersen , 2016. T. Review of Advances in Neural Networks: Neural Design  
+     Technology Stack. Neurocomputing. 174, Part A: 31 –41. 
+[7] LeCun, Yann; Bengio, Yoshua; Hinton, Geoffrey .2015. "Deep learning". Nat ure. 521 (7553): 436 –444 
+[8] Chopra, S., Hadsell, R. an d LeCun. 2005.Y. Learning A Similarity Metric Discriminatively with Application to Face Veriﬁcation. Computer  
+     Vision and Pattern Recognition. CVPR 2005. IEEE Computer Society Conference on., vol. 1  
+[9] Krizhevsky, A., Sutskever, I., Hinton, G.E. 2012 . Imagenet classiﬁcation with deep convolutional neural networks. Advances in neural    
+     information processing systems, pp. 1097 –1105, 2012  
+[10] A. S. Arachchige, J. Samarabandu, J. H. Knoll, and P. K. Rogan. 2013. Intensity integrated laplacian -based  thickness measurement for  
+       detecting human metaphase chromosome centromere location. IEEE Transactions on Biomedical Engineering, vol. 60, no. 7, pp. 20 05–2013.  
+[11] Ji, L., 1994. Fully automatic chromosome segmentation. Cytometry Part A, 17(3), pp.196 -208. 
+[12] Somasundaram, D. and Kumar, V.V. 2014. Separation of overlapped chromosomes and pairing of similar chromosomes for karyotypin g  
+        analysis. Measurement, 48, pp.274 -281. 
+[13] Karvelis, P.S., Fotiadis, D.I., Syrrou, M. and Georgiou, I. ,2005. Segmentation of chromosome images based on a recursive watershed  
+        transform. In IFMBE Proc  vol. 11, No. 1, pp. 1727 -1983.  
+[14] Karvelis, P., Likas, A. and Fotiadis, D.I., 2010. Identifying touching and overlapping chromosomes using the water shed transform and  
+        gradient paths. Pattern Recognition Letters , 31(16), pp.2474 -2488.  
+[15] N. Madian and K. Jayanthi. 2014. Analysis of human chromosome classiﬁcation using centromere position,” Measurement, vol. 47,  pp. 287 – 
+        295, 2014.  
+[16] Cao, H., Deng, H.W. and Wang, Y.P. 2012. Segmentation of M -FISH images for improved classification of chromosomes with an adaptive  
+        fuzzy C -means clustering algorithm. IEEE transactions on fuzzy systems, 20(1), pp.1 -8. 
+[17] Grisan, E., Poletti,  E. and Ruggeri, A., 2009. Automatic segmentation and disentangling of chromosomes in Q -band prometaphase images.  
+         IEEE Transactions on Information Technology in Biomedicine , 13(4), pp.575 -581. 
+[18] Hu, RL, Karnowski, J, Fadely, R, Pommier, JP.Neural. 2017. Image Segmentation to Distinguish Between Overlapping Human  
+        Chromosomes”, Information Processing Systems Machine Learning for Health Workshop.  
+[19] Litjens, G. J. S., Kooi, T., Bejnordi, B. E., Setio, A. A. A., Ciompi, F., Ghafoor ian, M., van der Laak, J. A. W. M., van Ginneken, B. &  
+        Sánchez, C. I. 2017. A survey on deep learning in medical image analysis. Medical Image Analysis , 42, 60 -88. 
+[20] Song, Y., Zhang, L., Chen, S., Ni, D., Lei, B., Wang, T. 2015. Accurate segmen tation of cervical cytoplasm and nuclei based on multiscale  
+        convolutional network and graph partitioning. IEEE Trans Biomed Eng 62 (10), 2421 –2433.  
+[21] Yang, L., Zhang, Y., Guldner, I.H., Zhang, S., Chen, D.Z. 2016 .3d segmentation of glial cells  using fully convolutional networks and k - 
+        terminal cut. In: Med Image Comput Comput Assist Interv. Vol. 9901 of Lect Notes Comput Sci. Springer, pp. 658 –666. 
+[22] Akram, S. U., Kannala, J., Eklund, L., Heikkil¨a, J. 2016. Cell segmentation proposa l network for microscopy image analysis. In: DLMIA.  
+        Vol. 10008 of Lect Notes Comput Sci. pp. 21 –29. 
+[23] Hatipoglu, Nuh & Bilgin, Gökhan. 2017. Cell segmentation in histopathological images with deep learning algorithms by utilizi ng spatial  
+        relationships. Medical & Biological Engineering & Computing. 55.  
+[24] Petersen K, Nielsen M, Diao P, Karssemeijer N, Lillholm M. 2014. Breast tissue segmentation and mammographic risk scoring usi ng deep  
+        learning. In: Breast imaging: proceedings  of 12th international workshop on digital mammography, IWDM’14. Springer, Berlin, pp 88 –94 
+[25] Xu J, Luo X, Wang G, Gilmore H, Madabhushi A. 2016. A deep convolutional neural network for segmenting and classifying epithe lial and  
+        stromal regions in histopathological images. Neurocomputing 191:214 –223 
+[26] Olaf Ronneberger, Philipp Fischer, and Thomas Brox .2015. U -net: Convolutional networks for biomedical image segmentation. In  
+        International Conference on Medical Image Computing and Comp uter-Assisted Intervention, pages 234 –241. Springer.  
+[27] Esteban Pardoa, José Mário T Morgadob, Norberto Malpicaa. 2018. Semantic segmentation of mFISH images using convolutional net works,  
+        Cytometry.  
+[28] Pommier JP. 2016. Overlapping chromosomes . https://www.kaggle.com/jeanpat/ overlapping -chromosomes/data.  
+ Hariyanti Mohd Saleh  et al. / Procedia Computer Science 159 (2019) 524–533 533Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000 –000 
+ performance of chromosome segmentation in all areas: visualisation, quantita tive training and testing (IOU and 
+accuracy). For future work, we aim to further improve the accuracy. An opportunity to use instance segmentation 
+and dedicated algorithm for the model may also arise.  
+Acknowledgements  
+This work was supported by the Univers iti Sains Malaysia Research University (Individual) Research Grant Scheme 
+under Grant 1001/PELECT/8014030 entitled “Development of Automatic Intelligent Karyotyping System of 
+Classifying Abnormal Chromosome”.  
+References  
+[1] Jean McGowan -Jordan, Annet Simon s, Michael Schmid, ISCN .2016. An International System for Human Cytogenomic Nomenclature,      
+      Karger  
+[2] Susan  Mahler Zneimer, 2014. Cytogenetic Abnormalities (Chromosomal, FISH and Microarray -Based Clinical Reporting), Wiley Blackwell.  
+[3] Harold  Chen, 2006. Atlas of Genetic Diagnosis and Counseling Humana Press.  
+[4] Marilyn  S.Arsham, Margaret J.BArch, Helen J.LAwce . 2017. The AGT Cytogenetics Laboratory Manual (4th Edition), Wiley Blackwell  
+[5] Sodhi, S. S. and Chandra, P.2014. Bi -modal Derivative Activation Function for Sigmoidal Feedforward Networks. Neurocomputing. 143:   
+     182–196. 
+[6] Almási, A. -D., Woz´niak, S., Cristea, V., Leblebici, Y. and Engbersen , 2016. T. Review of Advances in Neural Networks: Neural Design  
+     Technology Stack. Neurocomputing. 174, Part A: 31 –41. 
+[7] LeCun, Yann; Bengio, Yoshua; Hinton, Geoffrey .2015. "Deep learning". Nat ure. 521 (7553): 436 –444 
+[8] Chopra, S., Hadsell, R. an d LeCun. 2005.Y. Learning A Similarity Metric Discriminatively with Application to Face Veriﬁcation. Computer  
+     Vision and Pattern Recognition. CVPR 2005. IEEE Computer Society Conference on., vol. 1  
+[9] Krizhevsky, A., Sutskever, I., Hinton, G.E. 2012 . Imagenet classiﬁcation with deep convolutional neural networks. Advances in neural    
+     information processing systems, pp. 1097 –1105, 2012  
+[10] A. S. Arachchige, J. Samarabandu, J. H. Knoll, and P. K. Rogan. 2013. Intensity integrated laplacian -based  thickness measurement for  
+       detecting human metaphase chromosome centromere location. IEEE Transactions on Biomedical Engineering, vol. 60, no. 7, pp. 20 05–2013.  
+[11] Ji, L., 1994. Fully automatic chromosome segmentation. Cytometry Part A, 17(3), pp.196 -208. 
+[12] Somasundaram, D. and Kumar, V.V. 2014. Separation of overlapped chromosomes and pairing of similar chromosomes for karyotypin g  
+        analysis. Measurement, 48, pp.274 -281. 
+[13] Karvelis, P.S., Fotiadis, D.I., Syrrou, M. and Georgiou, I. ,2005. Segmentation of chromosome images based on a recursive watershed  
+        transform. In IFMBE Proc  vol. 11, No. 1, pp. 1727 -1983.  
+[14] Karvelis, P., Likas, A. and Fotiadis, D.I., 2010. Identifying touching and overlapping chromosomes using the water shed transform and  
+        gradient paths. Pattern Recognition Letters , 31(16), pp.2474 -2488.  
+[15] N. Madian and K. Jayanthi. 2014. Analysis of human chromosome classiﬁcation using centromere position,” Measurement, vol. 47,  pp. 287 – 
+        295, 2014.  
+[16] Cao, H., Deng, H.W. and Wang, Y.P. 2012. Segmentation of M -FISH images for improved classification of chromosomes with an adaptive  
+        fuzzy C -means clustering algorithm. IEEE transactions on fuzzy systems, 20(1), pp.1 -8. 
+[17] Grisan, E., Poletti,  E. and Ruggeri, A., 2009. Automatic segmentation and disentangling of chromosomes in Q -band prometaphase images.  
+         IEEE Transactions on Information Technology in Biomedicine , 13(4), pp.575 -581. 
+[18] Hu, RL, Karnowski, J, Fadely, R, Pommier, JP.Neural. 2017. Image Segmentation to Distinguish Between Overlapping Human  
+        Chromosomes”, Information Processing Systems Machine Learning for Health Workshop.  
+[19] Litjens, G. J. S., Kooi, T., Bejnordi, B. E., Setio, A. A. A., Ciompi, F., Ghafoor ian, M., van der Laak, J. A. W. M., van Ginneken, B. &  
+        Sánchez, C. I. 2017. A survey on deep learning in medical image analysis. Medical Image Analysis , 42, 60 -88. 
+[20] Song, Y., Zhang, L., Chen, S., Ni, D., Lei, B., Wang, T. 2015. Accurate segmen tation of cervical cytoplasm and nuclei based on multiscale  
+        convolutional network and graph partitioning. IEEE Trans Biomed Eng 62 (10), 2421 –2433.  
+[21] Yang, L., Zhang, Y., Guldner, I.H., Zhang, S., Chen, D.Z. 2016 .3d segmentation of glial cells  using fully convolutional networks and k - 
+        terminal cut. In: Med Image Comput Comput Assist Interv. Vol. 9901 of Lect Notes Comput Sci. Springer, pp. 658 –666. 
+[22] Akram, S. U., Kannala, J., Eklund, L., Heikkil¨a, J. 2016. Cell segmentation proposa l network for microscopy image analysis. In: DLMIA.  
+        Vol. 10008 of Lect Notes Comput Sci. pp. 21 –29. 
+[23] Hatipoglu, Nuh & Bilgin, Gökhan. 2017. Cell segmentation in histopathological images with deep learning algorithms by utilizi ng spatial  
+        relationships. Medical & Biological Engineering & Computing. 55.  
+[24] Petersen K, Nielsen M, Diao P, Karssemeijer N, Lillholm M. 2014. Breast tissue segmentation and mammographic risk scoring usi ng deep  
+        learning. In: Breast imaging: proceedings  of 12th international workshop on digital mammography, IWDM’14. Springer, Berlin, pp 88 –94 
+[25] Xu J, Luo X, Wang G, Gilmore H, Madabhushi A. 2016. A deep convolutional neural network for segmenting and classifying epithe lial and  
+        stromal regions in histopathological images. Neurocomputing 191:214 –223 
+[26] Olaf Ronneberger, Philipp Fischer, and Thomas Brox .2015. U -net: Convolutional networks for biomedical image segmentation. In  
+        International Conference on Medical Image Computing and Comp uter-Assisted Intervention, pages 234 –241. Springer.  
+[27] Esteban Pardoa, José Mário T Morgadob, Norberto Malpicaa. 2018. Semantic segmentation of mFISH images using convolutional net works,  
+        Cytometry.  
+[28] Pommier JP. 2016. Overlapping chromosomes . https://www.kaggle.com/jeanpat/ overlapping -chromosomes/data.  Hariyanti Mohd Saleh  et al.  / Procedia Computer Science  00 (2019) 000–000 
+ [29] PommierJP. Overlappingchromosomes. 2016. https://github.com/jeanpat/DeepFISH/tree/ master/dataset  
+[30] https://www.linkedin.com/pulse/segmenting -overlapping -chromosomes -using -deep -learnin g-rohit -ghosh  
+[31] Ali  Sharif Razavian Hossein Azizpour Josephine Sullivan Stefan Carlsson. CNNFeaturesoff -the-shelf:an  Astounding  Baseline  for  
+        Recognition  
+[32] Tara N. Sainath,  Oriol Vinyals,  Andrew Senior,  Haşim Sak . 2015. Convolutional, Long Short -Term Memory, fully connected Deep  
+        Neural Networks.  2015 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)  
+[33] Wang G., Li W., Ourselin S., Vercauteren T. 2019. Automatic Brain Tumo r Segmentation Using Convolutional Neural Networks with  
+        Test-Time Augmentation. In book: Crimi A., Bakas S., Kuijf H., Keyvan F., Reyes M., van Walsum T. (eds) Brainlesion: Glioma,  
+        Multiple Sclerosis, Stroke and Traumatic Brain Injuries. BrainLes 2018. Lecture Notes in Computer Science, vol 11384. Springer  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

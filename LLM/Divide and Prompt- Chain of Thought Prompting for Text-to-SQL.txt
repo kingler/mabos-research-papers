@@ -1,0 +1,483 @@
+Divide and Prompt: Chain of Thought Prompting for Text-to-SQL
+Xiping Liu, Zhao Tan
+Jiangxi University of Finance and Economics
+Abstract
+Chain-of-thought (CoT) prompting combined
+with large language models (LLMs) have
+achieved encouraging results on complex rea-
+soning tasks. Text-to-SQL is a critical se-
+mantic parsing task that converts natural lan-
+guage questions into SQL statements, involv-
+ing a complex reasoning process. However,
+there is little work about using CoT prompt-
+ing to activate LLM’s reasoning capabilities
+on Text-to-SQL tasks. In this work, we pro-
+pose a new paradigm for prompting Text-to-
+SQL tasks, called Divide-and-Prompt, which
+ﬁrst divides the task into subtasks, and then ap-
+proach each subtask through CoT. We present
+3 prompting-based methods to enhance the
+Text-to-SQL ability of LLMs. Experiments
+show that these prompts guide LLMs to gen-
+erate Text-to-SQL with higher execution accu-
+racy.
+1 Introduction
+With the increasing size of large language mod-
+els (LLMs), they excel at various natural language
+processing tasks and have become an essential ele-
+ment of natural language processing. Models such
+as BERT(Devlin et al., 2019), BART(Lewis et al.,
+2019), and T5(Raffel et al., 2020) require ﬁne-
+tuning with a small amount of relevant data. How-
+ever, their ﬁne-tuning becomes very costly as the
+models’ size grows. Models such as GPT-3(Brown
+et al., 2020), LaMDA(Thoppilan et al., 2022), and
+PaLM(Chowdhery et al., 2022) require prompt de-
+sign to generate target outputs. ChatGpt1has a pow-
+erful performance in (in-context) few-shot and zero-
+shot learning by employing Reinforcement Learn-
+ing for Human Feedback (RLHF)(Christiano et al.,
+2023). However, scaling up the model size has yet
+to prove sufﬁcient for achieving high performance
+on challenging tasks such as Text-to-SQL(Liu et al.,
+2023; Rajkumar et al., 2022).
+1https://chat.openai.com/
+Figure 1: This is an illustration of the inference process
+in Text-to-SQL.
+Translating text to SQL is a challenging process
+involving extensive and complex reasoning. As
+show in Figure 1.
+It is promising to consider Text-to-SQL as a rea-
+soning task. We notice that CoT prompting(Wei
+et al., 2023a; Kojima et al., 2023) induces LLMs
+to produce a series of intermediate steps before the
+ﬁnal answer to a question; CoT prompting elic-
+its challenging tasks such as arithmetic, common-
+sense, and symbolic reasoning in LLMs. However,
+as shown in table 1, normal CoT prompting does
+not perform well on Text-to-SQL. This is probably
+because the task involves much reasoning steps,
+concerning the understanding of the query inten-
+tions as well as the database schema.
+Inspired by the characteristics of Text-to-SQL,
+we propose a new paradigm for prompting Text-to-
+SQL tasks, called Divide-and-Prompt (DnP). The
+basic idea is to divide the task into subtasks, and
+then tackle each subtask through CoT. We design
+3 DnP promptings for Text-to-SQL and evaluate
+them on LLMs. Based on the experimental results,
+the following ﬁndings were obtained:
+•DnP promptings is very effective for Text-to-
+SQL. Compared with the standard zero-shot
+prompt, our proposed prompts improve exe-
+cution accuracy by 4.3% .arXiv:2304.11556v1  [cs.CL]  23 Apr 2023
+•DnP promptings is specially useful for difﬁ-
+cult Text-to-SQL. On hard-level Text-to-SQL
+tasks, our prompts improved the execution ac-
+curacy by up to 10.8% ; for extra-level tasks,
+it also showed a 3% improvement.
+•Normal CoT prompting does not perform well
+on SQL generation. Due to the strict structure
+and syntax of SQL, normal CoT prompting
+hard to inducing the helpful reasoning chains
+for Text-to-SQL in LLMs.
+2 Method
+In this work, we propose a new paradigm for
+prompts of Text-to-SQL, called Divide-and-prompt
+(DnP). The basic idea is to instruct the model to
+divide complex tasks into subtasks, and then solve
+each subtasks. There are different ways of dividing
+a Text-to-SQL task, therefore, there are many pos-
+sible DnP methods. We designed 3 DnP methods,
+as shown in Figure 2, which show effectiveness
+on Text-to-SQL task. Note that we used only nat-
+ural language to construct the prompts. This is
+because Text-to-SQL technology is expected to be
+used by non-expert users; making prompts easier
+to understand for users is essential.
+Clause by Clause DnP (CC-DnP). In this method,
+the model is induced to generates an SQL query
+clause by clause, e.g. ﬁrst generate the SELECT
+clause, then FROM clause, , as shown in Figure
+4. We found that the order in which clauses are
+generated is an essential factor that impacts the
+results, and we discuss this in 3.3.
+Schema Linking DnP (SL-DnP). (Li et al.,
+2023a) has conﬁrmed that schema linking, i.e. iden-
+tifying relevant schema elements (tables, columns,
+etc.), is valuable for the model to generate SQL
+correctly. We proposed SL-DnP method, by which
+the model ﬁrst learn to identify the relevant schema
+elements relevant to the question, and then gener-
+ate the SQL. What’s more, we found that different
+ways of schema linking have impacts on the perfor-
+mance. More discussions can be found in 3.3.
+Generate and Reﬁne DnP(GR-DnP). Recently,
+there have been some attempts(Madaan et al., 2023)
+to use LLMs to modify the raw output that may
+have some mistakes. In this work, we propose the
+GR-DnP method, which generate an SQL query in
+two stages. In the ﬁrst stage, the model generates aninitial SQL; In the second stage, the model checks
+and reﬁnes the SQL as needed. Figure 2 shows an
+example.
+3 Experiment
+3.1 Experiment Setup
+Model. Our experiment focuses on the models
+accessible via the OpenAI API: GPT-3.5-Turbo.
+We also conducted experiments on other GPT-
+3.5 models(text-davinci-002, text-davinci-003, i.e.).
+However, their Text-to-SQL capability is far infe-
+rior to GPT-3.5-Turbo. The model parameters we
+set for temperature andtop_p are 0.3 and 1, respec-
+tively.
+Datasets. We conduct experiments on the standard
+Spider dataset(Yu et al., 2019), a large-scale cross-
+domain Text-to-SQL benchmark containing 8659
+training samples across 146 databases and 1034
+evaluation samples across 20 databases. The data
+richness of the Spider dataset is sufﬁcient to verify
+the validity of the methods designed in this paper.
+Evaluation Metrics. The most popular evaluation
+metrics for Text-to-SQL are Exact Match(EM) and
+Execution Accuracy(EX). EM evaluates whether
+the generated queries exactly match the golden
+answers, while EX evaluates the correctness of
+generated answers based on the execution results.
+In this work, we do not adopt EM, because we
+think that SQL is ﬂexible in syntax, thus EX makes
+much sense. What is more, GPT-3.5 was not ﬁne-
+tuned on the Spider dataset, it tends to generate
+SQL queries with a lot of variety different from
+the golden answers. We also adopt valid SQL(V A)
+and test-suite accuracy (TS)(Zhong et al., 2020) as
+evaluation metrics. All results are the average of
+three experiment results.
+Baselines. We primarily utilized the following
+baselines: (1) PICARD (Scholak et al., 2021)
+is a method for constraining auto-regressive de-
+coders of language models through incremental
+parsing. (2) Graphix-T5 (Li et al., 2023b) pro-
+pose a mixed model with the standard pre-trained
+transformer model augmented by some specially-
+designed graph-aware layers. (3) RESDSQL (Li
+et al., 2023a) proposes a ranking-enhanced encod-
+ing and skeleton-aware decoding framework to de-
+couple the schema linking and the skeleton parsing.
+Figure 2: This is an illustration of the methods: (a) Clause by Clause DnP (CC-DnP), (b) Schema Linking DnP (SL-
+DnP), (c) Generate and Reﬁne DnP(GR-DnP). The demonstrations in few-shot are green text, and the reasoning
+steps in model input and output are highlighted.
+(4) (Rajkumar et al., 2022) perform an empirical
+evaluation of Text-to-SQL capabilities of the Codex
+language model. (5) (Liu et al., 2023) presents the
+comprehensive analysis of ChatGPT’s Text-to-SQL
+ability.
+3.2 Main Experiment
+Overall Performance We use natural language to
+construct prompts. In the zero-shot scenario, the
+EX performance of GPT-3.5 is 70.8%. We con-
+struct normal CoT, CC-DnP, SL-DnP, and GR-DnP
+promoting in the few-shot learning scenario, and
+the demonstrations in the few-shot are the cluster-
+ing results of question in the Spider training set.
+We construct demonstrations for CoT promopt-
+ing by requiring the model to think step by step .
+Manually construct demonstrations for CC-DnP,
+SL-DnP, and GR-DnP promopting.
+The experiment results show that our methods
+improve execution accuracy by 4.3% . Despite
+there being a gap (9%) in EX compared to the cur-
+rent SOTA model(Li et al., 2023a), it is remarkable
+that GPT-3.5 achieved 75.1% EX with GR-DnP
+prompting considering that it was not ﬁnetuned on
+the Spider.
+Methods V A EX TS
+Finetuned
+T5-3B + PICARD 98.4 79.3 69.4
+GRAPHIX + PICARD 98.8 80.5 70.3
+RESDSQL + NatSQL 99.1 84.1 73.5
+Prompting only
+(Rajkumar et al., 2022) 91.6 67.0 55.1
+(Liu et al., 2023) 97.7 70.1 60.1
+ours
+GPT-3.5 (zero-shot) 97.9 70.8 62.3
+GPT-3.5 (few-shot) 98.2 72.9 62.6
+GPT-3.5 + normal CoT 92.6 60.3 49.5
+GPT-3.5 + CC-DnP 97.8 74.3 63.0
+GPT-3.5 + RL-DnP 99.1 74.7 65.1
+GPT-3.5 + GR-DnP 98.6 75.1 65.4
+Table 1: Prior best Spider development set performance
+across models, as measured by percentage of predic-
+tions which are valid SQL (V A), execution accuracy
+(EX), test-suite accuracy (TS).
+Results on Complex Queries. We compare the
+more precise performance results of our prompts
+Figure 3: Performance of zero-shot learning and few-
+shot learning of prompts.
+in four separate SQL difﬁculty levels separated by
+Spider ofﬁcially. As (Wei et al., 2023a) pointed
+out, CoT promptings are particularly helpful for
+complex reasoning tasks.
+It is evident in Table 2. For difﬁcult Text-to-SQL
+tasks, our prompts stimulate the potential of the
+model. For hard-level Text-to-SQL tasks, GR-DnP
+prompting improved the EX by 10.8% compared
+to standard prompting, which is encouraging.
+Results of zero-shot learning. We compared the
+performance of prompts in zero-shot and few-shot
+learning scenarios. We have designed correspond-
+ing zero-shot prompts for our methods; the results
+are shown in Figure 3.
+For Text to SQL, designing a effective zero-shot
+prompt is very challenging. In the zero-shot sce-
+nario, the performance of all prompts was greatly
+reduced; in LR-DnP, the performance declined by
+13.1%.
+By observing the model’s output, in the zero-
+shot scenario, the model does not follow the rea-
+soning steps provided by the prompt. CC-DnP,
+LR-DnP, and normal CoT prompting have no sig-
+niﬁcant difference for performers in the zero-shot
+scenario.
+3.3 Ablation Study
+Ablation study of CC-DnP. The order of clause
+generation is essential, and we have experimented
+with three different orders of prompts, as shown in
+Figure 4.
+Different orders represent different reasoning
+paths. For example, the SELECT clause ﬁrst rep-
+resents thinking in SQL generating standard or-
+Prompts Easy Medium Hard Extra all
+Standard Prompting 91.1 78.5 58.0 46.4 72.9
+Normal CoT Prompting 71.4 62.8 52.9 45.2 60.3
+CC-DnP 89.1 79.1 65.5 48.2 74.3
+LR-DnP 91.5 78.8 64.2 49.4 74.7
+GR-DnP 89.9 79.1 68.8(10.8 ") 49.4 75.1
+Table 2: Execution accuracy (EX) by varying the levels of difﬁculty of the inference data.
+der. However, this is counterintuitive because when
+writing an SQL, we must ﬁrst consider which tables
+the SQL involves rather than which columns.
+Due to SQL queries can be expressed in various
+ways, it is challenging to deﬁne an optimal order.
+This paper considers 3 orders and concludes that
+the SELECT clause last is the most suitable order.
+Ablation study of SL-DnP. Finding relevant
+schema elements before generating SQL is an in-
+tuitive idea that is almost impossible. We want to
+guide the model via SL-DnP prompting to identify
+relevant tables or columns, which ultimately helps
+generate the target SQL.
+For SL-DnP prompting, it is necessary to con-
+sider whether it is necessary to identify each related
+table and column. Because identifying tables and
+columns are inherently challenging for the LLMs.
+Based on this, we propose 3 SL-DnP are shown in
+Figure 4.
+The experiment results show that identifying
+which schema elements signiﬁcantly impact the
+results. The ﬁrst prompt in Figure 4 induces the
+model to identify each relevant table and column
+name, resulting in the worst performance. However,
+less precise prompts have better performance, such
+as the third prompt in the Figure 4 only guiding the
+model to ﬁnd the relevant table and all the columns
+in this table, achieving the best performance.
+Ablation study of GR-DnP. For the GR-DnP,
+model generate SQL in stage-1, and in stage-2,
+checke and modify SQL as needed. We compared
+the performance of two stages in zero-shot and few-
+shot learning scenarios, respectively, as shown in
+ﬁgure5.
+4 Related Work
+This section reviews two lines of research that form
+the basis of this work: CoT prompting and Text-to-
+SQL task.4.1 Chain of Thought Prompting
+These are two primary paradigms for CoT prompt-
+ing. One is called zero-shot-CoT(Kojima et al.,
+2023), adding a single prompt like “Let’s think step
+by step” before the answer to inducing the reason-
+ing chains in LLMs. The other paradigm is few-
+shot prompting with manual or model-generated
+reasoning demonstrations(Wei et al., 2023a). Each
+demonstration has a question and a reasoning chain.
+A reasoning chain comprises a series of intermedi-
+ate reasoning steps and an expected answer. CoT
+prompting enhances perform of LLMs in challeng-
+ing reasoning tasks.
+4.2 Text-to-SQL
+Text-to-SQL is a task that translates natural lan-
+guage questions posed by non-expert users into
+SQL statements. Spider dataset(Yu et al., 2019)
+collects many natural language questions and their
+corresponding SQL and covers many complex lan-
+guage structures and operations. Based on Spi-
+der, many other challenging datasets have been
+proposed(Spider-SYN(Gan et al., 2021a), Spider-
+DK(Gan et al., 2021b), Spider-CG(Gan et al.,
+2022)).
+From a modeling viewpoint, two distinct ap-
+proaches are often utilized in Text-to-SQL. One
+is employing Graph Neural Networks to utilize
+the structural information of text and schema(e.g.,
+RATSQL(Wang et al., 2021), Graphix-T5(Li et al.,
+2023b)). Another is the use of pre-trained mod-
+els (e.g., T5(Raffel et al., 2020), GAP(Shi et al.,
+2020)); LLMs have been applied in Text-to-SQL,
+and PICARD(Scholak et al., 2021) utilizes the T5-
+3B model but still requires the training data for
+ﬁne-tuning. (Rajkumar et al., 2022)investigated
+the Text-to-SQL capabilities of the GPT3 model.
+(Liu et al., 2023)evaluate the comprehensive Text-
+to-SQL capabilities of ChatGPT.
+However, prior works employed the direct
+prompt, which only partially exploits the LLMs’
+capabilities. To the best of our knowledge, there
+Figure 4: Execution accuracy (EX) of different CC-DnP and LR-DnP.
+Figure 5: Ablation study of GR-DnP. SL-DnP + GR-
+DnP means generating SQL with SL-DnP in stage-1
+and reﬁning SQL with GR-DnP in stage-2.
+is currently no work to explore CoT prompting
+of Text-to-SQL, and we are the ﬁrst to connect
+Text-to-SQL with reasoning task employing CoT
+prompting to enhance LLMs’ ability to generate
+Text-to-SQL.
+5 Discussion
+Why few-shot learning? Experiment results
+show that our prompts have impressive perfor-
+mance only in the few-shot learning scenario. We
+observe the model’s output in the zero-shot sce-
+nario, and observe that the model does not strictly
+follow the reasoning steps required in the prompts.
+Zero-shot prompting cannot guide the model to
+reason as required.
+Demonstrations in few-shot learning. The
+demonstrations in the few-shot have a signiﬁcant
+effect on the results(Wei et al., 2023b); they should
+be the representative. We cluster the question inSpider training set into 5 clusters(Zhang et al.,
+2022). The clustering result is 5 questions that start
+with “what, ﬁnd, how, which, and show.” However,
+we expect the demonstrations to represent various
+query methods instead of questioning methods. We
+will ﬁnd more suitable methods to generate demon-
+strations for Text-to-SQL in the future.
+6 Conclusion
+This paper considers Text-to-SQL as a reasoning
+task and proposes 3 prompting-based methods to
+enhance LLMs’ ability to generate Text-to-SQL.
+SQL statements have strict syntax and structure,
+and normal CoT prompting cannot induce LLMs
+to generate Text-to-SQL well. We have designed
+CC-DnP, SL-DnP, and GR-DnP prompting for Text-
+to-SQL based on Text-to-SQL characteristics to
+induce LLMs to make helpful reasoning chains.
+Compared to the standard prompting, our proposed
+prompts improve execution accuracy by 4.3%, es-
+pecially for hard-level Text-to-SQL tasks, improv-
+ing execution accuracy by 10.8%.
+References
+Tom B. Brown, Benjamin Mann, Nick Ryder, Melanie
+Subbiah, Jared Kaplan, Prafulla Dhariwal, Arvind
+Neelakantan, Pranav Shyam, Girish Sastry, and
+Amanda Askell et al. 2020. Language models are
+few-shot learners.
+Aakanksha Chowdhery, Sharan Narang, Jacob Devlin,
+Maarten Bosma, Gaurav Mishra, Adam Roberts,
+Paul Barham, Hyung Won Chung, Charles Sutton,
+Sebastian Gehrmann, et al. 2022. Palm: Scaling lan-
+guage modeling with pathways.
+Paul Christiano, Jan Leike, Tom B. Brown, Miljan Mar-
+tic, Shane Legg, and Dario Amodei. 2023. Deep re-
+inforcement learning from human preferences.
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and
+Kristina Toutanova. 2019. Bert: Pre-training of deep
+bidirectional transformers for language understand-
+ing.
+Yujian Gan, Xinyun Chen, Qiuping Huang, and
+Matthew Purver. 2022. Measuring and improving
+compositional generalization in text-to-sql via com-
+ponent alignment.
+Yujian Gan, Xinyun Chen, Qiuping Huang, Matthew
+Purver, John R. Woodward, Jinxia Xie, and Peng-
+sheng Huang. 2021a. Towards robustness of text-to-
+SQL models against synonym substitution. In Pro-
+ceedings of the 59th Annual Meeting of the Associa-
+tion for Computational Linguistics and the 11th In-
+ternational Joint Conference on Natural Language
+Processing (Volume 1: Long Papers) , pages 2505–
+2515, Online. Association for Computational Lin-
+guistics.
+Yujian Gan, Xinyun Chen, and Matthew Purver.
+2021b. Exploring underexplored limitations of
+cross-domain text-to-sql generalization.
+Takeshi Kojima, Shixiang Shane Gu, Machel Reid, Yu-
+taka Matsuo, and Yusuke Iwasawa. 2023. Large lan-
+guage models are zero-shot reasoners.
+Mike Lewis, Yinhan Liu, Naman Goyal, Mar-
+jan Ghazvininejad, Abdelrahman Mohamed, Omer
+Levy, Ves Stoyanov, and Luke Zettlemoyer. 2019.
+Bart: Denoising sequence-to-sequence pre-training
+for natural language generation, translation, and
+comprehension.
+Haoyang Li, Jing Zhang, Cuiping Li, and Hong Chen.
+2023a. Resdsql: Decoupling schema linking and
+skeleton parsing for text-to-sql.
+Jinyang Li, Binyuan Hui, Reynold Cheng, Bowen Qin,
+Chenhao Ma, Nan Huo, Fei Huang, Wenyu Du, Luo
+Si, and Yongbin Li. 2023b. Graphix-t5: Mixing
+pre-trained transformers with graph-aware layers for
+text-to-sql parsing.
+Aiwei Liu, Xuming Hu, Lijie Wen, and Philip S. Yu.
+2023. A comprehensive evaluation of chatgpt’s zero-
+shot text-to-sql capability.
+Aman Madaan, Niket Tandon, Prakhar Gupta, Skyler
+Hallinan, Luyu Gao, Sarah Wiegreffe, Uri Alon,
+Nouha Dziri, Shrimai Prabhumoye, Yiming Yang,
+Sean Welleck, Bodhisattwa Prasad Majumder,
+Shashank Gupta, Amir Yazdanbakhsh, and Peter
+Clark. 2023. Self-reﬁne: Iterative reﬁnement with
+self-feedback.
+Colin Raffel, Noam Shazeer, Adam Roberts, Katherine
+Lee, Sharan Narang, Michael Matena, Yanqi Zhou,
+Wei Li, and Peter J. Liu. 2020. Exploring the limits
+of transfer learning with a uniﬁed text-to-text trans-
+former.
+Nitarshan Rajkumar, Raymond Li, and Dzmitry Bah-
+danau. 2022. Evaluating the text-to-sql capabilities
+of large language models.
+Torsten Scholak, Nathan Schucher, and Dzmitry Bah-
+danau. 2021. Picard: Parsing incrementally for
+constrained auto-regressive decoding from language
+models.Peng Shi, Patrick Ng, Zhiguo Wang, Henghui Zhu,
+Alexander Hanbo Li, Jun Wang, Cicero Nogueira
+dos Santos, and Bing Xiang. 2020. Learning con-
+textual representations for semantic parsing with
+generation-augmented pre-training.
+Romal Thoppilan, Daniel De Freitas, Jamie Hall,
+Noam Shazeer, Apoorv Kulshreshtha, Heng-Tze
+Cheng, Alicia Jin, Taylor Bos, Leslie Baker, Yu Du,
+YaGuang Li, Hongrae Lee, Huaixiu Steven Zheng,
+et al. 2022. Lamda: Language models for dialog
+applications.
+Bailin Wang, Richard Shin, Xiaodong Liu, Oleksandr
+Polozov, and Matthew Richardson. 2021. Rat-sql:
+Relation-aware schema encoding and linking for
+text-to-sql parsers.
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten
+Bosma, Brian Ichter, Fei Xia, Ed Chi, Quoc Le, and
+Denny Zhou. 2023a. Chain-of-thought prompting
+elicits reasoning in large language models.
+Jerry Wei, Jason Wei, Yi Tay, Dustin Tran, Albert
+Webson, Yifeng Lu, Xinyun Chen, Hanxiao Liu,
+Da Huang, Denny Zhou, and Tengyu Ma. 2023b.
+Larger language models do in-context learning dif-
+ferently.
+Tao Yu, Rui Zhang, Kai Yang, Michihiro Yasunaga,
+Dongxu Wang, Zifan Li, James Ma, Irene Li,
+Qingning Yao, Shanelle Roman, Zilin Zhang,
+and Dragomir Radev. 2019. Spider: A large-
+scale human-labeled dataset for complex and cross-
+domain semantic parsing and text-to-sql task.
+Zhuosheng Zhang, Aston Zhang, Mu Li, and Alex
+Smola. 2022. Automatic chain of thought prompt-
+ing in large language models.
+Ruiqi Zhong, Tao Yu, and Dan Klein. 2020. Semantic
+evaluation for text-to-sql with distilled test suites.

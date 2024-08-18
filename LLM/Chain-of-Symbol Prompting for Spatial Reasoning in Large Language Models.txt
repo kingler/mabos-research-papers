@@ -1,0 +1,1304 @@
+Published as a conference paper at COLM 2024
+Chain-of-Symbol Prompting for Spatial Reasoning in Large
+Language Models
+Hanxu Hu1,3∗, Hongyuan Lu2∗†, Huajian Zhang3, Yun-Ze Song1, Wai Lam2, Yue Zhang1
+1Westlake University2The Chinese University of Hong Kong3University of Edinburgh
+huhanxu1233@gmail.com
+{hylu,wlam}@se.cuhk.edu.hk
+v1hzha17@exseed.ed.ac.uk
+zhangyue@westlake.edu.cn
+Abstract
+In this paper, we first investigate the performance of LLMs on complex
+planning tasks that require LLMs to understand a virtual spatial environ-
+ment simulated via natural language and act or reason correspondingly
+in text. By evaluating on classic spatial planning scenarios, we found that
+current LLMs still lack abilities to handle spatial relationships in texts.
+This arises a question: Is the natural language the best way to represent
+complex spatial environments for LLMs, or are other alternatives such as
+symbolic representations more efficient and effective for LLMs? To this
+end, we propose a novel method called COS(Chain- of-Symbol Prompting)
+that represents the spatial relationships with condensed symbols during
+the chained intermediate thinking steps. COSis easy to use and does not
+need additional training on LLMs. Extensive experiments indicate that
+COSclearly surpasses the performance of the Chain-of-Thought (CoT)
+Prompting described in natural language in all three spatial reasoning
+and planning tasks with even fewer tokens used in the inputs compared
+with CoT. The performance gain is strong, by up to 60.8% accuracy (from
+31.8% to 92.6%) on Brick World for GPT-3.5-Turbo. COSalso reduces the
+number of tokens in the prompt obviously, by up to 65.8% of the tokens
+(from 407 to 139) for the intermediate steps from demonstrations on Brick
+World. Interestingly, we also observed emergent ability of abstract symbols
+understanding when the size of models scales up.1
+1 Introduction
+Given a set of target behaviour examples, large language models (LLMs) demonstrate
+exceptional abilities to accomplish a wide range of tasks, frequently exhibiting performance
+that surpasses that of humans (Brown et al., 2020; Srivastava et al., 2022). Specifically,
+LLMs exhibit impressive sequential textual reasoning ability during inference, resulting
+in a significant boost in their performance when encountered with reasoning questions
+described in natural languages (Nye et al., 2021; Wei et al., 2022). This phenomenon can be
+clearly observed with a multi-step chain of intermediate thinking procedure, i.e., a "Chain
+of Thought" (CoT, Wei et al. 2022).
+Conventional CoT usually leverages natural languages as intermediate thinking steps in
+prompting. Although CoT can enhance LLMs’ ability in many cases, redundant natural
+languages and irrelevant information also can hamper the performance of LLMs (Shi et al.,
+2023) in some cases. For example, spatial languages and descriptions can be hard for
+language models to understand Mirzaee et al. 2021; Mirzaee & Kordjamshidi 2022 due to
+∗Equal Contribution
+†Corresponding Author
+1Our code are available at https://github.com/hanxuhu/chain-of-symbol-planning .
+1arXiv:2305.10276v7  [cs.CL]  5 Aug 2024
+Published as a conference paper at COLM 2024
+There are a set of bricks. The yellow brick C is on top of the brick E . The yellow brick D is on top of the brick A . The yellow brick E is on top of the brick D . The white brick A is on top of the brick B . For the brick B, the color is white. Now we have toget a specific brick. The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed, the upper brick mustbe removed first. How to get brick D?SharedModelInput
+The bricks from bottom to top is B, A, D, E, C1. Remove brick A from the top of brick B.2. Remove brick E from the top of brick D.3. Now brick D is the topmost yellow brick and can be grabbed.Chain-of-ThoughtPromptingB/A/D/E/CC/EE/DDChain-of-SymbolPrompting
+Sowe get the result as A, E, D.ModelOutputSowe get the result as C, E, D.ModelOutput
+Figure 1: An example for comparison between Chain-of-Thought (CoT) and Chain-of-
+Symbol ( COS) that elicits large language models in tackling complex planning tasks with
+higher performance and fewer input tokens. We let the model generate CoT/ COSduring
+inference in a few-shot manner. Results were taken in May 2023 with ChatGPT and can be
+subject to change.
+complex spatial relationships. Aligning symbols and representing spatial relationships by
+symbols in word sequences can be a neater representation and thus can be potentially easier
+to understand by LLMs. We thus explore the use of symbols for LLM prompting, which is
+still an understudied topic. This is important to study which implies understanding abilities
+beyond language models for language understanding per se.
+To explore the role of symbolic representations in prompting, we take the complex spatial
+understanding and planning as the evaluation scenarios, which require LLMs to understand
+the virtual spatial environments described through natural language as well as planning
+and achieving certain goals in such environments. Inspired by existing classic planning
+competitions and spatial reasoning datasets, we present three domains: (i) Brick World (ii)
+NLVR-based Manipulation and (iii) Natural Language Navigation. Figure 1 illustrates an
+example for Brick World 1D, and all these three tasks are described in detail in Section 2.1.
+These three tasks are all described in natural language. And we also evaluate one existing
+spatial question answering dataset SPARTUN (Mirzaee & Kordjamshidi, 2022) which uses
+human-generated questions thus closer to realistic situations. For these tasks, LLMs need to
+understand a virtual environment in natural language, with the spatial relationship between
+the objects to be operated on and the restrictions on the operation, which is easy for real
+humans. However, we found that there are still places for improvement in the performance
+of LLMs on the tasks.
+As a major contribution to this study, we investigate the symbolic representations for spatial
+relationships, and propose a novel method called Chain- of-Symbol ( COS) prompting to
+elicit spatial understanding and planning abilities on LLMs. As in Figure 1, instead of using
+intermediate thinking steps described in natural language in CoT prompts shown on the
+left-hand side, the CoS prompts remove the redundant text description but only using a
+set of symbols to represent spatial relationships between objects in complex environments.
+COSachieves noticeable improvement in both performance and efficiency (by up to 60.8%
+improvements in accuracy and 65.8% for the number of input tokens). We speculate that
+such an improvement is benefited by the more efficient symbolic representation produced
+by C OS. Our main contributions are three-fold:
+•We evaluate LLMs on both existing classic spatial understanding tasks and our
+proposed synthetic spatial planning tasks. We spot that there is still room for
+performance improvements on current LLMs even with CoT.
+•We propose a novel method called COS, which prompts LLMs to convert the
+complex environment described with natural language into condensed symbolic
+2
+Published as a conference paper at COLM 2024
+There is a set of bricks. The white brick F is on top of brick D . The yellow brick B is on top of brick A. The blue brick D is on top of the brick C. The white brick E is on top of brick G . For brick A, the color is blue. The blue brick C is on top of the brick E. The white brick G is on top of the brick B. Now we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed, the upper brick must be removed first. How to get the brick G?A/B/G/E/C/D/FD/FC/DE/CG/E.So we get the result as F, D, C, E, G.BrickWorld1D
+Story:There are three boxes. In the left box, there are one large round in black, one small square in blue, one small square in blue, one small triangle in yellow, one middle square in yellow. In the middle box, there are one large square in yellow, one middle triangle in blue, one large round in black. In the right box, there are one large square in blue, one large triangle in black, one middle triangle in black.Question:How to move all black objects to the left box?Answer:To move all black objects to the left box, we need to identify all the black objects in the three boxes. They are:-left box: (large, round, black)-middle box: (large, round, black),-right box: (middle, triangle, black), (large, triangle, black)Then we can move the objects not in the left box above to the left box:1.(large, round, black): middle-left2.(middle, triangle, black): right-left3.(large, triangle, black): right -leftNLVR-basedManipulation
+There is a set of roads and a set of landmarks. The start point is bank A. There is a road which is 200 meters long from bank A to bank C. There is a road which is 100 meters long from bank C to house H. There is a road which is 100 meters long from house H to cinema F. There is a road which is 200 meters long from cinema F to store B. There is a road which is 100 meters long from store B to store G. There is a road which is 200 meters long from bank C to house D. There is a road which is 200 meters long from house D to garden J. There is a road which is 100 meters long from bank A to cinema I. There is a road which is 100 meters long from cinema I to house E.From the start point, how to reach the nearest store?-bank A/bank C/house H/cinema F/store B(200 + 100 + 100 + 200 = 600)-bank A /bank C/house H/cinema F/store B/store G (200 + 100 + 100 + 200 + 100 = 700)-So we get the result as bank A /bank C /house H/cinema F/store B.So the answer is ACHFBNaturalLanguageNavigationBackground:There are three blue shapes in a block that we call A. Two medium blue squares are below a big blue square. The first medium blue square is to the left of the other medium one which is touching the bottom edge of block A. There is another block below block A we call it B. A big blue triangle is touching the top edge of this block which is above a small black triangle, a big blue circle and a medium blue triangle. The medium triangle is touching the bottom edge of the block. The circle is below and to the left of the small triangle. It is above the medium triangle.Question: Is the small triangle below the medium triangle?Candidate Answers:["Yes", "NO", "Do not Know"]Answer:Let's analyze the arrangement of objects in block B to determine if the small triangle is below the medium triangle:B:1.(big, blue, triangle)= top B2. (big, blue, triangle) ↑ (small, black, triangle), (big, blue, circle) & (medium, blue, triangle)2. (big, blue, circle)↓< (small, black, triangle)3. (big, blue, circle) ~↓ (big, blue, triangle)4. (medium, blue, triangle)= bottom BBased on the provided information, the small black triangle is above the medium blue triangle.} So, the correct answer is: "No."Spatial QA
+Figure 2: <input, Chain of Symbol, output> example triples for our three proposed tasks:
+Brick World, NLVR-based Manipulation, and Natural Language Navigation, and SPARTUN
+dataset (Mirzaee & Kordjamshidi, 2022). Chains of Symbols are highlighted.
+representations. COSdrastically improves LLMs on the spatial tasks. The accuracy
+gain of COSis large, also with a good reduction in the token consumption for LLMs.
+•We conduct an in-depth analysis on COSto explore the effect of using different
+symbols, on different LLMs, and different languages to show the robustness of our
+method.
+2 Spatial Planning and Understanding tasks
+2.1 Natural Language Spatial Planning
+Inspired by classic planning domains and tasks described in Liu et al. (2023) and existing
+spatial reasoning dataset Suhr et al. (2017), we explore the performance of LLMs in three
+natural language spatial planning tasks. For all three tasks, we can formulate the problem
+as given a virtual scenario described by natural language, and a planning question. LLMs
+should take both the scenario and the question as the input and output correspondingly to
+solve the question. Such a solution usually contains a series of steps to achieve a final goal.
+The final test tasks consist of 5,500 evaluation instances, with 4,000 from Brick World, 1,000
+from NLVR-based Manipulation, and the remaining 500 from Natural Language Navigation.
+We use code to generate these instances based on definition of each task.
+2.2 Brick World
+Figure 2 demonstrates an instance for Brick World (top), which requires the LLMs to acquire
+certain bricks by grabbing the bricks sequentially. We explore 1D and 2D scenarios for
+the Brick Worlds task. Specifically, in the 1D scenario, the relationship between bricks is
+only vertical. In the 2D scenario, in addition to the vertical relationship, there is also a
+horizontal relationship, which we express as "in the front of". To explore the characteristics
+of language understanding from LLMs, we investigate different levels of difficulty in the
+way of describing virtual scenarios. We describe them in increasing levels of difficulty as
+below.
+3
+Published as a conference paper at COLM 2024
+•Firstly, we explore labelling bricks from A to Z according to the order of spatial
+stacking from bottom to top, and the corresponding texts are also described in order
+from bottom to top, we call this setting "No shuffle".
+•Secondly, we shuffle the order of the corresponding natural language description
+while maintaining the labelling rules in alphabetic order called "Shuffle description".
+•Thirdly, we shuffled the order of labelling so that the spatial relationships do not
+correspond to the alphabetic order anymore, but are still described in the order
+from bottom to top in the text description, called "Shuffle label".
+•Finally, we shuffled both the order of labelling and description. We call it "Shuffle
+both".
+We use colors to represent the bricks, which enriches the information and increases the
+difficulty of the tasks. For each setting with 1D and 2D, we create 500 evaluation instances.
+The final evaluation set consists of 4,000 instances.
+2.3 NLVR-based Manipulation
+Figure 2 demonstrates an instance for NLVR-based Manipulation (middle). We convert
+the format of Natural Language Visual Reasoning (NLVR, Suhr et al. (2017)) tasks into a
+text-based planning task. Based on the creation rules of synthetic images of NLVR, we create
+1,000 natural language descriptions for the virtual spatial environments using Python code.
+Specifically, for each description, we set three boxes just like NLVR, in the left, middle, and
+right, and in each box, and there are several objects. Each object has three properties: color,
+shape, and size. Each description has one related question, the question is about how to
+move all objects that satisfy a certain condition of one property (such as "all objects in black"
+or "all rounds") to a specific target box. The ground truth is the set of all objects satisfied
+with this condition which needs to be moved (not in the target boxes).
+2.4 Natural Language Navigation
+Figure 2 demonstrates an instance for Natural Language Navigation (bottom). Inspired by
+Vision-and-Language navigation (Gu et al., 2022), we create a virtual spatial environment
+that is similar to a 2D map of navigation tasks but using natural language description only.
+Specifically, we define a set of landmarks:′store′,′bank′,′house′,′cinema′,′garden′,′school′.
+For each description, there are 7 to 10 landmarks. We create 500 evaluation instances using
+Python code: the relationship between landmarks is a binary tree structure, with a root
+node which indicates the start point in the virtual scenario, and each node other than the
+leaf nodes has one or two child nodes, with a distance of 100 meters or 200 meters between
+them. Each description has one related question which is about how to reach the nearest
+one specific kind of landmark from the starting point.
+2.5 Spatial QA
+We also evaluate COSon manually annotated existing spatial question answering task,
+SPARTUN (Mirzaee & Kordjamshidi, 2022), which contains a larger variety of spatial
+relation types and spatial expressions compared with previous Spatial QA datasets and
+our three synthetic spatial planning tasks. And the questions in this dataset are manually
+annotated, which is closer to real-world scenes. The scenarios in this dataset are described
+in natural languages based on NLVR (Suhr et al., 2017) and SPARTQA (Mirzaee et al., 2021).
+3 Chain-of-Symbol Prompting
+We propose Chain-of-Symbol ( COS) prompting for LLMs, which converts the simulated
+environment with natural language into a condensed symbolic representation that considers
+spatial relationship. In order to make our constructing method of COSgeneralizable and
+reliable, we adopt a three-step procedure in creating the demonstrations of our COSwhich
+can be used in any related tasks:
+4
+Published as a conference paper at COLM 2024
+•(i) Automatically prompt the LLMs to generate a CoT demonstration in a zero-shot
+manner
+• (ii) Correct the generated CoT demonstration if there existing errors.
+•(iii) Replace the spatial relationships described in natural languages in CoT with
+random symbols , and only keep objects and symbols, remove other descriptions.
+We then use the COSdemonstrations to guide the language model in a few-shot manner for
+prompting LLMs just like CoT (Wei et al., 2022).
+Figure 1 depicts an example of a demonstration of CoS produced by models. In this example,
+we see that both CoT and COSreceive the same shared simulated spatial environment in
+natural language texts. COSdepicts a different intermediate thinking process than CoT.
+The latter represents the environments in a natural language only, while the former use a
+condensed symbolic representation that considers spatial relationship. Specifically, we use
+the symbol " /" to represent the spatial relationship "from the top of" here. By doing such
+a conversion, and removing redundant descriptions, COSeffectively improves the model
+performance as well as reduces the inference costs with LLMs.
+Figure 2 depicts examples of CoS demonstration for all three planning tasks we proposed.
+For NLVR-based Manipulation, we convert natural language descriptions for objects to the
+format of a triplet such as "(large, round, black)". For Natural Language Navigation, we
+represent the order of landmarks by using symbol "/" to connect them. For Spatial QA task,
+we use a set of symbols such as "=", " ∼" to represent different spatial relationships, and use
+triplet with "( , , )" to represent objects and their attributes.
+CoS prompting has multiple properties that are attractive as a prompting approach for
+LLMs:
+•First, COSeffectively allows a neater, shorter, and condensed intermediate pro-
+cedure than CoT. It is more structured than natural languages, hence easier for
+human annotators to analyze, check and correct the intermediate thinking process
+for LLMs.
+•Second, COSimproves important planning tasks that current LLMs do not tackle
+well. It provides a better representing method for spatial environments which is
+easier for LLMs to learn compared with natural language.
+•Finally, COSclearly reduces the amount of text input into the LLMs and output
+from LLMs. This makes it much cheaper to access LLMs with API/GPU.
+4 Experiments
+In this section, we first introduce our experimental setup in Section 4.1 about the settings
+of different methods we use, the language models, and the evaluation metrics. Then, in
+Section 4.2, we report the results of the three spatial planning tasks we proposed. In Section
+4.3, we report the results on the SPARTUN dataset.
+4.1 Experimental Setup
+We evaluate CoS and CoT on our proposed three spatial planning tasks and the existing
+SQA dataset, based on representative LLMs like ChatGPT(gpt-3.5-turbo) and LLAMA-2
+series. There are three prompts: zero-shot CoT, few-shot CoT, and few-shot CoS (Ours).
+Zero-shot Chain-of-Thought Prompting We consider zero-shot CoT as our baseline. The
+reason is that we have found that our choices of LLMs naturally give their intermediate
+steps (CoT) in their answers, even without specifically asking them to do so. We also found
+that asking them to remove the thinking steps obviously degrades the results. Therefore,
+we allow the LLMs to generate CoT, while we do not put any demonstration to the prompt
+but give prompts like "Let’s think step by step" just as Kojima et al. (2022). For an easier
+evaluation, we ask the LLMs to output the final results by separating the landmarks with
+commas.
+5
+Published as a conference paper at COLM 2024
+Table 1: The results of ChatGPT(gpt-3.5-turbo) on Brick World. We report the results with
+four settings as described in Section 2.2, under both 1D and 2D scenarios. We adopt Ns=5,
+where Nsrepresents the number of demonstrations for COSand CoT. The best results are
+bolded. For COSand CoT, we report the average and the standard deviation from three runs
+with different sets of demonstrations. Acc. represents accuracy, Pre. represents precision,
+and Rec. represents recall. zs-CoT represents zero-shot CoT. We report the average number
+of tokens in the intermediate steps.
+Model No Shuffle Shuffle Description Shuffle Label Shuffle Both
+Acc. Pre. Rec. Acc. Pre. Rec. Acc. Pre. Rec. Acc. Pre. Rec. Tok.
+1D Scenario
+zs-CoT 61.0 77.2 71.9 60.4 77.5 77.5 31.8 63.4 59.8 28.2 58.6 55.3 -
+CoT 81.0 ±11.0 87.7±4.5 90.1 ±2.671.5±9.290.7±3.681.8±7.175.1±10.1 88.0±3.690.1±0.943.0±4.471.4±3.375.7±1.6407
+COS 96.6±1.998.0±0.897.7±0.895.9±1.297.9±0.697.5±0.392.6±2.097.0±1.395.9±1.169.7±5.186.7±4.283.6±1.6139
+2D Scenario
+zs-CoT 32.7 53.8 60.6 14.8 31.9 46.9 13.0 32.0 42.3 9.8 30.4 38.4 -
+CoT 25.0 ±15.6 49.8±9.845.0±10.5 21.5±8.245.6±5.441.2±6.321.8±2.344.7±5.943.2±4.014.9±3.438.1±2.936.4±3.5546
+COS 60.7±1.967.2±1.171.3±1.333.7±3.246.7±0.850.0±1.523.5±5.045.9±0.863.0±12.1 28.9±2.346.3±1.044.4±2.8341
+Chain-of-Thought Prompting This baseline uses a few-shot CoT, in which we encourage
+LLMs to think step by step, and we use five demonstrations to guide the LLMs in the
+thinking procedure. Note that the intermediate thinking procedure is represented as natural
+language text, just like the Standard Prompting. Like in (Wei et al., 2022), we manually
+crafted five demonstrations for each task to guarantee their correctness. To guarantee
+the consistency and reliability of the prompts, we follow the format of CoT generated by
+zeroshot-CoT prompting. We use these fixed five demonstrations for evaluations on each
+task.
+Chain-of-Symbol Prompting As described in Section 3, COSaugments the standard
+CoT prompting with condensed symbolic representation. While CoT has been shown to
+give large improvements to LLMs on various tasks (Wei et al., 2022), we argue that using
+condensed symbolic representations can be an alternative to describing using natural lan-
+guage texts. We manually converted from CoT demonstrations to CoS using the procedure
+described in Section 3. Five CoS demonstrations of the same examples with CoT are created
+for each task of Natural Language Planning.
+Language Models We use both Opensource LLMs (Llama-2) and Closed Source LLMs
+ChatGPT(Gpt-3.5-turbo) for the evaluation of all tasks. We set the temperature to 0 for all
+the experiments throughout this paper.
+Evaluation Metrics For planning tasks, we use three evaluation metrics, namely accuracy,
+precision, and recall. We define accuracy as the success rate in achieving the final goal.
+We then compute the Longest Common Sequence (LCS) between the ground truth and
+LLM output sequence to measure their similarity. We compute precision as the ratio of LCS
+against the length of the LLM output, and we compute recall as the ratio of LCS against the
+length of the ground truth. For spatial QA task, we only compute accuracy.
+4.2 Results of Spatial Planning Tasks
+4.2.1 Brick World
+Table 1 reports the results of COSagainst the zs-CoT and CoT on the task of Brick World.
+First of all, we can see that the complexity increases both from the 1D scenario to the 2D
+scenario and from the setting of No Shuffle to the setting of Shuffle Both, together with
+a drop in the performance. ChatGPT with zs-CoT does not perform well, with only 9.8%
+6
+Published as a conference paper at COLM 2024
+accuracy on the most difficult setting Shuffle Both under the 2D scenario. Although CoT
+brings some improvements, the performance for CoT is still not satisfying, with an accuracy
+of 43.0% which is just below the 50% bar for setting Shuffle Both under the 1D scenario.
+In contrast, we see that COSgives very good improvements on this setting (from 28.2%
+to 69.7%). We found that COSgives consistent improvements to all the settings on Brick
+World, clearly surpassing CoT. The largest gain is on the setting of Shuffle Label under the
+1D scenario, with 60.8% improvements in accuracy (from 31.8% to 92.6%).
+4.2.2 Further Analysis of Brick World
+Randomness in the Experiments To investigate the randomness in our experiments, we run
+multiple trials with three different sets of demonstrations for CoT and COS. Table 1 reports
+their means and standard deviations. We see a general trend here that COSusually reports
+a lower standard deviation than CoT (for example, a standard deviation of 1.9 for Acc. for
+No Shuffle under the 1D scenario for COS, against 11.0 for CoT). This represents that COSis
+more stable than CoT on Brick World.
+GPT-3.5-Turbo020406080100Brick World 1D (shuffle both) success rate (%)None
+//
+/-
+,
+Figure 3: Performance of us-
+ing different symbols for COS
+on Brick World 1D (Shuffle
+Both) in accuracy.CoS on the Different Language In addition to the
+tasks described in English, we also tested COSon Brick
+World in Chinese. CoT reports 22.9% accuracy, and
+COSreports 39.1% in 1D scenario of Brick World, which
+demonstrates the robustness of COSto a language other
+than English.
+Robustness to Different Symbols Figure 3 demon-
+strates the robustness of using different symbols for
+COS. As we can see, using different symbols brings
+consistent performance, while not having any symbol
+drastically impacts the results. Among all the symbols,
+the comma gives the best results. We conclude that
+COS is robust to the selection of symbol.
+Results on Different Language Models Figure 4 re-
+ports the results on LLAMA-2 under the 1D scenario.
+The experimental results align with our previous con-
+clusion that C OS outperforms CoT obviously.
+Saving Tokens for Prompting One advantage featured
+byCOSis that it reduces the number of input tokens to
+be fed into LLMs. For Brick World (1D scenario), COS
+reduces the
+number of tokens for the intermediate steps from 407 to 139 (Table 1, the numbers are
+reported from OpenAI Playground2). This subsequently saves the costs of accessing LLMs
+via API/GPUs.
+4.2.3 NLVR-based Manipulation and Natural Language Navigation
+For both of these two tasks, we adopt almost the same experimental settings as the ones for
+Brick World. The only difference is the evaluation metrics we report, we compute precision
+and recall based on the set rather than the Longest Common Sequence.
+Main Results Table 2 reports the results of NLVR-based Manipulation and Natural Lan-
+guage Navigation with GPT-3.5-turbo. For both of these two tasks, COSreports a higher
+performance than C OT and zero-shot CoT prompting on all of the metrics.
+Saving Tokens for Prompting One advantage of COSis that it can reduces the number
+of input tokens. Table 2 reported that for NLVR-based Manipulation, COSreduces the
+number of tokens for the intermediate steps from 653 to 534, nearly by half of the original
+intermediate steps (we separate the tokens by space). This subsequently saves the costs of
+accessing LLMs via API/GPU, which enables easier access to the models.
+2https://platform.openai.com/playground
+7
+Published as a conference paper at COLM 2024
+Table 2: The automatic evaluation results with gpt-3.5-turbo on Natural Language Navi-
+gation and NLVR-based Manipulation. We set Ns=5, where Nsrepresents the number of
+demonstrations for prompting with COSand CoT. The best results are bolded. We report
+the average and the standard deviation from three runs with different demonstrations. Acc.
+represents accuracy, Pre. represents precision, and Rec. represents recall (precision and
+recall are computed with sets in this case).
+Task Natural Language Navigation NLVR-based Manipulation
+Acc. Pre. Rec. Tok. Acc. Pre. Rec. Tok.
+zs-CoT 52.8 74.0 79.6 - 18.6 26.9 19.7 -
+CoT 53.6 ±2.8 76.3±1.1 81.7±0.8 390 64.1 ±3.8 81.7±1.3 84.5±0.7 653
+COS 74.9±3.4 87.9±1.8 86.7±3.0 239 68.4 ±2.3 71.2±1.9 82.9±2.1 534
+Table 3: The automatic evaluation results with GPT-3.5-Turbo and GPT-4 on SPARTUN
+dataset. We apply CoT with 5 shots, and CoS with 5 shots (Ours) respectively. We report the
+number of tokens in the intermediate steps from demonstrations as the last column.
+Model GPT-3.5-Turbo GPT-4 Tokens
+CoT-5 47.1 69.8 198
+CoS-5 49.4 72.6 167
+4.3 Spatial Question Answering
+We also explore the effectiveness of COSin a more real-world scenario, by using existing hu-
+man annotated spatial QA dataset SPARTUN (Mirzaee & Kordjamshidi, 2022). Specifically,
+we applied both COSand CoT on GPT-3.5-Turbo and GPT-4. COSgains better performance
+and uses fewer tokens compared with CoT. In table 3, we report the results of performance,
+and both CoT and CoS have 5 shots. It should be noticed that there are far more types of
+spatial relationships in SPARTUN dataset than our proposed planning tasks, so the results
+indicate CoS can gain promising performance even when there are a lot of symbols to
+represent different spatial relationships.
+4.4 Results of different size LLAMA-2
+We also evaluate CoS on current open-source representative models like LLAMA-2 Touvron
+et al. (2023) series to further validate the effectiveness and generality of our method. We use
+LLAMA-2 with different size (7B, 13B and 13B). As shown in Figure 4, when the model size
+is small (7B and 13B), CoS cannot outperform CoT in many cases, but in 70B, CoS gain a
+clear better performance in all three tasks compared with using CoT. It can be seen that as
+the model size increases, the ratio of model performance to parameters for CoS has a larger
+slope compared to CoT. This indicate that large language models might can have emergent
+ability of abstract symbols understanding.
+5 Related Work
+In-Context Learning Large language models (LLMs) have demonstrated remarkable few-
+shot learning abilities across various domains (Brown et al., 2020; Srivastava et al., 2022),
+which is also called as in-context learning, leading to a paradigm shift in AI to use LLMs
+as foundational models for language-related tasks, either directly or through fine-tuning
+(Bommasani et al., 2021; Hu et al., 2022). While less relevant to COS, a concurrent work
+converts natural language into executable actions for robots with ChatGPT (Wake et al.,
+2023). Another very recent concurrent work uses Symbol Tuning that replaces natural
+language labels with arbitrary symbols to improve in-context learning (Wei et al., 2023).
+8
+Published as a conference paper at COLM 2024
+7 13 70020406080Solve rate (%)
+Brick-1D
+7 13 70
+Navigation
+7 13 70
+Temporal Sequence
+Model Scale (B)CoS CoT
+Figure 4: Scaling curve of CoS and CoT of Llama-2 on three tasks.
+Chain-of-Thought Reasoning The ability of LLMs (Brown et al., 2020; Srivastava et al.,
+2022) to perform complex reasoning tasks can be significantly enhanced by using a show
+known as Chain-of-Thought (CoT) prompting, which involves providing them with interme-
+diate reasoning steps (Nye et al., 2021; Wei et al., 2022). Such a phenomenon also generalizes
+to the multilingual settings (Shi et al., 2023). Despite the fact that CoT is powerful, there are
+reports that demonstrate that CoT is not always useful and that integrating CoT degrades
+the performance on the task of Machine Translation in their experiment. And this is possibly
+due to the word-by-word translation (Peng et al., 2023).
+Spatial Reasoning Spatial reasoning over natural language texts has been an important
+research direction in the community (Janner et al., 2018; Mirzaee et al., 2021). Janner et al.
+(2018) proposes to leverage representation learning on a navigation task that requires the
+agent to move a specific location. Rojowiec et al. (2020) proposes a new task on spatial
+reasoning that requires the language model to generate natural language instructions for
+‘before’ and ‘after’ image pairs. Mirzaee et al. (2021) proposes a new benchmark for spatial
+question-answering with ‘which’ and ‘what’ questions regarding the environment. In a
+concurrent work, Tsai et al. (2023) demonstrates that LLMs perform poorly on text-based
+games with question-answering tasks that require several steps of reasoning.
+Navigation and Path Planning Language grounding navigation (Gu et al., 2022) refers to
+the interdisciplinary task that requires the intelligent agent to perceive the visual environ-
+ment and guide the user to the goal location through natural language instructions (Nguyen
+et al., 2019; Chen et al., 2019). Path planning (Panov et al., 2018; Krishna Lakshmanan et al.,
+2020) refers to the tasks that require the agent to plan its own path to achieve certain goals
+such as the shortest path or maximizing the cleaning area, typically through the use of
+reinforcement learning. These areas are highly relevant to the spatial planning tasks we
+explored and COS, as the spatial environments can be potentially represented by symbolic
+representations. We leave the investigations of these application areas to future studies.
+(Sun et al., 2024)
+6 Conclusion
+We found that current popular LLMs still lack abilities in complex spatial planning and
+understanding tasks. To this end, we propose a novel method called COS(Chain- of-Symbol
+Prompting) that converts spatial relationships described in natural languages to condensed
+symbolic representations in the chained intermediate thinking steps. COSis easy to use
+and does not need additional training on LLMs. Extensive experiments indicate that using
+few-shot COSdemonstration clearly surpasses the performance of using CoT described in
+natural languages on all three spatial planning tasks we proposed and the representative
+spatial QA benchmark with even fewer tokens (down to about 1/3 tokens of the thinking
+steps with CoT) used in the inputs compared with CoT prompting. The performance gain is
+strong, by up to 60.8% accuracy (from 31.8% to 92.6%) on Brick World for ChatGPT.
+9
+Published as a conference paper at COLM 2024
+Limitations Refer to the Appendix for the section on Broader Impact. In addition, we
+only use two models to verify the effectiveness of our method due to the limited time and
+resources. It would be interesting to apply our method to more models with different sizes
+to see whether there is an emergent ability of CoS for LLMs. Nevertheless, our choices of
+foundation models are representative and they are popular LLMs.
+Acknowledgments
+We acknowledge funding support from the NSFC Key project 62336006, and Center for
+Perceptual and Interactive Intelligence (CPII) Ltd. under the Innovation and Technology
+Commission’s innoHK scheme.
+References
+Rishi Bommasani, Drew A. Hudson, Ehsan Adeli, Russ Altman, Simran Arora, Sydney
+von Arx, Michael S. Bernstein, Jeannette Bohg, Antoine Bosselut, Emma Brunskill, Erik
+Brynjolfsson, Shyamal Buch, Dallas Card, Rodrigo Castellon, Niladri Chatterji, Annie
+Chen, Kathleen Creel, Jared Quincy Davis, Dora Demszky, Chris Donahue, Moussa
+Doumbouya, Esin Durmus, Stefano Ermon, John Etchemendy, Kawin Ethayarajh, Li Fei-
+Fei, Chelsea Finn, Trevor Gale, Lauren Gillespie, Karan Goel, Noah Goodman, Shelby
+Grossman, Neel Guha, Tatsunori Hashimoto, Peter Henderson, John Hewitt, Daniel E. Ho,
+Jenny Hong, Kyle Hsu, Jing Huang, Thomas Icard, Saahil Jain, Dan Jurafsky, Pratyusha
+Kalluri, Siddharth Karamcheti, Geoff Keeling, Fereshte Khani, Omar Khattab, Pang Wei
+Koh, Mark Krass, Ranjay Krishna, Rohith Kuditipudi, Ananya Kumar, Faisal Ladhak,
+Mina Lee, Tony Lee, Jure Leskovec, Isabelle Levent, Xiang Lisa Li, Xuechen Li, Tengyu
+Ma, Ali Malik, Christopher D. Manning, Suvir Mirchandani, Eric Mitchell, Zanele Mun-
+yikwa, Suraj Nair, Avanika Narayan, Deepak Narayanan, Ben Newman, Allen Nie,
+Juan Carlos Niebles, Hamed Nilforoshan, Julian Nyarko, Giray Ogut, Laurel Orr, Isabel
+Papadimitriou, Joon Sung Park, Chris Piech, Eva Portelance, Christopher Potts, Aditi
+Raghunathan, Rob Reich, Hongyu Ren, Frieda Rong, Yusuf Roohani, Camilo Ruiz, Jack
+Ryan, Christopher Ré, Dorsa Sadigh, Shiori Sagawa, Keshav Santhanam, Andy Shih,
+Krishnan Srinivasan, Alex Tamkin, Rohan Taori, Armin W. Thomas, Florian Tramèr,
+Rose E. Wang, William Wang, Bohan Wu, Jiajun Wu, Yuhuai Wu, Sang Michael Xie,
+Michihiro Yasunaga, Jiaxuan You, Matei Zaharia, Michael Zhang, Tianyi Zhang, Xikun
+Zhang, Yuhui Zhang, Lucia Zheng, Kaitlyn Zhou, and Percy Liang. On the Opportunities
+and Risks of Foundation Models. arXiv e-prints , art. arXiv:2108.07258, August 2021. doi:
+10.48550/arXiv.2108.07258.
+Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla
+Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, Sandhini
+Agarwal, Ariel Herbert-Voss, Gretchen Krueger, Tom Henighan, Rewon Child, Aditya
+Ramesh, Daniel Ziegler, Jeffrey Wu, Clemens Winter, Chris Hesse, Mark Chen, Eric
+Sigler, Mateusz Litwin, Scott Gray, Benjamin Chess, Jack Clark, Christopher Berner, Sam
+McCandlish, Alec Radford, Ilya Sutskever, and Dario Amodei. Language models are
+few-shot learners. In H. Larochelle, M. Ranzato, R. Hadsell, M.F. Balcan, and H. Lin
+(eds.), Advances in Neural Information Processing Systems , volume 33, pp. 1877–1901. Curran
+Associates, Inc., 2020.
+Howard Chen, Alane Suhr, Dipendra Misra, Noah Snavely, and Yoav Artzi. Touchdown:
+Natural language navigation and spatial reasoning in visual street environments. In 2019
+IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 12530–12539,
+2019. doi: 10.1109/CVPR.2019.01282.
+Jing Gu, Eliana Stefani, Qi Wu, Jesse Thomason, and Xin Wang. Vision-and-language
+navigation: A survey of tasks, methods, and future directions. In Proceedings of the 60th
+Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp.
+7606–7623, Dublin, Ireland, May 2022. Association for Computational Linguistics. doi:
+10.18653/v1/2022.acl-long.524. URL https://aclanthology.org/2022.acl-long.524 .
+10
+Published as a conference paper at COLM 2024
+Edward J Hu, yelong shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang,
+Lu Wang, and Weizhu Chen. LoRA: Low-rank adaptation of large language models. In
+International Conference on Learning Representations , 2022.
+Michael Janner, Karthik Narasimhan, and Regina Barzilay. Representation learning for
+grounded spatial reasoning. Transactions of the Association for Computational Linguistics , 6:
+49–61, 2018. doi: 10.1162/tacl_a_00004. URL https://aclanthology.org/Q18-1004 .
+Takeshi Kojima, Shixiang Shane Gu, Machel Reid, Yutaka Matsuo, and Yusuke Iwasawa.
+Large language models are zero-shot reasoners. Advances in neural information processing
+systems , 35:22199–22213, 2022.
+Anirudh Krishna Lakshmanan, Rajesh Elara Mohan, Balakrishnan Ramalingam, Anh Vu
+Le, Prabahar Veerajagadeshwar, Kamlesh Tiwari, and Muhammad Ilyas. Complete
+coverage path planning using reinforcement learning for tetromino based cleaning and
+maintenance robot. Automation in Construction , 112:103078, 2020. ISSN 0926-5805. doi:
+https://doi.org/10.1016/j.autcon.2020.103078. URL https://www.sciencedirect.com/
+science/article/pii/S0926580519305813 .
+Bo Liu, Yuqian Jiang, Xiaohan Zhang, Qiang Liu, Shiqi Zhang, Joydeep Biswas, and Peter
+Stone. Llm+p: Empowering large language models with optimal planning proficiency,
+2023.
+Roshanak Mirzaee and Parisa Kordjamshidi. Transfer learning with synthetic corpora for
+spatial role labeling and reasoning. In Proceedings of the 2022 Conference on Empirical
+Methods in Natural Language Processing , pp. 6148–6165, Abu Dhabi, United Arab Emirates,
+December 2022. Association for Computational Linguistics. doi: 10.18653/v1/2022.
+emnlp-main.413. URL https://aclanthology.org/2022.emnlp-main.413 .
+Roshanak Mirzaee, Hossein Rajaby Faghihi, Qiang Ning, and Parisa Kordjamshidi.
+SPARTQA: A textual question answering benchmark for spatial reasoning. In Proceed-
+ings of the 2021 Conference of the North American Chapter of the Association for Computa-
+tional Linguistics: Human Language Technologies , pp. 4582–4598, Online, June 2021. As-
+sociation for Computational Linguistics. doi: 10.18653/v1/2021.naacl-main.364. URL
+https://aclanthology.org/2021.naacl-main.364 .
+Khanh Nguyen, Debadeepta Dey, Chris Brockett, and Bill Dolan. Vision-based navigation
+with language-based assistance via imitation learning with indirect intervention. In 2019
+IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 12519–12529,
+2019. doi: 10.1109/CVPR.2019.01281.
+Maxwell Nye, Anders Johan Andreassen, Guy Gur-Ari, Henryk Michalewski, Jacob Austin,
+David Bieber, David Dohan, Aitor Lewkowycz, Maarten Bosma, David Luan, Charles
+Sutton, and Augustus Odena. Show Your Work: Scratchpads for Intermediate Computa-
+tion with Language Models. arXiv e-prints , art. arXiv:2112.00114, November 2021. doi:
+10.48550/arXiv.2112.00114.
+Aleksandr I. Panov, Konstantin S. Yakovlev, and Roman Suvorov. Grid path planning
+with deep reinforcement learning: Preliminary results. Procedia Computer Science , 123:
+347–353, 2018. ISSN 1877-0509. doi: https://doi.org/10.1016/j.procs.2018.01.054. URL
+https://www.sciencedirect.com/science/article/pii/S1877050918300553 . 8th An-
+nual International Conference on Biologically Inspired Cognitive Architectures, BICA
+2017 (Eighth Annual Meeting of the BICA Society), held August 1-6, 2017 in Moscow,
+Russia.
+Keqin Peng, Liang Ding, Qihuang Zhong, Li Shen, Xuebo Liu, Min Zhang, Yuanxin Ouyang,
+and Dacheng Tao. Towards Making the Most of ChatGPT for Machine Translation. arXiv
+e-prints , art. arXiv:2303.13780, March 2023.
+Robin Rojowiec, Jana Götze, Philipp Sadler, Henrik Voigt, Sina Zarrieß, and David Schlangen.
+From “before” to “after”: Generating natural language instructions from image pairs in a
+simple visual domain. In Proceedings of the 13th International Conference on Natural Language
+11
+Published as a conference paper at COLM 2024
+Generation , pp. 316–326, Dublin, Ireland, December 2020. Association for Computational
+Linguistics. URL https://aclanthology.org/2020.inlg-1.38 .
+Freda Shi, Xinyun Chen, Kanishka Misra, Nathan Scales, David Dohan, Ed Chi, Nathanael
+Schärli, and Denny Zhou. Large Language Models Can Be Easily Distracted by Irrelevant
+Context. arXiv e-prints , art. arXiv:2302.00093, January 2023. doi: 10.48550/arXiv.2302.
+00093.
+Freda Shi, Mirac Suzgun, Markus Freitag, Xuezhi Wang, Suraj Srivats, Soroush Vosoughi,
+Hyung Won Chung, Yi Tay, Sebastian Ruder, Denny Zhou, Dipanjan Das, and Jason
+Wei. Language models are multilingual chain-of-thought reasoners. In The Eleventh
+International Conference on Learning Representations , 2023.
+Aarohi Srivastava, Abhinav Rastogi, Abhishek Rao, Abu Awal Md Shoeb, Abubakar Abid,
+Adam Fisch, Adam R. Brown, Adam Santoro, Aditya Gupta, Adrià Garriga-Alonso,
+Agnieszka Kluska, Aitor Lewkowycz, Akshat Agarwal, Alethea Power, Alex Ray, Alex
+Warstadt, Alexander W. Kocurek, Ali Safaya, Ali Tazarv, Alice Xiang, Alicia Parrish,
+Allen Nie, Aman Hussain, Amanda Askell, Amanda Dsouza, Ambrose Slone, Ameet
+Rahane, Anantharaman S. Iyer, Anders Andreassen, Andrea Madotto, Andrea Santilli,
+Andreas Stuhlmüller, Andrew Dai, Andrew La, Andrew Lampinen, Andy Zou, Angela
+Jiang, Angelica Chen, Anh Vuong, Animesh Gupta, Anna Gottardi, Antonio Norelli, Anu
+Venkatesh, Arash Gholamidavoodi, Arfa Tabassum, Arul Menezes, Arun Kirubarajan,
+Asher Mullokandov, Ashish Sabharwal, Austin Herrick, Avia Efrat, Aykut Erdem, Ayla
+Karaka¸ s, B. Ryan Roberts, Bao Sheng Loe, Barret Zoph, Bartłomiej Bojanowski, Batuhan
+Özyurt, Behnam Hedayatnia, Behnam Neyshabur, Benjamin Inden, Benno Stein, Berk
+Ekmekci, Bill Yuchen Lin, Blake Howald, Cameron Diao, Cameron Dour, Catherine
+Stinson, Cedrick Argueta, César Ferri Ramírez, Chandan Singh, Charles Rathkopf, Chen-
+lin Meng, Chitta Baral, Chiyu Wu, Chris Callison-Burch, Chris Waites, Christian Voigt,
+Christopher D. Manning, Christopher Potts, Cindy Ramirez, Clara E. Rivera, Clemencia
+Siro, Colin Raffel, Courtney Ashcraft, Cristina Garbacea, Damien Sileo, Dan Garrette,
+Dan Hendrycks, Dan Kilman, Dan Roth, Daniel Freeman, Daniel Khashabi, Daniel Levy,
+Daniel Moseguí González, Danielle Perszyk, Danny Hernandez, Danqi Chen, Daphne
+Ippolito, Dar Gilboa, David Dohan, David Drakard, David Jurgens, Debajyoti Datta, Deep
+Ganguli, Denis Emelin, Denis Kleyko, Deniz Yuret, Derek Chen, Derek Tam, Dieuwke
+Hupkes, Diganta Misra, Dilyar Buzan, Dimitri Coelho Mollo, Diyi Yang, Dong-Ho Lee,
+Ekaterina Shutova, Ekin Dogus Cubuk, Elad Segal, Eleanor Hagerman, Elizabeth Barnes,
+Elizabeth Donoway, Ellie Pavlick, Emanuele Rodola, Emma Lam, Eric Chu, Eric Tang,
+Erkut Erdem, Ernie Chang, Ethan A. Chi, Ethan Dyer, Ethan Jerzak, Ethan Kim, Eunice
+Engefu Manyasi, Evgenii Zheltonozhskii, Fanyue Xia, Fatemeh Siar, Fernando Martínez-
+Plumed, Francesca Happé, Francois Chollet, Frieda Rong, Gaurav Mishra, Genta Indra
+Winata, Gerard de Melo, Germán Kruszewski, Giambattista Parascandolo, Giorgio Mari-
+ani, Gloria Wang, Gonzalo Jaimovitch-López, Gregor Betz, Guy Gur-Ari, Hana Galijasevic,
+Hannah Kim, Hannah Rashkin, Hannaneh Hajishirzi, Harsh Mehta, Hayden Bogar, Henry
+Shevlin, Hinrich Schütze, Hiromu Yakura, Hongming Zhang, Hugh Mee Wong, Ian Ng,
+Isaac Noble, Jaap Jumelet, Jack Geissinger, Jackson Kernion, Jacob Hilton, Jaehoon Lee,
+Jaime Fernández Fisac, James B. Simon, James Koppel, James Zheng, James Zou, Jan
+Koco ´ n, Jana Thompson, Jared Kaplan, Jarema Radom, Jascha Sohl-Dickstein, Jason Phang,
+Jason Wei, Jason Yosinski, Jekaterina Novikova, Jelle Bosscher, Jennifer Marsh, Jeremy
+Kim, Jeroen Taal, Jesse Engel, Jesujoba Alabi, Jiacheng Xu, Jiaming Song, Jillian Tang,
+Joan Waweru, John Burden, John Miller, John U. Balis, Jonathan Berant, Jörg Frohberg,
+Jos Rozen, Jose Hernandez-Orallo, Joseph Boudeman, Joseph Jones, Joshua B. Tenen-
+baum, Joshua S. Rule, Joyce Chua, Kamil Kanclerz, Karen Livescu, Karl Krauth, Karthik
+Gopalakrishnan, Katerina Ignatyeva, Katja Markert, Kaustubh D. Dhole, Kevin Gimpel,
+Kevin Omondi, Kory Mathewson, Kristen Chiafullo, Ksenia Shkaruta, Kumar Shridhar,
+Kyle McDonell, Kyle Richardson, Laria Reynolds, Leo Gao, Li Zhang, Liam Dugan,
+Lianhui Qin, Lidia Contreras-Ochando, Louis-Philippe Morency, Luca Moschella, Lucas
+Lam, Lucy Noble, Ludwig Schmidt, Luheng He, Luis Oliveros Colón, Luke Metz, Lütfi
+Kerem ¸ Senel, Maarten Bosma, Maarten Sap, Maartje ter Hoeve, Maheen Farooqi, Man-
+aal Faruqui, Mantas Mazeika, Marco Baturan, Marco Marelli, Marco Maru, Maria Jose
+Ramírez Quintana, Marie Tolkiehn, Mario Giulianelli, Martha Lewis, Martin Potthast,
+12
+Published as a conference paper at COLM 2024
+Matthew L. Leavitt, Matthias Hagen, Mátyás Schubert, Medina Orduna Baitemirova,
+Melody Arnaud, Melvin McElrath, Michael A. Yee, Michael Cohen, Michael Gu, Michael
+Ivanitskiy, Michael Starritt, Michael Strube, Michał Sw˛ edrowski, Michele Bevilacqua,
+Michihiro Yasunaga, Mihir Kale, Mike Cain, Mimee Xu, Mirac Suzgun, Mo Tiwari, Mo-
+hit Bansal, Moin Aminnaseri, Mor Geva, Mozhdeh Gheini, Mukund Varma T, Nanyun
+Peng, Nathan Chi, Nayeon Lee, Neta Gur-Ari Krakover, Nicholas Cameron, Nicholas
+Roberts, Nick Doiron, Nikita Nangia, Niklas Deckers, Niklas Muennighoff, Nitish Shirish
+Keskar, Niveditha S. Iyer, Noah Constant, Noah Fiedel, Nuan Wen, Oliver Zhang, Omar
+Agha, Omar Elbaghdadi, Omer Levy, Owain Evans, Pablo Antonio Moreno Casares,
+Parth Doshi, Pascale Fung, Paul Pu Liang, Paul Vicol, Pegah Alipoormolabashi, Peiyuan
+Liao, Percy Liang, Peter Chang, Peter Eckersley, Phu Mon Htut, Pinyu Hwang, Piotr
+Miłkowski, Piyush Patil, Pouya Pezeshkpour, Priti Oli, Qiaozhu Mei, Qing Lyu, Qinlang
+Chen, Rabin Banjade, Rachel Etta Rudolph, Raefer Gabriel, Rahel Habacker, Ramón Risco
+Delgado, Raphaël Millière, Rhythm Garg, Richard Barnes, Rif A. Saurous, Riku Arakawa,
+Robbe Raymaekers, Robert Frank, Rohan Sikand, Roman Novak, Roman Sitelew, Ronan
+LeBras, Rosanne Liu, Rowan Jacobs, Rui Zhang, Ruslan Salakhutdinov, Ryan Chi, Ryan
+Lee, Ryan Stovall, Ryan Teehan, Rylan Yang, Sahib Singh, Saif M. Mohammad, Sajant
+Anand, Sam Dillavou, Sam Shleifer, Sam Wiseman, Samuel Gruetter, Samuel R. Bowman,
+Samuel S. Schoenholz, Sanghyun Han, Sanjeev Kwatra, Sarah A. Rous, Sarik Ghazarian,
+Sayan Ghosh, Sean Casey, Sebastian Bischoff, Sebastian Gehrmann, Sebastian Schuster,
+Sepideh Sadeghi, Shadi Hamdan, Sharon Zhou, Shashank Srivastava, Sherry Shi, Shikhar
+Singh, Shima Asaadi, Shixiang Shane Gu, Shubh Pachchigar, Shubham Toshniwal, Shyam
+Upadhyay, Shyamolima, Debnath, Siamak Shakeri, Simon Thormeyer, Simone Melzi,
+Siva Reddy, Sneha Priscilla Makini, Soo-Hwan Lee, Spencer Torene, Sriharsha Hatwar,
+Stanislas Dehaene, Stefan Divic, Stefano Ermon, Stella Biderman, Stephanie Lin, Stephen
+Prasad, Steven T. Piantadosi, Stuart M. Shieber, Summer Misherghi, Svetlana Kiritchenko,
+Swaroop Mishra, Tal Linzen, Tal Schuster, Tao Li, Tao Yu, Tariq Ali, Tatsu Hashimoto,
+Te-Lin Wu, Théo Desbordes, Theodore Rothschild, Thomas Phan, Tianle Wang, Tiberius
+Nkinyili, Timo Schick, Timofei Kornev, Timothy Telleen-Lawton, Titus Tunduny, Tobias
+Gerstenberg, Trenton Chang, Trishala Neeraj, Tushar Khot, Tyler Shultz, Uri Shaham,
+Vedant Misra, Vera Demberg, Victoria Nyamai, Vikas Raunak, Vinay Ramasesh, Vinay
+Uday Prabhu, Vishakh Padmakumar, Vivek Srikumar, William Fedus, William Saunders,
+William Zhang, Wout Vossen, Xiang Ren, Xiaoyu Tong, Xinran Zhao, Xinyi Wu, Xudong
+Shen, Yadollah Yaghoobzadeh, Yair Lakretz, Yangqiu Song, Yasaman Bahri, Yejin Choi,
+Yichi Yang, Yiding Hao, Yifu Chen, Yonatan Belinkov, Yu Hou, Yufang Hou, Yuntao Bai,
+Zachary Seid, Zhuoye Zhao, Zijian Wang, Zijie J. Wang, Zirui Wang, and Ziyi Wu. Beyond
+the Imitation Game: Quantifying and extrapolating the capabilities of language models.
+arXiv e-prints , art. arXiv:2206.04615, June 2022. doi: 10.48550/arXiv.2206.04615.
+Alane Suhr, Mike Lewis, James Yeh, and Yoav Artzi. A corpus of natural language for visual
+reasoning. In Proceedings of the 55th Annual Meeting of the Association for Computational
+Linguistics (Volume 2: Short Papers) , pp. 217–223, Vancouver, Canada, July 2017. Association
+for Computational Linguistics. doi: 10.18653/v1/P17-2034. URL https://aclanthology.
+org/P17-2034 .
+Qiushi Sun, Zhirui Chen, Fangzhi Xu, Kanzhi Cheng, Chang Ma, Zhangyue Yin, Jian-
+ing Wang, Chengcheng Han, Renyu Zhu, Shuai Yuan, et al. A survey of neural code
+intelligence: Paradigms, advances and beyond. arXiv preprint arXiv:2403.14734 , 2024.
+Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei,
+Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, Dan Bikel, Lukas
+Blecher, Cristian Canton Ferrer, Moya Chen, Guillem Cucurull, David Esiobu, Jude
+Fernandes, Jeremy Fu, Wenyin Fu, Brian Fuller, Cynthia Gao, Vedanuj Goswami, Naman
+Goyal, Anthony Hartshorn, Saghar Hosseini, Rui Hou, Hakan Inan, Marcin Kardas,
+Viktor Kerkez, Madian Khabsa, Isabel Kloumann, Artem Korenev, Punit Singh Koura,
+Marie-Anne Lachaux, Thibaut Lavril, Jenya Lee, Diana Liskovich, Yinghai Lu, Yuning
+Mao, Xavier Martinet, Todor Mihaylov, Pushkar Mishra, Igor Molybog, Yixin Nie, Andrew
+Poulton, Jeremy Reizenstein, Rashi Rungta, Kalyan Saladi, Alan Schelten, Ruan Silva,
+Eric Michael Smith, Ranjan Subramanian, Xiaoqing Ellen Tan, Binh Tang, Ross Taylor,
+Adina Williams, Jian Xiang Kuan, Puxin Xu, Zheng Yan, Iliyan Zarov, Yuchen Zhang,
+13
+Published as a conference paper at COLM 2024
+Angela Fan, Melanie Kambadur, Sharan Narang, Aurelien Rodriguez, Robert Stojnic,
+Sergey Edunov, and Thomas Scialom. Llama 2: Open foundation and fine-tuned chat
+models, 2023.
+Chen Feng Tsai, Xiaochen Zhou, Sierra S. Liu, Jing Li, Mo Yu, and Hongyuan Mei. Can Large
+Language Models Play Text Games Well? Current State-of-the-Art and Open Questions.
+arXiv e-prints , art. arXiv:2304.02868, April 2023. doi: 10.48550/arXiv.2304.02868.
+Naoki Wake, Atsushi Kanehira, Kazuhiro Sasabuchi, Jun Takamatsu, and Katsushi Ikeuchi.
+Chatgpt empowered long-step robot control in various environments: A case application,
+2023.
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, brian ichter, Fei Xia, Ed H.
+Chi, Quoc V Le, and Denny Zhou. Chain of thought prompting elicits reasoning in large
+language models. In Alice H. Oh, Alekh Agarwal, Danielle Belgrave, and Kyunghyun
+Cho (eds.), Advances in Neural Information Processing Systems , 2022.
+Jerry Wei, Le Hou, Andrew Lampinen, Xiangning Chen, Da Huang, Yi Tay, Xinyun Chen,
+Yifeng Lu, Denny Zhou, Tengyu Ma, and Quoc V . Le. Symbol tuning improves in-
+context learning in language models. arXiv e-prints , art. arXiv:2305.08298, May 2023. doi:
+10.48550/arXiv.2305.08298.
+A Appendix
+A.1 Broader Impact
+COSis a prompting technique that is easy to use, which can effectively improve the perfor-
+mance of complex planning with LLMS. It also indicates that future training with LLMs
+can also be well benefited by employing C OS in the training procedure to further improve
+LLM’s planning abilities.
+A.2 Extended Settings
+A.2.1 Number of Tokens
+We have mentioned that we used white spacing for calculating the number of tokens in
+the intermediate thinking steps. This was a typo and in fact, we accurately measures the
+number of tokens using the OpenAI Playground.3The numbers we reported are correct
+and there is no need for modification.
+A.2.2 Designing the Intermediate Steps
+The intermediate steps we use in the demonstrations for CoT are created and modified from
+the zero-shot CoT from the LLMs by simply adding “Let’s think step by step” before the
+answer. We then manually correct the intermediate steps from the outputs of using zero-shot
+CoT for further improvements. We attempted our best efforts in tuning the baselines, and
+we report the best results we achieved.
+A.3 Few-shot Exemplars
+In the remaining of this section, we demonstrate the few-shot exemplars used in the experi-
+ments in our study. We demonstrate the exemplars for both C OS and CoT.
+3https://platform.openai.com/playground
+14
+Published as a conference paper at COLM 2024
+Table 4: Few-shot exemplars for full Chain-of-Symbol prompt for brick 1D.
+Question : There is a set of bricks. For brick B, the color is yellow. The yellow brick C is on top of the brick B . The yellow brick A is on top of
+the brick C . Now we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed,
+the upper brick must be removed first. How to get brick B
+Answer :
+A//C
+C//B
+Insum: A//C//B
+So we get the result as A, C, B.
+Question : There is a set of bricks. The yellow brick A is on top of the brick C . The yellow brick B is on top of the brick A . For the brick C, the
+color is white. Now we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed,
+the upper brick must be removed first. How to get brick A?
+Answer :
+B//A
+A//C
+Insum: B//A//C
+So we get the result as B, A.
+Question : There is a set of bricks. The blue brick A is on top of the brick E . For the brick C, the color is blue. The blue brick D is on top of the
+brick B . The white brick E is on top of the brick D . The blue brick B is on top of the brick C . Now we have to get a specific brick. The bricks
+must now be grabbed from top to bottom, and if the lower brick is to be grabbed, the upper brick must be removed first. How to get brick D?
+Answer :
+A//E
+E//D
+D//B
+B//C
+Insum: A//E//D//B//C
+So we get the result as A, E, D.
+Question : There is a set of bricks. The white brick F is on top of the brick C . The white brick C is on top of the brick B . The yellow brick E is on
+top of the brick A . For the brick B, the color is white. The white brick D is on top of the brick F . The blue brick A is on top of the brick D . Now
+we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed, the upper brick
+must be removed first. How to get brick F?
+Answer :
+E//A
+A//D
+D//F
+F//C
+C//B
+Insum: E//A//D//F//C//B
+So we get the result as E, A, D, F.
+Question : There is a set of bricks. The white brick F is on top of the brick D . The yellow brick B is on top of the brick A . The blue brick D is on
+top of the brick C . The white brick E is on top of the brick G . For the brick A, the color is blue. The blue brick C is on top of the brick E . The
+white brick G is on top of the brick B . Now we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the
+lower brick is to be grabbed, the upper brick must be removed first. How to get brick G?
+Answer :
+A//B//G//E//C//D//F
+D//F
+C//D
+E//C
+G//E
+So we get the result as F, D, C, E, G.
+15
+Published as a conference paper at COLM 2024
+Table 5: Few-shot exemplars for full C OT prompt for brick 1D.
+Question : There is a set of bricks. The yellow brick B is on top of the brick D . For the brick D,
+the color is white. The yellow brick A is on top of the brick C . The yellow brick E is on top of
+the brick A . The blue brick C is on top of the brick B . Now we have to get a specific brick. The
+bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed, the
+upper brick must be removed first. How to get brick D?
+Answer :The bricks from bottom totopisB,D,C,A,E1.Remove brick Efrom thetopofbrick
+A.2.Remove brick Afrom thetopofbrick C.3.Remove brick Cfrom thetopofbrick B.4.Now
+brick Bisthetopmost yellow brick and canbegrabbed, butweneed toremove ittogettobrick
+D.5.Remove brick Bfrom thetopofbrick D.6.Now brick Disthetopmost white brick and
+canbegrabbed. So we get the result as E, A, C, B, D.
+Question : There is a set of bricks. For the brick A, the color is blue. The white brick B is on top
+of the brick C . The blue brick C is on top of the brick A . Now we have to get a specific brick.
+The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed,
+the upper brick must be removed first. How to get brick B?
+Answer :The bricks from bottom totopisA,C,B1.Remove brick Cfrom thetopofbrick A.2.
+Now brick Aisthetopmost brick and canbegrabbed, butweneed toremove ittogettobrick
+B.3.Remove brick Afrom thetopofbrick C.4.Now brick Bisthetopmost white brick and can
+begrabbed. So we get the result as C, A, B.
+Question : There is a set of bricks. The white brick B is on top of the brick A . The white brick A
+is on top of the brick G . The white brick G is on top of the brick D . The blue brick D is on top
+of the brick F . The white brick H is on top of the brick B . For the brick C, the color is yellow.
+The white brick E is on top of the brick C . The white brick F is on top of the brick E . Now we
+have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the
+lower brick is to be grabbed, the upper brick must be removed first. How to get brick F?
+Answer :The bricks from bottom totopisC,E,F,D,G,A,B,H1.Remove brick Hfrom thetop
+ofbrick B.2.Remove brick Bfrom thetopofbrick A.3.Remove brick Afrom thetopofbrick G.
+4.Remove brick Gfrom thetopofbrick D.5.Remove brick Dfrom thetopofbrick F.6.Now
+brick Fisthetopmost white brick and canbegrabbed. So we get the result as H, B, A, G, D, F.
+Question : There is a set of bricks. The white brick B is on top of the brick C . The yellow brick
+D is on top of the brick A . For the brick A, the color is yellow. The yellow brick E is on top of
+the brick B . The white brick C is on top of the brick D . Now we have to get a specific brick.
+The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed,
+the upper brick must be removed first. How to get brick D?
+Answer :The bricks from bottom totopisA,D,C,B,E1.Remove brick Efrom thetopofbrick
+B.2.Remove brick Bfrom thetopofbrick C.3.Now brick Cisthetopmost white brick and can
+begrabbed, butweneed toremove ittogettobrick D.4.Remove brick Cfrom thetopofbrick
+D.5.Now brick Disthetopmost yellow brick and canbegrabbed. So we get the result as E, B,
+C, D.
+Question : There is a set of bricks. The yellow brick C is on top of the brick B . The white brick B
+is on top of the brick A . For the brick A, the color is white. Now we have to get a specific brick.
+The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed,
+the upper brick must be removed first. How to get brick B?
+Answer :The bricks from bottom totopisA,B,C1.Now brick Cisthetopmost brick and can
+begrabbed, butweneed toremove ittogettobrick B.2.Now brick Bisthetopmost white
+brick and canbegrabbed. So we get the result as C, B.
+16
+Published as a conference paper at COLM 2024
+Table 6: Few-shot exemplars for full C OS prompt for brick 2D.
+Question : There is a set of bricks. There is a brick A. The brick B is in front of the brick A. The brick C is in front of the brick B. The brick D is
+on top of the brick B . The brick E is on top of the brick A . The brick F is on top of the brick C . The brick G is on top of the brick D . The brick H
+is on top of the brick G . Now we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower brick is to
+be grabbed, the upper brick must be removed first. How to get brick A?
+Answer :
+Wecanget
+A//E,
+C//F,
+B//D//G//H,
+So we get the result as E, A.
+Question : There is a set of bricks. For the brick A. The yellow brick B is on top of the brick A . The blue brick C is on top of the brick B . The
+blue brick D is on top of the brick C . Now we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower
+brick is to be grabbed, the upper brick must be removed first. How to get brick B?
+Answer :
+Wecanget
+A//B//C//D.
+So we get the result as D, C, B.
+Question : There is a set of bricks. For the brick A, the color is blue. The yellow brick B is in front of the brick A. The yellow brick C is in front
+of the brick B. The white brick D is on top of the brick C . The white brick E is on top of the brick D . The yellow brick F is on top of the brick E .
+Now we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower brick is to be grabbed, the upper
+brick must be removed first. How to get brick C?
+Answer :
+Wecanget
+C->B->A,
+C//D//E//F.
+So we get the result as F, E, D, C.
+Question : There is a set of bricks. The brick P is on top of the brick R . The brick J is on top of the brick B . The brick D is on top of the brick P .
+The brick R is on top of the brick H . The brick K is in front of the brick M. The brick B is on top of the brick D . For the brick M, the color is blue.
+The brick C is on top of the brick J . The brick H is in front of the brick K. Now we have to get a specific brick. The bricks must now be grabbed
+from top to bottom, and if the lower brick is to be grabbed, the upper brick must be removed first. How to get brick M?
+Answer :
+Wecanget
+H//R//P//D//B//J//C,
+M->K->H.
+So we get the result as M directly.
+Question : There is a set of bricks. The brick K is on top of the brick F . The brick M is in front of the brick F. The brick N is on top of the brick K .
+For the brick O, the color is blue. The brick G is on top of the brick A . The brick F is in front of the brick I. The brick I is in front of the brick O.
+The brick A is on top of the brick N . Now we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower
+brick is to be grabbed, the upper brick must be removed first. How to get brick O?
+Answer :
+Wecanget
+F//K//N//A//G,
+F->I->O,
+So we get the result as O directly.
+17
+Published as a conference paper at COLM 2024
+Table 7: Few-shot exemplars for full C OT prompt for brick 2D.
+Question : There are a set of bricks. There is a brick A. The brick B is in front of the brick A. The
+brick C is in front of the brick B. The brick D is on top of the brick B . The brick E is on top of the
+brick A . The brick F is on top of the brick C . The brick G is on top of the brick D . The brick H
+is on top of the brick G . Now we have to get a specific brick. The bricks must now be grabbed
+from top to bottom, and if the lower brick is to be grabbed, the upper brick must be removed
+first. How to get brick A?
+Answer :Let’s think step bystep:
+1.Togetbrick A,wefind EisontopofA.
+2.Wefind Eisonthetop.
+3Weneed toremove brick Efirst, asitisontopofbrick A.
+4.Brick Aisnow accessibleand canbegrabbed.
+So we get the result as E, A.
+Question : There are a set of bricks. For the brick A. The yellow brick B is on top of the brick
+A . The blue brick C is on top of the brick B . The blue brick D is on top of the brick C . Now
+we have to get a specific brick. The bricks must now be grabbed from top to bottom, and if the
+lower brick is to be grabbed, the upper brick must be removed first. How to get brick B?
+Answer :Let’s think step bystep: 1.Togetbrick B,wefind CisontopofB2.Wefind Dison
+topofC3.Wefind Disonthetop4.Weneed toremove brick D,asitisontopofbrick C.5.
+Weneed toremove brick C,asitisontopofbrick B.6.Brick Bisnow accessibleand canbe
+grabbed. So we get the result as D, C, B.
+Question : There are a set of bricks. The brick P is on top of the brick R . The brick J is on top of
+the brick B . The brick D is on top of the brick P . The brick R is on top of the brick H . The brick
+K is in front of the brick M. The brick B is on top of the brick D . For the brick M, the color is
+blue. The brick C is on top of the brick J . The brick H is in front of the brick K. Now we have to
+get a specific brick. The bricks must now be grabbed from top to bottom, and if the lower brick
+is to be grabbed, the upper brick must be removed first. How to get brick M?
+Answer :Let’s think step bystep: 1.Togetbrick M,wefind there isnobrick ontopofbrick M,
+So we get the result as M directly.
+Question : There are a set of bricks. The brick K is on top of the brick F . The brick M is in front
+of the brick F. The brick N is on top of the brick K . For the brick O, the color is blue. The brick
+G is on top of the brick A . The brick F is in front of the brick I. The brick I is in front of the brick
+O. The brick A is on top of the brick N . Now we have to get a specific brick. The bricks must
+now be grabbed from top to bottom, and if the lower brick is to be grabbed, the upper brick
+must be removed first. How to get brick O?
+Answer :Let’s think step bystep: 1.Togetbrick O,wefind there isnobrick ontopofbrick O,
+So we get the result as O directly.
+Question : There are a set of bricks. For the brick A, the color is blue. The yellow brick B is in
+front of the brick A. The yellow brick C is in front of the brick B. The white brick D is on top of
+the brick C . The white brick E is on top of the brick D . The yellow brick F is on top of the brick
+E . Now we have to get a specific brick. The bricks must now be grabbed from top to bottom,
+and if the lower brick is to be grabbed, the upper brick must be removed first. How to get brick
+C?
+Answer :Let’s think step bystep: 1.Togetbrick C,wefind Cisinfront ofB.
+2.Wefind DisontopofC.
+3.Wefind EisontopofD.
+4.Wefind FisontopofE.
+5.Weneed toremove brick F,asitisontopofbrick E.
+6.Weneed toremove brick E,asitisontopofbrick D.
+7.Weneed toremove brick D,asitisontopofbrick C.
+8.Brick Cisnow accessibleand canbegrabbed.
+So we get the result as F, E, D, C.18
+Published as a conference paper at COLM 2024
+Table 8: Few-shot exemplars for full C OS prompt for Natural Language Navigation
+Question : There is a set of roads and a set of landmarks. The start point is bank A. There is a
+road which is 200 meters long from bank A to bank C. There is a road which is 100 meters long
+from bank C to house H. There is a road which is 100 meters long from house H to cinema F.
+There is a road which is 200 meters long from cinema F to store B. There is a road which is 100
+meters long from store B to store G. There is a road which is 200 meters long from bank C to
+house D. There is a road which is 200 meters long from house D to garden J. There is a road
+which is 100 meters long from bank A to cinema I. There is a road which is 100 meters long
+from cinema I to house E. From the start point, how to reach the nearest store?
+Answer :There aretwo stores onthemap, store Band store G.
+-bank A/bank C/house H/cinema F/store B(200 +100+100+200=600)
+-bank A/bank C/house H/cinema F/store B/store G(200 +100+100+200+100=700)
+Sowegettheresult asbank A/bank C/house H/cinema F/store B.
+So the answer is ACHFB
+Question : There is a set of roads and a set of landmarks. The start point is bank H. There is a
+road which is 100 meters long from bank H to store E. There is a road which is 200 meters long
+from store E to bank C. There is a road which is 100 meters long from bank C to house A. There
+is a road which is 100 meters long from house A to house F. There is a road which is 200 meters
+long from bank C to garden I. There is a road which is 200 meters long from store E to cinema
+G. There is a road which is 200 meters long from cinema G to school J. There is a road which is
+200 meters long from bank H to school D. There is a road which is 100 meters long from school
+D to store B. From the start point, how to reach the nearest school?
+Answer :There aretwo schools onthemap, school Jand school D.-bank H/store E/bank C
+/garden I/cinema G/school J(200 +200+200=600)
+-bank H/school D(200)
+Wegettheresult asbank H/school D.
+So the answer is HD
+Question : There is a set of roads and a set of landmarks. The start point is garden B. There
+is a road which is 200 meters long from garden B to cinema D. There is a road which is 200
+meters long from cinema D to school J. There is a road which is 100 meters long from garden B
+to school I. There is a road which is 100 meters long from school I to house C. There is a road
+which is 100 meters long from house C to bank F. There is a road which is 100 meters long from
+house C to cinema G. There is a road which is 200 meters long from cinema G to store H. There
+is a road which is 100 meters long from store H to cinema E. There is a road which is 200 meters
+long from cinema E to bank A. From the start point, how to reach the nearest school?
+Answer :There aretwo schools onthemap, school Jand school I.
+-garden B/cinema D/school J(200+200 =400)
+-garden B/school I(100)
+Wegettheresult asgarden B/school I(100).
+So the answer is BI
+19
+Published as a conference paper at COLM 2024
+Table 9: Few-shot exemplars for full C OT prompt for Natural Language Navigation
+Question : There is a set of roads and a set of landmarks. The start point is bank A. There is a
+road which is 200 meters long from bank A to bank C. There is a road which is 100 meters long
+from bank C to house H. There is a road which is 100 meters long from house H to cinema F.
+There is a road which is 200 meters long from cinema F to store B. There is a road which is 100
+meters long from store B to store G. There is a road which is 200 meters long from bank C to
+house D. There is a road which is 200 meters long from house D to garden J. There is a road
+which is 100 meters long from bank A to cinema I. There is a road which is 100 meters long
+from cinema I to house E. From the start point, how to reach the nearest store?
+Answer :Let’s think step bystep 1.Start atbank A.2.There aretwo stores onthemap, store B
+and store G.3.The road from bank Atostore Bisfrom bank Atobank Ctohouse Htocinema
+Ftostore B(200 meters+100meters+100meters+200meters=600meters) 4.The road from
+bank Atostore Bisshorter than theroad from bank Atostore G.5.There fore, thenear eststore
+from thestart point (bank A)isstore B.So the answer is ACHFB.
+Question : There is a set of roads and a set of landmarks. The start point is bank H. There is a
+road which is 100 meters long from bank H to store E. There is a road which is 200 meters long
+from store E to bank C. There is a road which is 100 meters long from bank C to house A. There
+is a road which is 100 meters long from house A to house F. There is a road which is 200 meters
+long from bank C to garden I. There is a road which is 200 meters long from store E to cinema
+G. There is a road which is 200 meters long from cinema G to school J. There is a road which is
+200 meters long from bank H to school D. There is a road which is 100 meters long from school
+D to store B. From the start point, how to reach the nearest school?
+Answer :Let’s think step bystep 1.Start atbank H.2.There aretwo schools onthemap, school
+Jand school D.3.The road from bank Htoschool Jisfrom bank Htostore Etocinema Gto
+school J(200 meters+200meters+200meters=600meters). 4.The road from bank Htoschool
+Disfrom bank Htoschool D(200 meters). 5.There fore, thenear estschool from thestart point
+(bank H)isschool D.6.Follow theroad from bank Htoschool D(200 meters). So the answer is
+HD
+Question : There is a set of roads and a set of landmarks. The start point is garden B. There
+is a road which is 200 meters long from garden B to cinema D. There is a road which is 200
+meters long from cinema D to school J. There is a road which is 100 meters long from garden B
+to school I. There is a road which is 100 meters long from school I to house C. There is a road
+which is 100 meters long from house C to bank F. There is a road which is 100 meters long from
+house C to cinema G. There is a road which is 200 meters long from cinema G to store H. There
+is a road which is 100 meters long from store H to cinema E. There is a road which is 200 meters
+long from cinema E to bank A. From the start point, how to reach the nearest school?
+Answer :Let’s think step bystep 1.Start atgarden B.2.There aretwo schools onthemap,
+school Jand school I.3.The road from garden Btoschool Jisfrom garden Btocinema Dto
+school J(200 meters +200meters =400meters). 4.The road from garden Btoschool Iisfrom
+garden Btoschool I(100 meters). 5.There fore, thenear estschool from thestart point (garden B)
+isschool I.6.Follow theroad from garden Btoschool I(100 meters). So the answer is BI
+20
+Published as a conference paper at COLM 2024
+Table 10: Few-shot exemplars for full C OS prompt for NLVR-based Manipulation.
+Story : There are three boxes. In the left box, there are one middle square in yellow, one middle square in black, one small
+square in blue, one middle square in blue. In the middle box, there are one large square in blue, one middle square in blue,
+one middle square in black, one large triangle in black, one middle round in blue, one small square in yellow. In the right
+box, there are one large round in blue, one small triangle in yellow, one large triangle in blue. Question:How to move all
+rounds to the middle box?
+Answer :Tomove allrounds tothemiddlebox, weneed toiden tifyalltheround objects inthethree boxes. They are:
+-middlebox: (mid dle, round, blue)
+-right box: (large, round, blue)
+Then we can move the objects not in the middle box above to the middle box one by one:
+- (large, round, blue) middle - right
+Story : There are three boxes. In the left box, there are one small round in blue, one small round in blue, one large round in
+black, one large square in blue, one small round in yellow, one small round in yellow. In the middle box, there are one
+large square in blue, one middle triangle in yellow. In the right box, there are one large round in black, one large round in
+blue, one middle triangle in black, one middle triangle in black. Question:How to move all squares to the right box?
+Answer :Tomove allsqaure objects totheright box, weneed toiden tifyallthesquare objects inthethree boxes. They
+are:
+-leftbox: (large, square, blue)
+-middlebox: (large, square, blue)
+Then we can move the objects not in the right box above to the right box:
+- (large, square, blue) left - right box
+- (large, square, blue) middle - right box
+Story : There are three boxes. In the left box, there are one large square in blue, one middle square in blue, one small round
+in blue, one middle triangle in blue, one middle round in yellow, one large square in yellow. In the middle box, there are
+one small round in yellow, one middle square in blue, one small triangle in black, one small square in black, one small
+triangle in yellow, one large round in black. In the right box, there are one small square in yellow, one small triangle in
+yellow, one middle triangle in black, one large round in yellow, one middle square in blue, one large square in yellow.
+Question:How to move all black objects to the right box?
+Answer :Tomove allblack objects totheright box, weneed toiden tifyalltheblack objects inthethree boxes. They are:
+-middlebox:
+(small, triangle,black),
+(small, square, black),
+(large, round, black)
+Then we can move the objects not in the right box above to the right box:
+- (small, triangle, black) middle - right
+- (small, square, black) middle - right
+- (large, round, black) middle - right
+Story : There are three boxes. In the left box, there are one middle square in yellow, one middle square in black, one small
+square in blue, one middle square in blue. In the middle box, there are one large square in blue, one middle square in blue,
+one middle square in black, one large triangle in black, one middle round in blue, one small square in yellow. In the right
+box, there are one large round in blue, one small triangle in yellow, one large triangle in blue. Question:How to move all
+rounds to the middle box?
+Answer :Tomove allrounds tothemiddlebox, weneed toiden tifyalltheround objects inthethree boxes. They are:
+-middlebox: (mid dle, round, blue)
+-right box: (large, round, blue)
+Then we can move the objects not in the middle box above to the middle box:
+- (large, round, blue) right - middle
+Story : There are three boxes. In the left box, there are one large round in black, one small square in blue, one small square
+in blue, one small triangle in yellow, one middle square in yellow. In the middle box, there are one large square in yellow,
+one middle triangle in blue, one large round in black. In the right box, there are one large square in blue, one large triangle
+in black, one middle triangle in black. Question:How to move all black objects to the left box?
+Answer :Tomove allblack objects totheleftbox, weneed toiden tifyalltheblack objects inthethree boxes. They are:
+-leftbox: (large, round, black)
+-middlebox: (large, round, black),
+-right box: (mid dle, triangle,black), (large, triangle,black)
+Then we can move the objects not in the left box above to the left box:
+1. (large, round, black) middle - left
+2. (middle, triangle, black) right - left
+3. (large, triangle, black) right - left21
+Published as a conference paper at COLM 2024
+Table 11: Few-shot exemplars for full C OT prompt for NLVR-based Manipulation.
+Story : There are three boxes. In the left box, there are one middle square in yellow, one middle square in black, one small
+square in blue, one middle square in blue. In the middle box, there are one large square in blue, one middle square in blue,
+one middle square in black, one large triangle in black, one middle round in blue, one small square in yellow. In the right
+box, there are one large round in blue, one small triangle in yellow, one large triangle in blue. Question:How to move all
+rounds to the middle box?
+Answer :Tomove allrounds tothemiddlebox, weneed toiden tifyalltheround objects inthethree boxes. They are:
+-One middleround inblue inthemiddlebox-One large round inblue intheright box
+Then we can move the boxes above not in the middle box to the middle box one by one:
+1. Move the large round in blue from the right box to the middle box.
+Now all the rounds are in the middle box.
+Story : There are three boxes. In the left box, there are one small round in blue, one small round in blue, one large round in
+black, one large square in blue, one small round in yellow, one small round in yellow. In the middle box, there are one
+large square in blue, one middle triangle in yellow. In the right box, there are one large round in black, one large round in
+blue, one middle triangle in black, one middle triangle in black. Question:How to move all squares to the right box?
+Answer :Tomove allsqaure objects totheright box, weneed toiden tifyallthesquare objects inthethree boxes. They
+are:
+-One large square inblue intheleftbox-One large square inblue inthemiddlebox
+Then we can move the box above with the square object to the right box:
+1. Move the large square in blue from the left box to the right box. 2. Move the large square in blue from the middle box to
+the right box.
+Now all the square objects are in the right box.
+Story : There are three boxes. In the left box, there are one large square in blue, one middle square in blue, one small round
+in blue, one middle triangle in blue, one middle round in yellow, one large square in yellow. In the middle box, there are
+one small round in yellow, one middle square in blue, one small triangle in black, one small square in black, one small
+triangle in yellow, one large round in black. In the right box, there are one small square in yellow, one small triangle in
+yellow, one middle triangle in black, one large round in yellow, one middle square in blue, one large square in yellow.
+Question:How to move all black objects to the right box?
+Answer :Tomove allblack objects totheright box, weneed toiden tifyalltheblack objects inthethree boxes. They are:
+-One small triangleinblack inthemiddlebox-One middletriangleinblack inthemiddlebox-One large round inblack
+inthemiddlebox
+Then we can move the boxes above not in the right box to the right box one by one: 1. Move the small triangle in black
+from the middle box to the right box. 2. Move the middle triangle in black from the middle box to the right box. 3. Move
+the large round in black from the middle box to the right box.
+Now all the black objects are in the right box.
+Story : There are three boxes. In the left box, there are one middle square in yellow, one middle square in black, one small
+square in blue, one middle square in blue. In the middle box, there are one large square in blue, one middle square in blue,
+one middle square in black, one large triangle in black, one middle round in blue, one small square in yellow. In the right
+box, there are one large round in blue, one small triangle in yellow, one large triangle in blue. Question:How to move all
+rounds to the middle box?
+Answer :Tomove allrounds tothemiddlebox, weneed toiden tifyalltheround objects inthethree boxes. They are:
+-One middleround inblue inthemiddlebox-One large round inblue intheright box
+Then we can move the boxes above not in the middle box to the middle box one by one:
+1. Move the large round in blue from the right box to the middle box.
+Now all the rounds are in the middle box.
+Story : There are three boxes. In the left box, there are one large round in black, one small square in blue, one small square
+in blue, one small triangle in yellow, one middle square in yellow. In the middle box, there are one large square in yellow,
+one middle triangle in blue, one large round in black. In the right box, there are one large square in blue, one large triangle
+in black, one middle triangle in black. Question:How to move all black objects to the left box?
+Answer :Tomove allblack objects totheleftbox, weneed toiden tifyalltheblack objects inthethree boxes. They are:
+-One large round inblack intheleftbox-One large round inblack inthemiddlebox-One large triangleinblack inthe
+right box-One middletriangleinblack intheright box
+Then we can move the boxes above not in the left box to the left box one by one:
+1. Move the large round in black from the middle box to the left box. 2. Move the large triangle in black from the right box
+to the left box. 3. Move the middle triangle in black from the right box to the left box.
+Now all the black objects are in the left box.
+22
+Published as a conference paper at COLM 2024
+Table 12: Few-shot exemplars for full C OT prompt for SPARTQA.
+Example 1:
+Background: There are three blocks called A, B, and C. In block A, there is a small blue square far above a small blue circle. There is a small
+black triangle far to the right of both small blue objects. The black triange is near and above a medium blue square. The medium blue square is
+touching the right edge of A and is near and above a medium black circle. Near and to the right of the medium black circle is a medium yellow
+triangle. The yellow triangle is to the left of the small blue circle. In B, which is to the right of A, there is a large blue square near and to the left
+of a large yellow triangle. There is also a small yellow triangle far below the square. In C, which is to the right of B. there is a small yellow
+circle near and above a small yellow triangle. The small yellow triangle is touching the top of a medium black triangle. The black triangle is
+touching the right edge of C. There is a large blue circle far below the black triangle.
+Question: Are all yellow objects in C above a blue thing?
+Candidate Answers:["Yes", "No", "Do not Know"]
+Answer:
+Let’s analyze theinformation provided step bystep: Inblock C:1.There asmall yellow circlenear and above asmall yellow triangle.2.The
+small yellow triangleistouch ingthetopofamedium black triangle.3.There isalarge blue circlefarbelow theblack triangle.Based onthe
+provided information, thesmall yellow circleand thesmall yellow triangleinBlock Careindeed above ablue thing, which isthelarge blue
+circle. So, the correct answer is: "Yes".
+Example 2:
+Background: There are three blocks called A, B, and C. A is to the left of B and B is to the left of C. In A, there is a small black triangle near and
+ot the left of a large blue circle. The large blue circle is near and to the left of a small blue circle. The small blue square is far below a medium
+yellow square. In B, there is a small yellow circle. In C, there is a medium black triangle that is near and to the left of a small yellow circle. The
+small yellow circle is near and to the left of a blue triangle. There is a large yellow square touching the bottom of the small yellow circle. Near
+and below the large yellow square is a large black square.
+Question: What is the relation between the large black thing and the small yellow thing?
+Candidate Answers:["left", "right", "above", "below", "near to", "far from", "touching", "Do Not Know"]
+Answer:
+Let’s analyze theinformation provided step bystep: Inblock C:1.There isamedium black trianglethat isnear and totheleftofasmall yellow
+circle.2.The small yellow circleisnear and totheleftofablue triangle.3.There isalarge yellow square touch ingthebottom ofthesmall
+yellow circle.4.Near and below thelarge yellow square isalarge black square. Now, let’s determine therelation between the"large black
+thing" (large black square) and the"small yellow thing" (small yellow circle): 1.The large black square isinblock C,and itisdescribed asbeing
+"near and below" thelarge yellow square. 2.The small yellow circleisalso inblock C,and itisdescribed asbeing"near and totheleftof"the
+medium black triangle.Based ontheprovided information, thelarge black square isbelow thelarge yellow square and thesmall yellow circle
+isnear tothemedium black triangle. So, the correct answer: "below" and "near to".
+Example 3:
+Background: There are three blocks called A, B, and C. A is to the right of B and B is to the right of C. In A, there is a medium black circe that is
+far to the right of a medium blue square. The medium blue square is near and to the right of a small yellow circle. Far above the blue square is
+a medium yellow triangle. Near above the medium triangle is a small blue circle. In B, there is a large blue square that is touching the right
+edge of B. There is a medium black triangle that is touching the left side of the blue square. Near and above the medium black triangle is a
+large blue circle. Near and above the large blue circle is a large yellow triangle. In C, there is a small yellow triangle near and to the right of a
+medium black circle. The yellow triangle is touching the right edge of C. Far to the left of the medium black circle is a small blue square.
+Question: What block does not have any objects touching the edge of it?
+Candidate Answers: ["A", "B", "C"]
+Answer:
+Let’s analyze theinformation provided step bystep: Inblock A:1.There isamedium black circle,which isfartotheright ofamedium blue
+square. 2.The medium blue square isnear and totheright ofasmall yellow circle.3.Farabove theblue square isamedium yellow triangle.4.
+Near above themedium triangleisasmall blue circle.Inblock B:1.There isalarge blue square that istouch ingtheright edge ofB.2.There isa
+medium black trianglethat istouch ingtheleftside oftheblue square. 3.Near and above themedium black triangleisalarge blue circle.4.
+Near and above thelarge blue circleisalarge yellow triangle.Inblock C:1.There isasmall yellow trianglenear and totheright ofamedium
+black circle.2.The yellow triangleistouch ingtheright edge ofC.3.Fartotheleftofthemedium black circleisasmall blue square. Based on
+theprovided information, it’sBlock A,which does nothave any objects touch ingitsedge. So, the correct answer is: "A".
+Example 4:
+Background: There are three blocks called A, B, and C. A is to the left of B and B is to the left of C. In A, there is a large black triangle far above
+a medium black triangle. The medium black triangle is near and above a large yellow circle. Near and to the right of the large circle is a small
+blue circle. In B, there is a medium blue circle near and to the left of a small black square. Far below the blue circle is a small yellow circle. In C,
+there is a small blue square.
+Question: What object is near the large yellow thing, the medium black triangle or the small blue circle the medium black triangle or the smal
+blue circle?
+Candidate Answers:["the medium black triangle", "the smal blue circle", "both of them", "none of them"]
+Answer:
+Let’s analyze theinformation provided step bystep: Inlock A:1.There isalarge black trianglefarabove amedium black triangle.2.The
+medium black triangleisnear and above alarge yellow circle.3.Near and totheright ofthelarge circleisasmall blue circle.Inblock B:1.
+There isamedium blue circlenear and totheleftofasmall black square. 2.Farbelow theblue circleisasmall yellow circle.Inblock C:1.
+There isasmall blue square. Now, let’s analyze theposition ofthelarge yellow circle:1.The large yellow circleisinBlock Aand isnear and
+above themedium black triangle.2.The small blue circleisalso inBlock Aand isnear and totheright ofthelarge yellow circle.Based onthe
+provided information, both themedium black triangleand thesmall blue circlearenear thelarge yellow circleinBlock A. So, the correct
+answer is: "both of them".
+Example 5:
+Background: There are three blue shapes in a block that we called A. Two medium blue squares are below a big blue square. First medium blue
+square is to the left of the other medium one which is touching the bottom edge of block A. There is another block below the block A we call it
+B. A big blue triangle is touching the top edge of this block which is above a small black triangle, a big blue circle and a medium blue triangle.
+The medium triangle is touching the bottom edge of the block. The circle is below and to the left of the small triangle. It is above the medium
+triangle.
+Question: Is the small triangle below the medium triangle?
+Candidate Answers:["Yes", "No", "Do not Know"]
+Answer:
+Let’s analyze theinformation provided step bystep: Inblock B:1.Abigblue triangleistouch ingthetopedge ofthisblock which isabove a
+small black triangle,abigblue circleand amedium blue triangle.2.The medium triangleistouch ingthebottom edge oftheblock. 3.The circle
+isbelow and totheleftofthesmall triangle.Itisabove themedium triangle.Based ontheprovided information, thesmall black triangleis
+above themedium blue triangle. So, the correct answer is: "No".23
+Published as a conference paper at COLM 2024
+Table 13: Few-shot exemplars for full C OS prompt for SPARTQA.
+Example 1:
+Background: There are three blocks called A, B, and C. In block A, there is a small blue square far above a small blue circle. There is a small
+black triangle far to the right of both small blue objects. The black triangle is near and above a medium blue square. The medium blue square is
+touching the right edge of A and is near and above a medium black circle. Near and to the right of the medium black circle is a medium yellow
+triangle. The yellow triangle is to the left of the small blue circle. In B, which is to the right of A, there is a large blue square near and to the left
+of a large yellow triangle. There is also a small yellow triangle far below the square. In C, which is to the right of B. There is a small yellow
+circle near and above a small yellow triangle. The small yellow triangle is touching the top of a medium black triangle. The black triangle is
+touching the right edge of C. There is a large blue circle far below the black triangle.
+Question: Are all yellow objects in C above a blue thing?
+Candidate Answers:["Yes", "NO", "Do not Know"]
+Answer:
+Let’s analyze theinformation provided step bystep todetermine ifallyellow objects inBlock Careabove ablue thing: C:1.(small, yellow,
+circle)↑(small, yellow, triangle) 2.(small, yellow, triangle) =topof(medium, black, triangle) 3.(large, blue, circle)∞↓(medium, black,
+triangle). Based ontheprovided information, C:(small, yellow, circle)↑(large, blue, circle)and (small, yellow, triangle)↑(large, blue, circle).
+So, the correct answer is: "Yes".
+Example 2:
+Background: There are three blocks called A, B, and C. A is to the left of B and B is to the left of C. In A, there is a small black triangle near and
+to the left of a large blue circle. The large blue circle is near and to the left of a small blue circle. The small blue square is far below a medium
+yellow square. In B, there is a small yellow circle. In C, there is a medium black triangle that is near and to the left of a small yellow circle. The
+small yellow circle is near and to the left of a blue triangle. There is a large yellow square touching the bottom of the small yellow circle. Near
+and below the large yellow square is a large black square.
+Question: What is the relation between the large black thing and the small yellow thing?
+Candidate Answers:["left", "right", "above", "below", "near to", "far from", "touching", "Do Not Know"]
+Answer:
+Let’s break down therelationships between theobjects step bystep: A:1.(small, black, triangle) <(large, blue, circle)2.(large, blue, circle) <
+(small, blue, circle)3.(small, blue, square) ∞↓(medium, yellow, square) B:1.(small, yellow, circle)C:1.(medium, black, triangle) <(small,
+yellow, circle)2.(small, yellow, circle) <(blue, triangle) 3.(large, yellow, square) =↓(small, yellow, circle)4.(large, black, square) ↓(large,
+yellow, square) Now, let’s determine therelation between the(large, black, square) and the(small, yellow, circle): 1.C:(large, black, square)
+↓(large, yellow, square). There fore, (large, black, square) ↓(large, yellow, square) 2.C:(small, yellow, circle) <(medium, black, triangle).
+There fore, (small, yellow, circle) (medium, black, triangle) So, the correct answer: "below" and "near to".
+Example 3:
+Background: There are three blocks called A, B, and C. A is to the right of B and B is to the right of C. In A, there is a medium black circle that is
+far to the right of a medium blue square. The medium blue square is near and to the right of a small yellow circle. Far above the blue square is
+a medium yellow triangle. Near the medium triangle is a small blue circle. In B, there is a large blue square that is touching the right edge of B.
+There is a medium black triangle that is touching the left side of the blue square. Near and above the medium black triangle is a large blue
+circle. Near and above the large blue circle is a large yellow triangle. In C, there is a small yellow triangle near and to the right of a medium
+black circle. The yellow triangle is touching the right edge of C. Far to the left of the medium black circle is a small blue square.
+Question: What block does not have any objects touching the edge of it?
+Candidate Answers:["A", "B", "C"]
+Answer:
+Let’s analyze each block step bystep todetermine which onedoes nothave any objects touch ingitsedge: A:1.(medium, black, circle)∞>
+(medium, blue, square). 2.(medium, blue, square) >(small, yellow, circle). 3.(medium, yellow, triangle)∞↑(blue, square). 4.(small, blue,
+circle)↑(medium, triangle). B:1.(large, blue, square) =>edge ofB.2.(medium, black, triangle) =<(blue, square). 3.(large, blue, circle)↑
+(medium, black, triangle). 4.(large, yellow, triangle)↑(large, blue, circle). C:1.(small, yellow, triangle) >(medium, black, circle). 2.(yellow,
+triangle) =>edge ofC.3.(small, blue, square) ∞<(medium, black, circle). Based ontheprovided information„ let’s determine which block
+does nothave any objects touch ingitsedge. It’sBlock B. So, the correct answer is: "A".
+Example 4:
+Background: There are three blocks called A, B, and C. A is to the left of B and B is to the left of C. In A, there is a large black triangle far above
+a medium black triangle. The medium black triangle is near and above a large yellow circle. Near and to the right of the large circle is a small
+blue circle. In B, there is a medium blue circle near and to the left of a small black square. Far below the blue circle is a small yellow circle. In C,
+there is a small blue square.
+Question: What object is near the large yellow thing, the medium black triangle the small blue circle the medium black triangle or the small
+blue circle?
+Candidate Answers:["the medium black triangle", "the small blue circle", "both of them", "none of them"]
+Answer:
+Let’s break down theinformation step bystep todetermine which objectisnear thelarge yellow circle,themedium black triangle,orthesmall
+blue circle:A:1.(large, black, triangle)∞↑(medium, black, triangle). 2.(medium, black, triangle)↑(large, yellow, circle). 3.(small, blue, circle)
+>(large, circle). B:1.(medium, blue, circle) <(small, black, square). 2.(small, yellow, circle)∞↓(blue, circle). C:1.there isasmall blue square.
+Now, let’s analyze theposition ofthe(large, yellow, circle): 1.A:(large, yellow, circle)↑(medium, black, triangle). 2.A:(small, blue, circle) >
+(large, yellow, circle). Based ontheprovided information, A:(medium, black, triangle) (large, yellow, circle)and (small, blue, circle) (large,
+yellow, circle). So, the correct answer is: "both of them".
+Example 5:
+Background: There are three blue shapes in a block that we call A. Two medium blue squares are below a big blue square. The first medium
+blue square is to the left of the other medium one which is touching the bottom edge of block A. There is another block below block A we call it
+B. A big blue triangle is touching the top edge of this block which is above a small black triangle, a big blue circle and a medium blue triangle.
+The medium triangle is touching the bottom edge of the block. The circle is below and to the left of the small triangle. It is above the medium
+triangle.
+Question: Is the small triangle below the medium triangle?
+Candidate Answers:["Yes", "NO", "Do not Know"]
+Answer:
+Let’s analyze thearrange ment ofobjects inblock Btodetermine ifthesmall triangleisbelow themedium triangle:B:1.(big, blue, triangle) =
+topedge ofB2.(big, blue, triangle)↑(small, black, triangle), (big, blue, circle)and (medium, blue, triangle) 2.(big, blue, circle)↓<(small, black,
+triangle) 3.(big, blue, circle)↓(big, blue, triangle) 4.(medium, blue, triangle) =bottom edge BBased ontheprovided information, thesmall
+black triangleisabove themedium blue triangle. So, the correct answer is: "No."24
+Published as a conference paper at COLM 2024
+Table 14: Comparison of COS(above) and COT(below) prompts for BBH’s Temporal Se-
+quence task.
+Example 1:
+Q: Today, Emily went to the museum. Between what times could they have gone?
+We know that:
+Emily woke up at 1pm.
+Elizabeth saw Emily reading at the library from 2pm to 4pm.
+Jessica saw Emily watching a movie at the theater from 4pm to 5pm.
+Leslie saw Emily waiting at the airport from 5pm to 6pm.
+William saw Emily buying clothes at the mall from 6pm to 7pm.
+The museum was closed after 7pm.
+Between what times could Emily have gone to the museum?
+Options:
+(A) 1pm to 2pm
+(B) 6pm to 7pm
+(C) 5pm to 6pm
+(D) 2pm to 4pm
+A: Let’s think step by step.
+1pm /woke -up.
+1pm -2pm //free.
+2pm -4pm /read ing.
+4pm -5pm /watch ing
+5pm -6pm /wait ing.
+6pm -7pm /buying
+7pm /closure.
+=>1pm -2pm//free, Sotheanswer is(A).
+Q: Today, Emily went to the museum. Between what times could they have gone?
+We know that:
+Emily woke up at 1pm.
+Elizabeth saw Emily reading at the library from 2pm to 4pm.
+Jessica saw Emily watching a movie at the theater from 4pm to 5pm.
+Leslie saw Emily waiting at the airport from 5pm to 6pm.
+William saw Emily buying clothes at the mall from 6pm to 7pm.
+The museum was closed after 7pm.
+Between what times could Emily have gone to the museum?
+Options:
+(A) 1pm to 2pm
+(B) 6pm to 7pm
+(C) 5pm to 6pm
+(D) 2pm to 4pm
+A: Let’s think step by step.
+Wake -uptime: 1pm.
+1pm -2pm: free.
+2pm -4pm: read ingatthelibrary.
+4pm -5pm: watch ingamovie atthetheater.
+5pm -6pm: wait ingattheairport.
+6pm -7pm: buyingclothes atthemall.
+The museum closure time: 7pm.
+The only time when Emily could have gone tothemuseum was 1pm to2pm. Sotheanswer is(A).
+25

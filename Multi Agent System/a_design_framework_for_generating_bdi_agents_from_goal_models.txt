@@ -1,0 +1,319 @@
+See discussions, st ats, and author pr ofiles f or this public ation at : https://www .researchgate.ne t/public ation/221455165
+A design framework for generating BDI-agents from goal models
+Conf erence Paper  · Januar y 2007
+DOI: 10.1145/1329125.1329307  · Sour ce: DBLP
+CITATIONS
+14READS
+98
+5 author s, including:
+Some o f the author s of this public ation ar e also w orking on these r elat ed pr ojects:
+SUPER SEDE  View pr oject
+Finding Experts  View pr oject
+Loris P enserini
+Minist ero dell'Istruzione, dell'Univ ersità e della Ric erca
+61 PUBLICA TIONS    699 CITATIONS    
+SEE PROFILE
+Anna P erini
+Fondazione Bruno K essler
+227 PUBLICA TIONS    4,905  CITATIONS    
+SEE PROFILE
+Mirk o Mor andini
+Fondazione Bruno K essler
+33 PUBLICA TIONS    396 CITATIONS    
+SEE PROFILE
+John Mylopoulos
+Univ ersity of T oronto
+759 PUBLICA TIONS    25,165  CITATIONS    
+SEE PROFILE
+All c ontent f ollo wing this p age was uplo aded b y Anna P erini  on 03 June 2014.
+The user has r equest ed enhanc ement of the do wnlo aded file.
+ADesign Framework forGenerating
+BDI-Agentsfrom Goal Models
+Loris Penserini, Anna Perini, Angelo Susi, MirkoMorandini , John Mylopoulos
+ITC-IRST
+Via Sommarive 18,
+I-38050, Trento- Povo,Italy
+{penserini,perini,susi,morandini }@itc.it, jm@cs.toronto.edu
+ABSTRACT
+Wedeﬁneatool-supporteddesignframeworkthatallowstosp ecify
+an agent goal model and to automatically generate fragments of a
+BDI agent from it. We devise the design process as a transform a-
+tionprocessfromplatform-independentdesignmodelstopl atform-
+speciﬁcmodelsandthentocode. Thedesignframeworkisdemo n-
+stratedbyreferringtothe TroposmethodologyandtotheJADE/Jadex
+platform. Inthisshortpaper,keystepsintheprocessareil lustrated
+through an example.
+General Terms
+Design
+Keywords
+Agent-Oriented Software Engineering
+1. INTRODUCTION
+Goalmodelshave beenusedindistributedArtiﬁcialIntelli gence
+as a means for capturing agent intentions and guiding agent c oor-
+dination [4, 6, 7]. These goal models consist of goal graphs w hose
+nodes represent goals. Goals can be related through AND/OR r e-
+lationships that represent the hierarchical decompositio n of a goal
+into simpler goals. Inaddition, goals canbe relatedthroug h differ-
+entkindsofinter-dependencylinksthatrepresentconﬂict sbetween
+goals, or resources needed for the fulﬁllment of inter-depe ndent
+goals. In this context, goal models guide software agent cho ices
+(behavior) at run time. Similar goal models, ( GMfrom now on)
+have been adopted, by so called goal-oriented approaches to soft-
+ware (requirements) engineering [1, 3, 10]. In this context , aGM
+allows a designer to represent and reason about stakeholder goals
+in a given application domain in order toderive requirement s for a
+system-to-be. According to these approaches, GMs provide analy-
+sis and design artifacts during system development. GMs can also
+givesupportinexploringandevaluatingalternativesolut ionswhich
+can meet stakeholders expectations (goals) and in detectin g con-
+ﬂicts that may arise from multiple viewpoints. Some approac hes
+Permission to make digital or hard copies of all or part of thi s work for
+personal or classroom use is granted without fee provided th at copies are
+not made or distributed for proﬁt or commercial advantage an d that copies
+bear this notice and thefull citation on theﬁrstpage. Tocop y otherwise, to
+republish, topostonserversortoredistribute tolists,re quires priorspeciﬁc
+permission and/or afee.
+AAMAS’07 May 14–18 2007, Honolulu, Hawai’i, USA.
+Copyright 2007 IFAAMAS .adopt aformalnotationwhichenables model-checkingveriﬁ cation
+of the resultingmodels [3,1].
+Taking advantage of the above results, we propose to use GMs
+at different abstraction levels in engineering Multi-Agen t Systems
+(MAS), namely at design- and at run-time. A GMat design time
+represents the purposes behind a MAS, making the dependenci es
+betweensystemagentgoalsandstakeholder goalsexplicit. Knowl-
+edgelevelconceptssuchasthoseof agent,whocanbesocial,orga-
+nizational, human or software, goals, andsocial dependencies for
+deﬁning the obligations of agents to other agents are used at this
+level. Moreover, aview onthe system behavior canbe obtaine d by
+querying a design-time GM. Let’s consider a MAS supporting dif-
+ferent word searching techniques over the Internet. We may q uery
+our design-time GMto determine the alternative ways the system
+canmanage arequest(event)byauser. Forinstance,ﬁndingg ram-
+matical/semanticinformationabout awordmightbe accompl ished
+byeitherusingasearchenginesuchasgoogle, orbylookingu pan
+on-line dictionary.
+The main objective of this paper is to propose a tool-support ed
+design process that takes as input such GMs and generates frag-
+ments of a BDI agent. These fragments include goals and capa-
+bilities, along with a reasoning strategy for selecting and running
+appropriate capabilities, given a goal and a set of domain co ndi-
+tions. Our approach offers a systematic process for operati onaliz-
+ing aGMinto a set of capabilities and for automating BDI-agent
+code generation from the GMdesignartifacts.
+This approach aims at addressing crucial issues in developi ng
+and maintaining complex distributed software. Moreover, w e be-
+lieve itoffers aninterestingdirectiontowards engineeri ng adaptive
+systems,giventhat GMscanbeextended(modiﬁed)atrun-time[7]
+and that we can provide traceability links between GMs at differ-
+entlevelsof abstractions. Anissue thatseemsstillunders tudied by
+the main Agent-Oriented Software Engineering (AOSE) metho d-
+ologies [5, 2]. In this short paper, we sketch our tool-suppo rted
+designframework,byﬁrstgivinganexampleofdesignartifa ct,de-
+veloped using the TroposAOSE methodology [1], along with key
+modelling concepts, such as the concept of GMand agent capabil-
+ity(Section2). Wethen focus oncode generation (Section3) . The
+JADE/JadexMASplatform is considered for implementation.
+2. GOALMODELDESIGN
+TheTroposagent-oriented methodology [1] borrows modelling
+and analysis techniques from goal-oriented requirements e ngi-
+neering frameworks and integrates them into an agent-orien ted
+paradigm. A core activity along this process is conceptual m od-
+elling. Themodellinglanguageoffersconceptsof actor,goal,plan,
+resource,capability , and ofsocial dependency between actors for
+goal achievement, a graphical notation to depict views of a m odel,
+analysis techniques and supporting tools1. Adopting Troposin our
+Figure 1: Troposarchitectural design: Agent knowledge and
+capabilitylevels.
+framework allows us to represent and reason on a GMresulting
+from the analysis of each actor’s point of view. Speciﬁcally , aGM
+inTroposisrepresentedintermsofaforestofAND/ORgoaltrees,
+along with lateral contributions labelled +,++(i.e. if g1++− − →g2
+andg1is fulﬁlled, so is g2) and−,−−(ifg1is fulﬁlled, g2is de-
+nied) and means-ends relationships among goals andplans. E xam-
+ples are depicted in Fig. 1, which illustrates a fragment of a goal-
+orientedTroposspeciﬁcation of the search system’s requirements.
+The system is intended to support students and teachers in ex am
+related activities. Let us consider the goal dependencies ﬁnd the
+word description andﬁnd copied text , between the actors Stu-
+dentandTeacher and the agent role SearchActor , which model
+the possibility for such goals to be triggered by a request me ssage
+from the users (or a personal agent of) Student andTeacher. In
+other words, to pass an exam a student has to deliver some writ -
+ten homework, while the teacher wants to evaluate originali ty of
+the student homework, for instance, checking if the student copied
+from existingmaterial (e.g. encyclopedia, or Internet).
+Inparticular,wewillpointoutthetwodifferentabstracti onlevels
+that characterize the agent design, knowledge level andcapability
+level. The knowledge level gives to the agent a picture of the real
+world in terms of goal concepts that describe alternative wa ys to
+cope with complex and simple problems. For example, goals ma y
+be naturally triggered by agent internal or external events , e.g. a
+FIPA-request message (i.e. an external event) can carry out infor-
+mationaboutwhatgoalsarerequiredtobeachievedbytherec eiver
+agent. The capability level is composed of leaf node goals th at are
+satisﬁedbyroot-levelplansthroughthe Troposmeans-endrelation-
+ship [9].
+1For more details on modelling activities and supporting too ls
+see [1, 9].Althoughthispaperfocusesontheknowledge level,forthec on-
+cept ofcapability we adopt the revised deﬁnition proposed in [9],
+which distinguishes the concept of abilityfrom the concept of op-
+portunity and introduces a speciﬁc notation to model them. The
+abilitycomponent refers to plans for achieving a given goal and is
+speciﬁed in Troposby a means-end relationship between the goal
+andtheplan,whilethe opportunity componentrepresentsuserpref-
+erences and environmental conditions, which may, at run-ti me, en-
+able or disable the executionof the abilitycomponent.
+Capability modelling starts during requirements analysis by
+identifying agent capabilities and their correlations wit h stake-
+holder needs. Tab 1, depicts some of the capabilities that op er-
+ationalize the behaviour of the GMof theSearch Actor in the
+example given inFig.1.
+Capab. Means End(goal,plan) Listof Contributions
+cp1 filter pages, {}
+contentFilter
+cp2 parse result, {}
+parser
+cp3 find in encyclopedia, {reliable result ++ }
+EBritannica {minimize cost - }
+... ... ...
+Table 1:SearchActor capabilities.
+3. TOWARDSAUTOMATED CODING
+In this section we sketch the transformations which are prel imi-
+nary to the automated coding of GMs into BDI agents. We direct
+theinterestedreaderto[8]foracompletedescriptionofth eprocess
+and some experimental evaluation.
+Agent code generation requires a transformation of the Tropos
+GMspeciﬁcation into a speciﬁc one for the implementation plat -
+form, i.e. Jade2agents inour case.
+The ability parts of Troposcapabilities, are mapped to UML
+activity-diagrams, through model-driven automatic trans formation
+techniques,andareenrichedwithsequencediagramstospec ifyex-
+ecution workﬂow and interaction protocols respectively (d etailed
+can be found in [9]). The rest of the GM, including the capabil-
+ity’s opportunity part, relies on an automatic transformat ion from
+Troposmodels toJadex BDIagents, as detailedinthe following.
+We ﬁrst describe the semantics of the adopted sub-set of Tropos
+concepts, andthen give anoverview ofsome of the proposed ma p-
+pings betweensuch concepts andrelateddata-structures of a Jadex
+BDIagent. Theproposed approach considers TroposagentGMs at
+architecturaldesign. Thespeciﬁcationforthemappingpro cess has
+been conducted along two phases: basic concept mappings (go als,
+softgoals,plans,resources)andstructuremappings (AND/ ORgoal
+dependencies, means-end links, contribution links, deleg ation and
+dependency links)as detailed below.
+Goal. AsaJadex-goalcanonlybetriggeredbyaJadex-plan,hence
+aTroposgoal is directly mapped to a pair of < goal,plan > in
+Jadex.
+Softgoal. Inour prototype, theyaremainlyusedtodeﬁneopportu-
+nities for the selection of the next goals or plans to pursue a long
+theGM. A softgoal is therefore mapped to a belief base entry,
+which contains its name and a value that may be changed by the
+user at run-time. Such a value expresses the actual softgoal impor-
+2Jade, as well as Jadex, are based on a pure Java API. More de-
+tails at http://jade.tilab.com/ and http://vsis-www.inf ormatik.uni-
+hamburg.de/projects/jadex/
+tance and may change from time to time reﬂecting environment al
+changes.
+Plan. This mapping considers only those Troposplans that have a
+directmeans-endrelationshiptoleafgoals,namelyroot-l evelplans
+according toour deﬁnitionof capabilityconcept.
+Resource . Resources naturally map to an entry or a set of entries
+in the Jadex belief base. Since in Jadex the belief base is an
+object-oriented database, the entry can be related to an arb itrary
+Java object. At runtime, resources should be changeable by
+means of an external request message, to reﬂect changes in th e
+environment.
+In order to endow the generated BDI agents with all the GM
+features, We provide the mappings for a wide subset of Troposre-
+lationshipsintoJadexstructures. Below,forspacereason s,wegive
+just few details.
+ANDdecomposition . IfanAND-decomposedgoalisactivated,all
+subgoals havetobedispatched. Speciﬁcally,anAND-decomp osed
+goal is set as trigger for exactly one plan, called AND-dispa tch-
+plan. Intheplanbody, allsubgoals have tobe dispatchedin( some,
+perhaps random) sequence, if one subgoal fails, the process has to
+be stopped and a failure has to be returned. For this ﬁrst prop osal,
+onfailure noattempts forcompensation techniques ofalrea dyexe-
+cuted actions have been considered.
+OR decomposition . Jadex goals cannot activate other goals, but
+only be the triggering event for a plan. So, to map this kind
+of decomposition, Jadex-plans have to be linked between goa ls
+and the OR-decomposed sub-goals, as illustrated in Figure 2 .
+Each dispatch-goal plan (hexagon) is triggered on the activ ation
+of the parent goal and it dispatches one subgoal. Since an OR-
+decomposition deals with at least two goals (and related pla ns) as
+alternative ways to achieve the triggered goal, the agent ne eds to
+be able to reason about what is the more convenient at that tim e.
+To deliver on such a task, as shown in in Figure 2, we adopted th e
+Jadex meta-level reasoning. That is, if more than one plan is ap-
+plicable for an active goal, such a meta-reasoning process s tarts: a
+so-called metagoal isdispatched,whichtriggersanassociatedplan,
+themetaplan,thatimplementsastrategy(e.g. someAItechniques)
+toselect between applicable plans.
+Figure 2: Mapping of the Troposgoal OR-decomposition into
+an equivalentJadex BDIstructure.
+Means-end . TheTroposmeans-end relationship can be mapped
+one-to-onetotheJadexplantriggeringmechanism. Havingd eﬁned
+no conditions, every time the associated goal is activated, plan
+execution is triggered. Notice that, in this case, the Jadex plans
+are realTroposroot-level plans, namely those required to build
+up agent capabilities. Jadex supposes that every applicabl e planfor a goal (without achievement conditions) is able to satis fy that
+goal completely. Therefore, if more than one plan is applica ble, a
+meta-level reasoning is utilized in the same way seen for the goal
+OR-decomposition inFigure 2.
+The generated agent can evaluate costs for the execution of e v-
+ery plan in order to effectively deal withgoals and plans sel ection.
+Costs include softgoal contribution and importance; at run -time,
+negative contributions could cause higher cost and guide th e agent
+tothe selectionof alternatives for goal satisfaction.
+4. CONCLUSION ANDFUTURE WORK
+This paper presented a tool-supported, systematic process for
+generating BDI agents from goal models. We described an agen t
+design framework that is ﬂexible enough to support proactiv e, de-
+liberative and reactive agents without focusing on domain s peciﬁc
+AI techniques. The generated agents are able to reason about their
+intentionality, being aware of their potential behaviors a long with
+associated events and environmental constraints.
+Our future work will extend the proposed framework providin g
+automatic execution of experimental tests. We alsointend t oreﬁne
+the framework to support the design of composite/organizat ional
+agents whichconsist of anaggregation hierarchy.
+5. REFERENCES
+[1] P.Bresciani,P.Giorgini,F.Giunchiglia, J. Mylopoulo s, and
+A.Perini.Tropos: AnAgent-Oriented Software
+Development Methodology. Autonomous Agents and
+Multi-Agent Systems , 8(3):203–236, July2004.
+[2] L.Cernuzzi and F.Zambonelli. DealingwithAdaptive
+Multi-Agent Organizations inthe Gaia Methodology. In 6th
+International Workshop onAgent-Oriented Software
+Engineering (AOSE-2005) , 2005.
+[3] A.Dardenne, A.van Lamsweerde, and S.Fickas.
+Goal-directedrequirements acquisition. In 6IWSSD: Selected
+Papers ofthe SixthInternational Workshop on Software
+Speciﬁcation andDesign , pages 3–50. Elsevier Science
+Publishers B.V., 1993.
+[4] E.Durfee and T.Montgomery. Coordination as distribute d
+searchina hierarchical behavior space. In Systems, Man and
+Cybernetics, IEEETransactions on , volume 21. 1991.
+[5] B.Henderson-Sellers andP.Giorgini,editors.
+Agent-Oriented Methodologies . Idea GroupInc., 2005.
+[6] N.Jennings. Foundations of DistributedArtiﬁcial
+Intelligence , chapter Coordination Techniques for
+DistributedArtiﬁcialIntelligence. Wiley-IEEE,1996.
+[7] V. Lesser.A retrospective view of fa/c distributedprob lem
+solving. In Systems, Man and Cybernetics, IEEE
+Transactions on , volume 21. 1991.
+[8] L.Penserini,A. Perini,A.Susi,M. Morandini, and
+J.Mylopoulos. A DesignFrameworkfor Generating
+BDI-Agents from Goal Models. (Extended version).
+Technical report, ITC-irst,2007.
+[9] L.Penserini,A. Perini,A.Susi,and J.Mylopoulos. From
+Stakeholder Intentions toSoftware Agent Implementations .
+InProceedings of the18th Conference OnAdvanced
+Information Systems Engineering , volume 4001 of LNCS,
+pages 465–479. Springer-Verlag,2006.
+[10] E.Yu. Modelling Strategic Relationships for Process
+Reengineering . PhD thesis,Universityof Toronto,
+Department of Computer Science, Universityof Toronto,
+1995.
+View publication statsView publication stats

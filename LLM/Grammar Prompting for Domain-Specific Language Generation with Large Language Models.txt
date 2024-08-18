@@ -1,0 +1,1321 @@
+arXiv:2305.19234v3  [cs.CL]  3 Nov 2023Grammar Prompting for Domain-Speciﬁc Language
+Generation with Large Language Models
+Bailin Wang⋄Zi Wang†Xuezhi Wang†Yuan Cao‡Rif A. Saurous†Yoon Kim⋄
+⋄Massachusetts Institute of Technology†Google DeepMind‡Google Research
+{bailinw, yoonkim}@mit.edu,{wangzi, xuezhiw, yuancao, r if}@google.com
+Abstract
+Large language models (LLMs) can learn to perform a wide rang e of natural
+language tasks from just a handful of in-context examples. H owever, for gen-
+erating strings from highly structured languages (e.g., se mantic parsing to com-
+plex domain-speciﬁc languages), it is challenging for the L LM to generalize from
+just a few exemplars. We propose grammar prompting , a simple approach to en-
+able LLMs to use external knowledge and domain-speciﬁc cons traints, expressed
+through a grammar in Backus–Naur Form (BNF), during in-cont ext learning.
+Grammar prompting augments each demonstration example wit h a specialized
+grammar that is minimally sufﬁcient for generating the part icular output example,
+where the specialized grammar is a subset of the full DSL gram mar. For inference,
+the LLM ﬁrst predicts a BNF grammar given a test input, and the n generates the
+output according to the rules of the grammar. Experiments de monstrate that gram-
+mar prompting can enable LLMs to perform competitively on a d iverse set of DSL
+generation tasks, including semantic parsing (SMCalFlow, Overnight, GeoQuery),
+PDDL planning, and SMILES-based molecule generation.
+1 Introduction
+Prompting large language models (LLMs) with demonstration s optionally combined with natural
+language instructions has been shown to be an effective appr oach for surfacing their myriad capabil-
+ities acquired through pretraining [ 10]. This approach is however inadequate for applications whe re
+the task speciﬁcations cannot be fully delineated through j ust a handful of exemplars, for example
+in semantic parsing where an LLM must translate a natural lan guage utterance to an executable
+program in a domain-speciﬁc language (DSL). DSLs often inco rporate domain-speciﬁc abstractions
+and semantics that are difﬁcult to characterize via just a fe w demonstrations. And unlike general-
+purpose programming languages, DSLs are by deﬁnition speci alized and thus unlikely to have been
+encountered often enough (or at all) during pretraining for the LLM to acquire its full syntax.
+How can we draw on the few-shot learning capabilities of LLMs to generate structured strings
+that are substantially different from those seen during pre training? This work explores grammar
+prompting as a simple approach for data-efﬁcient generation of struct ured languages where an output
+string in the language can be derived through a series of symb olic manipulations. We exploit the fact
+that constraints over a structured output space can often be succinctly described by a context-free
+grammar in Backus–Naur Form (BNF), which is commonly used to deﬁne the syntax of a language.
+Grammar prompting augments each in-context example (x,y)with a specialized BNF grammar
+G[y]that is minimally sufﬁcient for generating y. Given a new input, the LLM ﬁrst predicts the
+specialized BNF grammar and then generates the answer condi tioned on the grammar.
+Grammar prompting follows the recent line of work which enha nces the few-shot reasoning capa-
+bilities of LLMs by interleaving intermediate “reasoning” steps between each in-context input and
+Code and data available at: https://github.com/berlino/grammar-prompting .
+37th Conference on Neural Information Processing Systems ( NeurIPS 2023).
+output [ 51,24,86,80,73]. The key difference in our approach is that the intermediat e variable is in
+the form of a formal grammar rather than in natural language, which focuses on eliciting the sym-
+bolic manipulation capabilities of LLMs. The use of a formal grammar moreover makes it possible
+to impose constraints during incremental decoding such tha t syntactic validity is guaranteed. Finally,
+unlike chain-of-thought-style prompts [ 86] which typically require manual verbalization of the inter -
+mediate reasoning steps, in our approach the specialized gr ammarG[y]can be derived automatically
+by parsing the output ywith the full (unspecialized) DSL grammar.
+To summarize,
+• We propose grammar prompting as a simple approach for enabl ing LLMs to generate highly
+structured languages from just a few exemplars.
+• We design a constrained LLM decoding algorithm tailored to grammar prompting, which guar-
+antees syntactic validity while minimizing the number of LL M API calls.
+• We apply grammar prompting to various domain speciﬁc langu ages for semantic parsing (SM-
+CalFlow, Overnight, GeoQuery), AI planning (PDDL), and mol ecule generation (SMILES), and
+ﬁnd that it can meaningfully improve upon standard promptin g baselines in the few-shot setting.
+2 Background
+In this section, we deﬁne our problem and review the few-shot learning method that we build on.
+2.1 Problem Formulation: Domain-Speciﬁc Language Generat ion
+LetΣ∗be the set of all ﬁnite strings over an alphabet Σ, and further let D⊆Σ∗be a domain-speciﬁc
+language (DSL) for an application of interest. Given an inpu tx(e.g., a natural language command)
+we are interested in generating y∈D(e.g., a program in a DSL fulﬁlling the command), as shown
+by the following calendar assistant example from SMCalFlow [6]:
+x:Add meeting with Jean’s manager on Wednesday at 3PM.
+y:CreateEvent (&(start _?WednesdayNumberPM (3))(attendee _?FindManager (Jean)))
+event ::="CreateEvent(" constraint ")"
+|"QueryEvent(" constraint ")"
+constraint ::="(&" constraint constraint ")"
+|"(start_?" date time? ")"
+|"(attendee_?" attendee* ")"
+date ::="Wednesday"|"Monday"
+number ::=("0".."9")+
+time ::="NumberAM(" number ")"
+|"NumberPM(" number ")"
+attendee ::=|"Bob"|"Carol"|"Jean"
+|"FindManager"
+Figure 1: A simple BNF grammar for a calendar DSL.DSLs are crafted by experts who use
+their domain-speciﬁc knowledge to incor-
+porate higher-level abstractions than are
+typically found in general-purpose pro-
+gramming languages. We assume access
+to an expert-deﬁned grammar Gthat fully
+speciﬁes the DSL’s syntax. As is the case
+with many DSLs, we further assume that
+Gis a context-free grammar in Backus–
+Naur Form (BNF). See Figure 1for a sim-
+ple example adapted from SMCalFlow [ 6].
+LettingL(G)be the language generated
+byG, we have D⊆L(G)⊆Σ∗(not all
+syntactically valid programs are semantically valid).
+2.2 Few-shot Learning with Large Language Models
+In-context learning with large language models (LLMs) has b een shown to be an effective approach
+for few-shot learning [ 10]. Under this approach, a pretrained LLM is conditioned on Ndemonstra-
+tion examples (x(i),y(i))N
+i=1followed by a test example x, and the output is given by decoding from
+the prompted LLM, i.e., PLLM(y|x,(x(i),y(i))N
+i=1). The demonstration examples can be optionally
+preceded by natural language instructions to further impro ve performance or even enable zero-shot
+learning [ 85,62]. Recent work has additionally shown that interleaving nat ural language verbal-
+izations of intermediate reasoning steps between each x(i)andy(i)can greatly improve few-shot
+performance on complex reasoning tasks [ 51,86,80,73,16].
+The effectiveness of few-shot in-context learning depends both on how useful the implicit knowledge
+acquired through pretraining is for the task, and on how effe ctively the task speciﬁcations can be
+conveyed through the demonstrations. For DSL, the structur ed nature of combinatorial output space
+(i.e., the DSL grammar G) cannot be adequately captured through just a handful of dem onstrations.
+Thus, few-shot generation of strings of a DSL remains challe nging for LLMs.
+2
+LLM Prompt
+Y ou are an expert programmer, and you need to write a program f or the given natural language query.
+First, you should write a grammar that contains all the neces sary BNF rules. Then, you should write pro-
+grams that conform to your predicted rules.
+(optional) G: [BEGIN RULES] ... [END RULES]
+x(1):ﬁnd the meeting on Wednesday with Bob and Carol
+G[y(1)]: event ::="QueryEvent(" constraint ")"
+constraint ::="(&" constraint constraint ")"
+|"(start_?" date ")"
+|"(attendee_?" attendee attendee ")"
+date ::="Wednesday"
+attendee ::="Bob"|"Carol"
+y(1):QueryEvent (& (start _?Wednesday )(attendee _?Bob Carol ))
+...
+x:Add meeting with Jean’s manager on Wednesday at 3PM
+LLM Output
+/hatwideG: event ::="CreateEvent(" constraint ")"
+constraint ::="(&" constraint constraint ")"
+|"(start_?" date time ")"
+|"(attendee_?" attendee ")"
+date ::="Wednesday"
+time ::="NumberPM(3)"
+attendee ::="FindManager(" attendee ")" |"Jean"
+/hatwidey:CreateEvent (& (start _?Wednesday NumberPM (3))(attendee _?FindManager (Jean)))
+Figure 2: Example of grammar prompting for a calendar DSL. We interlea ve the minimal specialized grammar
+G[y(i)]between the demonstrations x(i)andy(i). During decoding, the LLM ﬁrst predicts the specialized
+grammar /hatwideG, and then predicts the program /hatwideyconditioned on /hatwideG. The blue portion is not part of the actual
+prompt and only shown for illustrative purposes.
+3 Grammar Prompting
+Grammar prompting exploits the fact that while the actual st rings of a DSL may not have been
+encountered frequently enough (or at all) during pretraini ng for the LLM to implicitly acquire its
+syntax, the LLM will likely have encountered many instances ofmetalanguages (languages used to
+describe other languages). BNF grammars are a standard meta language for specifying a language’s
+syntax, and are expected to occur in the LLM training corpus w ith some frequency (e.g., in computer
+science textbooks). We thus focus on using BNF grammars for f ew-shot DSL generation.
+LetG=/uniontextM
+j=1{rj}be an extended BNF grammar where each rule rjis of the form
+<symbol> ::= <expr 1> | <expr 2> | ...
+Here<symbol> is a nonterminal symbol and each <expr1>is a sequence of nonterminal and terminal
+symbols.1A straightforward approach for incorporating a BNF grammar during in-context learning
+is to simply prepend the string representation of the full gr ammarGto the demonstration examples,
+along with an instruction to use the grammar. However in prel iminary experiments, we found that
+this did not yield any improvements.2
+3.1 Specialized Grammars
+We propose to use specialized grammars to enable better use of domain-speciﬁc knowledge and
+constraints. A specialized grammar G′⊆Gis a grammar obtained from taking a subset of the rules
+of the full grammar G. We further deﬁne G[y], aminimal specialized grammar ofy, to be a BNF
+1For brevity we forgo the formal tuple-based deﬁnition of Gand instead deﬁne Gto be equivalent to its
+context-free rules. We also freely go back and forth between this set deﬁnition of Gand its string representation.
+2However, when combined with specialized grammars we did obs erve small improvements by appending
+the full DSL grammar to the instructions. Hence, for all expe riments where Gis small enough (GeoQuery,
+Overnight-B, SMILES), we include Gas part of the instruction. See Figure 2.
+3
+grammar with the following properties: (1) y∈L(G[y]), and (2)∀r∈G[y],y/\e}atio\slash∈L(G[y]\{r}).3
+We can readily obtain a minimal specialized grammar by using Gto parseyand then taking the
+union of rules that were used in the derivation of y.
+Grammar prompting feeds a sequence of (x(i),G[y(i)],y(i))N
+i=1along with xas a prompt to an
+LLM. For inference we ﬁrst obtain the specialized grammar wi th an (approximate) argmax decod-
+ing
+/hatwideG= argmax
+G′⊆GPLLM(G′|x,(x(i),G[y(i)],y(i))N
+i=1).
+We then obtain the program conditioned on /hatwideG,
+/hatwidey= argmax
+y∈L(/hatwideG)PLLM(y|/hatwideG,x,(x(i),G[y(i)],y(i))N
+i=1).
+We discuss how to perform constrained decoding with /hatwideG⊆Gand/hatwidey∈L(/hatwideG)in the next section.
+Grammar prompting views DSL program generation as a grammar specialization process where
+given a natural language speciﬁcation x, a set of production rules, /hatwideG, is selected from G, and then a
+program/hatwideyis deduced according to the selected rules. Grammar prompti ng can also be viewed as an
+instance of chain-of-thought prompting [ 51,86] where the intermediate thought is in the form of a
+formal grammar. However, unlike typical chain-of-thought prompting where the answer is (usually)
+deterministic given the intermediate reasoning steps, in o ur case there is still some uncertainty with
+respect to /hatwideygiven/hatwideG(e.g.,L(/hatwideG)could still be inﬁnite).
+3.2 Constrained Decoding
+Algorithm 1 Earley-based Constrained Generation
+Input : Test input x, predicted grammar /hatwideG
+Output : Program ˆy∈L(/hatwideG)
+1:ˆy←ǫ ⊲ initialize to empty string
+2:while True do
+3:¯y←decode/parenleftBig
+PLLM(·|x,/hatwideG,ˆy,...)/parenrightBig
+4:ˆy←ˆy·¯y ⊲concatenation
+5: ifˆy∈L(/hatwideG)then ⊲try parsing with /hatwideG
+6: returnˆy ⊲return if successful
+7: else ⊲if parsing fails, need to correct
+8: ypreﬁx,Σ[ypreﬁx]←EarleyParse( ˆy,/hatwideG)
+9: w∗←argmax
+w∈Σ[ypreﬁx]PLLM(w|ypreﬁx,...)
+10: ˆy←ypreﬁx·w∗
+11: end if
+12:end while
+13:returnˆyThe use of a formal grammar as an inter-
+mediate variable makes it possible to en-
+force grammatical constraints during au-
+toregressive LLM decoding. We ﬁrst dis-
+cuss how we enforce the constraint y∈
+L(/hatwideG). One approach to constrained de-
+coding is to use /hatwideGto obtain a left-to-right
+Earley parser [ 18] and only decode from
+valid continuations at each decoding step.
+However this simple strategy poses several
+practical challenges when working with
+API-only LLMs. For one, a valid terminal
+continuation in /hatwideGmay consist of multiple
+BPE tokens. Moreover, while we can sam-
+ple a valid continuation at each time step
+by disallowing invalid tokens,4since the
+set of valid continuations changes at each
+time step, this strategy would require call-
+ing the LLM API at each time step with
+the full prompt and preﬁx along with the disallowed continua tions, which is prohitively expensive.5
+While there are many methods for grammar-constrained LM dec oding [ 68,64,26], we present a
+simple strategy which speculatively decodes from the LLM to look ahead for multiple tokens. The
+pseudocode is shown in Algorithm 1. At each prediction step, we ask the LLM to speculatively
+decode the full program conditioned on the current preﬁx (li nes 4-5). If the resulting continuation
+leads to a valid program, we return it (lines 6-7). Otherwise , we consult an Earley parser to extract
+3Note that ymay have more than one minimal specialized grammar due to the potential instantiation of
+extended BNF rules. For instance, the expression "(attendee_?" attendee+ ")" depicted in Figure 1im-
+plicitly deﬁnes all occurrences of attendee greater than 1. If this expression is incorporated into a pro gram,
+either the concrete rule "(attendee_?" attendee ")" or the original rule could be included in the minimal
+specialized grammar. In most applications we consider the r ules of the minimal specialized grammar will be
+concrete, and thus there will only be one parse associated wi thy. See appendix A.1for further details.
+4For example by using the logit_bias argument from OpenAI’s LLM API.
+5These costs might be mitigated in the future if LLM APIs allow for cheaper use of cached prompts.
+4
+Earley-based Constrained Decoding
+ˆy(t):CreateEvent (& (start _?Wednesday NumberPM (3))(attendee _?Jean’sManager))
+Extract the longest valid preﬁx, and possible ﬁxes (i.e., ne xt terminals) based on Earley parsing :
+ypreﬁx:QueryEvent (& (start _?Wednesday )(attendee _?
+Σ[ypreﬁx]: {Jean ,FindManager( }
+Find the best candidate and concatenate it with the preﬁx :
+ˆy(t)←QueryEvent (& (start _?Wednesday )(attendee _?FindManager (
+Figure 3: Illustration of how an predicted program is corrected in our proposed Earley-based constrained
+decoding. The ﬁnal partial program will be subsequently fed into the LLM for continuation.
+the longest valid preﬁx from the current prediction ( ypreﬁx), along with a set of valid terminals
+that can follow the preﬁx ( Σ[ypreﬁx]). Finally, we rely on the LLM’s probabilities to decide whic h
+terminal to use, with which a new partial program can be const ructed (lines 10-11).6Figure 3
+illustrates one prediction step where the predicted progra m is corrected into a new valid partial
+program. Note that wcan consist of multiple BPE tokens, e.g., "FindManager(" in Figure 3. By
+scoring over multi-token terminals, the search procedure i s implicitly augmented by looking ahead
+for a few tokens.
+We use a similar procedure to operationalize the constraint G′⊆G, except that EarleyParse (used
+at Algorithm 1, line 9) is constructed with a metagrammar (i.e., the grammar of G) for grammar pre-
+diction. See appendix A.1for more details. In our ablation study we ﬁnd that while thes e constraints
+are helpful insofar as they guarantee syntactic validity, g rammar prompting still meaningfully im-
+proves upon standard prompting with even with simple uncons trained decoding.
+4 Experiments
+We apply grammar prompting to diverse domains: DSLs for sema ntic parsing (SMCalFlow,
+Overnight, GeoQuery), an action DSL (PDDL planning), and a m olecule generation DSL (SMILES).
+These experiments are not necessarily intended to improve u pon the state-of-the-art on these bench-
+marks but rather intended to assess whether LLMs can improve upon standard prompting for few-
+shot DSL generation by learning to predict and use grammars d uring in-context learning.
+4.1 Semantic Parsing for Tool Usage
+Software tools are typically accompanied by a collection of human-interpretable APIs which provide
+a platform for developers to interact programmatically wit h the tools. These APIs constitute a DSL,
+where each production rule of the grammar speciﬁes the input and output types for a speciﬁc API
+call (see Figure 1for an example). These tools demonstrate a broad spectrum in terms of DSL com-
+plexity, ranging from single-function tools such as Google(user_query) ,Translate(sentence,
+language) to more complex tools such as the entirety of Wolfram languag e.7Enabling LLMs to use
+external tools via APIs is an important step towards enhanci ng their capabilities [ 63,56,53,72,47].
+We test our approach on standard semantic parsing benchmark s involving complex DSLs: SM-
+CalFlow [ 6], which features human-generated utterances about calend ar management (see Figure 2);
+GeoQuery [ 99] which features queries against a US Geography database; an d Overnight-Blocks [ 81],
+which features queries about blocks in a synthetic block wor ld. See appendix Bfor examples of
+input-output pairs along with the specialized grammars. Th e original benchmarks target the train-
+ing of conventional semantic parsers and thus contain hundr eds/thousands of training examples.
+Even prompting-based approaches on these benchmark rely on retrieval-based in-context learning
+which ﬁrst retrieves mexemplars from a large training set of nexamples ( n≫m) based on some
+similarity measure (e.g., BM-25), and then performs in-con text learning with the retrieved exem-
+plars [ 57,95,68,46]. In contrast, we target the true few-shot setting where we o nly assume access
+to 16–32 demonstration examples.
+Our baselines here include: (1) standard prompting, (2) sta ndard prompting with constrained decod-
+ing based on the full DSL grammar G[68,64], and (3) a derivation tree-based prompting baseline
+6In rare cases the set Σ[ypreﬁx]was too large to feed to LLM APIs. In these cases we used Senten ce-
+BERT [ 59] to compute the similarity between the encoding of ypreﬁx·wandˆy(t)and took the top 16 candidates
+asΣ[ypreﬁx].
+7https://www.wolfram.com/language/
+5
+GeoQuery SMCalFlow Overnight-Blk
+Approach Prog. Exec. Prog. Prog. Exec.
+Standard Prompting (unconstrained decoding) 60.7 81.5 46.4 29.3 54.7
+w. constrained decoding ( /hatwidey∈L(G)) 61.1 81.8 49.2 29.3 54.7
+Linearized Derivation Tree Prompting 58.6 77.5 50.0 27.3 56.4
+Grammar Prompting (unconstrained decoding) 67.1 87.5 50.8 34.8 57.4
+w. grammar constraint ( /hatwideG⊆G) 67.9 88.6 51.3 37.1 60.4
+w. grammar and program constraint ( /hatwidey∈L(/hatwideG)) 69.6 88.9 52.4 37.6 60.9
+w. oracle grammar ( /hatwideG=G[y]) 95.7 96.1 80.0 73.9 94.2
+w. oracle grammar + program constraint 95.7 96.8 83.6 74.4 96.5
+Table 1: Results on few-shot semantic parsing with Codex with variou s decoding strategies. GeoQuery and
+Overnight-Blk use 32 in-context examples, and SMCalFlow us es 16 examples. We show both program (Prog.)
+and execution (Exec.) accuracy when possible.
+Retrieval-based ICL GeoQuery Out-of-Distribution
+Model GeoQuery SMCalFlow Overnight-Blk Template TMCD Leng th NewFunc
+(# ICL examples / # retrieval set) (32/560) (16/128) (32/1,4 36) (32/441) (32/440) (32/440) (32/453)
+Previous Work 86.1♣60.7♠65.2♦– – – –
+Standard Prompting 96.8 60.0 69.4 93.2 77.1 86.4 63.3
+Grammar Prompting 97.9 62.8 70.2 95.7 86.6 88.6 90.8
+w. oracle grammar 98.6 88.9 97.2 97.9 95.0 95.7 96.2
+Table 2: Results on retrieval-based in-context learning (left) and compositional generalization (right) with
+Codex. GeoQuery and Overnight-Blk show execution accuracy while SMCalFlow shows program accuracy.
+The numbers with♣,♠and♦are taken from Herzig and Berant [ 31], Ye et al. [ 95] and Cao et al. [ 11],
+respectively.
+which imbues more structural information to the exemplars b y feeding the linearized derivation tree
+instead of the surface form program.8We use Codex-davinci-002 [ 13] as the base LLM for these
+main experiments. Language models trained on code (such as C odex) have shown to be particularly
+effective on semantic parsing benchmarks [ 67]. We evaluate according to program accuracy (match-
+ing the predicted and reference programs) as well as executi on accuracy (same execution in both
+programs) if possible.
+Few-shot results. The main results are shown in Table 1. We ﬁnd that grammar prompting can
+meaningfully improve upon the standard prompting baseline even without constrained decoding.
+Interestingly, grammar prompting outperforms derivation tree prompting which actually provides
+more information than the minimal specialized grammar G[y](since the derivation tree explicitly
+shows how the rules are actually applied to obtain the progra m). This potentially indicates that
+having the LLM “plan out” the program by forcing it to predict the specialized grammar /hatwideGﬁrst is
+an effective strategy. We also analyze the effect of constra ined decoding on the number of LLM API
+calls in Table 7of appendix A.1, where we observe that constrained decoding requires rough ly three
+times more API calls than unconstrained decoding. However, despite the promising performance
+of grammar prompting, there is a large gap between using the p redicted grammar versus using the
+oracle grammar (i.e., setting /hatwideG=G[y]), indicating opportunities for further work in this area.
+Retrieval-based in-context learning. While our core target application is few-shot semantic pars -
+ing, we also apply grammar prompting for retrieval-based in -context learning to test whether it can
+still improve performance in the data-rich regime and also t o compare against prior work on these
+benchmarks. Results in Table 2(left) show that grammar prompting can improve results even in this
+setting, although the improvements are less pronounced tha n in the few-shot setting.
+Out-of-distribution generalization. We experiment to see whether grammar prompting can im-
+prove compositional generalization on GeoQuery. Speciﬁca lly, we test grammar prompting on the
+compositional splits of GeoQuery split from Shaw et al. [ 66]. These splits feature structural diver-
+gence between training and test examples, e.g., programs ha ve different templates or length. Results
+8For example, the derivation tree of a subprogram (attendee_? FindManager(Jean)) is linearized to
+[constraint "(attendee_?" [attendee "FindManager(" [att endee "Jean" ")"] ")"] , which uses
+square brackets to encode richer hierarchical information than just the surface form program.
+6
+in Table 2(right) shows that grammar prompting can improve upon stand ard prompting, across all
+splits (Template, TMCD, Length).
+We next assess whether grammar prompting can enable LLMs to m ake zero-shot use of un-
+seen functions (NewFunc) that are not even part of the retrieval set. We set a side 8 func-
+tions (smallest, shortest, most, highest, sum, population_1, cou nt, major ) and re-
+move them from the retrieval set, simulating a scenario wher e new functions are supported in
+the backend yet no NL-program paired data is available for ad apting a semantic parser. Note that
+for GeoQuery (and Overnight-Blk), we always prepend the ful l DSL grammar G—which includes
+the held-out functions—before the in-context exemplars. T able 2(right-most column) shows that
+grammar-prompted LLMs achieve signiﬁcantly better perfor mance than standard prompting. Our
+results suggest that the explicit prediction of specialize d grammars elicits understanding and reason-
+ing at the grammar level, thereby enabling generalization t o unseen functions. We also found that
+without constrained generation, LLMs were often able to gue ss functions that did not exist but were
+nonetheless sensible. An interesting direction is to explo re whether LLMs can tackle DSL-open
+benchmarks such as LARC [ 1].
+Base LM Method GeoQuery SMCalFlow Overnight-Blk
+Codex Standard 83 27 63
+Grammar 95 35 66
+GPT-3.5 Standard 75 9 49
+Grammar 86 5 67
+GPT-4 Standard 85 32 56
+Grammar 98 36 62
+PaLM 2-L Standard 90 14 59
+Grammar 87 17 62
+Table 3: Results with different base LLMs on a subset of 100
+examples sampled from the original test set. GeoQuery and
+Overnight-Blk show execution accuracy, while SMCalFlow
+shows program accuracy.Different base LLMs. We ﬁnally
+experiment with grammar prompting
+across different base LLMs. Since
+GPT-3.5’s 4K token limit is smaller than
+Codex’s (8K) and GPT-4’s (8K) limits,
+we use fewer exemplars in these exper-
+iments than before (24/8/16 exemplars
+for GeoQuery/SMCalFlow/Overnight-B
+respectively). Due to API cost, we limit
+our experiments to a smaller subset of 100
+test examples instead of the full test set.
+Table 3shows that grammar prompting im-
+proves upon standard prompting in the ma-
+jority of the settings. The exceptions are
+SMCalFlow with GPT-3.5 where both methods performed poorly , and GeoQuery with PaLM 2-L[ 7],
+where standard prompting already performed well.
+4.2 Class-Speciﬁc Molecule Generation
+We next demonstrate an application of grammar prompting bey ond language parsing problems with
+a molecule generation task. Existing methods for molecule g eneration typically focus on training
+specialized neural models using large training sets [ 45,37,15,2,79,61,19]. We instead follow Guo
+et al. [ 29] and explore a few-shot setting where the task is to generate class-speciﬁc molecules given
+a small number of exemplars of that class. Formally, given a s mall set of molecules {y(i)
+c}N
+i=1
+belonging to a particular molecule class c∈ {Acrylates, Chain Extenders, Isocyanates },
+our goal is to generate novel molecules ycof the same class that can be synthesized using existing
+molecules. Since the in-context examples in this case will o nly consist of molecules of the same
+class, the “input” x(i)
+cis the empty string in this case. The data contains 32Acrylates, 11Chain
+Extenders, and 11Isocyanates (see appendix G of Guo et al. [ 29]).
+While molecules can be more faithfully represented with 3D g raph structure, the SMILES string
+representation [ 87] remains popular due to its ease of use.9The specialized grammars G[yc](which
+are specialized from the SMILES grammar) encode various str uctural properties of the molecule
+that are speciﬁc to the molecule class. Figure 4shows an example of a specialized grammar and the
+corresponding molecule in SMILES format. In this example, ring_closure ::= "1" speciﬁes the
+number of rings, and branch ::= "(" smiles ")" speciﬁes whether there is a branch.
+We test our approach by generating 100 molecules for each cla ss and assessing the quality of the
+generated molecules. In addition to the standard prompting baseline, we also run the graph grammar
+baseline from Guo et al. [ 29] which learns a hypergraph grammar [ 38] from the given molecules. We
+9Note that SMILES does not guarantee that a generated string c orresponds to a valid molecule. Using our
+approach on more advanced string representations such as SE LFIES [ 44] (which guarantee validity) remains
+an interesting avenue for future work.
+7
+Specialized SMILES Grammar for Molecule Generation
+G[y]: smiles ::=atom chain branch chain chain |atom chain
+atom ::=organic_symbol
+organic_symbol ::="C"|"N"|"O"
+chain ::=atom ring_closure bond atom |bond atom
+|bond atom ring_closure |atom
+|atom bond atom bond atom
+|bond atom bond atom
+ring_closure ::="1"
+bond ::="="
+branch ::="(" smiles ")"O
+OO
+y:CC(=C)C(=O)OCCOC1=CC=CC=C1
+Figure 4: Example of a specialized grammar for generating a molecule f rom the Acrylates class.
+Acrylates Chain Extenders Isocyanates
+Model V D R M V D R M V D R M
+Graph Grammar [ 29] 100 0.83 79.0 30.3 100 0.86 72.7 98.3 100 0.93 52.2 82.7
+Standard Prompting 87.7 0.73 80.0 76.7 60.3 0.89 72.7 55.7 94 .7 0.82 78.0 92.2
+Grammar Prompting 98.0 0.74 91.0 93.3 96.3 0.90 86.7 94.0 97. 7 0.79 78.0 96.3
+Table 4: Results for few-shot molecule generation with GPT-3.5. The metrics are validity (V), diversity (D),
+retrosynthesis score (R) and membership (M). Higher is bett er for all metrics.
+use four metrics: Validity (V) , the percentage of chemically valid molecules; Diversity (D) , average
+pairwise Tanimoto distance over Morgan ﬁngerprints [ 60];Retrosynthesis score (R) , the percentage
+of molecules that are synthesizable from existing molecule s, which is computed approximately via
+the Retro* model [ 12];Membership (M) , the percentage of molecules that belong to the desired
+monomer class. We use GPT-3.5 as the base LLM and sample from t he LLM without constrained
+decoding, as constrained decoding was found to decrease the diversity of samples. See appendix A.2
+for the full experimental setup.
+Results. Table 4shows that, compared with standard prompting, grammar prom pting signiﬁcantly
+improves the synthesis of Acrylates and Chain Extenders acr oss all metrics, while yielding mixed
+results for Isocyanates. Notably, both prompting-based me thods outperform the graph grammar
+baseline in terms of Retro score, possibly due to that LLMs ma y have been pre-trained on existing
+datasets of molecules, enabling them to effectively genera te synthesizable molecules. In contrast,
+the baseline method cannot incorporate any external knowle dge beyond the 11 or 32 molecules
+provided. Our preliminary results indicate that LLMs can se rve as a useful tool for generating string
+representations of chemical structures (and potentially o ther biological/chemical structures).
+4.3 Action Subset Selection for Efﬁcient PDDL Planning
+Our ﬁnal experiments show how grammar prompting can improve the efﬁciency of classical AI
+planners. Classical planning is the problem of ﬁnding a sequ ence of actions (i.e., a plan) that
+goes from an initial state s0to a goal state sg. An action is represented by a ground opera-
+tor (e.g.,unstack(block1,block2)which consists of an operator unstack along with two ob-
+ject arguments). We additionally consider macro-operators which can potentially speed up plan-
+ning [ 9].10Planning tasks, along with actions, are represented in Plan ning Domain Deﬁnition Lan-
+guage (PDDL) [ 27]. We explore how grammar prompted LLMs can help guide classi cal planning
+algorithms.
+We design specialized grammars to provide guidance to the cl assical greedy best-ﬁrst search (GBFS)
+algorithm [ 5] by selecting a set of relevant actions. Figure 5illustrates an example of such a spe-
+cialized grammar, which captures all the necessary actions for the ﬁnal plan ythat solves the given
+task. The process of the guided planning consists of the foll owing steps: (1) given a task, predict
+a specialized grammar G[y]; (2) use the specialized grammar G[y]to subsequently generate a plan
+within the restricted action space derived from G[y]; (3) initialize GBFS’s priority queue with the
+LLM-generated plan, and (4) search for the ﬁnal plan in the re stricted action space. Our setup builds
+upon the idea of using an LLM-generated plan to initialize GB FS from Silver et al. [ 69], which has
+10For example, pickup-and-stack(A, B) is a combination of pickup(A) andstack(A, B) .
+8
+Specialized Action Grammar for PDDL Planning
+s0:AB
+CDsg:ACB
+D
+G[y]:plan ::=ground_operator+
+ground_operator ::="pick_up-and-stack(" block block ")"
+|"unstack-and-put_down(" block block ")"
+block ::="A"|"B"|"C"
+y:unstack-and-put_down(B, A) ;pick_up-and-stack(C, A) ;pick_up-and-stack(B, C)
+Figure 5: Example of a specialized grammar for PDDL planning in the Blo cks domain. Given an input
+x= (s0,sg), the specialized grammar G[y]only includes necessary actions for solving this task.
+Blocks Depot Satellite
+Approach Created Expanded Success Created Expanded Succes s Created Expanded Success
+GBFS + Prim. (No LLM) 360 188 1.0 18047 3870 0.4 8205 150 1.0
+Standard + Prim. 348 180 1.0 17597 4039 0.4 6686 78 1.0
+Grammar + Prim. 251 124 1.0 15033 3641 0.4 5162 64 1.0
+Standard + Macro. 850 16 1.0 1460 56 0.4 4003 27 0.3
+Grammar + Macro. 170 9 1.0 2917 127 0.8 3665 46 0.9
+Standard + Min Macro. 228 8 1.0 1903 65 0.6 3483 35 0.8
+Table 5: Results on PDDL planning. Created/Expanded refer to the num ber of nodes during planning (lower is
+better). Success refers to success rate (higher is better). Numbers are averaged over three runs using GPT-3.5.
+a simpler two-step process: (1) given a task, predict a plan v ia standard prompting, and (2) utilize
+this plan to guide GBFS. We use their method as our baseline.
+Following Silver et al. [ 69], we create a similar few-shot setting for LLM planning, usi ng 5 tasks
+as in-context examples and 10 tasks for evaluation from Pype rplan [ 5]. We test our approach on
+3 classic domains in PDDL planning, including Blocks, Depot and Satellite. For the action space,
+we use either a set of primitive actions (Prim) or an augmente d set with macro actions (Macro).
+In addition to standard prompting, we add two more baselines : (1) No LLM: planning with the
+entire set of actions; (2) Min Macro: where we construct a min imal set of macro actions for each
+domain by selecting actions from existing plans for the trai ning tasks. The Min Macro baseline is a
+domain-speciﬁc method to reduce the action space. By compar ing to Min Macro, we can verify the
+effectiveness of instance-speciﬁc v.s. domain-speciﬁc ac tion selection. See appendix A.3for more
+details.
+Results. We evaluate the efﬁciency of planning in terms of the number o f search nodes created/-
+expanded, as well as the success rate. Table 5shows the promising performance of LLM-guided
+planning via grammar prompting. In Blocks, grammar prompti ng signiﬁcantly improves efﬁciency
+while maintaining 100% success rate. In Depot, grammar prom pting with macro actions improves
+the success rate by 20% over the best competing baseline. In S atellite, using primitive actions yields
+the best performance with 100% success rate and a reduction o f 57% expanded nodes comparing to
+the No LLM baseline. While our experiments are not intended t o complete with the state-of-the-art
+algorithms for fast planning [ 20–22,32,25,84], they indicate the promise of LLMs for improving
+existing planning algorithms.
+5 Discussion and Limitations
+We discuss several limitations of our approach including so me negative results. Grammar prompting
+did not yield any improvements for DSLs that were likely to ha ve been frequently encountered dur-
+ing pretraining (e.g., regular expressions, SQL). Moreove r, constrained generation based on special-
+ized grammars led to increased API calls, and was not always b eneﬁcial for tasks beyond semantic
+parsing. For instance, in molecule generation we discovere d that enforcing constraints can some-
+times result in lower diversity. Additionally, in PDDL plan ning we observed that the constraints
+applied to prune objects can sometimes negatively impact pe rformance, suggesting that relevant ob-
+ject selection is still very challenging for LLMs. It may be i nteresting to explore whether ﬁnetuning
+9
+of moderately-sized LLMs using specialized grammars can le ad to better grammar-based models
+for DSL generation.
+On the positive front, our work demonstrates that LLMs have t he capacity to understand and generate
+metalanguages. Working in this “metalanguage space” can be combined with chain-of-thought-style
+[86] prompts by, for example, manually providing natural langu age comments to the rules of the
+specialized grammars. We found this to improve results slig htly on semantic parsing (see Figure 6
+of appendix A.1). Moreover, many scientiﬁc problems can be formally approa ched by representing
+hypotheses as DSL programs [ 71], and DSLs can enable easier encoding of human prior knowled ge
+and scientiﬁc principles, providing a foundation for scien tiﬁc discovery. Recent work shows that
+state-of-the-art LLMs can follow previously unseen formal systems [ 75]. Techniques like grammar
+prompting can widen the scope of scientiﬁc problems for whic h LLMs could be effectively applied
+by more explicitly accounting for external knowledge and co nstraints.
+6 Related Work
+Chain-of-thought prompting. Grammar prompting extends a recent line of work on improving
+reasoning capabilities by requesting explicit reasoning s teps as part of the prompt [ 51,24,86,80,
+14,94]. Our approach is closely related to concurrent work on empl oying symbolic variables as part
+of the prompt [ 30,50,33,97,52], though we are not aware of any existing work that uses forma l
+grammars as the intermediate reasoning step.
+LLMs for program generation and semantic parsing. Generating programs from natural lan-
+guage speciﬁcations, a task often referred to as semantic pa rsing, is a sub-problem of program
+synthesis; for surveys, see Kamath and Das [ 39] and Gulwani et al. [ 28]. Recent works [ 8,89] have
+explored using LLMs for generating code in general-purpose programming languages (e.g., Python).
+Our work further extends this line by examining whether LLMs can generate DSL programs, which
+are intrinsically scarce. There has also been work on using L LMs for tool usage via further train-
+ing [ 63] or prompting [ 56,77], investigating how model scales [ 57] and retrievers [ 96,46] affect
+in-context learning for semantic parsing, and constrained decoding [ 64,68,55] for program genera-
+tion.
+Neural grammars. Grammar prompting can also been seen as a “fully LLM” instant iation of a
+line of work on neural parameterizations of symbolic gramma rs [35,17,43,42,36,100,92,91,93].
+Indeed, our approach to semantic parsing essentially uses p rompt-based learning to deﬁne a quasi-
+synchronous grammar [ 70,78] whose rules dynamically depend on the source sentence. Con cretely,
+in contrast to recent works which embed learnable neural com ponents within synchronous grammars
+[41,23,76], grammar prompting relies on the implicit in-context lear ning capabilities of LLMs for
+the learning component. (However unlike these works, our co nditional grammar does not explicitly
+align its rules to the subparts of the source sentence).
+Grammar-based molecule generation. Grammar-based methods have gained signiﬁcant interest
+in the realm of molecule generation, offering advantages in interpretability, data-efﬁciency, and
+controllability. One line of research involves integratin g generic SMILES grammars with neural
+networks to generate syntactically correct molecules [ 45,15]. Another approach centers on data-
+driven induction of grammars for generation [ 29,38]. Our work aligns with the former, viewing
+grammar prompting as a straightforward method for integrat ing grammar into an LLM without the
+need for additional training.
+LLMs for planning. Recently, LLMs have been increasingly studied in the contex t of planning
+for autonomous agents. When given goals expressed in natura l language in household environments,
+earlier works [ 3,65,34,48] directly prompted LLMs to predict executable actions. How ever, in
+PDDL domains, recent works [ 69,74] showed that LLMs underperform classical planners if the
+desired action sequences are very long. Grammar prompting r epresents a promising strategy for
+augmenting classical planners with LLMs to get the best of bo th worlds. Other related efforts include
+translating between problems and PDDL models [ 49] and corrective re-prompting [ 58]. Besides
+using LLMs, integrating learning and planning has been exte nsively studied in the past literature,
+e.g., learning actions [ 4,82], skills [ 84], macro-actions [ 9], rules [ 88] and guidance strategies [ 90,
+83,40] for more efﬁcient planning.
+10
+7 Conclusion
+We propose grammar prompting as a simple approach for improv ing few-shot DSL generation with
+large language models. Experiments across a range of struct ured languages including DSLs for se-
+mantic parsing (SMCalFlow, GeoQuery, Overnight), PDDL pla nning (action DSL), and molecule
+generation (SMILES), show that grammar prompting can impro ve upon standard prompting base-
+lines. The encouraging results in semantic parsing indicat e its potential to assist LLMs with tool
+usage, and the promising results in other domains indicate t hat grammar prompting can enable ap-
+plication of LLMs in domains that intrinsically depend on DS Ls.
+Acknowledgments
+We thank Jacob Andreas, Gabriel Grand, Linlu Qiu, Tom Silver , and Hunter Lang for helpful discus-
+sion and feedback. This study was supported by funds from the Google-MIT research collaborations
+program and the GIST-MIT joint research program.
+References
+[1] Sam Acquaviva, Yewen Pu, Marta Kryven, Theodoros Sechop oulos, Catherine Wong,
+Gabrielle Ecanow, Maxwell Nye, Michael Tessler, and Josh Te nenbaum. Communicating
+natural programs to humans and machines. Proceedings of NeurIPS , 35:3731–3743, 2022.
+[2] Walid Ahmad, Elana Simon, Seyone Chithrananda, Gabriel Grand, and Bharath Ramsundar.
+Chemberta-2: Towards chemical foundation models. arXiv preprint arXiv:2209.01712 , 2022.
+[3] Michael Ahn, Anthony Brohan, Noah Brown, Yevgen Chebota r, Omar Cortes, Byron David,
+Chelsea Finn, Keerthana Gopalakrishnan, Karol Hausman, Al ex Herzog, et al. Do as I can,
+not as I say: Grounding language in robotic affordances. arXiv preprint arXiv:2204.01691 ,
+2022.
+[4] Diego Aineto, Sergio Jiménez, and Eva Onaindia. Learnin g STRIPS action models with
+classical planning. In Proceedings of the International Conference on Automated P lanning
+and Scheduling , volume 28, pages 399–407, 2018.
+[5] Yusra Alkhazraji, Matthias Frorath, Markus Grützner, M alte Helmert, Thomas Liebetraut,
+Robert Mattmüller, Manuela Ortlieb, Jendrik Seipp, Tobias Springenberg, Philip Stahl, and
+Jan Wülﬁng. Pyperplan (v1.3), 2020. URL https://doi.org/10.5281/zenodo.3701399 .
+[6] Jacob Andreas, John Bufe, David Burkett, Charles Chen, J osh Clausman, Jean Crawford,
+Kate Crim, Jordan DeLoach, Leah Dorner, Jason Eisner, Hao Fa ng, Alan Guo, David Hall,
+Kristin Hayes, Kellie Hill, Diana Ho, Wendy Iwaszuk, Smriti Jha, Dan Klein, Jayant Krish-
+namurthy, Theo Lanman, Percy Liang, Christopher H. Lin, Ily a Lintsbakh, Andy McGovern,
+Aleksandr Nisnevich, Adam Pauls, Dmitrij Petters, Brent Re ad, Dan Roth, Subhro Roy, Jesse
+Rusak, Beth Short, Div Slomin, Ben Snyder, Stephon Striplin , Yu Su, Zachary Tellman, Sam
+Thomson, Andrei V orobev, Izabela Witoszko, Jason Wolfe, Ab by Wray, Yuchen Zhang, and
+Alexander Zotov. Task-oriented dialogue as dataﬂow synthe sis. Transactions of the Asso-
+ciation for Computational Linguistics , 8:556–571, 2020. doi: 10.1162/tacl_a_00333. URL
+https://aclanthology.org/2020.tacl-1.36 .
+[7] Rohan Anil, Andrew M Dai, Orhan Firat, Melvin Johnson, Dm itry Lepikhin, Alexandre Pas-
+sos, Siamak Shakeri, Emanuel Taropa, Paige Bailey, Zhifeng Chen, et al. PaLM 2 technical
+report. arXiv preprint arXiv:2305.10403 , 2023.
+[8] Jacob Austin, Augustus Odena, Maxwell Nye, Maarten Bosm a, Henryk Michalewski, David
+Dohan, Ellen Jiang, Carrie Cai, Michael Terry, Quoc Le, et al . Program synthesis with large
+language models. arXiv preprint arXiv:2108.07732 , 2021.
+[9] Adi Botea, Markus Enzenberger, Martin Müller, and Jonat han Schaeffer. Macro-ff: Improv-
+ing AI planning with automatically learned macro-operator s.Journal of Artiﬁcial Intelligence
+Research , 24:581–621, 2005.
+11
+[10] Tom B Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah , Jared Kaplan, Prafulla Dhari-
+wal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Aman da Askell, et al. Language
+models are few-shot learners. In Proceedings of NeurIPS , 2020.
+[11] Ruisheng Cao, Su Zhu, Chen Liu, Jieyu Li, and Kai Yu. Sema ntic parsing
+with dual learning. In Proceedings of ACL , pages 51–64, Florence, Italy, July
+2019. Association for Computational Linguistics. doi: 10. 18653/v1/P19-1007. URL
+https://aclanthology.org/P19-1007 .
+[12] Binghong Chen, Chengtao Li, Hanjun Dai, and Le Song. Ret ro*: Learning retrosynthetic
+planning with neural guided A* search. In Proceedings of ICML , pages 1608–1616. PMLR,
+2020.
+[13] Mark Chen, Jerry Tworek, Heewoo Jun, Qiming Yuan, Henri que Ponde de Oliveira Pinto,
+Jared Kaplan, Harri Edwards, Yuri Burda, Nicholas Joseph, G reg Brockman, Alex Ray,
+Raul Puri, Gretchen Krueger, Michael Petrov, Heidy Khlaaf, Girish Sastry, Pamela Mishkin,
+Brooke Chan, Scott Gray, Nick Ryder, Mikhail Pavlov, Alethe a Power, Lukasz Kaiser, Mo-
+hammad Bavarian, Clemens Winter, Philippe Tillet, Felipe P etroski Such, Dave Cummings,
+Matthias Plappert, Fotios Chantzis, Elizabeth Barnes, Ari el Herbert-V oss, William Hebgen
+Guss, Alex Nichol, Alex Paino, Nikolas Tezak, Jie Tang, Igor Babuschkin, Suchir Balaji,
+Shantanu Jain, William Saunders, Christopher Hesse, Andre w N. Carr, Jan Leike, Josh
+Achiam, Vedant Misra, Evan Morikawa, Alec Radford, Matthew Knight, Miles Brundage,
+Mira Murati, Katie Mayer, Peter Welinder, Bob McGrew, Dario Amodei, Sam McCandlish,
+Ilya Sutskever, and Wojciech Zaremba. Evaluating large lan guage models trained on code.
+2021.
+[14] Wenhu Chen, Xueguang Ma, Xinyi Wang, and William W Cohen . Program of thoughts
+prompting: Disentangling computation from reasoning for n umerical reasoning tasks. arXiv
+preprint arXiv:2211.12588 , 2022.
+[15] Hanjun Dai, Yingtao Tian, Bo Dai, Steven Skiena, and Le S ong. Syntax-directed variational
+autoencoder for structured data. arXiv preprint arXiv:1802.08786 , 2018.
+[16] David Dohan, Winnie Xu, Aitor Lewkowycz, Jacob Austin, David Bieber, Raphael Gontijo
+Lopes, Yuhuai Wu, Henryk Michalewski, Rif A. Saurous, Jasch a Sohl-dickstein, Kevin Mur-
+phy, and Charles Sutton. Language Model Cascades. arXiv:2207.10342 , 2022.
+[17] Chris Dyer, Adhiguna Kuncoro, Miguel Ballesteros, and Noah A. Smith. Recurrent neural
+network grammars. In Proceedings of NAACL , 2016.
+[18] Jay Earley. An efﬁcient context-free parsing algorith m.Communications of the ACM , 13(2):
+94–102, 1970.
+[19] Carl Edwards, Tuan Lai, Kevin Ros, Garrett Honke, and He ng Ji. Translation between
+molecules and natural language. arXiv preprint arXiv:2204.11817 , 2022.
+[20] Richard E Fikes and Nils J Nilsson. STRIPS: A new approac h to the application of theorem
+proving to problem solving. Artiﬁcial intelligence , 2(3-4):189–208, 1971.
+[21] Maria Fox and Derek Long. PDDL2. 1: An extension to PDDL f or expressing temporal
+planning domains. Journal of Artiﬁcial Intelligence Research , 20:61–124, 2003.
+[22] Maria Fox and Derek Long. Modelling mixed discrete-con tinuous domains for planning.
+Journal of Artiﬁcial Intelligence Research , 27:235–297, 2006.
+[23] Dan Friedman, Alexander Wettig, and Danqi Chen. Findin g Dataset Shortcuts with Grammar
+Induction. In Proceedings of EMNLP , 2022.
+[24] Luyu Gao, Aman Madaan, Shuyan Zhou, Uri Alon, Pengfei Li u, Yiming Yang, Jamie Callan,
+and Graham Neubig. PAL: Program-aided Language Models. arXiv:2211.10435 , 2022.
+[25] Caelan R. Garrett, Tomas Lozano-Perez, and Leslie P. Ka elbling. PDDLStream: Integrat-
+ing symbolic planners and blackbox samplers. In International Conference on Automated
+Planning and Scheduling (ICAPS) , 2020. URL https://arxiv.org/abs/1802.08705 .
+12
+[26] Saibo Geng, Martin Josifosky, Maxime Peyrard, and Robe rt West. Flexible Grammar-Based
+Constrained Decoding for Language Models. arXiv:2305.13971 , 2023.
+[27] Malik Ghallab, Adele Howe, Craig Knoblock, Drew McDerm ott, Ashwin Ram, Manuela
+Veloso, Daniel Weld, David Wilkins SRI, Anthony Barrett, Da ve Christianson, et al. PDDL
+– the planning domain deﬁnition language. Technical Report CVC TR98003/DCS TR1165.
+New Haven, CT: Yale Center for Computational Vision and Cont rol., 1998.
+[28] Sumit Gulwani, Oleksandr Polozov, Rishabh Singh, et al . Program synthesis. Foundations
+and Trends® in Programming Languages , 4(1-2):1–119, 2017.
+[29] Minghao Guo, Veronika Thost, Beichen Li, Payel Das, Jie Chen, and Wojciech Matusik.
+Data-efﬁcient graph grammar learning for molecular genera tion. In Proceedings of ICLR ,
+2022.
+[30] Joy He-Yueya, Gabriel Poesia, Rose E Wang, and Noah D Goo dman. Solving math word prob-
+lems by combining language models with symbolic solvers. arXiv preprint arXiv:2304.09102 ,
+2023.
+[31] Jonathan Herzig and Jonathan Berant. Span-based seman tic parsing for compositional
+generalization. In Proceedings of ACL , pages 908–921, Online, August 2021. As-
+sociation for Computational Linguistics. doi: 10.18653/v 1/2021.acl-long.74. URL
+https://aclanthology.org/2021.acl-long.74 .
+[32] Jörg Hoffmann. The metric-ff planning system: Transla ting“ignoring delete lists”to numeric
+state variables. Journal of Artiﬁcial Intelligence Research , 20:291–341, 2003.
+[33] Hanxu Hu, Hongyuan Lu, Huajian Zhang, Wai Lam, and Yue Zh ang. Chain-of-symbol
+prompting elicits planning in large langauge models. arXiv preprint arXiv:2305.10276 , 2023.
+[34] Wenlong Huang, Pieter Abbeel, Deepak Pathak, and Igor M ordatch. Language models as
+zero-shot planners: Extracting actionable knowledge for e mbodied agents. In Proceedings of
+ICML , pages 9118–9147. PMLR, 2022.
+[35] Yong Jiang, Wenjuan Han, Kewei Tu, et al. Unsupervised n eural dependency parsing. Asso-
+ciation for Computational Linguistics (ACL), 2016.
+[36] Lifeng Jin, Finale Doshi-Velez, Timothy Miller, Lane S chwartz, and William Schuler. Unsu-
+pervised learning of PCFGs with normalizing ﬂow. In Proceedings of ACL , Florence, Italy,
+July 2019. Association for Computational Linguistics.
+[37] Wengong Jin, Regina Barzilay, and Tommi Jaakkola. Junc tion tree variational autoencoder
+for molecular graph generation. In Proceedings of ICML , pages 2323–2332. PMLR, 2018.
+[38] Hiroshi Kajino. Molecular hypergraph grammar with its application to molecular optimiza-
+tion. In Proceedings of ICML , pages 3183–3191. PMLR, 2019.
+[39] Aishwarya Kamath and Rajarshi Das. A survey on semantic parsing. arXiv preprint
+arXiv:1812.00978 , 2018.
+[40] Beomjoon Kim, Zi Wang, Leslie Pack Kaelbling, and Tomás Lozano-Pérez. Learning to
+guide task and motion planning using score-space represent ation. The International Journal
+of Robotics Research , 38(7):793–812, 2019.
+[41] Yoon Kim. Sequence-to-sequence learning with latent n eural grammars. In Proceedings of
+NeurIPS , pages 26302–26317, 2021.
+[42] Yoon Kim, Chris Dyer, and Alexander Rush. Compound prob abilistic context-free grammars
+for grammar induction. In Proceedings of ACL , Florence, Italy, July 2019. Association for
+Computational Linguistics.
+[43] Yoon Kim, Alexander Rush, Lei Yu, Adhiguna Kuncoro, Chr is Dyer, and Gábor Melis. Unsu-
+pervised recurrent neural network grammars. In Proceedings of NAACL , Minneapolis, Min-
+nesota, June 2019. Association for Computational Linguist ics.
+13
+[44] Mario Krenn, Florian Häse, AkshatKumar Nigam, Pascal F riederich, and Alan Aspuru-Guzik.
+Self-referencing embedded strings (selﬁes): A 100% robust molecular string representation.
+Machine Learning: Science and Technology , 1(4):045024, oct 2020.
+[45] Matt J Kusner, Brooks Paige, and José Miguel Hernández- Lobato. Grammar variational
+autoencoder. In Proceedings of ICML , pages 1945–1954. PMLR, 2017.
+[46] Itay Levy, Ben Bogin, and Jonathan Berant. Diverse demo nstrations improve in-context com-
+positional generalization. arXiv preprint arXiv:2212.06800 , 2022.
+[47] Yaobo Liang, Chenfei Wu, Ting Song, Wenshan Wu, Yan Xia, Yu Liu, Yang Ou, Shuai
+Lu, Lei Ji, Shaoguang Mao, Yun Wang, Linjun Shou, Ming Gong, a nd Nan Duan.
+TaskMatrix.AI: Completing Tasks by Connecting Foundation Models with Millions of APIs.
+arXiv:2303.16434 , 2023.
+[48] Bill Yuchen Lin, Chengsong Huang, Qian Liu, Wenda Gu, Sa m Sommerer, and Xiang
+Ren. On grounded planning for embodied tasks with language m odels. arXiv preprint
+arXiv:2209.00465 , 2022.
+[49] Bo Liu, Yuqian Jiang, Xiaohan Zhang, Qiang Liu, Shiqi Zh ang, Joydeep Biswas, and Peter
+Stone. Llm+ p: Empowering large language models with optima l planning proﬁciency. arXiv
+preprint arXiv:2304.11477 , 2023.
+[50] Qing Lyu, Shreya Havaldar, Adam Stein, Li Zhang, Delip R ao, Eric Wong, Marianna Apid-
+ianaki, and Chris Callison-Burch. Faithful chain-of-thou ght reasoning. arXiv preprint
+arXiv:2301.13379 , 2023.
+[51] Maxwell Nye, Anders Andreassen, Guy Gur-Ari, Henryk Wi told Michalewski, Jacob Austin,
+David Bieber, David Martin Dohan, Aitor Lewkowycz, Maarten Paul Bosma, David Luan,
+Charles Sutton, and Augustus Odena. Show your work: Scratch pads for intermediate compu-
+tation with language models. arXiv:2112.00114 , 2021.
+[52] Liangming Pan, Alon Albalak, Xinyi Wang, and William Ya ng Wang. Logic-LM: Em-
+powering Large Language Models with Symbolic Solvers for Fa ithful Logical Reasoning.
+arXiv:2305.12295 , 2023.
+[53] Bhargavi Paranjape, Scott Lundberg anbd Sameer Singh, Hannaneh Hajishirzi, Luke Zettle-
+moyer, and Marco Tulio Ribeiro. ART: Automatic multi-step r easoning and tool-use for large
+language models. arXiv:2303.09014 , 2023.
+[54] Emmanouil Antonios Platanios, Adam Pauls, Subhro Roy, Yuchen Zhang, Alexander Kyte,
+Alan Guo, Sam Thomson, Jayant Krishnamurthy, Jason Wolfe, J acob Andreas, and Dan Klein.
+Value-agnostic conversational semantic parsing. In Proceedings of ACL , August 2021.
+[55] Gabriel Poesia, Alex Polozov, Vu Le, Ashish Tiwari, Gus tavo Soares, Christopher Meek, and
+Sumit Gulwani. Synchromesh: Reliable Code Generation from Pre-trained Language Models.
+Proceedings of ICLR, 2022.
+[56] Yujia Qin, Shengding Hu, Yankai Lin, Weize Chen, Ning Di ng, Ganqu Cui, Zheni Zeng,
+Yufei Huang, Chaojun Xiao, Chi Han, et al. Tool learning with foundation models. arXiv
+preprint arXiv:2304.08354 , 2023.
+[57] Linlu Qiu, Peter Shaw, Panupong Pasupat, Tianze Shi, Jo nathan Herzig, Emily Pitler, Fei Sha,
+and Kristina Toutanova. Evaluating the impact of model scal e for compositional generaliza-
+tion in semantic parsing. In Proceedings of EMNLP , December 2022.
+[58] Shreyas Sundara Raman, Vanya Cohen, Eric Rosen, Ifrah I drees, David Paulius, and Stefanie
+Tellex. Planning with large language models via corrective re-prompting. arXiv preprint
+arXiv:2211.09935 , 2022.
+[59] Nils Reimers and Iryna Gurevych. Sentence-bert: Sente nce embeddings using siamese bert-
+networks. arXiv preprint arXiv:1908.10084 , 2019.
+14
+[60] David Rogers and Mathew Hahn. Extended-connectivity ﬁ ngerprints. Journal of chemical
+information and modeling , 50(5):742–754, 2010.
+[61] Yu Rong, Yatao Bian, Tingyang Xu, Weiyang Xie, Ying Wei, Wenbing Huang, and Junzhou
+Huang. Self-supervised graph transformer on large-scale m olecular data. Proceedings of
+NeurIPS , 33:12559–12571, 2020.
+[62] Victor Sanh, Albert Webson, Colin Raffel, Stephen H. Ba ch, et al. Multitask prompted train-
+ing enables zero-shot task generalization. In Proceedings of ICLR , 2022.
+[63] Timo Schick, Jane Dwivedi-Yu, Roberto Dessi, Roberta R aileanu, Maria Lomeli, Luke Zettle-
+moyer, Nicola Cancedda, and Thomas Scialom. Toolformer: La nguage Models Can Teach
+Themselves to Use Tools. arXiv:2302.04761 , 2023.
+[64] Torsten Scholak, Nathan Schucher, and Dzmitry Bahdana u. PICARD: Parsing incrementally
+for constrained auto-regressive decoding from language mo dels. In Proceedings of EMNLP ,
+Online and Punta Cana, Dominican Republic, November 2021. A ssociation for Computa-
+tional Linguistics.
+[65] Pratyusha Sharma, Antonio Torralba, and Jacob Andreas . Skill induction and planning with
+latent language. arXiv preprint arXiv:2110.01517 , 2021.
+[66] Peter Shaw, Ming-Wei Chang, Panupong Pasupat, and Kris tina Toutanova. Compositional
+generalization and natural language variation: Can a seman tic parsing approach handle both?
+InProceedings of ACL , August 2021.
+[67] Richard Shin and Benjamin Van Durme. Few-shot semantic parsing with language models
+trained on code. In Proceedings of NAACL , pages 5417–5425, Seattle, United States, July
+2022. Association for Computational Linguistics. doi: 10. 18653/v1/2022.naacl-main.396.
+URLhttps://aclanthology.org/2022.naacl-main.396 .
+[68] Richard Shin, Christopher Lin, Sam Thomson, Charles Ch en, Subhro Roy, Emmanouil Anto-
+nios Platanios, Adam Pauls, Dan Klein, Jason Eisner, and Ben jamin Van Durme. Constrained
+language models yield few-shot semantic parsers. In Proceedings of EMNLP . Association for
+Computational Linguistics, November 2021.
+[69] Tom Silver, Varun Hariprasad, Reece S Shuttleworth, Ni shanth Kumar, Tomás Lozano-Pérez,
+and Leslie Pack Kaelbling. PDDL planning with pretrained la rge language models. In
+NeurIPS 2022 Foundation Models for Decision Making Worksho p, 2022.
+[70] David Smith and Jason Eisner. Quasi-Synchronous Gramm ars: Alignment by Soft Projection
+of Syntactic Dependencies. In Proceedings on the Workshop on Statistical Machine Transla -
+tion, 2006.
+[71] Jennifer J Sun, Megan Tjandrasuwita, Atharva Sehgal, A rmando Solar-Lezama, Swarat
+Chaudhuri, Yisong Yue, and Omar Costilla-Reyes. Neurosymb olic programming for science.
+arXiv preprint arXiv:2210.05050 , 2022.
+[72] Didac Suris, Sachit Menon, and Carl V ondrick. ViperGPT : Visual Inference via Python Exe-
+cution for Reasoning. arXiv:2303.08128 , 2023.
+[73] Mirac Suzgun, Nathan Scales, Nathanael Scharli, Sebas tian Gehrmann, Yi Tay, Hyung Won
+Chung, Aakanksha Chowdhery, Quoc V . Le, Ed H. Chi, Denny Zhou , and Jason Wei. Chal-
+lenging big-bench tasks and whether chain-of-thought can s olve them. arXiv:2210.09261 ,
+2022.
+[74] Karthik Valmeekam, Alberto Olmo, Sarath Sreedharan, a nd Subbarao Kambhampati. Large
+language models still can’t plan (a benchmark for llms on pla nning and reasoning about
+change). arXiv preprint arXiv:2206.10498 , 2022.
+[75] Gregor vom Scheidt. Experimental results from applyin g GPT-4 to an unpublished formal
+language. arXiv:2305.12196 , 2023.
+15
+[76] Bailin Wang, Ivan Titov, Jacob Andreas, and Yoon Kim. Hi erarchical Phrase-based Sequence-
+to-Sequence Learning. In Proceedings of EMNLP , 2022.
+[77] Guanzhi Wang, Yuqi Xie, Yunfan Jiang, Ajay Mandlekar, C haowei Xiao, Yuke Zhu, Linxi
+Fan, and Anima Anandkumar. V oyager: An open-ended embodied agent with large language
+models. arXiv preprint arXiv:2305.16291 , 2023.
+[78] Mengqiu Wang, Noah A. Smith, and Teruko Mitamura. What i s the Jeopardy Model? A
+Quasi-Synchronous Grammar for QA. In Proceedings of EMNLP , 2007.
+[79] Sheng Wang, Yuzhi Guo, Yuhong Wang, Hongmao Sun, and Jun zhou Huang. Smiles-bert:
+large scale unsupervised pre-training for molecular prope rty prediction. In Proceedings of
+the 10th ACM international conference on bioinformatics, c omputational biology and health
+informatics , pages 429–436, 2019.
+[80] Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed Chi , Sharan Narang, Aakanksha
+Chowdhery, and Denny Zhou. Self-consistency improves chai n of thought reasoning in lan-
+guage models. In Proceedings of ICLR , 2023.
+[81] Yushi Wang, Jonathan Berant, and Percy Liang. Building a semantic parser overnight. In
+Proceedings of ACL , Beijing, China, July 2015.
+[82] Zi Wang, Stefanie Jegelka, Leslie Pack Kaelbling, and T omás Lozano-Pérez. Focused model-
+learning and planning for non-Gaussian continuous state-a ction systems. In 2017 IEEE Inter-
+national conference on robotics and automation (ICRA) , pages 3754–3761. IEEE, 2017.
+[83] Zi Wang, Caelan Reed Garrett, Leslie Pack Kaelbling, an d Tomás Lozano-Pérez. Active
+model learning and diverse action sampling for task and moti on planning. In 2018 IEEE/RSJ
+International Conference on Intelligent Robots and System s (IROS) , pages 4107–4114. IEEE,
+2018.
+[84] Zi Wang, Caelan Reed Garrett, Leslie Pack Kaelbling, an d Tomás Lozano-Pérez. Learning
+compositional models of robot skills for task and motion pla nning. The International Journal
+of Robotics Research , 40(6-7):866–894, 2021.
+[85] Jason Wei, Maarten Paul Bosma, Vincent Zhao, Kelvin Guu , Adams Wei Yu, Brian Lester,
+Nan Du, Andrew Mingbo Dai, and Quoc V . Le. Finetuned language models are zero-shot
+learners. In Proceedings of ICLR , 2022.
+[86] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma , Brian Ichter, Fei Xia, Ed Chi,
+Quoc Le, and Denny Zhou. Chain of thought prompting elicits r easoning in large language
+models. In Proceedings of NeurIPS , 2022.
+[87] David Weininger. Smiles, a chemical language and infor mation system. 1. introduction to
+methodology and encoding rules. Journal of chemical information and computer sciences ,
+28(1):31–36, 1988.
+[88] Victoria Xia, Zi Wang, and Leslie Pack Kaelbling. Learn ing sparse relational transition mod-
+els. In International Conference on Learning Representations , 2019.
+[89] Frank F Xu, Uri Alon, Graham Neubig, and Vincent Josua He llendoorn. A systematic evalua-
+tion of large language models of code. In Proceedings of the 6th ACM SIGPLAN International
+Symposium on Machine Programming , pages 1–10, 2022.
+[90] Ryan Yang, Tom Silver, Aidan Curtis, Tomas Lozano-Pere z, and Leslie Pack Kaelbling. Pg3:
+Policy-guided planning for generalized policy generation .arXiv preprint arXiv:2204.10420 ,
+2022.
+[91] Songlin Yang, Yanpeng Zhao, and Kewei Tu. Neural bi-lex icalized PCFG induction. In
+Proceedings of ACL , Online, August 2021. Association for Computational Lingu istics.
+[92] Songlin Yang, Yanpeng Zhao, and Kewei Tu. PCFGs can do be tter: Inducing probabilistic
+context-free grammars with many symbols. In Proceedings of NAACL , 2021.
+16
+[93] Songlin Yang, Roger P Levy, and Yoon Kim. Unsupervised d iscontinuous constituency pars-
+ing with mildly context-sensitive grammars. arXiv preprint arXiv:2212.09140 , 2022.
+[94] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thoma s L Grifﬁths, Yuan Cao, and
+Karthik Narasimhan. Tree of thoughts: Deliberate problem s olving with large language mod-
+els.arXiv preprint arXiv:2305.10601 , 2023.
+[95] Jiacheng Ye, Zhiyong Wu, Jiangtao Feng, Tao Yu, and Ling peng Kong. Compositional exem-
+plars for in-context learning. arXiv preprint arXiv:2302.05698 , 2023.
+[96] Xi Ye, Qiaochu Chen, Isil Dillig, and Greg Durrett. Benc hmarking multimodal regex synthe-
+sis with complex structures. In Proceedings of ACL . Association for Computational Linguis-
+tics, July 2020.
+[97] Xi Ye, Qiaochu Chen, Isil Dillig, and Greg Durrett. Sati sﬁability-aided language models
+using declarative prompting. arXiv preprint arXiv:2305.09656 , 2023.
+[98] Pengcheng Yin, Hao Fang, Graham Neubig, Adam Pauls, Emm anouil Antonios Platanios,
+Yu Su, Sam Thomson, and Jacob Andreas. Compositional genera lization for neural semantic
+parsing via span-level supervised attention. Proceedings of ACL, 2021.
+[99] John M Zelle and Raymond J Mooney. Learning to parse data base queries using inductive
+logic programming. In Proceedings of the national conference on artiﬁcial intell igence , pages
+1050–1055, 1996.
+[100] Hao Zhu, Yonatan Bisk, and Graham Neubig. The return of lexical dependencies: Neural
+lexicalized PCFGs. Transactions of the Association for Computational Linguis tics, 8, 2020.
+17
+Few-Shot Retrieval-based GeoQuery Out-of-Dist.
+GeoQuery SMCalﬂow Overnight-Blk GeoQuery SMCalﬂow Overni ght-Blk Template TMCD Length NewFunc
+Train 32 16 32 560 128 1436 441 440 440 453
+Test 280 360 399 280 360 399 439 440 440 447
+Table 6: Statistics of the splits used for experiments on semantic pa rsing.
+Approach GeoQuery SMCalFlow Overnight-B
+Standard Prompting (unconstrained decoding) 81.5 (1.0) 46.4 (1.0) 54.7 (1.0)
+w. constrained decoding ( /hatwidey∈L(G)) 81.8 (4.3) 49.2 (5.6) 54.7 (1.6)
+Linearized Derivation Tree Prompting 77.5 (1.0) 50.0 (1.0) 56.4 (1.0)
+Grammar Prompting (unconstrained decoding) 87.5 (1.0) 50.8 (1.0) 57.4 (1.0)
+w. grammar constraint ( /hatwideG⊆G) 88.6 (3.0) 51.3 (3.0) 60.4 (1.4)
+w. grammar and program constraint ( /hatwidey∈L(/hatwideG)) 88.9 (3.3) 52.4 (3.3) 60.9 (2.8)
+w. oracle grammar ( /hatwideG=G[y]) 96.1 (1.3) 80.0 (1.0) 94.2 (1.0)
+w. oracle grammar + program constraint 96.8 (2.1) 83.6 (2.6) 96.5 (1.0)
+Table 7: Extended results which show the number of Codex calls per exa mple on few-shot semantic parsing in
+brackets. Columns in grey show program accuracy, while whit e columns others indicate execution accuracy.
+A Experiment Details
+A.1 Semantic Parsing
+Statistics and Splits. We show the statistics for the splits used for the experiment s in Table 6.
+For GeoQuery, we utilize the standard split from Zelle and Mo oney [ 99] in the retrieval-based setting
+and the Template, TMCD, and Length splits from Shaw et al. [ 66]. We randomly sample 32 exam-
+ples from the training set of the standard split to create the few-shot split. To generate the NewFunc
+split, we designate examples utilizing the following eight functions as test examples: smallest,
+shortest, most, highest, sum, population_1, count, major ; the remaining examples are
+incorporated into the training set.
+For SMCalFlow, we adopt the 16-shot and 128-shot cross-doma in settings from Yin et al. [ 98] as
+our few-shot and retrieval-based settings, respectively. It is noteworthy that the training set of the
+original splits contains approximately 25k in-domain trai ning examples. Previous work [ 96,57] uti-
+lized these examples as their retrieval set. However, in our experiments, we found that incorporating
+in-domain examples did not enhance performance. Consequen tly, we use 16/128 cross-domain ex-
+amples as our training set in the few-shot and retrieval sett ings, respectively. For all experiments on
+SMCalFlow, we used the preprocessed version from Qiu et al. [ 57], which employs a more concise
+LISPRESS format [ 54] than the original version [ 98]. This format aligns with Ye et al. [ 96] for a
+fair comparison.
+For Overnight-Blocks, we employ the standard split from Wan g et al. [ 81] in the retrieval setting.
+We randomly sample 32 examples from the training set of the st andard split to create the few-shot
+split.
+Scoring Functions for Constrained Generation. For each candidate continuation w∈Σ[ypreﬁx]
+for correction, we ﬁrst form a partial program via concatena tionypreﬁx·wand then feed it into Codex
+to obtain the score for the candidate via
+logPLLM(w|/hatwideG,x,ypreﬁx,(x(i),G[y(i)],y(i))N
+i=1).
+In the case where wconsists of multiple BPE tokens, e.g., FindManger( is tokenized into Find ,
+Manager , and(, we average the token-level log-likelihood to obtain a cand idate-level score. How-
+ever, when the size of Σ[ypreﬁx]exceeds 16, invoking Codex for each candidate becomes too ex pen-
+sive. To address this issue, we employ SentenceBERT to selec t 16 most plausible candidates ﬁrst
+via a dot product,
+(SentenceBERT (ˆyt))⊤(SentenceBERT (ypreﬁx·w)),
+where SentenceBERT yields the embeddings for the incorrect prediction ˆytand a candidate of cor-
+rected partial program ypreﬁx·w.
+18
+Molecule Class Temperature Presence Penalty Frequency Pen alty
+Sampling specialized grammars /hatwideG
+Acrylates 0.6 0.1 0.1
+Chain Extenders 0.6 0.1 0.1
+Isocyanates 0.6 0.4 0.4
+Sampling molecules /hatwidey
+Acrylates 0.6 0.1 0.1
+Chain Extenders 0.6 0.1 0.1
+Isocyanates 0.3 0.4 0.4
+Table 8: Hyperparameters for sampling specialized grammars /hatwideG(top) and the molecules /hatwideyin grammar prompt-
+ing for molecule generation. Standard prompting uses the sa me hyperparameters for y.
+The functionality of obtaining the log-likelihood for a can didate continuation given a preﬁx is ap-
+plicable via Codex APIs11via setting logprobs=True andecho=True . Unfortunately, subsequent
+models (e.g., GPT-3.5 and GPT-4) disable such functionalit y. As a workaround, we simply use the
+scoring function based on SentenceBERT to directly select t he best candidate in our PDDL planning
+experiments.
+Cost Efﬁciency. We assess various decoding strategies for their cost efﬁcie ncy, focusing on the
+number of API calls. The number of Codex calls resulting from the few-shot semantic parsing
+experiments is presented in Figure 7, alongside the corresponding accuracy metrics. The result s
+indicate that standard prompting under constrained decodi ng leads to a signiﬁcantly higher number
+of Codex calls. Similarly, grammar-prompting with constra ints also results in an increased number
+of Codex calls. However, when employing both grammar and pro gram constraints, the number
+of calls decreases meaningfully in comparison to standard p rompting under constrained decoding.
+Future work might consider exploring strategies for more co st-efﬁcient constrained decoding.
+Grammar Prompting with Annotated Rules. We have additionally experimented with enhanc-
+ing BNF rules by appending natural language comments. As ill ustrated in Figure 6, we pair each
+BNF rule with its corresponding natural language phrases ex tracted from the given query x. These
+manually annotated comments yield an explicit corresponde nce between natural language phrases
+and their corresponding BNF rules, thereby better facilita ting interpretation and application of the
+grammars for generating programs. When employing the augme nted grammar prompting, we no-
+ticed marginal improvements on SMCalFlow (+1.0%) and Overn ight-Blocks (0.5%), with no ob-
+served enhancement on GeoQuery. While the gains might not ap pear signiﬁcant, this predicted
+alignment could potentially contribute to improved interp retability and further constraints on gen-
+eration. For instance, the phrase “someone’s manager” shou ld consistently trigger the function
+FindManager( . We leave the exploration of utilizing the augmented rules f or future work.
+A.2 Molecule Generation
+Sampling Procedure Different from semantic parsing and PDDL planning, where th e most proba-
+ble program yneeds to be found via argmax inference, molecule generation has empty speciﬁcation
+xand requires sampling from a prompting-based distribution . The sampling procedure for grammar
+prompting consists of three stages: (1) we randomly sample a permutation of given molecules, de-
+noted asπ, (2) based on a prompt formed by the permutation, we sample a s pecialized grammar /hatwideG
+via
+/hatwideG∼PLLM(G′|x,(G[y(π[i])],y(π[i]))N
+i=1),
+iii) we ﬁnally obtain the molecule conditioned /hatwideG,
+/hatwidey∼PLLM(y|/hatwideG,(G[y(π[i])],y(π[i]))N
+i=1).
+We list the hyperparameters used for the sampling procedure in for (2) in Table 8(top) and for (3)
+in Table 8(bottom).
+11https://learn.microsoft.com/en-us/azure/cognitive-s ervices/openai/reference
+19
+LLM Prompt
+Y ou are an expert programmer, and you need to write a program f or the given natural language query.
+First, you should write a grammar that contains all the neces sary BNF rules. Then, you should write pro-
+grams that conform to your predicted rules.
+x(1):ﬁnd the meeting on Wednesday with Bob and Carol
+G[y(1)]:event ::="QueryEvent(" constraint ")" ﬁnd the meeting
+constraint ::="(&" constraint constraint ")"
+|"(start_?" date ")" on ...
+|"(attendee_?" attendee attendee ")" with ...
+date ::="Wednesday" Wednesday
+attendee ::="Bob"|"Carol" Bob and Carol
+y(1):QueryEvent (& (start _?Wednesday )(attendee _?Bob Carol ))
+...
+x:Add meeting with Jean’s manager on Wednesday at 3PM
+LLM Output
+/hatwideG: event ::="CreateEvent(" constraint ")" Add meeting
+constraint ::="(&" constraint constraint ")"
+|"(start_?" date time ")" on ... at ...
+|"(attendee_?" attendee ")" with ...
+date ::="Wednesday" Wednesday
+time ::="NumberPM(3)" 3PM
+attendee ::="FindManager(" attendee ")" |"Jean" Jean’s manager
+/hatwidey:CreateEvent (& (start _?Wednesday NumberPM (3))(attendee _?FindManager (Jean)))
+Figure 6: Example of grammar prompting where BNF grammars are additio nally annotated with natural lan-
+guage comments (shown in green). These manually curated com ments provide a detailed mapping between
+natural language phrases and their corresponding BNF rules , thereby better facilitating interpretation and appli-
+cation of the grammars for generating programs. We manually craft and add these comments to the few-shot
+prompts (top). The model predicts this during inference (bo ttom).
+In comparison, the sampling procedure for standard prompti ng only consists of two stages: (1) we
+randomly sample a permutation of given molecules, denoted a sπ, (2) based on a prompt formed by
+the permutation, we directly sample a molecule via
+/hatwidey∼PLLM(y|(y(π[i]))N
+i=1).
+The hyperparameters used for Step (2) is the same as in gramma r prompting and shown in Table 8
+(bottom).
+While we observed that Earley-based constrained generatio n enhances grammar prompting in terms
+of improving validity, other metrics, such as the retrosynt hesis score, decreased signiﬁcantly. This
+discrepancy could be attributed to the fact that existing LL Ms, due to their limited exposure to
+molecules represented in SMILES format, struggle with comp rehending and applying the BNF
+grammar rules of SMILES. Overall, our current ﬁndings serve as preliminary evidence that gram-
+mar prompting can tap into the capacity of LLMs to understand and apply BNF rules. However such
+capacity still remains limited in text-focused LLMs.
+A.3 PDDL Planning
+Restricted Action Space The specialized grammar deﬁned for PDDL planning essential ly delin-
+eates a constrained action space that includes necessary ac tions and their associated objects. Our
+empirical results found that limiting the classical GBFS pl anner to the objects selected by a spe-
+cialized grammar proved too restrictive, yielding beneﬁci al results only within the Blocks domain.
+Therefore, we decided to remove this limitation, thus expan ding the action space of GBFS to contain
+the actions predicted from the grammar with an unrestricted range of objects.
+20
+B Prompts
+Figures 7,8, and 9demonstrate the prompts with grammars, based on actual exam ples in the SM-
+CalFlow, GeoQuery, and Overnight datasets respectively. B ecause the general grammar of SM-
+CalFlow is long (around 4k tokens), we do not include it withi n the prompt. For GeoQuery and
+Overnight, the general grammar is integrated as part of the i nstruction within the prompt. In the
+context of molecule generation, the general grammar for SMI LES12is also included. Figures 10and
+11demonstrate the prompts with action DSLs for PDDL planning.
+12https://metamolecular.com/cheminformatics/smiles/fo rmal-grammar/
+21
+LLM Prompt
+Y ou are an expert programmer, and you need to write a program f or the given natural language query.
+First, you should write a grammar that contains all the neces sary BNF rules. Then, you should write pro-
+grams that conform to your predicted rules.
+query: I need a meeting with Elli and her team on Wednesday afternoon .
+BNF grammar rules:
+call ::="(Yield" event ")"
+event ::="(CreatePreflightEventWrapper" event_constraint ")"
+event_constraint ::="(&" event_constraint event_constraint ")"
+|"(Event.start_?" datetime_constraint ")"
+|"(Event.attendees_?" attendee_constraint ")"
+datetime_constraint ::="(DateTimeConstraint" time date ")"
+time ::="(Afternoon)"
+date ::=day
+day ::="(NextDOW" day ")" |DAY
+DAY ::="(Wednesday)"
+attendee_constraint ::="(&" attendee_constraint attendee_constraint ")"
+|"(AttendeeListHasRecipient" person ")"
+|"(AttendeeListHasPeople" person ")"
+person ::=recipient|"(FindTeamOf" person ")"
+recipient ::="(Execute (refer (extensionConstraint" recipient ")))"
+|"(RecipientWithNameLike (PersonName.apply" string "))"
+string ::="“Elli”"
+program based on the BNF grammar rules:
+(Yield(CreatePreflightEventWrapper (&(Event.start _?(DateTimeConstraint (Afternoon )
+(NextDOW(Wednesday ))))(Event.attendees _?(&(AttendeeListHasRecipient (Execute(refer
+(extensionConstraint (RecipientWithNameLike (PersonName .apply“Elli”))))))
+(AttendeeListHasPeople (FindTeamOf (Execute(refer(extensionConstraint
+(RecipientWithNameLike (PersonName .apply“Elli”))))))))))))
+...
+query: Create a meeting tomorrow with the staff .
+LLM Output
+BNF grammar rules:
+call ::="(Yield" event ")"
+event ::="(CreatePreflightEventWrapper" event_constraint ")"
+event_constraint ::="(&" event_constraint event_constraint ")"
+|"(Event.start_?" datetime_constraint ")"
+|"(Event.attendees_?" attendee_constraint ")"
+datetime_constraint ::="(DateTime.date_?" datetime_constraint ")"
+|"(?" OP datetime ")"
+OP ::="="
+datetime ::=date
+date ::=day
+day ::=DAY
+DAY ::="(Tomorrow)"
+attendee_constraint ::="(AttendeeListHasPeople" person ")"
+person ::="(FindReports" person ")"
+|recipient
+recipient ::="(toRecipient (CurrentUser))"
+program based on the BNF grammar rules:
+(Yield(CreateCommitEventWrapper (CreatePreflightEventWrapper (&(Event.start _?
+(DateTime .date _?(? = (Tomorrow ))))(Event.attendees _?(AttendeeListHasPeople
+(FindReports (toRecipient (CurrentUser )))))))))
+Figure 7: Prompt with real examples from the SMCalFlow dataset.
+22
+LLM Prompt
+Y ou are an expert programmer, and you need to write a program f or the given natural language query.
+First, you should write grammar rules by choosing from the fo llowing BNF rules. Then, you should write
+programs that conform to your predicted rules.
+[BEGIN RULES]
+query ::="answer(" answer_type ")"
+answer_type ::=city|state|num|place|river|country
+city ::="city(" city ")"
+|"cityid(‘" CITYNAME "’, ‘" STATEABBREV "’)"
+|"cityid(‘" CITYNAME "’, _)"
+|"capital(" city ")"
+|"major(" city ")"
+|"capital_1(" state ")"
+|"loc_2(" state ")"
+|"loc_2(" country ")"
+|"largest(" city ")"
+|"smallest(" city ")"
+|"intersection(" city "," city ")"
+|"exclude(" city "," city ")"
+|"largest_one(population_1(" city "))"
+|"largest_one(density_1(" city "))"
+|"smallest_one(population_1(" city "))"
+|"smallest_one(density_1(" city "))"
+|ALL_CITY
+...
+[END RULES]
+query: what states border hawaii ?
+BNF grammar rules:
+query ::="answer(" answer_type ")"
+answer_type ::=state
+state ::="state(" state ")"
+|"next_to_2(" state ")"
+|"stateid(‘" STATENAME "’)"
+STATENAME ::="hawaii"
+program based on the BNF grammar rules:
+answer(state(next _to_2(stateid(‘hawaii′))))
+...
+query: how many major cities are in arizona ?
+LLM Output
+BNF grammar rules:
+query ::="answer(" answer_type ")"
+answer_type ::=num
+num ::="count(" city ")"
+city ::="major(" city ")"
+|"city(" city ")"
+|"loc_2(" state ")"
+state ::="stateid(‘" STATENAME "’)"
+STATENAME ::="arizona"
+program based on the BNF grammar rules:
+answer(count(major(city(loc_2(stateid(‘arizona′))))))
+Figure 8: Prompt with real examples from the GeoQuery dataset.
+23
+LLM Prompt
+Y ou are an expert programmer, and you need to write a program f or the given natural language query.
+First, you should write grammar rules by choosing from the fo llowing BNF rules. Then, you should write
+programs that conform to your predicted rules.
+[BEGIN RULES]
+list_value ::="(listValue" list_value ")"
+|"(filter" list_value PROPERTY ")"
+|"(filter" list_value PROPERTY OP list_value ")"
+|"(superlative" list_value AGGREGATE "
+|(ensureNumericProperty" PROPERTY "))"
+|"(countSuperlative" list_value AGGREGATE PROPERTY ")"
+|"(_size" list_value ")"
+|"(aggregate" AGGREGATE list_value ")"
+|"(getProperty" list_value PROPERTY ")"
+|"(getProperty (singleton" SINGLETON_VALUE ") !type)"
+|"(concat" ENTITY_VALUE ENTITY_VALUE ")"
+|"(concat" NUMBER_VALUE NUMBER_VALUE ")"
+|ENTITY_VALUE|NUMBER_VALUE
+PROPERTY ::="shape"|"color"|"length"|"is_special"|"width"
+|"height"|"left"|"right"|"above"|"below"
+|"(reverse left)" |"(reverse right)"
+|"(reverse above)" |"(reverse below)"
+SINGLETON_VALUE ::="en.block"|"en.shape"|"en.color"
+ENTITY_VALUE ::="en.block.block1" |"en.block.block2" |"en.shape.pyramid"
+|"en.shape.cube" |"en.color.red"|"en.color.green"
+NUMBER_VALUE ::="3 en.inch"|"6 en.inch"|"2"
+OP ::="="|">"|"<"|">="|"<="|"!="
+AGGREGATE ::="sum"|"max"|"min"|"avg"
+[END RULES]
+query: which brick is taller than brick 1
+BNF grammar rules:
+list_value ::="(listValue" list_value ")"
+|"(aggregate" AGGREGATE list_value ")"
+|"(getProperty" list_value PROPERTY ")"
+|"(getProperty (singleton" SINGLETON_VALUE ") !type)"
+AGGREGATE ::="avg"
+SINGLETON_VALUE ::="en.block"
+PROPERTY ::="width"
+program based on the BNF grammar rules:
+(listValue (aggregate avg (getProperty (getProperty (singleton en .block) !type)width)))
+...
+query: look right of block 1 and get the special block
+LLM Output
+BNF grammar rules:
+list_value ::="(listValue" list_value ")"
+|"(filter" list_value PROPERTY OP list_value ")"
+|"(filter" list_value PROPERTY ")"
+|"(getProperty (singleton" SINGLETON_VALUE ") !type)"
+|ENTITY_VALUE
+SINGLETON_VALUE ::="en.block"
+PROPERTY ::="is_special"
+|"(reverse left)"
+OP ::="="
+ENTITY_VALUE ::="en.block.block1"
+program based on the BNF grammar rules:
+(listValue (filter(filter(getProperty (singleton en .block) !type)is_special)
+(reverse left ) =en.block.block1))
+Figure 9: Prompt with real examples from the Overnight dataset. Some l ong rules are omitted to ﬁt the space.
+24
+LLM Prompt
+Q:
+(:objects a b c d e - block)
+(:init (clear d) (clear c) (ontable d) (ontable a) (on c e) (on e b) (on b a) (handempty))
+(:goal (on a e) (on e b) (on b d) (on d c))
+DSL:
+plan ::=action+
+action ::="(unstack" object object ")"
+|"(put-down" object ")"
+|"(pick-up-and-stack" object object ")"
+|"(unstack-and-stack" object object object ")"
+object ::="c"|"e"|"d"|"b"|"a"
+A:
+(unstack c e) (put-down c) (pick-up-and-stack d c) (unstack e b) (put-down e) (unstack-and-stack b a d) (pick-up-
+and-stack e b) (pick-up-and-stack a e)
+Q:
+(:objects a b c d - block)
+(:init (clear a) (clear c) (clear d) (ontable a) (ontable b) ( ontable d) (on c b) (handempty))
+(:goal (on a b) (on b c) (on c d))
+DSL:
+plan ::=action+
+action ::="(unstack-and-stack" object object object ")"
+|"(pick-up-and-stack" object object ")"
+object ::="c"|"b"|"d"|"a"
+A:
+(unstack-and-stack c b d) (pick-up-and-stack b c) (pick-up -and-stack a b)
+...
+Q:
+(:objects a b c d - block)
+(:init (clear c) (clear a) (clear b) (clear d) (ontable c) (on table a) (ontable b) (ontable d) (handempty))
+(:goal (on d c) (on c b) (on b a))
+DSL:
+LLM Output
+plan ::=action+
+action ::="(pick-up-and-stack" object object ")"
+object ::="b"|"a"|"c"|"d"
+A:
+(pick-up-and-stack b a) (pick-up-and-stack c b) (pick-up- and-stack d c)
+Figure 10: Prompt with real examples in the Blocks domain from Pyperpla n. The prompt template follows
+[69].
+25
+LLM Prompt
+Q:
+(:objects crate0 crate1 crate2 crate3 crate4 crate5 depot0 distributor0 distributor1 hoist0 hoist1 hoist2 pallet0 pa llet1
+pallet2 pallet3 pallet4 pallet5 truck0 truck1 - object)
+(:init (pallet pallet0) (surface pallet0) (at pallet0 depo t0) (clear crate5) (pallet pallet1) (surface pallet1) (at p allet1
+distributor0) (clear pallet1) (pallet pallet2) (surface p allet2) (at pallet2 distributor1) (clear crate3) (pallet p allet3)
+(surface pallet3) (at pallet3 distributor0) (clear pallet 3) (pallet pallet4) (surface pallet4) (at pallet4 distribu tor0)
+(clear crate4) (pallet pallet5) (surface pallet5) (at pall et5 distributor1) (clear crate1) (truck truck0) (at truck0 dis-
+tributor1) (truck truck1) (at truck1 depot0) (hoist hoist0 ) (at hoist0 depot0) (available hoist0) (hoist hoist1) (at
+hoist1 distributor0) (available hoist1) (hoist hoist2) (a t hoist2 distributor1) (available hoist2) (crate crate0) ( surface
+crate0) (at crate0 distributor0) (on crate0 pallet4) (crat e crate1) (surface crate1) (at crate1 distributor1) (on cra te1
+pallet5) (crate crate2) (surface crate2) (at crate2 distri butor1) (on crate2 pallet2) (crate crate3) (surface crate3 ) (at
+crate3 distributor1) (on crate3 crate2) (crate crate4) (su rface crate4) (at crate4 distributor0) (on crate4 crate0) ( crate
+crate5) (surface crate5) (at crate5 depot0) (on crate5 pall et0) (place depot0) (place distributor0) (place distribu-
+tor1))
+(:goal (on crate0 pallet3) (on crate1 crate4) (on crate3 pal let1) (on crate4 pallet5) (on crate5 crate1))
+DSL:
+plan ::=action+
+action ::="(lift-and-drive" object object object object object obje ct ")"
+|"(drive-and-load" object object object object ")"
+|"(drive-and-lift" object object object object object ")"
+|"(lift" object object object object ")"
+|"(drive-and-unload" object object object object object ") "
+|"(drop" object object object object ")"
+object ::="truck1" |"hoist0" |"crate5" |"pallet0" |"depot0" |"truck0" |"hoist2"
+|"crate4" |"crate0" |"distributor1" |"hoist1" |"pallet4" |"distributor0"
+|"crate1" |"pallet5" |"crate3" |"crate2" |"pallet1" |"pallet3"
+A:
+(lift-and-drive truck1 hoist0 crate5 pallet0 depot0 depot 0) (drive-and-load truck1 hoist0 crate5 depot0) (drive-an d-
+lift truck0 hoist2 crate4 crate0 distributor1) (lift hoist 1 crate0 pallet4 distributor0) (drive-and-lift truck1 hoi st0
+crate1 pallet5 depot0) (drive-and-load truck1 hoist0 crat e1 depot0) (drive-and-lift truck1 hoist0 crate3 crate2 de-
+pot0) (drive-and-load truck1 hoist0 crate3 depot0) (drive -and-unload truck1 hoist0 crate3 pallet1 depot0) (drop
+hoist2 crate4 pallet5 distributor1) (drive-and-unload tr uck1 hoist0 crate1 crate2 depot0) (drive-and-lift truck0 h oist2
+crate1 crate2 distributor1) (drop hoist2 crate1 crate4 dis tributor1) (drive-and-unload truck1 hoist0 crate5 crate1 de-
+pot0) (drop hoist1 crate0 pallet3 distributor0)
+...
+Q:
+(:objects crate0 crate1 crate2 crate3 depot0 distributor0 distributor1 hoist0 hoist1 hoist2 pallet0 pallet1 pallet2
+truck0 truck1 - object) (:init (pallet pallet0) (surface pa llet0) (at pallet0 depot0) (clear crate0) (pallet pallet1) (sur-
+face pallet1) (at pallet1 distributor0) (clear crate3) (pa llet pallet2) (surface pallet2) (at pallet2 distributor1) (clear
+crate2) (truck truck0) (at truck0 depot0) (truck truck1) (a t truck1 depot0) (hoist hoist0) (at hoist0 depot0) (avail-
+able hoist0) (hoist hoist1) (at hoist1 distributor0) (avai lable hoist1) (hoist hoist2) (at hoist2 distributor1) (ava ilable
+hoist2) (crate crate0) (surface crate0) (at crate0 depot0) (on crate0 pallet0) (crate crate1) (surface crate1) (at cra te1
+distributor1) (on crate1 pallet2) (crate crate2) (surface crate2) (at crate2 distributor1) (on crate2 crate1) (crate
+crate3) (surface crate3) (at crate3 distributor0) (on crat e3 pallet1) (place depot0) (place distributor0) (place dis -
+tributor1)) (:goal (on crate0 pallet2) (on crate1 crate3) ( on crate2 pallet0) (on crate3 pallet1))
+DSL:
+LLM Output
+plan ::=action+
+action ::="(lift-and-drive" object object object object object obje ct ")"
+|"(lift" object object object object ")"
+|"(drive" object object object ")"
+|"(drive-and-lift" object object object object object ")"
+|"(drop" object object object object ")"
+|"(drive-and-load" object object object object ")"
+|"(drive-and-unload" object object object object object ") "
+object ::="truck0" |"hoist0" |"crate0" |"pallet0" |"depot0" |"hoist2"
+|"crate2" |"crate1" |"distributor1" |"distributor0" |"hoist1"
+|"pallet2" |"crate3" |"truck1"
+A:
+(lift-and-drive truck0 hoist0 crate0 pallet0 depot0 depot 0) (lift hoist2 crate2 crate1 distributor1) (drive truck0 d e-
+pot0 distributor0) (drive-and-lift truck0 hoist1 crate1 p allet2 distributor0) (drop hoist1 crate1 crate3 distribut or0)
+(drive-and-load truck1 hoist0 crate0 depot0) (drive-and- unload truck1 hoist0 crate0 pallet2 depot0) (drive truck1
+depot0 distributor1) (drive-and-load truck1 hoist2 crate 2 distributor1) (drive-and-unload truck1 hoist2 crate2 pa llet0
+distributor1)
+Figure 11: Prompt with real examples in the Depot domain from Pyperplan . The prompt template follows
+[69].
+26

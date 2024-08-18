@@ -1,0 +1,515 @@
+GuidingaTheorem Prover with SoftConstraints
+JohnSlaney andArnoldBinas andDavidPrice1
+Abstract. Attempts to use ﬁnite models to guide the search for
+proofsbyresolutionandthelikeinﬁrstorderlogicallsuff erfromthe
+need to trade off the expense of generating and maintaining m odels
+against the improvement in quality of guidance as investmen t in the
+semantic aspect of the reasoning is increased. Previous att empts to
+resolve thistradeoff have resultedeither inpoor selectio nof models,
+or in fragility as the search becomes over-sensitive to the o rder of
+clauses, or in extreme slowness. Here we present a fresh appr oach,
+whereby most of the clauses for which a model is sought are tre ated
+assoftconstraints. The result is a partial model of all the clauses
+rather than an exact model of only a subset of them. This allow s
+our system to combine the speed of maintaining just a single m odel
+withtherobustnesspreviouslyrequiringmultiplemodels. Wepresent
+experimental evidence ofbeneﬁtsover arange ofﬁrstorderp roblem
+domains.
+1 THEPROBLEM:INTELLIGENTPROOF
+SEARCH
+First order theorem proving is the traditional core of autom ated rea-
+soning, of importance not only for pure mathematics but also for its
+applications toAI—toplanning, for instance—and tosoftwa re engi-
+neering among other ﬁelds. The search spaces encountered in theo-
+remprovingaretypicallyinﬁnite,andforreasonsrelatedt oundecid-
+ability there is little regularity to their structure. Proo f search there-
+fore relies on rules of thumb backed by little but empirical w isdom.
+It istherefore somewhat surprising, and certainly disappo inting, that
+attemptstosearchintelligentlyforproofscontinuetobel esssuccess-
+ful inpractice thanbrute force.
+Over the last few years, there have been several attempts to i n-
+ject intelligence into the search bycombining a theorem pro ver with
+some module that turns sets of ﬁrstorder clauses into constr aint sat-
+isfaction problems and then uses a ﬁnite domain CSP solver to gen-
+erate models relevant to the theorem being sought. These mod els
+somehow representinformationabout themeaningoftheprob lem—
+that is, they give the prover a rudimentary understanding of the
+problem—andsomaybeusedtoguidetheproofsearch.Thegene ral
+technique is to concentrate the search on clauses which are f alse in
+the guiding model or models. This is intuitively reasonable : the aim
+is to show that the input clause set is necessarily false, so it makes
+sense to seek anomalies among the consequences of those clau ses
+whichare actuallyfalse.
+Slaney, Lusk and and McCune [5] proposed the system SCOTT
+which uses a model to restrict the inference rules such as res olution
+by requiring ineach inference that one of the parent clauses be false
+1Australian National University and National ICT Australia Ltd,Canberra.
+Email: John.Slaney@nicta.com.au.
+National ICT Australia is funded through the Australian Gov ernment’s
+Backing Australia’s Ability initiative, in part through the Australian Re-
+search Council.inthe guidingmodel. Accordingto[4]thatsystem was quitef ragile,
+inthatsmallchangesintheorderinwhichclausesareproces sedhave
+large effects on its behaviour, and it was shown to be incompl ete
+for some inference rules only slightly more interesting tha n binary
+resolution.
+Hodgson and Slaney [4] later produced a version of SCOTT in
+which robustness was secured by maintaining several models rather
+thanjustone,andcompleteness wasachievedbyusingthemod elsto
+guide clause selection without restricting the inference r ules. That
+system, however, is extremely slow because of the overheads in-
+curred in generating and maintaining many models. It did com pete
+several times in CASC, as reported in [4], achieving perform ance
+marginallybetter thanthat of OTTER.
+Choi and Kerber [2, 3] propose a different technique whereby
+models related to the input clauses are generated in a prepro cessing
+phase and are then again used to guide clause selection. Thei r sys-
+temusestheclausegraphmethod,andsuffersfromthefactth atonly
+very small models (with domain size 2) can be generated and us ed
+in that way. More problematically, only the input clauses ar e con-
+sidered when the models are being generated, so that propert ies that
+emerge only after some consequences have been deduced are li kely
+tobe ignored.
+Brown and Sutcliffe [1, 7] have developed a system
+PTTP+GLiDeS in which models are generated with a proposi-
+tional SAT solver and used to constrain the inferences made i n
+the course of proofs by linear input resolution. The system s hows
+interestingefﬁciency gains over PTTPon some non-Horn prob lems,
+butcannot improveonitinthe Horncaseandhas yettodemonst rate
+general usefulness incomparison withconventional prover s.
+Inthepresentpaper,wepresentanewapproachwithinthisov erall
+researchprogram. Thepaper isorganisedasfollows.Insect ion2we
+outline the method and what makes it distinctive. Then in sec tion 3
+we examine a small example of a proof search in order to illust rate
+the idea.Section4contains experimental results on the“ha rd” prob-
+lems from the TPTP library, and we conclude with an indicatio n of
+planned further work.
+2 AFRESHAPPROACH
+We follow [4, 5] in basing our system on the pre-existing theo rem
+prover OTTER [8]. This is no longer the fastest theorem prove r in
+itsclass,butisstillahighperformance system whichiswel lknown,
+widely used, well maintained and stable. Like Choi and Kerbe r [2]
+wealsofollow[4,5]inusingFINDER[11]astheconstraintso lver.2
+While not comparable with the state of the art in CSP, FINDER
+is suitable for generating small models quickly, accepts ﬁr st order
+2It might have been neater to use MACE, following the example o f [7], but
+MACE does not appear to exist in a version that supports soft c onstraints
+by solving MAX-SATproblems.
+clauses as input and comes with functions designed for linki ng it to
+external software in just this way. Forour system, we used a v ersion
+ofFINDERwhichallows constraints tobe soft,treatingthep roblem
+asessentiallyaweightedMAX-CSP.Thedetailsarenotsoimp ortant
+tothetheorem-provingapplication:forourpurposes,itis enoughthat
+it accepts as input a set of ﬁrst order clauses each marked eit her as
+hard or as soft and returns a model of the hard clauses satisfy ing as
+many as possible of the instances of the soft ones interpreted over a
+given ﬁnitedomain. We use this model toguide OTTER’ssearch .
+2.1 Thegiven clause algorithm
+The core of OTTER, as of most other high performance ﬁrst orde r
+theorem provers,3is the given clause algorithm. For this, the clauses
+are partitionedintoanactive set (the usable list inOTTERparlance)
+and a passive set or set of support . The main part of the algorithm is
+aloopexecutedindeﬁnitelyuntileitherthesetofsupporti semptyor
+the goal (usually the emptyclause) is deduced:
+Procedure GivenClauseLoop
+While the setof support is not emptydo
+Selectgiven clause gfrom the set of support
+Move gtothe usable list
+Foreach immediate consequence cof the usable list
+that has gas a parent do
+Ifcisthe goal then
+Returnsuccess
+Ifcpasses the ﬁltersthen
+Addctothe set ofsupport
+Returnfailure
+EndGivenClauseLoop
+Not speciﬁed here are the steps of back subsumption and back d e-
+modulation, whereby the existing clauses are rewritten usi ng new
+clauses. This may be done eagerly before the new clause cis kept
+inthe setof support, orlazilywhen itisselectedas the give n clause.
+OTTERiseager;Waldmeister,forexample,islazy.Alsounsp eciﬁed
+arethecriteriaforgivenclauseselection,thechoice ofru lesdeﬁning
+“immediate consequence” and the ﬁlters used to remove unwan ted
+clauses. Details of the rules and ﬁlters willnot be given her e, except
+tonote that some ﬁlters such as subsumption preserve the com plete-
+ness of the method when rules such as resolution are used, whi le
+otherssuchasdeletingallclausesaboveacertainlengthli mitleadto
+incompleteness.
+2.2 Semantic guidance
+OTTER’s default criterion for selection of the next given cl ause is
+tochoose one of those withthe smallest number of constituen t sym-
+bols (function symbols and variables), breaking ties by cho osing the
+oldest—i.e.theone whichwas placedinthesetof support ﬁrs t.This
+criterion is tempered by the “pick-given ratio” which stipu lates that
+everyk-thclauseischosentobesimplytheoldest,withoutregardt o
+its length, so that in effect a breadth-ﬁrst search is interl eaved with
+the best-ﬁrstone.
+Clearly,thecriteriaforgivenclauseselectionmakenoref erenceto
+themeaningoftheclauseoritslikelyrˆ oleinanyproof.Int hehopeof
+improvingthequalityofselection,andthereforetheefﬁci encyofthe
+search,weaugmentthecriterionwithasemanticcomponent. Forthis
+3For example, Vampire [9], Gandalf [14], SPASS [15], Waldmei ster [6] and
+E [10] all use variants of the given clause algorithm. See the CASC results
+[12]for arough butrevealing comparison of thebest systems .purpose,let Mbeamodel—thatis,aninterpretationofthelanguage
+oftheprobleminwhicheachclauseinthelanguageiseithert rue(for
+all assignments of values to its variables) or false (for at l east one
+assignment). Our suggestion is to choose most of the given cl auses
+from among those false in the guiding model. That is, by defau lt we
+choose the oldest of the shortest of the false clauses. Becau se some
+true clauses may also be required for a successful proof, cho osing
+onlyfalse clauses would lead to incompleteness,4so every so often
+wefollowOTTER’sclauseselectionwithoutregardtothesem antics.
+Theratioof semantic tonon-semantic clause selections isc ontrolled
+by another magic number, the “semantic-given ratio” which i s input
+as aparameter like the pick-given ratio.
+Semantically guided choice requires a decision as to whethe r a
+clauseis“true”or“false”,whichisgivenbytestingagains ta(small)
+ﬁnite model. Sophisticated model checking is not required, as the
+model is very small (we rarely use a domain of more than three o r
+four elements) and the ﬁrst order clauses occurring in feasi ble proof
+searches are typically rather short, so crude enumeration o f valua-
+tions of the constituent variables sufﬁces.
+The more interesting question is how to determine the guidin g
+model. For this, ﬁrst note some vocabulary. Let cbe a ﬁrst order
+clause containing variables x1, . . . , x nand let Mbe a model with a
+ﬁnite domain which may as well consist of the integers {1, . . . , k }.
+Inadditiontothefunctionsymbols,constants andthelike i ntheﬁrst
+order language in question, let there be special constants 1, . . . , k
+whose interpretation is ﬁxed in the obvious way. Now among th e
+ground instances of c, of which there will normally be inﬁnitely
+many,therearethoseinwhichonlytheconstants 1, . . . , karesubsti-
+tutedforthevariables.Wecallthese domain-grounded instancesand
+obviouslythereareonlyﬁnitelymanyofthem( kninfact).Trivially,
+cis equivalent in the model Mto the conjunction of its domain-
+grounded instances.
+Example: letcbe the clause ¬P(f(g(x)))∨P(f(x))and let
+the domain of Mbe{1,2,3}. Then while chas inﬁnitely many
+ground instances ¬P(f(g(g(g(a)))))∨P(f(g(g(a))))etc, it has
+only three domain-grounded instances relative to the domai n of
+M,viz.¬P(f(g(1))) ∨P(f(1)),¬P(f(g(2))) ∨P(f(2))and
+¬P(f(g(3))) ∨P(f(3)).
+TheCSPcorresponding toasetof clauses isobtainedbyﬁrst ﬂat-
+teningthe clauses by introducing extra variables and setting them
+equal to the subformulae. We say that a term is ﬂatif it contains
+no nested function symbols—i.e. if the only terms inside a fu nction
+symbol are variables—and that an atomic formula is ﬂat if eit her
+it contains no function symbols at all or else it is an equatio n be-
+tween a variable and a ﬂat term. A literal is ﬂat if the atom in i t is
+ﬂat, and a clause if every literal in it is ﬂat. Then every clau se has
+a ﬂat equivalent. Now for the CSP, the domain variables corre spond
+to the domain-grounded instances of ﬂat terms and ﬂat atoms. Each
+domain-grounded instance of the ﬂattened clause then state s a con-
+straint or a relation (usually non-binary) between domain v ariables
+of the CSP.
+Example: LetcandMbe as above. Then the result of ﬂattening
+cisv1/negationslash=g(x)∨v2/negationslash=f(v1)∨v3/negationslash=f(x)∨ ¬P(v2)∨P(v3).
+Any domain-grounded instance of this ﬂattened clause, such as
+3/negationslash=g(1)∨2/negationslash=f(3)∨3/negationslash=f(1)∨ ¬P(2)∨P(3), constrains the
+possible values for a 5-tuple of the CSPdomainvariables.
+4—unless we were to use full semantic resolution with the dyna mic model,
+of course. We allow the prover to use ordinary rules such as bi nary reso-
+lution, hyperresolution, paramodulation, etc. With these , truegiven clauses
+are sometimes needed for completeness.
+At any stage in the proof search, let the clauses in the usable list
+be partitioned into “hard” and “soft”. By an approximate model of
+the usable list we mean any model of the hard clauses. By the bad-
+nessof an approximate model Mwe mean the number of domain-
+grounded instances (relative to M) of the ﬂattenings of soft clauses
+which are false in M.5Mis an optimal model over a given domain
+if its badness is minimal among models over that domain. That is,
+we model the usable list as a MAX-CSP with mixed hard and soft
+constraints—we can view it as a weighted MAX-CSP with the har d
+constraints having inﬁnite weight—where each constraint i s given
+by a domain-grounded instance of one of the ﬂattened clauses . Note
+that each clause in the language is either (absolutely) true inMor
+(absolutely) false in Mdespitethe appeal tomattersofdegree inthe
+generation and evaluation of M.
+The hardclauses are those initiallyinthe usable list;the s oft ones
+are those which have been in the set of support. There are two r ea-
+sons for requiring some of the constraints to be hard. Firstl y, it is
+much more efﬁcient tosearch for models of soft constraints w ithina
+tightly constrained search space than in a totally unconstr ained one.
+Secondly,theclausesinitiallyintheusablelistarespeci alinthatthey
+cannot interact with each other to produce consequences sin ce they
+never get chosen as the given clause. They deﬁne the backgrou ond
+theory of the proof search, and in many cases also deﬁne in eff ect
+the goal. Hence by requiring them to be true in the guiding mod el,
+we constrain that model to cohere with the implicit semantic s of the
+search. At any rate, it seems empirically to be the case that m aking
+themintohardconstraintstendstoavoiduselessmodelssuc hasthose
+whichmake the entire setof support true and sogive no guidan ce.
+We model only the usable list, not the set of support. This gre atly
+reducesthenumberofclauseswhichhavetobemodelled.Each given
+clause,ifitistrueinthecurrentmodel,issimplyaddedtot heusable
+list. If it is false, a new model is sought which should be bett er than
+thecurrentonetakingthenewclauseintoaccountalongwith therest
+of the usable ones.6This is the core difference between our system
+and previous semantically guided provers. Our single appro ximate
+model is chosen to capture as much as possible of all the usabl e
+clauses, whereas their exact models each capture just an asp ect of
+the problem, since clauses which are false in an exact model c on-
+tributenothingtoit.Anotherdifferenceisthatweallowth emodelto
+changeinwhateverwayhelpstomakemoredomain-groundedcl ause
+instances true. In[2]the models never change once the searc hstarts.
+In[4]and[5]the models dochange, butsubject tothe conditi onthat
+clauseslabelledastruebyonemodel mustcontinue tobelabe lledas
+true by later ones. We see no need for such a condition, and ind eed
+consider it harmful since it “locks in” a bad choice made earl y in
+the search whereas our system has the option of undoing any ch oice
+of model once its badness becomes apparent. We do, however, h ave
+to re-test the clauses in the set of support after each model u pdate.
+At some point (after a time limit or after a number of given cla uses
+speciﬁed as a parameter with a somewhat arbitrary default va lue of
+250)thegenerationofmodels isdisabledbecause itisexpen sive and
+the returns diminishrapidly aftera while.
+Fortheexperimentsreportedbelow,weﬁxedthedomainsizet obe
+3, not for any interesting reason but just because models of t hat size
+5Thenumber ofsuchfalse instances maybegreater than thenum ber ofcon-
+straints resulting from them, because different domain-gr ounded instances
+mayyield thesameconstraint. Each constraint istherefore weighted bythe
+number ofclause instances which are false if it fails.
+6Thisisnotcompletely accurate: inthepresentimplementat ion, longclauses
+(generating constraints of cardinality greater than 4) are not modelled, be-
+cause FINDER has no good way of treating large constraints as soft. This
+ad hocrestriction willbe removed in amoremature implementation .020406080100120140
+020406080100120140160Badness
+Models in chronological order
+Figure 1. The badness of soft models in a search for a proof of problem
+FLD049-4.“Badness” is the number of falsiﬁed constraints.
+fairly often give decent guidance and are small enough to be f ound
+quickly. We also ﬁxed a limit of 105variable instantiations for each
+model search, so that the system should not spend too much of i ts
+time trying to improve the model. Thus the model returned at e ach
+pointisthebestfoundwithinacutoffandnotnecessarilyth eoptimal
+model on the domain.
+3 ANEXAMPLE
+Beforereportingthe experiments, itisuseful toillustrat ewithanex-
+ample.TheproblemchosenforthisisFLD049-4fromTPTP:the reis
+nodeepreasonforthischoiceexcept thatitisoneoftheprob lems in
+the“eligibleproblems”listforCASCin2003whichbothours ystem
+SOFTIEandtheunderlyingproverOTTERcansolveinareasona bly
+short time.The theorem is thatinanyﬁeld, forany elements aandc
+andforanynonzeroelements bandd,ifab−1=cd−1thenad=bc.
+This fairly basic fact of ﬁeld theory is made awkward to prove in
+FLD049-4 by being expressed in terms of ternary relations sumand
+product as well as functions addandmultiply , the relation
+of equality being axiomatised rather than written explicit ly as ‘=’ to
+prevent provers from using equational reasoning directly. SOFTIE
+foundaproofin244secondsafter184givenclausesofwhich2 5(15
+input clauses and 10 derived ones) are in the proof. By way of c om-
+parison, OTTER takes only 1.58 seconds to ﬁnd a different pro of,
+alsoof length25, after 250 givenclauses.
+ThereasonwhySOFTIEissoslowisthatitre-generatesthegu id-
+ing model after almost every selection of given clause, resu lting in
+145 changes of model for 184 given clauses. Of those 184 claus es,
+only 27 are true in the model at the time when they are added to t he
+usable list. The models vary in how much of the set of support t hey
+verify, but during most of the search about 90% of the clauses in the
+set of support are marked as true, so the preference for false given
+clausesclearlyfocusesthesearchconsiderably.Thecost, however,is
+that the program spends almost all of its time searching for m odels
+as opposed tomaking inferences.
+The penultimate model (one of the best used) has these tables for
+additionand multiplication:
++0 1 2
+00 1 0
+11 1 1
+20 0 0×0 1 2
+00 1 0
+12 1 0
+20 0 0
+The additive and multiplicative identities are 0 and 2 respe ctively.
+ 0 5 10 15 20 25
+ 0 20 40 60 80 100 120 140 160 180 200Clauses generated per usable clause
+Given clauses in chronological orderFalse given clauses
+True given clauses
+Figure2. Numberofclausesgeneratedbyeachsuccessivegivenclause dur-
+ing the search for a proof of TPTPproblem FLD049-4.
+While this structure is certainly not an accurate reﬂection of addi-
+tionandmultiplicationastaught inthe Schools,itdoes ver ifyallbut
+19 domain-grounded instances of the usable clauses, as well as over
+90%ofthesetofsupport.Henceitdescribestheproblempret tywell.
+Figure 1 shows the numbers of violated soft constraints in ea ch
+of the 145 successive models generated. It seems that the cho ice of
+model ﬂuctuates irregularly between two or more different c ases,
+which presumably represent variations on different approx imate
+models, one of which is much worse than the other(s). We have n ot
+ascertained how many isomorphism classes there are among th e 145
+models.
+Figure 2 shows the number of clauses generated at each step—
+thatis,asaresultofaddingeachgivenclause.Interesting ly,thereare
+two sorts of given clause: those which have many immediate co nse-
+quences (about 5 per usable clause) and those which have few. The
+clauses marked as true in the model at the time when they are se -
+lectedare almost allinthelattercategory. Whythis should be we do
+not know, butithints atagenuine linkbetweenevaluation in models
+and deductive properties.
+4 EXPERIMENTS
+Wehaveattemptedtoevaluate SOFTIEexperimentallybyrunn ingit
+on problems from the TPTP library [13]. This is not as simple a s it
+may seem, because SOFTIE is very new and has no settled defaul t
+values as yet for parameters like the semantic-given ratio. The ter-
+mination condition for model searches is no better than a gue ss, as
+is the limit of 250 given clauses before model generation sto ps. The
+interaction of the semantic component with the settings of O TTER,
+from the choice of inference rules tothe wayof constructing the ini-
+tialusablelist,isalsouninvestigated.Thereforetheres ultsofrunning
+SOFTIE with some parameters or other on a large problem set ha ve
+tobe seenas very rough.7
+To bring the task within bounds, we concentrated on the ‘hard ’
+problems (i.e.neither trivial nor impossible) which are th e ‘eligible’
+problems for CASC [12]. Running the prover repeatedly over t he
+whole set of eligible problems takes too long to be feasible, so Fig-
+ure 3 shows timings for just two syntactic classes: those pro blems
+consisting of Horn clauses with and without equality. These are the
+twosections inwhichOTTERperforms best.
+7[4] reports similar frustration with the attempt to create a n autonomous
+modefor SCOTT-5. 0.01 0.1 1 10 100 1000
+ 0  20  40  60  80  100  120Time in seconds
+Solutions in order of difficultyOTTER
+SOFTIE
+Figure 3. Times taken to ﬁnd proofs, with and without semantic guidanc e,
+forHornproblems(theHNEandHEQsections) oftheCASC’elig ible’ prob-
+lems. The solved problems and the order of in which they come i s different
+for the two lines, so that they are both monotone increasing. Cutoff is 900
+seconds. A ‘timeout’ data point at 900 seconds has been added in each case.
+ 0.01 0.1 1 10 100 1000
+ 0 10 20 30 40 50 60 70Time in seconds
+Solutions in order of difficultyOTTER
+SOFTIE
+Figure 4. UEQ: Time taken to ﬁnd a proof. These are the ‘unit equality’
+problems in the CASC ‘eligible problems’ list.
+Here we give results for runs of the prover withthe following set-
+tings:
+•Atime limitof 15minutes (cpu time)per problem.
+•Aweight limitof 50 symbols per clause.
+•‘Ratio’ settings such that of every 5 given clauses, 3 are cho sen
+to be the oldest of the shortest of the falseclauses, 1 is the oldest
+of theshortestclauses without regard to semantics, and 1 is the
+oldestwithout regardtosemantics or weight.
+•Amaximum of450seconds (50% ofthetimelimit)tobespent in
+generating models.
+•Otherwise thedefault “auto” settings thatcome withOTTER.
+We have no conﬁdence that these settings are in general ideal —in
+fact, we are sure they can be improved—but they give reasonab le
+resultsina good proportion of cases andare fairlysimple.
+As is evident from Figure 3 there is a time cost associated wit h
+model generationandtesting. However, notethat overallth e number
+ofproofsobtainedwithinoneminuteisroughlysimilarwith orwith-
+out he investment insemantics, but that SOFTIEbegins todom inate
+OTTER from about that point on. This suggests that semantic g uid-
+anceinthestyleofSOFTIEpaysitswaymoreoftenastheprobl ems
+become harder.
+Performance is by no means even across problem categories.
+TPTPproblems maybeclassiﬁedsyntacticallyaccordingtow hether
+they contain equality, whether all the clauses are Horn and s o forth,
+orsemanticallyaccordingtowhethertheyareproblemsofge ometry,
+group theory, planning, etc. Brieﬂy, we ﬁnd that soft semant ic guid-
+anceaswehaveimplementeditdoesbetterwithequationalre asoning
+thanwithpure ﬁrstorder logic.Thiswasa surprise,aswedev eloped
+it with rules such as resolution in mind, rather than term rew riting.
+Semantically, it suits some algebraic domains, notably gro up theory,
+better than it does other domainis. This may be because the mo del
+generator can efﬁciently ﬁnd structures similar to groups, and there-
+fore give high quality guidance, whereas it is too slow in mod elling
+theorieswithlargenumbersofdifferentpredicatesandfun ctionsym-
+bols, functions withmany argument places andsoforth.
+Inone syntactically deﬁned problem class, the unit equalit y prob-
+lems, SOFTIE clearly dominates OTTER. These problems requi re
+equational reasoning and many have an algebraic ﬂavour. Jus t why
+semantic guidance should be more effective for these proble ms than
+for others is unclear, but the results shown in Figure 4 are st rik-
+ing. SOFTIE solves 68 of these 138 problems within the time li mit,
+against OTTER’s 36, and it is clear that if the time limit were in-
+creased the difference between the two provers would widen. As it
+is,the extra timespent ﬁndingmodels has anadverse effect o nover-
+all time only for problems which are solved in under ten secon ds
+anyway.
+5 CONCLUSION
+We have presented a model-guided theorem prover using a MAX-
+CSP solver to generate models in which all of the usable claus es
+have as many true instances as possible. The guiding model is re-
+vised whenever a given clause is chosen which is false in the c ur-
+rent model. This makes the theory determined by the model non -
+monotonic, as changing the model to minimise the violation o f in-
+stances of the usable clauses may cause some currently true c lauses
+tobecomefalse.Wearenotawareofanyprevioussystemforgu iding
+a theorem prover whichhas this feature.
+While the system is still very new, and much work remains to be
+done to remove the causes of abnormal termination of searche s, and
+then to ﬁne-tune the many settings and details of the algorit hm for
+clause selection, we believe that SOFTIE already shows more than
+preliminary promise. It is complete, unlike the system desc ribed in
+[5],appears tobe more generallyapplicable and morepowerf ul than
+those in either [1] or [3], and faster than that in [4]. One int eresting
+line of future work is to learn the features of problems which are
+correlated with the best ways of applying the model, thus all owing
+SOFTIEtoadaptitselftodifferentproblemclasseswithout requiring
+the intervention of auser.
+More seriouslimitationsonthecurrent system arisefromth ose of
+thecomponents OTTERandFINDER.OTTERisextremelyslowon
+some classes of problems in TPTP: on many problems in the PEQ
+section, for instance, it gets stuck for hours in the process ing of one
+given clause, and on most problems containing clauses with m any
+literals it is slow compared with more modern provers.Futur e work
+therefore includes trying semantic guidance of faster prov ers. The
+most annoying limitationof FINDER,for present purposes, i s that it
+cannot treatconstraints ofcardinalitygreater thanabout 4assoftbe-
+cause “grounding out” longer clauses is too inefﬁcient. Mor e future
+workincludesovercomingthisdifﬁcultybyincorporatinga moreso-
+phisticatedalgorithm forhandling softconstraints.
+Meanwhile, our investigations have already uncovered some newquestions about automatic ﬁrst order proof search. What det ermines
+thetwotypesofgivenclauseshownclearlyinFigure2,forex ample?
+Isthisageneralphenomenon, oronelocaltospeciﬁcproblem types?
+Is it really related to semantics, or is the correletion with true and
+false clauses an accident of the particular case? More to the point
+of the present paper, we could wish for a theoretically compe lling
+reason why semantic guidance works at all, and also, while po sitive
+effects are detectable, why they are not more dramatic. We ha ve no
+answerstoofferatpresent:inkeepingwiththeﬁeldoftheor emprov-
+ing,our workhas been stronglyempirical incharacter. Howe ver, the
+questions have atleast been opened.
+ACKNOWLEDGEMENTS
+We wish to thank the previous participants in the SCOTT proje ct:
+Bill McCune, Ewing Lusk, Tim Surendonk and especially Kahli l
+Hodgson to whom we are indebted in many ways that may not all
+be obvious. Finally, we are grateful to National ICT Austral ia for its
+generous support of this project during2003.
+REFERENCES
+[1] M. Brown and G. Sutcliffe, ‘PTTP+GLiDeS – semantically g uided
+PTTP’, in Proceedings of the 17th Conference on Automated Deduc-
+tion (CADE) ,pp. 411–416, (2000).
+[2] S. Choi, ‘Towards semantic goal-directed forward reaso ning in resolu-
+tion’, inProceedings of the 10th International Conference on Artiﬁc ial
+Intelligence: Methods, Systems and Applications (AIMSA) , pp. 243–
+252, (2002).
+[3] S. Choi and M. Kerber, ‘Semantic selection for resolutio n in clause
+graphs’, in Proceedings of the Australian Joint Conference on AI , pp.
+83–94, (2002).
+[4] K. Hodgson and J. Slaney, ‘TPTP, CASC and the development of a
+semantically guided theormprover’, AICommunications ,15,135–146,
+(2002).
+[5] E.Lusk J. Slaney and W.McCune, ‘SCOTT:Semantically con strained
+otter’, inProceedings of the 12th Conference on Automated Deduction
+(CADE),pp. 764–768, (1994).
+[6] B. L ¨ochner and T. Hillenbrand, ‘A phytography of WALDMEISTER’,
+AICommunications ,15,127–133, (2002).
+[7] M.BrownandG.Sutcliffe, ‘PTTP+GLiDeS–guidinglinear deductions
+with semantics’, in Proceedings of the Australian Joint Conference on
+AI,pp. 244–254, (1999).
+[8] W.McCune. Otter 3.3 reference manual.
+http://www-unix.mcs.anl.gov/AR/otter/ .
+[9] A. Riazanov and A. Voronkov, ‘The design and implementat ion of
+VAMPIRE’, AI Communications ,15, 91–110, (2002).
+[10] S. Schulz, ‘E: A brainiac theorem prover’, AI Communications ,15,
+111–126, (2002).
+[11] J. Slaney, ‘FINDER: Finite Domain Enumerator’, in Proceedings of
+the 12th Conference on Automated Deduction (CADE) , pp. 798–801,
+(1994).
+[12] G. Sutcliffe and C. Suttner. CASC: CADE Automated Syste ms Com-
+petition. http://www.tptp.org/CASC .
+[13] G.SutcliffeandC.Suttner. TPTP:ThousandsofProblem sforTheorem
+Provers. http://www.tptp.org .
+[14] T. Tammet, ‘Gandalf’, Journal of Automated Reasoning ,18, 199–204,
+(1997).
+[15] C. Weidenbach, ‘SPASS–vewrsion 0.49’, Journal of Automated Rea-
+soning,18,247–252, (1997).

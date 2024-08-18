@@ -1,0 +1,782 @@
+ScienceDirect
+Available online at www.sciencedirect.com
+Procedia Computer Science 159 (2019)  736–745
+1877-0509 © 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.
+10.1016/j.procs.2019.09.229
+10.1016/j.procs.2019.09.229 1877-0509© 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering 
+Systems
+Dealing with Data Imbalance in T ext Classiﬁcation
+Cristian Padurariua,b, Mihaela Elena Breabana,b*
+aFaculty of Computer Science, Alexandru Ioan Cuza University of Iasi, Romania
+bSenticLab Research, Iasi, Romania
+Abstract
+Many real world datasets don’t oﬀer enough training input for regular classiﬁers: some classes are more represented than others.
+Imbalanced data raises problems in Machine Learning classiﬁcation and predicting an outcome becomes diﬃcult when there is not
+enough data to learn from. The object of classiﬁcation in our study is data coming from the ﬁeld of Human Resources, consisting
+of short descriptions of work experiences which must be classiﬁed into several highly imbalanced classes expressing job types.We perform an extensive experimental analysis using various representations of text data, several classiﬁcation algorithms and
+balancing schemes to derive a model that achieves highest performance with respect to metrics such as precision and recall. The
+contribution is twofold: a) with a comprehensive experimental design, the analysis is focused on studying the interactions betweenclassiﬁcation algorithms, text vectorization choices and the schemes to deal with data imbalance at several degrees of imbalance;
+b) besides state-of-the-art balancing schemes, we propose and analyze a cost sensitive approach formulated as a numerical
+optimization problem where the costs are derived with a Diﬀerential Evolution algorithm in two steps: in a ﬁrst step costs areoptimized at the class level and in a subsequent step costs are reﬁned at the data instance level. The results indicate that the use of
+cost-sensitive classiﬁers where the cost matrices are optimized with a Diﬀerential Evolution algorithm brings important beneﬁts
+on our real-world problem.
+©2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords: imbalanced text classiﬁcation; oversampling techniques; cost-sensitive methods; text vectorization; diﬀerential evolution
+1. Introduction
+Classiﬁcation of imbalanced data is an important topic of research triggered by the frequent real-life situations
+where some classes in data are underrepresented and by the incapability of standard classiﬁers to properly discriminate
+∗Corresponding author.
+E-mail address: pmihaela@info.uaic.ro
+1877-0509 ©2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering 
+Systems
+Dealing with Data Imbalance in T ext Classiﬁcation
+Cristian Padurariua,b, Mihaela Elena Breabana,b*
+aFaculty of Computer Science, Alexandru Ioan Cuza University of Iasi, Romania
+bSenticLab Research, Iasi, Romania
+Abstract
+Many real world datasets don’t oﬀer enough training input for regular classiﬁers: some classes are more represented than others.
+Imbalanced data raises problems in Machine Learning classiﬁcation and predicting an outcome becomes diﬃcult when there is not
+enough data to learn from. The object of classiﬁcation in our study is data coming from the ﬁeld of Human Resources, consisting
+of short descriptions of work experiences which must be classiﬁed into several highly imbalanced classes expressing job types.We perform an extensive experimental analysis using various representations of text data, several classiﬁcation algorithms and
+balancing schemes to derive a model that achieves highest performance with respect to metrics such as precision and recall. The
+contribution is twofold: a) with a comprehensive experimental design, the analysis is focused on studying the interactions betweenclassiﬁcation algorithms, text vectorization choices and the schemes to deal with data imbalance at several degrees of imbalance;
+b) besides state-of-the-art balancing schemes, we propose and analyze a cost sensitive approach formulated as a numerical
+optimization problem where the costs are derived with a Diﬀerential Evolution algorithm in two steps: in a ﬁrst step costs areoptimized at the class level and in a subsequent step costs are reﬁned at the data instance level. The results indicate that the use of
+cost-sensitive classiﬁers where the cost matrices are optimized with a Diﬀerential Evolution algorithm brings important beneﬁts
+on our real-world problem.
+©2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)Peer-review under responsibility of KES International.
+Keywords:
+imbalanced text classiﬁcation; oversampling techniques; cost-sensitive methods; text vectorization; diﬀerential evolution
+1. Introduction
+Classiﬁcation of imbalanced data is an important topic of research triggered by the frequent real-life situations
+where some classes in data are underrepresented and by the incapability of standard classiﬁers to properly discriminate
+∗Corresponding author.
+E-mail address: pmihaela@info.uaic.ro
+1877-0509 ©2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.2 Author /Procedia Computer Science 00 (2019) 000–000
+the poorly represented classes. Although many solutions were proposed in literature to deal with data imbalance,
+there is not a unique approach among the rest that shows best results, but their performance depends on the intrinsiccharacteristics of the data [1].
+In the Human Resources area we deal with high volumes of unstructured data coming from CVs, job postings,
+evaluation forms. All these documents are processed in order to extract information which is further stored as struc-tured data. In a ﬁrst step, these documents are segmented into sections that express diﬀerent types of information (i.e.
+personal information, education, job experiences in a CV). A very important task in building automatic recruitment
+systems is to identify all the work experiences a person describes in his CV and to match these experiences into apredeﬁned hierarchy of job types. The current paper illustrates the diﬃculties raised by imbalanced distributions indata and the solutions we used to deal with at this step, when building a classiﬁer system for the job type a person hasaccomplished given a short description of the work experience extracted from the CV .
+When tackling imbalanced text data classiﬁcation, decisions must be made at several distinct stages: How to rep-
+resent the text information? What is the classiﬁer algorithm that would give the best results? How to deal with theimbalance in data?
+Of course, the decision variables above (text representation, classiﬁcation algorithm, mechanism to deal with imbal-
+ance) are not independent, situation which generates a complex optimization problem with a large selection/decision
+space. We tackle it by a comprehensive experimental analysis that highlights interesting properties and leads us to a
+solution that combines several distinct algorithms, including meta-heuristics.
+The paper is structured as follows. Section 2brieﬂy presents the methods generally used in NLP to represent text as
+ﬁx-sized numerical data, methods which are also investigated in our experimental analysis. Section 3reviews solutions
+proposed in literature to deal with imbalance in data classiﬁcation. Besides state-of-the art methods we employ in our
+study, this section also describes the cost-sensitive approach we implement, based on Diﬀerential Evolution. Section 4
+motivates the choice of the classiﬁer algorithms, presents the experimental settings and discusses the results obtained.
+Conclusions are drawn in Section5.
+2. Numerical representations for text data
+When dealing with classiﬁcation of text documents, a ﬁrst step is to obtain a representation of the data that can be
+used within the learning algorithm. For this purpose, several ways exist which transform a collection of text documents
+into a numerical dataset.
+2.1 Bag of Words (BoW)
+The simplest way to transform text documents into numerical data, known as Bag of Words, is to consider a numberof features equal to the number of words in the corpus. Then, for each document, the value of each feature is given by
+the number of occurrences of that word within the current document.
+2.2. TF-IDF
+A common thing in text mining is to measure how important a word is to a document. One way to ﬁnd this is by com-
+puting the term frequency (tf ), but in many languages there are stop words that will most likely be the most frequent.
+In order to identify words that are speciﬁc to some documents inverse document frequency (id f) is introduced, which
+has low values for the most common words and increases the weight of rare words.The ﬁnal solution for a relevant weighting of words is using the tf.idf numerical statistic which is computed using the
+formula: tf.id f
+t,d=tft,d×id ft,d=tft,d×log(N
+dft) where tft,dis the number of occurences of term tin document d,dft
+is the number of documents containing tandNthe total number of documents.
+2.3. GLOVE embeddings
+GLOVE is a count-based model that learns their vectors by essentially doing dimensionality reduction on the co-
+occurrence counts matrix [2]. As a ﬁrst step, a large matrix of co-occurrence information is constructed, where the
+rows represent words and columns represent the context found in the corpus. One value in the matrix represent theoccurence of a word in a speciﬁc context. This matrix is factorized and reduced to a lower-dimensional (word x
+features) matrix, where each row represents a vector representation for each word.
+2.4. DOC2VEC
+Doc2Vec [3] is a well known document embedding technique for generating numerical representations for texts.
+Doc2Vec is built on word2vec [4], which is a technique for generating numerical representation vectors for words,
+ Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745 737Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering 
+Systems
+Dealing with Data Imbalance in T ext Classiﬁcation
+Cristian Padurariua,b, Mihaela Elena Breabana,b*
+aFaculty of Computer Science, Alexandru Ioan Cuza University of Iasi, Romania
+bSenticLab Research, Iasi, Romania
+Abstract
+Many real world datasets don’t oﬀer enough training input for regular classiﬁers: some classes are more represented than others.
+Imbalanced data raises problems in Machine Learning classiﬁcation and predicting an outcome becomes diﬃcult when there is not
+enough data to learn from. The object of classiﬁcation in our study is data coming from the ﬁeld of Human Resources, consisting
+of short descriptions of work experiences which must be classiﬁed into several highly imbalanced classes expressing job types.We perform an extensive experimental analysis using various representations of text data, several classiﬁcation algorithms and
+balancing schemes to derive a model that achieves highest performance with respect to metrics such as precision and recall. The
+contribution is twofold: a) with a comprehensive experimental design, the analysis is focused on studying the interactions betweenclassiﬁcation algorithms, text vectorization choices and the schemes to deal with data imbalance at several degrees of imbalance;
+b) besides state-of-the-art balancing schemes, we propose and analyze a cost sensitive approach formulated as a numerical
+optimization problem where the costs are derived with a Diﬀerential Evolution algorithm in two steps: in a ﬁrst step costs areoptimized at the class level and in a subsequent step costs are reﬁned at the data instance level. The results indicate that the use of
+cost-sensitive classiﬁers where the cost matrices are optimized with a Diﬀerential Evolution algorithm brings important beneﬁts
+on our real-world problem.
+©2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords:
+imbalanced text classiﬁcation; oversampling techniques; cost-sensitive methods; text vectorization; diﬀerential evolution
+1. Introduction
+Classiﬁcation of imbalanced data is an important topic of research triggered by the frequent real-life situations
+where some classes in data are underrepresented and by the incapability of standard classiﬁers to properly discriminate
+∗Corresponding author.
+E-mail address: pmihaela@info.uaic.ro
+1877-0509 ©2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering 
+Systems
+Dealing with Data Imbalance in T ext Classiﬁcation
+Cristian Padurariua,b, Mihaela Elena Breabana,b*
+aFaculty of Computer Science, Alexandru Ioan Cuza University of Iasi, Romania
+bSenticLab Research, Iasi, Romania
+Abstract
+Many real world datasets don’t oﬀer enough training input for regular classiﬁers: some classes are more represented than others.
+Imbalanced data raises problems in Machine Learning classiﬁcation and predicting an outcome becomes diﬃcult when there is not
+enough data to learn from. The object of classiﬁcation in our study is data coming from the ﬁeld of Human Resources, consisting
+of short descriptions of work experiences which must be classiﬁed into several highly imbalanced classes expressing job types.We perform an extensive experimental analysis using various representations of text data, several classiﬁcation algorithms and
+balancing schemes to derive a model that achieves highest performance with respect to metrics such as precision and recall. The
+contribution is twofold: a) with a comprehensive experimental design, the analysis is focused on studying the interactions betweenclassiﬁcation algorithms, text vectorization choices and the schemes to deal with data imbalance at several degrees of imbalance;
+b) besides state-of-the-art balancing schemes, we propose and analyze a cost sensitive approach formulated as a numerical
+optimization problem where the costs are derived with a Diﬀerential Evolution algorithm in two steps: in a ﬁrst step costs areoptimized at the class level and in a subsequent step costs are reﬁned at the data instance level. The results indicate that the use of
+cost-sensitive classiﬁers where the cost matrices are optimized with a Diﬀerential Evolution algorithm brings important beneﬁts
+on our real-world problem.
+©2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords:
+imbalanced text classiﬁcation; oversampling techniques; cost-sensitive methods; text vectorization; diﬀerential evolution
+1. Introduction
+Classiﬁcation of imbalanced data is an important topic of research triggered by the frequent real-life situations
+where some classes in data are underrepresented and by the incapability of standard classiﬁers to properly discriminate
+∗Corresponding author.
+E-mail address: pmihaela@info.uaic.ro
+1877-0509 ©2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.2 Author /Procedia Computer Science 00 (2019) 000–000
+the poorly represented classes. Although many solutions were proposed in literature to deal with data imbalance,
+there is not a unique approach among the rest that shows best results, but their performance depends on the intrinsiccharacteristics of the data [1].
+In the Human Resources area we deal with high volumes of unstructured data coming from CVs, job postings,
+evaluation forms. All these documents are processed in order to extract information which is further stored as struc-tured data. In a ﬁrst step, these documents are segmented into sections that express diﬀerent types of information (i.e.
+personal information, education, job experiences in a CV). A very important task in building automatic recruitment
+systems is to identify all the work experiences a person describes in his CV and to match these experiences into apredeﬁned hierarchy of job types. The current paper illustrates the diﬃculties raised by imbalanced distributions indata and the solutions we used to deal with at this step, when building a classiﬁer system for the job type a person hasaccomplished given a short description of the work experience extracted from the CV .
+When tackling imbalanced text data classiﬁcation, decisions must be made at several distinct stages: How to rep-
+resent the text information? What is the classiﬁer algorithm that would give the best results? How to deal with theimbalance in data?
+Of course, the decision variables above (text representation, classiﬁcation algorithm, mechanism to deal with imbal-
+ance) are not independent, situation which generates a complex optimization problem with a large selection/decision
+space. We tackle it by a comprehensive experimental analysis that highlights interesting properties and leads us to a
+solution that combines several distinct algorithms, including meta-heuristics.
+The paper is structured as follows. Section 2brieﬂy presents the methods generally used in NLP to represent text as
+ﬁx-sized numerical data, methods which are also investigated in our experimental analysis. Section 3reviews solutions
+proposed in literature to deal with imbalance in data classiﬁcation. Besides state-of-the art methods we employ in our
+study, this section also describes the cost-sensitive approach we implement, based on Diﬀerential Evolution. Section 4
+motivates the choice of the classiﬁer algorithms, presents the experimental settings and discusses the results obtained.
+Conclusions are drawn in Section5.
+2. Numerical representations for text data
+When dealing with classiﬁcation of text documents, a ﬁrst step is to obtain a representation of the data that can be
+used within the learning algorithm. For this purpose, several ways exist which transform a collection of text documents
+into a numerical dataset.
+2.1 Bag of Words (BoW)
+The simplest way to transform text documents into numerical data, known as Bag of Words, is to consider a numberof features equal to the number of words in the corpus. Then, for each document, the value of each feature is given by
+the number of occurrences of that word within the current document.
+2.2. TF-IDF
+A common thing in text mining is to measure how important a word is to a document. One way to ﬁnd this is by com-
+puting the term frequency (tf ), but in many languages there are stop words that will most likely be the most frequent.
+In order to identify words that are speciﬁc to some documents inverse document frequency (id f) is introduced, which
+has low values for the most common words and increases the weight of rare words.The ﬁnal solution for a relevant weighting of words is using the tf.idf numerical statistic which is computed using the
+formula: tf.id f
+t,d=tft,d×id ft,d=tft,d×log(N
+dft) where tft,dis the number of occurences of term tin document d,dft
+is the number of documents containing tandNthe total number of documents.
+2.3. GLOVE embeddings
+GLOVE is a count-based model that learns their vectors by essentially doing dimensionality reduction on the co-
+occurrence counts matrix [2]. As a ﬁrst step, a large matrix of co-occurrence information is constructed, where the
+rows represent words and columns represent the context found in the corpus. One value in the matrix represent theoccurence of a word in a speciﬁc context. This matrix is factorized and reduced to a lower-dimensional (word x
+features) matrix, where each row represents a vector representation for each word.
+2.4. DOC2VEC
+Doc2Vec [3] is a well known document embedding technique for generating numerical representations for texts.
+Doc2Vec is built on word2vec [4], which is a technique for generating numerical representation vectors for words,
+738 Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745
+Author /Procedia Computer Science 00 (2019) 000–000 3
+that is able to capture relationships between words, such as synonymy, antonymy or analogies. Word2Vec uses a
+neural network to derive the embedding and can be implemented in two ways:
+•CBoW (Continuous bag of words): This approach creates a sliding context window around the current word, socbow learns the context of a word to try and predict it.
+•Skipgram: This algorithms is the opposite of cbow, because it predicts the context words surrounding a speciﬁc
+word.
+On top of the above algorithms, doc2vec adds another layer which corresponds to paragraph representation. When
+training the word vectors, the document vector is trained as well, and in the end of training, it holds a numericrepresentation of the document.
+2.5. Word2Vec with char n-grams (Fasttext)
+Fasttext is a library deriving word embeddings and implementing a very eﬃcient text classiﬁer, developed by the Face-book Research team [5]. Fasttext generates word embeddings similar to the Word2Vec method, but unlike word2vec,it introduces char n-grams that facilitates the learning of rare words.
+3. Dealing with imbalanced data in classiﬁcation
+When classes are imbalanced, standard classiﬁers are usually biased towards the majority class. In this case, a shift
+is necessary from the general paradigm that optimizes the overall classiﬁcation accuracy to one that emphasizes the
+trade-oﬀ between precision and recall.
+The issue of imbalanced data has been an important subject of research for a while and a number of solutions
+have been developed so far [6]. They can be grouped in two distinct categories: one category corresponds to methods
+that operate on the dataset in a preprocessing step preceding classiﬁcation while a second category modiﬁes the
+classiﬁcation algorithm in order to put more emphasis on the minority class. The methods in the ﬁrst category are
+known as resampling methods. Within the second category cost-sensitive learning is a paradigm that emphasizes theincorrect classiﬁcation of instances from the minority class during the training process while being minimal intrusive
+for the classiﬁer in the sense that the algorithm does not require important changes. In the following we brieﬂy describe
+the methods in the two categories.
+3.1. Resampling methods
+Resampling methods aim at modifying the dataset in order to reduce the discrepancy among the sizes of the
+classes. In this regard, two scenarios are proposed: one that eliminates instances from the majority class - called under-
+sampling, and one that generates instances for the minority class - called over-sampling. Random undersampling
+showed to give poor results in our preliminary experiments, therefore we list in the following the over-samplingmethods evaluated in the experimental section.
+3.1.1. Random oversampling
+This is a simple approach where we take samples at random from the small class and duplicate this instances so thatit reaches a size comparable with the majority class.
+3.1.2. SMOTE
+Synthetic Minority Over-sampling Technique [7] is an oversampling method based on creating synthetic instancesfor the minority classes. The algorithm takes each minority class sample and introduces synthetic samples along the
+line joining the current instance and some of its k nearest neighbours from the same class. Depending on how much
+oversampling is needed, the algorithm chooses randomly from the knearest neighbours some of them and forms pairs
+of vectors that are used to create the synthetic samples. The new instances create larger and denser decision regions.
+This helps classiﬁers learn more from the minority classes in those decision regions, rather than from the large classes
+surrounding those regions.
+3.1.3. SMOTE-SVM
+The idea of this method is applying the SMOTE algorithm only on those instances that belong to the support vectorsgenerated by a SVM classiﬁer. To do this we ﬁrst need to train an SVM (for this we used a linear kernel) on the data4 Author /Procedia Computer Science 00 (2019) 000–000
+before any oversampling. The SVM model will give us the samples belonging to the support vectors, which will thenbe oversampled using SMOTE. This approach doesn’t equalize the number of instances, but should enforce the borderbetween the two classes.
+3.1.4. WEMOTE/CWEMOTE
+Regular SMOTE needs to determine the nearest neighbours for the minority class samples. This requires a time com-plexity of O(n
+2) (n - number of training instances). WEMOTE [8] is a more eﬃcient method of generating synthetic
+samples. The idea is that you pick randomly two vectors corresponding to the minority class and compute their meanvector. This new vector will count as a new sample for this class. The complexity of this method is O(n
+c), where ncis
+the number of instances that need to be added to the minority class c.
+Taking into account the in-class imbalance issues, CWEMOTE clusters the training samples from the minority
+class and then applies WEMOTE on the new clusters. The clustering is done using k-means. After this, the number ofnew instances for each cluster is decided base on the following formula: n
+/prime
+j=ni/summationtextmc
+j=1njncwhere niis the size of cluster i,
+mcthe number of clusters, ncthe number of new samples to be generated.
+3.2. Cost-sensitive learning
+3.2.1. Thresholding
+Thresholding is a post-processing operation applicable for any classiﬁer that produces probability estimates [9].
+The idea behind this method is very simple: it selects the probability that minimizes the total missclassiﬁcation cost
+on the validation instances as the threshold for predicting testing instances. When applying classiﬁers to predict
+labels, they also return a probability associated to that label, which represents the conﬁdence of the prediction. This
+conﬁdence threshold is usually 0.5 for a binary classiﬁer for example, but when dealing with imbalanced data this
+threshold is not optimal and that is why the Thresholding helps ajust this probability. Thresholding can thus convert
+any non-cost sensitive learning algorithms into cost sensitive ones.
+3.2.2. Cost-based direct methods
+Oversampling techniques are a good approach when it comes to imbalance data, but things might get prob-
+lematic when, for example the minority class is so small that the synthetic examples generated with SMOTE are not
+representative of the class.
+Classiﬁers can be made cost sensitive using a squared cost matrix where each entry Mijis the cost of classifying an
+instance with actual class ias class j. This gives the opportunity to penalize misclassiﬁcation of small classes, because
+classiﬁers usually mistakes them for majority classes, which is the issue of imbalance. One advantage of using such
+approach is that there is no need to remove data or add synthetic samples that might negatively aﬀect the integrity ofthe data. One of the most diﬃcult tasks of this cost matrix approach is ﬁnding an optimal matrix than can best depict
+the misclassiﬁcation costs.
+Evolutionary algorithms were proposed to search for the cost-matrix that optimizes a given objective function. In
+[10] the authors use Particle Swarm Optimization to optimize the cost matrix in the case of binary classiﬁcation while
+in [11, 12,13] the authors use a Genetic algorithm to learn the misclassiﬁcation costs in multi-class classiﬁcation.
+Learning the misclassiﬁcation costs is basically a numerical optimization problem which we choose to tackle with
+Diﬀerential Evolution (DE) due to the good performance this meta-heuristic showed in continuous domains. The
+version we implement is a classical DE/rand/1/* variant. A mutant vector y
+iis constructed based on selecting three
+random elements from the population. We use one of these as a base vector, xr1, and the other two, xr2andxr3, are
+combined and added to the base vector using a scaling factor F:yi=xr1+F·(xr2−xr3). The trial element ziis obtained
+using a mix of the mutant yiwith the xielement. For this we use a binomial crossover variant which constructs the trail
+vector in a random way, by tacking elements from the mutant vector, but also from the current element as follows:
+zj
+i=yj
+i,ifUj<CRorj=k
+xj
+i,otherwisewhere Ujis uniformly generated value for each j, over [0 ,1].
+The ﬁtness of each individual in the population is computed by training the classiﬁer using the costs it encodes and
+evaluating the performance of the model on the validation set.
+In a ﬁrst stage we use DE to learn the missclassiﬁcation cost for each class. In a second stage, we try to improve
+the classiﬁer by learning misclasiﬁcation costs at instance level. Because in this second stage the search space is
+ Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745 739
+Author /Procedia Computer Science 00 (2019) 000–000 3
+that is able to capture relationships between words, such as synonymy, antonymy or analogies. Word2Vec uses a
+neural network to derive the embedding and can be implemented in two ways:
+•CBoW (Continuous bag of words): This approach creates a sliding context window around the current word, socbow learns the context of a word to try and predict it.
+•Skipgram: This algorithms is the opposite of cbow, because it predicts the context words surrounding a speciﬁc
+word.
+On top of the above algorithms, doc2vec adds another layer which corresponds to paragraph representation. When
+training the word vectors, the document vector is trained as well, and in the end of training, it holds a numericrepresentation of the document.
+2.5. Word2Vec with char n-grams (Fasttext)
+Fasttext is a library deriving word embeddings and implementing a very eﬃcient text classiﬁer, developed by the Face-book Research team [5]. Fasttext generates word embeddings similar to the Word2Vec method, but unlike word2vec,it introduces char n-grams that facilitates the learning of rare words.
+3. Dealing with imbalanced data in classiﬁcation
+When classes are imbalanced, standard classiﬁers are usually biased towards the majority class. In this case, a shift
+is necessary from the general paradigm that optimizes the overall classiﬁcation accuracy to one that emphasizes the
+trade-oﬀ between precision and recall.
+The issue of imbalanced data has been an important subject of research for a while and a number of solutions
+have been developed so far [6]. They can be grouped in two distinct categories: one category corresponds to methods
+that operate on the dataset in a preprocessing step preceding classiﬁcation while a second category modiﬁes the
+classiﬁcation algorithm in order to put more emphasis on the minority class. The methods in the ﬁrst category are
+known as resampling methods. Within the second category cost-sensitive learning is a paradigm that emphasizes theincorrect classiﬁcation of instances from the minority class during the training process while being minimal intrusive
+for the classiﬁer in the sense that the algorithm does not require important changes. In the following we brieﬂy describe
+the methods in the two categories.
+3.1. Resampling methods
+Resampling methods aim at modifying the dataset in order to reduce the discrepancy among the sizes of the
+classes. In this regard, two scenarios are proposed: one that eliminates instances from the majority class - called under-
+sampling, and one that generates instances for the minority class - called over-sampling. Random undersampling
+showed to give poor results in our preliminary experiments, therefore we list in the following the over-samplingmethods evaluated in the experimental section.
+3.1.1. Random oversampling
+This is a simple approach where we take samples at random from the small class and duplicate this instances so thatit reaches a size comparable with the majority class.
+3.1.2. SMOTE
+Synthetic Minority Over-sampling Technique [7] is an oversampling method based on creating synthetic instancesfor the minority classes. The algorithm takes each minority class sample and introduces synthetic samples along the
+line joining the current instance and some of its k nearest neighbours from the same class. Depending on how much
+oversampling is needed, the algorithm chooses randomly from the knearest neighbours some of them and forms pairs
+of vectors that are used to create the synthetic samples. The new instances create larger and denser decision regions.
+This helps classiﬁers learn more from the minority classes in those decision regions, rather than from the large classes
+surrounding those regions.
+3.1.3. SMOTE-SVM
+The idea of this method is applying the SMOTE algorithm only on those instances that belong to the support vectorsgenerated by a SVM classiﬁer. To do this we ﬁrst need to train an SVM (for this we used a linear kernel) on the data4 Author /Procedia Computer Science 00 (2019) 000–000
+before any oversampling. The SVM model will give us the samples belonging to the support vectors, which will then
+be oversampled using SMOTE. This approach doesn’t equalize the number of instances, but should enforce the borderbetween the two classes.
+3.1.4. WEMOTE/CWEMOTE
+Regular SMOTE needs to determine the nearest neighbours for the minority class samples. This requires a time com-plexity of O(n
+2) (n - number of training instances). WEMOTE [8] is a more eﬃcient method of generating synthetic
+samples. The idea is that you pick randomly two vectors corresponding to the minority class and compute their meanvector. This new vector will count as a new sample for this class. The complexity of this method is O(n
+c), where ncis
+the number of instances that need to be added to the minority class c.
+Taking into account the in-class imbalance issues, CWEMOTE clusters the training samples from the minority
+class and then applies WEMOTE on the new clusters. The clustering is done using k-means. After this, the number ofnew instances for each cluster is decided base on the following formula: n
+/prime
+j=ni/summationtextmc
+j=1njncwhere niis the size of cluster i,
+mcthe number of clusters, ncthe number of new samples to be generated.
+3.2. Cost-sensitive learning
+3.2.1. Thresholding
+Thresholding is a post-processing operation applicable for any classiﬁer that produces probability estimates [9].
+The idea behind this method is very simple: it selects the probability that minimizes the total missclassiﬁcation cost
+on the validation instances as the threshold for predicting testing instances. When applying classiﬁers to predict
+labels, they also return a probability associated to that label, which represents the conﬁdence of the prediction. This
+conﬁdence threshold is usually 0.5 for a binary classiﬁer for example, but when dealing with imbalanced data this
+threshold is not optimal and that is why the Thresholding helps ajust this probability. Thresholding can thus convert
+any non-cost sensitive learning algorithms into cost sensitive ones.
+3.2.2. Cost-based direct methods
+Oversampling techniques are a good approach when it comes to imbalance data, but things might get prob-
+lematic when, for example the minority class is so small that the synthetic examples generated with SMOTE are not
+representative of the class.
+Classiﬁers can be made cost sensitive using a squared cost matrix where each entry Mijis the cost of classifying an
+instance with actual class ias class j. This gives the opportunity to penalize misclassiﬁcation of small classes, because
+classiﬁers usually mistakes them for majority classes, which is the issue of imbalance. One advantage of using such
+approach is that there is no need to remove data or add synthetic samples that might negatively aﬀect the integrity ofthe data. One of the most diﬃcult tasks of this cost matrix approach is ﬁnding an optimal matrix than can best depict
+the misclassiﬁcation costs.
+Evolutionary algorithms were proposed to search for the cost-matrix that optimizes a given objective function. In
+[10] the authors use Particle Swarm Optimization to optimize the cost matrix in the case of binary classiﬁcation whilein [11, 12,13] the authors use a Genetic algorithm to learn the misclassiﬁcation costs in multi-class classiﬁcation.
+Learning the misclassiﬁcation costs is basically a numerical optimization problem which we choose to tackle with
+Diﬀerential Evolution (DE) due to the good performance this meta-heuristic showed in continuous domains. The
+version we implement is a classical DE/rand/1/* variant. A mutant vector y
+iis constructed based on selecting three
+random elements from the population. We use one of these as a base vector, xr1, and the other two, xr2andxr3, are
+combined and added to the base vector using a scaling factor F:yi=xr1+F·(xr2−xr3). The trial element ziis obtained
+using a mix of the mutant yiwith the xielement. For this we use a binomial crossover variant which constructs the trail
+vector in a random way, by tacking elements from the mutant vector, but also from the current element as follows:
+zj
+i=yj
+i,ifUj<CRorj=k
+xj
+i,otherwisewhere Ujis uniformly generated value for each j, over [0 ,1].
+The ﬁtness of each individual in the population is computed by training the classiﬁer using the costs it encodes and
+evaluating the performance of the model on the validation set.
+In a ﬁrst stage we use DE to learn the missclassiﬁcation cost for each class. In a second stage, we try to improve
+the classiﬁer by learning misclasiﬁcation costs at instance level. Because in this second stage the search space is
+740 Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745
+Author /Procedia Computer Science 00 (2019) 000–000 5
+huge, the initialization makes use of the matrix learned in the ﬁrst stage: for each instance in the training dataset its
+misclassiﬁcation cost is set to be the one of the class it belongs to (as optimized in the ﬁrst stage) altered by adding orsubtracting a random value in the range (0, (max-min)/10), where minandmax are the smallest and the largest values
+in the cost matrix extracted in the ﬁrst stage.
+4. Experimental analysis
+In order to study the interaction between the degree of class imbalance, the type of text representation, the resam-
+pling scheme and the classiﬁers we evaluate the methods both in the context of binary classiﬁcation and multi-class
+classiﬁcation.
+We use 5-fold cross validation with the folds created using stratiﬁed sampling: we train on 4 of the 5 folds and test
+on the 5
+th, and we do this for each combination of 4 folds, so at the end we report the results for all the instances in
+our corpus.
+For the binary classiﬁcation tasks we report the F-measure computed for the minority class as the harmonic mean
+between precision and recall:
+F−measure =2∗precision ∗recall
+precision +recall
+where precision =TP
+TP+FP,recall =TP
+TP+FN,TPrepresents the number of items that are correctly classiﬁed in the
+minority class, FPthe number of items that are incorrectly classiﬁed as belonging to the minority class, FNthe
+number of items that belong to the minority class but are incorrectly classiﬁed in the majority class.
+For the multi-class case we report the macro-average F-measure.
+4.1. Classiﬁcation algorithms used
+As classiﬁcation algorithms we chose both linear and non-linear classiﬁers:
+•Logistic Regression;
+•SVM with linear and radial kernel; the results obtained with radial kernel are not reported in the experimental
+section because of the inferior performance;
+•Decision Tree Classiﬁer.
+In the multi-class classiﬁcation setting we used for the ﬁrst two classiﬁers the one versus one approach which shows
+superior results especially in the case of imbalanced data because it does not increase the imbalance.
+The Decision Tree Classiﬁer uses the Gini impurity index. No pruning was used because it is detrimental when the
+degree of imbalance is high.
+4.2. Data
+We used a corpus of 4235 work experiences related to the ﬁnancial and accounting sectors. The entries are short
+texts (74 words on average not counting the stop-words) in Italian. The data is split into 17 classes representing
+subcategories of the larger sector. The distribution of the data within the classes is illustrated in Table 1.
+4.3. Text pre-processing
+Before beginning the experiments, some data pre-processing is required:6 Author /Procedia Computer Science 00 (2019) 000–000
+Class Label #Instances
+Asset Manager A 34
+Credit Manager B 163
+Director, Finance Control C 197
+Financial director D 213
+Administrative Manager E 751
+Head of General Accounting F 304
+Head of Management Control G 239
+Financial manager H 193
+Fiscal Responsible I 48
+Head of Treasury J 71
+Administrative Specialist K 114
+Industrial Accounting Specialist L 69
+Management Control Specialist M 1319
+Financial Specialist N 288
+Internal Audit Specialist O 22
+Credit Recovery Specialist P 147
+Temporary Manager Q 63
+Table 1. Data distribution
+•We iterated through all the work experiences and removed all punctuation and numbers by replacing all of them
+with an empty string.
+•Next, the stop words were removed from the experiences.
+•Then the experiences were stemmed, for a more uniform corpus. For this we used from nltk the
+SnowballStemmer[14].
+4.4. Parameter settings
+Text representation
+For BOW and tf-idf we used a vector size of approximately 12000 (which represents the number of distinct words
+found in the training data) after eliminating the stopwords. For the Fasttext embedding the vector dimension was set
+to 50 and length of char n-grams were set to 2.
+Classiﬁers
+For SVM we report the results obtained with the linear kernel, with the regularization constant ( C) set at 1 and toler-
+ance set at 0.001. We use the OVO (one vs one) method when we are doing both binary and multi-class classiﬁcation.
+Logistic Regression is also used with C=1 and the classiﬁcation method is OVO.
+The Decision Tree Classiﬁer uses the Gini impurity index, with an unpruned structure.
+Tackling data imbalance schemes
+For random oversampling we created instances in the minority class until the size of the majority class was reached.
+For SMOTE we used 5 nearest neighbours to construct the synthetic samples and for SMOTE-SVM we call the
+SVM classiﬁer that is used to ﬁnd the support vectors with identical parameters as the SVM classiﬁer used for ﬁnal
+classiﬁcation. WEMOTE has no speciﬁc parameters while in the CWEMOTE we choose the number of clustersdynamically by using Silhouette Width (SW): kMeans is run severeal times on the training folds varying the numberof clusters and the partition with the highest SW score is used.
+Cost-sensitive learning
+The parameters of the DE algorithm used for deriving the costs of misclasiﬁcation are: F= 0.4717 and CR =0.8803.
+In the ﬁrst stage, when the misclassiﬁcation cost at the class level is optimized with the DE algorithm, the populationsize was set to 20 and the number iterations to 30. In the second stage, when the costs are reﬁned at data instancelevel, a larger population is required and was set to 50, for a number of 30 iterations. Macro-average F-measure is
+ Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745 741
+Author /Procedia Computer Science 00 (2019) 000–000 5
+huge, the initialization makes use of the matrix learned in the ﬁrst stage: for each instance in the training dataset its
+misclassiﬁcation cost is set to be the one of the class it belongs to (as optimized in the ﬁrst stage) altered by adding orsubtracting a random value in the range (0, (max-min)/10), where minandmax are the smallest and the largest values
+in the cost matrix extracted in the ﬁrst stage.
+4. Experimental analysis
+In order to study the interaction between the degree of class imbalance, the type of text representation, the resam-
+pling scheme and the classiﬁers we evaluate the methods both in the context of binary classiﬁcation and multi-class
+classiﬁcation.
+We use 5-fold cross validation with the folds created using stratiﬁed sampling: we train on 4 of the 5 folds and test
+on the 5
+th, and we do this for each combination of 4 folds, so at the end we report the results for all the instances in
+our corpus.
+For the binary classiﬁcation tasks we report the F-measure computed for the minority class as the harmonic mean
+between precision and recall:
+F−measure =2∗precision ∗recall
+precision +recall
+where precision =TP
+TP+FP,recall =TP
+TP+FN,TPrepresents the number of items that are correctly classiﬁed in the
+minority class, FPthe number of items that are incorrectly classiﬁed as belonging to the minority class, FNthe
+number of items that belong to the minority class but are incorrectly classiﬁed in the majority class.
+For the multi-class case we report the macro-average F-measure.
+4.1. Classiﬁcation algorithms used
+As classiﬁcation algorithms we chose both linear and non-linear classiﬁers:
+•Logistic Regression;
+•SVM with linear and radial kernel; the results obtained with radial kernel are not reported in the experimental
+section because of the inferior performance;
+•Decision Tree Classiﬁer.
+In the multi-class classiﬁcation setting we used for the ﬁrst two classiﬁers the one versus one approach which shows
+superior results especially in the case of imbalanced data because it does not increase the imbalance.
+The Decision Tree Classiﬁer uses the Gini impurity index. No pruning was used because it is detrimental when the
+degree of imbalance is high.
+4.2. Data
+We used a corpus of 4235 work experiences related to the ﬁnancial and accounting sectors. The entries are short
+texts (74 words on average not counting the stop-words) in Italian. The data is split into 17 classes representing
+subcategories of the larger sector. The distribution of the data within the classes is illustrated in Table 1.
+4.3. Text pre-processing
+Before beginning the experiments, some data pre-processing is required:6 Author /Procedia Computer Science 00 (2019) 000–000
+Class Label #Instances
+Asset Manager A 34
+Credit Manager B 163
+Director, Finance Control C 197
+Financial director D 213
+Administrative Manager E 751
+Head of General Accounting F 304
+Head of Management Control G 239
+Financial manager H 193
+Fiscal Responsible I 48
+Head of Treasury J 71
+Administrative Specialist K 114
+Industrial Accounting Specialist L 69
+Management Control Specialist M 1319
+Financial Specialist N 288
+Internal Audit Specialist O 22
+Credit Recovery Specialist P 147
+Temporary Manager Q 63
+Table 1. Data distribution
+•We iterated through all the work experiences and removed all punctuation and numbers by replacing all of them
+with an empty string.
+•Next, the stop words were removed from the experiences.
+•Then the experiences were stemmed, for a more uniform corpus. For this we used from nltk the
+SnowballStemmer[14].
+4.4. Parameter settings
+Text representation
+For BOW and tf-idf we used a vector size of approximately 12000 (which represents the number of distinct words
+found in the training data) after eliminating the stopwords. For the Fasttext embedding the vector dimension was set
+to 50 and length of char n-grams were set to 2.
+Classiﬁers
+For SVM we report the results obtained with the linear kernel, with the regularization constant ( C) set at 1 and toler-
+ance set at 0.001. We use the OVO (one vs one) method when we are doing both binary and multi-class classiﬁcation.
+Logistic Regression is also used with C=1 and the classiﬁcation method is OVO.
+The Decision Tree Classiﬁer uses the Gini impurity index, with an unpruned structure.
+Tackling data imbalance schemes
+For random oversampling we created instances in the minority class until the size of the majority class was reached.
+For SMOTE we used 5 nearest neighbours to construct the synthetic samples and for SMOTE-SVM we call the
+SVM classiﬁer that is used to ﬁnd the support vectors with identical parameters as the SVM classiﬁer used for ﬁnal
+classiﬁcation. WEMOTE has no speciﬁc parameters while in the CWEMOTE we choose the number of clustersdynamically by using Silhouette Width (SW): kMeans is run severeal times on the training folds varying the numberof clusters and the partition with the highest SW score is used.
+Cost-sensitive learning
+The parameters of the DE algorithm used for deriving the costs of misclasiﬁcation are: F= 0.4717 and CR =0.8803.
+In the ﬁrst stage, when the misclassiﬁcation cost at the class level is optimized with the DE algorithm, the populationsize was set to 20 and the number iterations to 30. In the second stage, when the costs are reﬁned at data instancelevel, a larger population is required and was set to 50, for a number of 30 iterations. Macro-average F-measure is
+742 Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745
+Author /Procedia Computer Science 00 (2019) 000–000 7
+used as ﬁtness function.
+Each experiment is repeated for a number of 6 times, which, in conjunction with 5-fold cross validation, generate 30values for each dataset.
+4.5. Results for binary classiﬁcation using resampling
+In order to study the inﬂuence of the degree of imbalance on the performance of the evaluated methods, we chose
+the largest class (Management Control Specialist) in conjunction with the smallest one and other two of intermediate
+sizes to form 3 classiﬁcation problems that correspond to higher and lower imbalance:
+•Management Control Specialist vs.Internal Audit Specialist (M vs. O) corresponds to the highest imbalance
+with a ratio IR=1319/22=59.95;
+•Management Control Specialist vs.Financial Specialist (M vs. N) corresponds to an imbalance ratio
+IR=1319/288=4.57;
+•Management Control Specialist vs.Administrative Manager (M vs. E) corresponds to an imbalance ratio
+IR=1319/751=1.75.
+Figures 1,2and3present the F-measure recorded for the minority class. We dropped oﬀ the results obtained with
+Glove and doc2vec representations which were signiﬁcant worst compared to the others.
+Fig. 1. Classiﬁcation results for the M (1319 instances) vs. O(22 instances) pair of classes: F-measure obtained for the minority class
+Fig. 2. Classiﬁcation results for the M (1319 instances) vs. N(288 instances) pair of classes: F-measure obtained for the minority class8 Author /Procedia Computer Science 00 (2019) 000–000
+Fig. 3. Classiﬁcation results for the M (1319 instances) vs E(751 instances) pair of classes: F-measure obtained for the minority class
+4.5.1. The eﬀect of data imbalance on the classiﬁers
+It is obvious that, generally, the highest the degree of imbalance is, the highest the error is.
+Regarding the performance of the classiﬁers on the original unmodiﬁed (not resampled) data (blue bars within
+the ﬁgures, labeled as ”no oversampling”), the decision tree gives the best results on the ﬁrst two datasets, which
+indicates that it is the least biased from our classiﬁers in the case of highly imbalanced data. Comparing the
+linear classiﬁers, Logistic regression is the most aﬀected by imbalance, while SVM achieves better results which
+can be explained by the principle of structural risk minimization behind it. It is surprising that, although Logistic
+regression behaves the worst from all classiﬁers at high imbalance for every type of text representation, the eﬀect is ex-treme when it is used in conjunction with tf-idf: for the ﬁrst dataset all the instances are classiﬁed in the majority class.
+4.5.2. Degree of imbalance over text representation performance
+Regarding the impact of the text representation method, Fasttext (and implicitly word2vec) shows the highest de-
+pendence on the degree of imbalance: while for the ﬁrst case corresponding to the highest imbalance, Fasttext word
+embeddings record the worst results, it is obvious how the performance increases with the decrease of imbalance, ob-
+taining clearly the best results for the third data set corresponding to low imbalance, for all classiﬁers. Comparing the
+performance of the two text representations which are mainly based on word frequencies, it’s surprising that for thelinear classiﬁers (Logistic regression and SVM) BoW surpasses the more complex tf-idf method; this is also observed
+in the case of the decision tree for the second and third dataset.
+4.5.3. The eﬃciency of oversampling schemes
+Over-sampling schemes bring a clear advantage in case of the algorithms that suﬀer most from the imbalance -
+Logistic regression the most followed by SVM. Although Logistic regression gives the worst results when applied
+on the original highly imbalanced data, when oversampling schemes are used it shows to outperform all the other
+methods for every type of embedding. SVM with tf-idf and fasttext embeddings also beneﬁt from oversampling while
+for the BoW embedding oversampling does not make a signiﬁcant diﬀerence. In case of Decision trees, which showthe least bias towards the majority class, the oversampling schemes do not guarantee increase in performance for thehighly imbalanced datasets (ﬁrst two cases), on contrary, most of the times recording worse results.
+Regarding the comparative performance of the oversampling schemes, there is not a clear winner. Analyzing their
+performance on the linear classiﬁers where they are most eﬃcient, simple random oversampling seem to work as well
+as other more complex schemes.
+ Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745 743
+Author /Procedia Computer Science 00 (2019) 000–000 7
+used as ﬁtness function.
+Each experiment is repeated for a number of 6 times, which, in conjunction with 5-fold cross validation, generate 30values for each dataset.
+4.5. Results for binary classiﬁcation using resampling
+In order to study the inﬂuence of the degree of imbalance on the performance of the evaluated methods, we chose
+the largest class (Management Control Specialist) in conjunction with the smallest one and other two of intermediate
+sizes to form 3 classiﬁcation problems that correspond to higher and lower imbalance:
+•Management Control Specialist vs.Internal Audit Specialist (M vs. O) corresponds to the highest imbalance
+with a ratio IR=1319/22=59.95;
+•Management Control Specialist vs.Financial Specialist (M vs. N) corresponds to an imbalance ratio
+IR=1319/288=4.57;
+•Management Control Specialist vs.Administrative Manager (M vs. E) corresponds to an imbalance ratio
+IR=1319/751=1.75.
+Figures 1,2and3present the F-measure recorded for the minority class. We dropped oﬀ the results obtained with
+Glove and doc2vec representations which were signiﬁcant worst compared to the others.
+Fig. 1. Classiﬁcation results for the M (1319 instances) vs. O(22 instances) pair of classes: F-measure obtained for the minority class
+Fig. 2. Classiﬁcation results for the M (1319 instances) vs. N(288 instances) pair of classes: F-measure obtained for the minority class8 Author /Procedia Computer Science 00 (2019) 000–000
+Fig. 3. Classiﬁcation results for the M (1319 instances) vs E(751 instances) pair of classes: F-measure obtained for the minority class
+4.5.1. The eﬀect of data imbalance on the classiﬁers
+It is obvious that, generally, the highest the degree of imbalance is, the highest the error is.
+Regarding the performance of the classiﬁers on the original unmodiﬁed (not resampled) data (blue bars within
+the ﬁgures, labeled as ”no oversampling”), the decision tree gives the best results on the ﬁrst two datasets, which
+indicates that it is the least biased from our classiﬁers in the case of highly imbalanced data. Comparing the
+linear classiﬁers, Logistic regression is the most aﬀected by imbalance, while SVM achieves better results which
+can be explained by the principle of structural risk minimization behind it. It is surprising that, although Logistic
+regression behaves the worst from all classiﬁers at high imbalance for every type of text representation, the eﬀect is ex-treme when it is used in conjunction with tf-idf: for the ﬁrst dataset all the instances are classiﬁed in the majority class.
+4.5.2. Degree of imbalance over text representation performance
+Regarding the impact of the text representation method, Fasttext (and implicitly word2vec) shows the highest de-
+pendence on the degree of imbalance: while for the ﬁrst case corresponding to the highest imbalance, Fasttext word
+embeddings record the worst results, it is obvious how the performance increases with the decrease of imbalance, ob-
+taining clearly the best results for the third data set corresponding to low imbalance, for all classiﬁers. Comparing the
+performance of the two text representations which are mainly based on word frequencies, it’s surprising that for thelinear classiﬁers (Logistic regression and SVM) BoW surpasses the more complex tf-idf method; this is also observed
+in the case of the decision tree for the second and third dataset.
+4.5.3. The eﬃciency of oversampling schemes
+Over-sampling schemes bring a clear advantage in case of the algorithms that suﬀer most from the imbalance -
+Logistic regression the most followed by SVM. Although Logistic regression gives the worst results when applied
+on the original highly imbalanced data, when oversampling schemes are used it shows to outperform all the other
+methods for every type of embedding. SVM with tf-idf and fasttext embeddings also beneﬁt from oversampling while
+for the BoW embedding oversampling does not make a signiﬁcant diﬀerence. In case of Decision trees, which showthe least bias towards the majority class, the oversampling schemes do not guarantee increase in performance for thehighly imbalanced datasets (ﬁrst two cases), on contrary, most of the times recording worse results.
+Regarding the comparative performance of the oversampling schemes, there is not a clear winner. Analyzing their
+performance on the linear classiﬁers where they are most eﬃcient, simple random oversampling seem to work as well
+as other more complex schemes.
+744 Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745
+Author /Procedia Computer Science 00 (2019) 000–000 9
+4.6. Results on Multi-class classiﬁcation using resampling
+Figure 4illustrates the performance of the evaluated methods in case of multi-class classiﬁcation, where all 17
+classes are used in the analysis. Regarding the performance on the original imbalanced data, generally the same
+Fig. 4. Macro-average F-measure for the classiﬁcation of the work experiences dataset consisting of 17 classes
+observations as in the case of binary classiﬁcation hold: Logistic regression is the most aﬀected classiﬁer from the
+imbalance in data when used with tf-idf and fasttext vectorizations. When using BoW, both linear classiﬁers surpass
+the decision tree, with SVM as winner. BoW is the winning vectorization type in case of all classiﬁers. This contardicts
+the last experiment in the binary classiﬁcation section, where fasttext achieved the best results, but it is explained bythe fact that the M-E pair of classes had lower imbalance, while the binary classiﬁers behind OVO classiﬁers (Logistic
+regression and SVM) still have to deal with many imbalanced datasets.
+All classiﬁers seem to beneﬁt to a given extent by oversampling, with highest increase in performance for the linear
+classiﬁers using tf-idf and fasttext vectorizations. Simple oversampling, SMOTE and SMOTE-SVM show the best,
+comparable performance.
+The poor results obtained by glove and doc2vec embedding may be explained by the relatively reduced size of ourdatasets but also by the length of the texts in our corpus which consists of very short documents. Embeddings obtained
+with neural networks are very powerful tools in text classiﬁcation, but they need a larger amount of data to learn
+context or word n-grams from. That’s why they work better with more balanced and larger classes.
+4.7. Results for cost-sensitive classiﬁcation with DE
+The goal of employing a cost-sensitive approach is to outperform the results we obtained with resampling methods
+for the case of multi-class classiﬁcation, the problem we have to solve in practice. With this aim, analyzing the results
+obtained in previous experiments, we decided to use further the TF-IDF representation, which gave the best results sofar.Figure 4.7illustrates comparatively the best results obtained using resampling versus the results obtained using cost-
+sensitive classiﬁcation based on DE for the multi-class classiﬁcation case, in both steps: when miss-classiﬁcation costs
+are inferred at the class level (denoted as cost-sensitive 1 in the ﬁgure) and when these are further optimized at the
+data instance level (cost-sensitive 2). There is an evident increase in performance when employing the cost-sensitive
+approach over the best resampling schemes, in the case of all the classiﬁcation algorithms.The use of costs at the levelof data instances brings small improvements over the use of costs at class level and only for logistic regression and
+SVM. The experiments show that SVM, a classiﬁer aiming at minimizing the structural risk, beneﬁts the most from
+deriving weights at data instance level.
+5. Conclusion
+Based on the experiments we have done we can say that simple text representations such as BoW orTF-IDF work
+better for small sets with large imbalance, rather than a more complex embedding such as Glove, doc2vec or even10 Author /Procedia Computer Science 00 (2019) 000–000
+Fig. 5. Best F-measure scores using sampling methods compared to the scores obtained using the cost sensitive approach based on Diﬀerential
+Evolution: cost-sensitive 1 corresponds to the ﬁrst level of optimization when costs are derived at the class level and cost-sensitive 2 corresponds
+to the second step when costs are derived at the data instance level
+FastText. Regarding the classiﬁers we used, both linear ones (Logistic regression and SVM with linear kernel) are
+more biased in the context of high imbalance compared to decision trees and this phenomenon is more pronounced
+when using TF-IDF representation and less when using BoW. Oversampling schemes are necessary in the context of
+the linear classiﬁers when working with TF-IDF and Fasttext vectorizations. SVM with the BoW vectorization does
+not seem to be aﬀected by the imbalance in data.
+When comparing the resampling schemes with the cost sensitive approach where the misclassiﬁcation costs are
+learned by a Diﬀerential Evolution algorithm, the cost-sensitive approach clearly give the best results in terms of
+F-measure.
+References
+[1]V. L´opez, A. Fern ´andez, J. G. Moreno-Torres, and F. Herrera, “Analysis of preprocessing vs. cost-sensitive learning for imbalanced classiﬁca-
+tion. open problems on intrinsic data characteristics,” Expert Systems with Applications, vol. 39, no. 7, pp. 6585–6608, 2012.
+[2]J. Pennington, R. Socher, and C. Manning, “Glove: Global vectors for word representation,” in Proceedings of the 2014 conference on empirical
+methods in natural language processing (EMNLP), 2014, pp. 1532–1543.
+[3]J. Han Lau and T. Baldwin, “An empirical evaluation of doc2vec with practical insights into document embedding generation,” 07 2016.
+[4]T. Mikolov, I. Sutskever, K. Chen, G. S. Corrado, and J. Dean, “Distributed representations of words and phrases and their compositionality,”
+inAdvances in neural information processing systems, 2013, pp. 3111–3119.
+[5]P. Bojanowski, E. Grave, A. Joulin, and T. Mikolov, “Enriching word vectors with subword information,” Transactions of the Association for
+Computational Linguistics, vol. 5, 2017.
+[6]V. L´opez, A. Fern ´andez, S. Garc ´ıa, V . Palade, and F. Herrera, “An insight into classiﬁcation with imbalanced data: Empirical results and current
+trends on using data intrinsic characteristics,” Information Sciences, vol. 250, pp. 113–141, 2013.
+[7]N. Chawla, K. Bowyer, L. O. Hall, and W. Philip Kegelmeyer, “Smote: Synthetic minority over-sampling technique,” vol. 16, 01 2002.
+[8]B. L. Q. L. J. X. Tao Chen, Ruifeng Xu, “Wemote - word embedding based minority oversampling technique for imbalanced emotion and
+sentiment classiﬁcation,” 2013.
+[9]V . S. Sheng and C. X. Ling, “Thresholding for making classiﬁers cost-sensitive,” in Proceedings of the 21st National
+Conference on Artiﬁcial Intelligence - Volume 1, ser. AAAI’06. AAAI Press, 2006, pp. 476–481. [Online]. Available: http:
+//dl.acm.org/ citation.cfm?id=1597538.1597615
+[10] P. Cao, D. Zhao, and O. Zaiane, “An optimized cost-sensitive svm for imbalanced data learning,” in Paciﬁc-Asia Conference on Knowledge
+Discovery and Data Mining. Springer, 2013, pp. 280–292.
+[11] Y . Sun, M. S. Kamel, and Y . Wang, “Boosting for learning multiple classes with imbalanced class distribution,” in null. IEEE, 2006, pp.
+592–602.
+[12] T. Perry, M. Bader-El-Den, and S. Cooper, “Imbalanced classiﬁcation using genetically optimized cost sensitive classiﬁers,” in Evolutionary
+Computation (CEC), 2015 IEEE Congress on. IEEE, 2015, pp. 680–687.
+[13] C. Lemnaru and R. Potolea, “Evolutionary cost-sensitive balancing: A generic method for imbalanced classiﬁcation problems,” in EVOLVE-A
+Bridge between Probability, Set Oriented Numerics, and Evolutionary Computation VI. Springer, 2018, pp. 194–209.
+[14] E. L. Bird, Steven and E. Klein, Natural Language Processing with Python. O’Reilly Media Inc., 01 2009.
+ Cristian Padurariu  et al. / Procedia Computer Science 159 (2019) 736–745 745
+Author /Procedia Computer Science 00 (2019) 000–000 9
+4.6. Results on Multi-class classiﬁcation using resampling
+Figure 4illustrates the performance of the evaluated methods in case of multi-class classiﬁcation, where all 17
+classes are used in the analysis. Regarding the performance on the original imbalanced data, generally the same
+Fig. 4. Macro-average F-measure for the classiﬁcation of the work experiences dataset consisting of 17 classes
+observations as in the case of binary classiﬁcation hold: Logistic regression is the most aﬀected classiﬁer from the
+imbalance in data when used with tf-idf and fasttext vectorizations. When using BoW, both linear classiﬁers surpass
+the decision tree, with SVM as winner. BoW is the winning vectorization type in case of all classiﬁers. This contardicts
+the last experiment in the binary classiﬁcation section, where fasttext achieved the best results, but it is explained bythe fact that the M-E pair of classes had lower imbalance, while the binary classiﬁers behind OVO classiﬁers (Logistic
+regression and SVM) still have to deal with many imbalanced datasets.
+All classiﬁers seem to beneﬁt to a given extent by oversampling, with highest increase in performance for the linear
+classiﬁers using tf-idf and fasttext vectorizations. Simple oversampling, SMOTE and SMOTE-SVM show the best,
+comparable performance.
+The poor results obtained by glove and doc2vec embedding may be explained by the relatively reduced size of ourdatasets but also by the length of the texts in our corpus which consists of very short documents. Embeddings obtained
+with neural networks are very powerful tools in text classiﬁcation, but they need a larger amount of data to learn
+context or word n-grams from. That’s why they work better with more balanced and larger classes.
+4.7. Results for cost-sensitive classiﬁcation with DE
+The goal of employing a cost-sensitive approach is to outperform the results we obtained with resampling methods
+for the case of multi-class classiﬁcation, the problem we have to solve in practice. With this aim, analyzing the results
+obtained in previous experiments, we decided to use further the TF-IDF representation, which gave the best results sofar.Figure 4.7illustrates comparatively the best results obtained using resampling versus the results obtained using cost-
+sensitive classiﬁcation based on DE for the multi-class classiﬁcation case, in both steps: when miss-classiﬁcation costs
+are inferred at the class level (denoted as cost-sensitive 1 in the ﬁgure) and when these are further optimized at the
+data instance level (cost-sensitive 2). There is an evident increase in performance when employing the cost-sensitive
+approach over the best resampling schemes, in the case of all the classiﬁcation algorithms.The use of costs at the levelof data instances brings small improvements over the use of costs at class level and only for logistic regression and
+SVM. The experiments show that SVM, a classiﬁer aiming at minimizing the structural risk, beneﬁts the most from
+deriving weights at data instance level.
+5. Conclusion
+Based on the experiments we have done we can say that simple text representations such as BoW orTF-IDF work
+better for small sets with large imbalance, rather than a more complex embedding such as Glove, doc2vec or even10 Author /Procedia Computer Science 00 (2019) 000–000
+Fig. 5. Best F-measure scores using sampling methods compared to the scores obtained using the cost sensitive approach based on Diﬀerential
+Evolution: cost-sensitive 1 corresponds to the ﬁrst level of optimization when costs are derived at the class level and cost-sensitive 2 corresponds
+to the second step when costs are derived at the data instance level
+FastText. Regarding the classiﬁers we used, both linear ones (Logistic regression and SVM with linear kernel) are
+more biased in the context of high imbalance compared to decision trees and this phenomenon is more pronouncedwhen using TF-IDF representation and less when using BoW. Oversampling schemes are necessary in the context of
+the linear classiﬁers when working with TF-IDF and Fasttext vectorizations. SVM with the BoW vectorization does
+not seem to be aﬀected by the imbalance in data.
+When comparing the resampling schemes with the cost sensitive approach where the misclassiﬁcation costs are
+learned by a Diﬀerential Evolution algorithm, the cost-sensitive approach clearly give the best results in terms of
+F-measure.
+References
+[1]V. L´opez, A. Fern ´andez, J. G. Moreno-Torres, and F. Herrera, “Analysis of preprocessing vs. cost-sensitive learning for imbalanced classiﬁca-
+tion. open problems on intrinsic data characteristics,” Expert Systems with Applications, vol. 39, no. 7, pp. 6585–6608, 2012.
+[2]J. Pennington, R. Socher, and C. Manning, “Glove: Global vectors for word representation,” in Proceedings of the 2014 conference on empirical
+methods in natural language processing (EMNLP), 2014, pp. 1532–1543.
+[3]J. Han Lau and T. Baldwin, “An empirical evaluation of doc2vec with practical insights into document embedding generation,” 07 2016.
+[4]T. Mikolov, I. Sutskever, K. Chen, G. S. Corrado, and J. Dean, “Distributed representations of words and phrases and their compositionality,”
+inAdvances in neural information processing systems, 2013, pp. 3111–3119.
+[5]P. Bojanowski, E. Grave, A. Joulin, and T. Mikolov, “Enriching word vectors with subword information,” Transactions of the Association for
+Computational Linguistics, vol. 5, 2017.
+[6]V. L´opez, A. Fern ´andez, S. Garc ´ıa, V . Palade, and F. Herrera, “An insight into classiﬁcation with imbalanced data: Empirical results and current
+trends on using data intrinsic characteristics,” Information Sciences, vol. 250, pp. 113–141, 2013.
+[7]N. Chawla, K. Bowyer, L. O. Hall, and W. Philip Kegelmeyer, “Smote: Synthetic minority over-sampling technique,” vol. 16, 01 2002.
+[8]B. L. Q. L. J. X. Tao Chen, Ruifeng Xu, “Wemote - word embedding based minority oversampling technique for imbalanced emotion and
+sentiment classiﬁcation,” 2013.
+[9]V . S. Sheng and C. X. Ling, “Thresholding for making classiﬁers cost-sensitive,” in Proceedings of the 21st National
+Conference on Artiﬁcial Intelligence - Volume 1, ser. AAAI’06. AAAI Press, 2006, pp. 476–481. [Online]. Available: http:
+//dl.acm.org/ citation.cfm?id=1597538.1597615
+[10] P. Cao, D. Zhao, and O. Zaiane, “An optimized cost-sensitive svm for imbalanced data learning,” in Paciﬁc-Asia Conference on Knowledge
+Discovery and Data Mining. Springer, 2013, pp. 280–292.
+[11] Y . Sun, M. S. Kamel, and Y . Wang, “Boosting for learning multiple classes with imbalanced class distribution,” in null. IEEE, 2006, pp.
+592–602.
+[12] T. Perry, M. Bader-El-Den, and S. Cooper, “Imbalanced classiﬁcation using genetically optimized cost sensitive classiﬁers,” in Evolutionary
+Computation (CEC), 2015 IEEE Congress on. IEEE, 2015, pp. 680–687.
+[13] C. Lemnaru and R. Potolea, “Evolutionary cost-sensitive balancing: A generic method for imbalanced classiﬁcation problems,” in EVOLVE-A
+Bridge between Probability, Set Oriented Numerics, and Evolutionary Computation VI. Springer, 2018, pp. 194–209.
+[14] E. L. Bird, Steven and E. Klein, Natural Language Processing with Python. O’Reilly Media Inc., 01 2009.

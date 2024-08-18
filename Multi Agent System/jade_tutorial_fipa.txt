@@ -1,0 +1,414 @@
+FIPA
+The Foundati on for Intel ligent, 
+Physical Agents
+Dominic  Greenw ood
+Whites tein Tec hnologies  AG
+
+10/05/04 2­ FIP A Mission ­
+“The promot ion of technol ogies and 
+interoperabi lity speci fications that 
+facilitate the end­t o­end  interworking 
+of intelligent agent  systems  in 
+modern  commerci al and indust rial 
+settings.”
+10/05/04 3­ FIPA History ­
+Started work in 1997
+At peak compr ised 60 mem bers
+Primary specifications  becam e 
+standar d in 2002
+Work ongoing in  Modeli ng, 
+Methodology,  Semantics & Services
+10/05/04 4­ Within the S cope of FIP A ­
+Agent  Lifecycl e Management
+Message  Transp ort
+Message  Structure
+Inter­agent  Interact ion Protocols
+Ontologies
+Securi ty
+10/05/04 5Within the S cope of FIP A
+Agent  Platform 1 Agent  Platform 2
+Yellow
+Pages
+White
+Pages
+Yellow
+Pages
+White
+Pages
+MTSMTS
+
+10/05/04 6­ Outside the S cope of FIP A ­
+The Agent
+10/05/04 7­ Agent C harac teristics ­
+Autonomous
+Reactive
+Proact ive
+Goal­driven
+Social
+Adapt ive
+Cognitive
+AGENTAGENT­ The FIP A Agent P latform  ­
+Message Transport CORBAAgent
+Non-agent software
+Directory
+Facilitator
+(DF)Agent
+Management
+System (AMS)
+ Message Transpo rt ServiceACL
+FIPA Agent  PlatformAPI APIApplication
+AGENT
+HTTP
+IIOP
+SMTP
+etc.Agent
+Message
+Transport
+SpecificationAgent
+Management
+Specification
+ACL
++
+CLACL Message
+Structure
+Specification
+SL Content
+Langua ge
+SpecificationCommunicative
+Act Library
+Interaction Protocol
+Specifications
+10/05/04 9The C ore S pecifications
+(standard)
+10/05/04 10­ Agent M anagem ent ­
+Agent
+Platform
+Agent
+Agent
+DescriptionAgent Service
+Description
+MTSDF AMShosts
+0..n
+uses_ahas_a has_a
+contains
+0..ncontains
+0..n
+has_ahas_acontains
+0..n
+10/05/04 11­ Agent M anagem ent ­
+DFAMSREGISTER
+DEREGISTER
+MODIFY
+SEARCHCommo n Operations
+Different
+Agent
+Descri ptionsName
+Location
+Services
+ProtocolsOntologies
+Lease-time
+ScopeName
+Owner
+State
+­ Sample DF Description ­
+(df­agent­descri ption
+ :nam e (agent­i denti fier
+ :nam e dum my@foo.com
+ :addresses (sequence i iop://foo.com /acc))
+ :protocol s fipa­request
+ :ontol ogies (set fi pa­agent­m anagem ent)
+ :languages (set fi pa­sl 0)
+ :lease­ti me +00000000T600000000T
+)
+10/05/04 13­ Message Trans port ­
+Agent m essage transport com prises tw o levels:
+(1)The Message Transport Protocol (MTP) 
+carries out the physical transferof 
+messages between two ACCs.
+(2)The Message Transport Service (MTS) is 
+provided by the AP to which an agent is 
+attached. The MTS supports the transport 
+of FIPA ACL mes sages between agents on 
+any given AP and between agents on 
+different APs.
+10/05/04 14­ FIP A Message S tructure ­
+ContentMessagePayloadEnvelope Transpo rt
+Information
+Encoded
+Message
+Message
+Parameters
+Message
+Content
+10/05/04 15­ FIP A Envelope P aram eters  ­
+Mandat ory
+to The intended receiver.
+from The sender
+acl­representationACL presentation (e.g. String, XML, Bit­efficient)
+date Creation date of the envelope
+Optional
+payload­length Byte length of the payload
+payload­encodingACL language encoding (e.g. US­AS CII, UTF­8)
+received Stamp evidencing receipt of the message
+security­object Encryption and certification informati on
+­ FIP A Message S tructure ­
+Envelope
+SymbolMessage
+ContentACL
+CL
+OntologyTranspor t
+Protocol
+ACL
+Encoding
+Scheme
+Interaction
+ProtocolIsExpressedIn
+IsExpressedInIsTransmittedOver
+BelongsTocontains
+containscontains1 1
+1 1
+1 1
+1 1..*1
+1..*
+1
+1
+1
+0..*CL
+Encoding
+SchemeIDL
+XML
+bit-effEnve lope
+Encoding
+Scheme
+String
+XML
+bit-eff
+String
+request, inform
+query, 
+contract-net,
+etc.IIOP
+HTTP
+ACL
+SL
+10/05/04 17­ ACL Message S tructure ­
+Element Descr iption
+performative What action the message performs
+sender Initiator of the message
+receiver Recipient of the message
+reply-to Recipient of the message reply
+content Content of the message
+language Language used to express content
+encoding Encoding used for content
+ontology Ontology context for content
+protocol Protocol message belongs to
+conversation-id Conversation message belongs to
+reply-with Reply with this expression
+in-reply-to Action to which this is a reply
+reply-by Time to receive reply byFIPA ACL
+Message
+Element s
+10/05/04 18­ ACL Message E xample ­
+(request
+:sender (:nam e dom inic­agent@ whitestei n.com :8080)
+:recei ver (:nam e rex­hotel @tcp://hotel rex.com :6600)
+:ontol ogy personal ­travel ­assi stant
+:language FIP A­SL
+:protocol  fipa­request
+:content 
+    (action m ovenpi ck­hotel @tcp://m ovenpi ck.com :6600
+      (book­hotel  (:arri val 25/11/2000)  (:departure 05/12/2000) ...
+        ))
+)
+10/05/04 19­ Communicative Acts ­
+Drawn from  Speech A ct theory
+A speaker  „utters“ s peech acts, w hich are also 
+know n as perform atives or com municative acts
+ACL messages are m odeled aft er speech acts
+Speec h acts m ay be u nderstood in term s of an 
+intentional level description of an agent
+An intentional description  makes references to 
+beliefs, desires, intentions &  other m odalities
+10/05/04 20Communicative Act Library  (1)
+accept­pr oposal: accept a previ ously subm itted proposal
+agree: agree to perform  som e acti on, possi bly in the future
+cancel: cancel  som e previ ously requested acti on
+cfp: make a cal  for proposal s to perform  a given acti on
+confir m: inform  a recei ver that a gi ven proposi tion is true
+disconfir m: inform  a recei ver that a gi ven poposi tion is false
+failur e: inform  another agent that an acti on w as attem pted but 
+failed
+infor m: inform  a recei ver that a gi ven proposi tion is true
+not­under stood: inform s a recei ver that sender di d not 
+understand
+quer y­if: ask another agent w hether a gi ven proposi tion is true
+request: requests a recei ver to p erform som e action
+10/05/04 21Communicative Act Library  (2)
+propose : submi t a proposal  to perform  a certain 
+action
+query­ ref: ask another agent  for the object referred to by 
+a referential expression
+refuse: refuse to perform a given action
+reject­proposal : reject a proposal  during a negot iation
+request ­when: request  a receiver to perform some 
+action when some given proposi tion becom es true
+request ­whenever : request  a receiver to perform some 
+action as soon  as some proposi tion is true and 
+thereafter each  time the proposi tion becom es true 
+again
+subscri be: a persistent intention to notify the sender  of a 
+value, and to notify again whenever  the value changes
+10/05/04 22Communicative Act Library  (3)
+propagate: the receiver treats the em bedded 
+message as sent directly to it, and m ust 
+identify the agents denoted by the given 
+descriptor and send the received propagate 
+message to them
+proxy: the receiver m ust select target agents 
+denoted by a given description and to send an 
+embedded m essage to them
+subscrib e: a persistent intention to notify the 
+sender of a value, and to notify again 
+whenever the value changes
+10/05/04 23­ Content Languages  ­
+Any language can be used as a C ontent Language, 
+e.g.:
+KIF
+Prolog
+SQL
+Serialized O bjects
+Binary Large O bjects
+FIPA­SL, FIPA­CCL, FIPA­RDF, FIPA­KIF
+24­ FIP A SL Content Language ­
+FIPA SL content expression has 3 types:
+(1) P roposition
+A Wff (well­formed formulae) that can be assigned  a 
+truth value in a speci fic context, e.g., confirm.
+Agent i confirms to agent  j that it is, in fact, true that a 
+platypus  is a mammal.
+(confirm 
+    :sender (agent-identifier :name i) 
+    :receiver (set (agent-identifier :name j))
+    :content ((is mammal platypus))
+    :language fipa-sl ) 
+25­ FIP A SL Content Language ­
+FIPA SL content expression has 3 types:
+(2) A ction
+Something to be performed, e.g. request.
+Agent i request s agent  j (robot) to deliver a box.
+(request
+    :sender (agent-identifier :name i)
+    :receiver (set (agent-identifier :name j))
+    :content ((action (agent-identifier :name j) (deliver box017 (loc 12)))              )
+    :protocol fipa-request
+    :language fipa-sl
+    :reply-with order567 ) 
+26­ FIP A SL Content Language ­
+FIPA SL content expression has 3 types:
+(3) IR E (Identifying R eference E xpression)
+References  an object in the domain, e.g. inform­ref.
+Agent i request s agent  j to tell it the 'capital of Wales'.
+(request 
+  :sender (agent-identifier :name i) 
+  :receiver (set(agent-identifier :name j))
+  :content
+    ((action (agent-identifier :name j)
+      (inform-ref 
+       :sender (agent-identifier :name j)
+       :receiver (set (agent-identifier :name i))
+       :content ((iota ?x (CapitalWales ?x)))       :ontology world-politics
+       :language fipa-sl ) ))
+  :reply-with query0
+  :language fipa-sl )
+10/05/04 27­ Ontology ­
+A common vocabulary of agreed  upon 
+definitions and relatio nships between those 
+definitions, to describ e a p articu lar su bject 
+domain.
+E.g.:
+Agent­management ontology
+UMTS wireless technology ontology
+Cinema ontology
+Weather  ontology
+IEEE Standar d Upper  Ontology
+10/05/04 28­ Ontology Example ­
+APPLEFRUIT
+BERRY TOMATO
+GOOSEBERR
+YSLOEHUCKLEBERRYTREE
+10/05/04 29­ Ontology ­
+In the previous exam ple the Ontology was world­politics
+This ontology refers to ALL terms in the content 
+expression
+Future work would allow definitions from different 
+ontologies to be associ ated with different terms in a 
+content expression
+E.g.::ontology (set (world­politics, geog raphy))
+:content ((iota ?x (world­politics:CapitalWales ?x)),
+      iota ?y (geogr aphy: LandA reaWales ?y)))
+10/05/04 30­ Interac tion Protoc ols ­
+Patterns of message exchange between agents
+Concurrent IPs are called conversations
+Based on communicative acts
+There is a basic set of pre­defined standard IPs
+Ad hoc IPs can be defined
+Communication semantics can be defined at IP 
+level rather than individuals CAs
+10/05/04 31­ Interac tion Protoc ols ­
+FIPA defined IP s are:
+FIPA­Request
+FIPA­Query
+FIPA­Request­W hen
+FIPA­Contract­N et
+FIPA­Iterated­C ontract­N et
+FIPA­Auction­E nglish
+FIPA­Auction­D utch
+FIPA­Brokering
+FIPA­Recruiting
+FIPA­Subscribe
+FIPA­Propose
+32­ The FIP A­Reques t Protoc ol ­
+InitiatorParticipant
+REQUEST
+REFU SEREQUEST
+AGREE
+FAILURE
+INFORM-D ONE
+INFORM-RES ULT
+33­ The FIP A­Contrac t­Net IP ­
+cfp(action p1)
+not-
+underst oodrefuse
+(reason)propose
+(p2)
+reject-
+proposalaccept -
+proposal
+failure
+(reason)inform
+(done)cancelFIPA-iterated
+-contract-net
+­ Other FIP A Specifications ­
+The Abstract Architecture
+Quality of Service
+CCL/KIF/RDF Content Languages
+Agent MTP for WAP
+Network Management and Provisioning
+Ontology service 
+Message Buffering Service
+Domains and Policies
+JXTA Discovery Middleware
+­ Ongoing Work ­
+Agent Modelling
+Agent Methodology
+Semantic Framework
+Service Framework
+Security
+­ Resources ­
+•FIPA
+•http://www.fipa.org
+•Agentc ities
+•http://www.agent cities.org/ 
+•http://www.agent cities.net/ 
+•Agent in G eneral
+•http://www.agent link.org/ 

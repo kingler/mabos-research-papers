@@ -1,0 +1,1663 @@
+Evolving A∗to Efficiently Solve the κShortest-Path Problem
+(Extended Version)
+Carlos Linares L´ opez1and Ian Herman1
+1Computer Science and Engineering Department – Universidad Carlos III de Madrid
+Abstract
+The problem of finding the shortest path in a graph G(V, E) has been widely studied. However, in many
+applications it is necessary to compute an arbitrary number of them, κ. Even though the problem has raised a lot
+of interest from different research communities and many applications of it are known, it has not been addressed
+to the same extent as the single shortest path problem. The best algorithm known for efficiently solving this
+task has a time complexity of O(|E|+|V|log|V|+κ|V|) when computing paths in explicit form, and is based
+on best-first search. This paper introduces a new search algorithm with the same time complexity, which results
+from a natural evolution of A∗thus, it preserves all its interesting properties, making it widely applicable to
+many different domains. Experiments in various testbeds show a significant improvement in performance over
+the state of the art, often by one or two orders of magnitude.
+1 Introduction
+Given a graph G(V, E), the problem of finding the shortest path between two designated vertices sandtis a
+long-studied task, and A∗(P. E. Hart et al., 1968) is a prominent algorithm used to solve it. A natural extension
+consists of computing the best κpaths1between the same vertices. David Eppstein (Eppstein, 1998) provides a
+thorough review in the history of the research on this task, noting that it dates back as far as 1957. Many variants
+have been considered, differing on various criteria, such as whether paths are required to be simple (or loopless) or
+whether the graphs considered are directed or undirected. This paper focuses on the problem of finding the κ, not
+necessarily simple, shortest paths between a start state, s, and a goal state, t, in directed graphs.
+The problem has been already addressed with various heuristic search algorithms, usually with various derivative
+versions. mA∗(Dechter et al., 2012; Flerova et al., 2016) is a straightforward application of A∗which allows the
+expansion of nodes up to κtimes. Doing so clearly allows the discovery of κpaths, and the idea can be easily
+applied to different domains. In contrast, K∗(Aljazzar, 2009; Aljazzar & Leue, 2011) expands nodes only once.
+It is a heuristic variant of Eppstein’s algorithm (EA) (Eppstein, 1998) which, in addition, can be built on-the-fly
+significantly improving its running time. K∗essentially transforms EA to return paths as soon as practical. At
+the center of both EA and K∗is the path graph , a structure which stores information from the search allowing the
+enumeration of paths through a one-to-one mapping between paths in the path graph and paths in the true graph.
+The algorithm swaps between search and enumerating paths from the path graph based on some swapping criterion,
+which can lead to the algorithm expanding nodes unnecessarily. The algorithm has been recently modified (Katz
+& Lee, 2023) with a variety of improvements, including a modification of the swapping criterion. Still, both EA
+and K∗have an algorithmic complexity equal to O(|E|+|V|log|V|+κ) when outputting paths in implicit form,
+i.e., as a sequence of sidetrack edges. Usually, however, paths are required in explicit form, i.e., as a sequence of
+vertices and their algorithm complexity is then O(|E|+|V|log|V|+κ|V|).
+In this paper, a novel search algorithm, BELA∗(Bidirectional Edge Labeling A∗), is introduced. Some relevant
+definitions are introduced first and, among them, a novel use of sidetrack edges is proposed which splits paths into
+two components. At the core of our contribution is the notion of a centroid which we then use for the introduction
+of the brute-force variant of our algorithm, BELA 0. Its theoretical properties are examined and its algorithmic
+complexity studied. We then consider the heuristic version of the algorithm, BELA∗. Afterwards, through empirical
+evaluation, we show BELA 0and BELA∗outperform both mA∗and K∗(as well as their brute-force variants), in a
+wide selection of problems often by one or two orders of magnitude in running time, and sometimes even more.
+2 Definitions
+Given a directed graph G(V, E) characterized by its set of vertices v∈Vand edges eij:vi→vj, eij∈E, letsand
+tdenote the start andgoalvertices respectively, between which an arbitrary number κof shortest-paths has to be
+1The letter k, commonly used for referring to the number of paths to find, is used throughout this paper as a generic index instead.
+1arXiv:2408.08227v1  [cs.DS]  15 Aug 2024
+s A B tCD E
+1 2 13 232
+2
+Figure 1: Examples of sidetrack edges —shown in thick lines
+found. A path πis defined as a concatenation of vertices π⟨n0, n1, n2, . . . , n k⟩such that eni−1,ni∈E,0< i≤k.
+Ifs=n0andt=nkthen πis denoted as a solution path . The edges are weighted with non-negative integers,
+where ω(ni−1, ni) denotes the cost of traversing the edge eni−1,ni. Thus, the cost of a path πis defined according
+to the additive model asC(π) =kP
+i=1ω(ni−1, ni). When the path πis clear from the context or it is irrelevant, the
+same cost can be denoted also as g(ni) if and only if the path starts at the start vertex, s. Analogously, gb(ni)
+denotes the cost of the path from nitotcomputed as gb(ni) =kP
+j=i+1ω(nj−1, nj) if and only if nk=t. A path π
+is said to be optimal , and is denoted as π∗, if and only if C(π∗)≤C(π′) for every solution path π′between sand
+t, and is termed as suboptimal otherwise. Following the previous definitions, g∗(ni), and g∗
+b(ni) denote the cost of
+an optimal path from the start vertex, stoni, and from nitot, respectively.
+Heuristic functions are denoted as h(·). A heuristic function is said to be admissible if and only if h(n)≤h∗(n)
+for every node n, where h∗(n) denotes the cost of an optimal solution from nto the goal t. Note that this definition
+refers to nodes instead of vertices, which are defined in turn, as the representation of a unique path from sto it,
+so that the same vertex can be represented with multiple nodes in a search algorithm. A heuristic function is said
+to be consistent if and only if h(n)−h(ni)≤ω(n, ni), for every node n, where niis any descendant of it.
+The set of all solution paths (either optimal or suboptimal) in Gis denoted as Gπ, and the set of all paths
+which are suboptimal is denoted as G′
+π,G′
+π⊂Gπ.
+Definition 1. Given a directed G(V, E)potentially infinite locally finite graph with natural edge weights, and two
+designated vertices, s, t∈V, the single-source κshortest-path problem consists of finding a set of different, not
+necessarily simple paths Π ={π0, π1, . . . , π κ−1}such that:
+•If there exists a path π′such that C(π′)< C(πi),0≤i < κ , then π′∈Π
+•If|Gπ| ≤κ, then Π =Gπ
+Every solution path πi∈Π has a cost possibly different than the cost of other accepted solution paths. C∗
+0
+represents the cost of all optimal solution paths πi∈Gπ\G′
+π;C∗
+1is the cost of the cheapest suboptimal solution,
+C∗
+1> C∗
+0. Likewise, C∗
+iis the cost of all suboptimal solution paths which are the i-th best, and C∗
+φrepresents the
+cost of the worst solutions in Π. In particular, C(πκ−1) =C∗
+φ.
+Eppstein’s Algorithm (EA) classified all edges in a graph in two different categories: tree edges andsidetrack
+edges , and K∗slightly modified the definition of the second term. In the following, we adhere to the definitions
+used in K∗:
+Definition 2. An edge eni,njis atree edge if and only if g∗(nj) =g∗(ni) +ω(ni, nj), and is said to be a sidetrack
+edge otherwise, i.e., g∗(nj)< g∗(ni) +ω(ni, nj).
+Clearly, the existence of at least one sidetrack edge is both a necessary and sufficient condition for a path to be
+suboptimal. One of our core contributions is that they also provide a means for distinguishing different components
+of any suboptimal solution path:
+Definition 3. Given a directed cyclic graph G(V, E)with natural edge weights, and two designated vertices, s, t∈V,
+any suboptimal solution path π⟨s=n0, n1, n2, . . . , n k=t⟩can be decomposed into a prefix and a suffix , via a
+sidetrack edge eni−1,ni∈π, for any iwith 0< i≤kas follows: Let nibe the first node in πwhich verifies that
+g∗(ni)< g∗(ni−1) +ω(ni−1, ni), then:
+•ϕ⟨s=n0, n1, . . . , n i−1⟩is the prefix , possibly empty.
+•σ⟨ni, ni+1, . . . , n k=t⟩is the suffix , possibly empty.
+•The edge eni−1,ni∈πis a sidetrack edge.
+2
+Figure 1 shows a graph with two sidetrack edges. In particular, eC,Bdecomposes the suboptimal path ⟨s, C, B, t ⟩
+into its prefix ϕ⟨s, C⟩and its suffix σ⟨B, t⟩because g∗(C) = 3 and g∗(B) = 3 < g∗(C) +ω(C, B) = 5. The other
+sidetrack exemplifies the case of sidetrack edges that get to the goal, t. Let πdenote any solution path (either
+optimal or suboptimal) such that g(ni) =g∗(ni),1≤i < k :
+•Ifg(t)> g∗(t) then πis a suboptimal path, decomposed into its prefix and suffix via the sidetrack enk−1,t,
+because the first node verifying g∗(ni)< g(ni−1) +ω(ni−1, ni) istindeed.
+Figure 1 shows this case: the edge eE,tdecomposes the suboptimal path ⟨s, D, E, t ⟩into the prefix ϕ⟨s, D, E ⟩
+and an empty suffix σ=λ.
+•Ifg(t) =g∗(t) then πis an optimal path, to be denoted as π∗, and thus, there is no vertex niverifying that
+g∗(ni)< g∗(ni−1) +ω(ni−1, ni).
+Figure 1 shows this case: the path ⟨s, A, B, t ⟩is optimal. Consequently, g(ni) = g∗(ni) = g∗(ni−1) +
+ω(ni−1, ni),1≤i≤kso there is no sidetrack edge. It is then said that the prefix of πisπitself.
+These two types of paths are both considered direct :
+Definition 4. A path π⟨s=n0, n1, n2, . . . , n k=t⟩is said to be direct if and only if one of the following conditions
+hold:
+•It is an optimal path or, in other words, it has no sidetrack edge.
+•It is a suboptimal path with an empty suffix, σ=λ.
+and is called indirect otherwise.
+Note there are also paths with an empty prefix, ϕ=λ: if there is a suboptimal path to get to tfrom s
+which consists of only one edge, then it is a sidetrack edge which makes ϕ=σ=λ; any suboptimal path
+π⟨s=n0, n1, n2, . . . , n k=t⟩with g∗(n1)< ω(s, n 1) is decomposed into an empty prefix, ϕ=λ, and the suffix
+σ⟨n1, n2, . . . , n k=t⟩via the sidetrack es,n1.
+Next, we provide a novel result regarding the relationship between suboptimal solution paths and adjacent
+paths via a sidetrack edge:
+Lemma 1. Letπi∈Πdenote a suboptimal solution path, and let eu,vdenote its first sidetrack edge, then there
+exists another solution path πj∈Π, C(πj)< C(πi), such that the ending vertex of eu,v,v, belongs to the prefix of
+πj.
+Proof : From the definition of a sidetrack edge it follows that there is a shorter path to v. Let ϕdenote it.
+Denoting the subpath from vto the end of πibyσ, the concatenation of ϕandσyields another solution path, πj
+which is necessarily shorter than πi, i.e., C(πj)< C(πi). Note that this is true even if πiis a direct suboptimal
+path, i.e., v=t. 2
+3 Centroids
+A new definition, which refines the notion of sidetrack edge is proposed first:
+Definition 5. Acentroid zis defined as the association of a sidetrack edge eu,v∈Ewithu, v∈V, and an overall
+costCz.
+Hence, two centroids are different if they use different sidetrack edges or they have different overall costs.
+Clearly, every suboptimal solution path πusing a centroid is divided into a prefix and suffix, and C(π) =g∗(u) +
+ω(u, v) +gb(v) =Cz. Of course, question is how to find the paths defined by the cost and sidetrack edge of the
+centroid. To do this, we must enumerate all valid suffixes and prefixes for paths of the centroid. Before returning
+to this question it is first shown that centroids create an equivalence class over the set of all suboptimal solution
+paths, G′
+π.
+Lemma 2. Any suboptimal path πis represented by one and only one centroid z.
+Proof : Indeed, there is a unique combination of an overall cost and a sidetrack edge that represents any
+suboptimal solution path π: It is trivially observed that the cost of πis unique, C(π) and thus, its centroid has to
+have an overall cost Cz=C(π); secondly, Definition (3) explicitly uses the firstsidetrack in πto split the path into
+its prefix and suffix, and hence it has to be unique. To conclude the second observation, note that every suboptimal
+path must necessarily have at least one sidetrack, otherwise it would be an optimal path. 2
+Lemma 3. The equivalence class induced by the definition of centroids forms a partition over the set of all subop-
+timal solution paths G′
+π, i.e., every suboptimal solution path πi∈Πbelongs to one and only one equivalence class
+defined by a centroid z.
+3
+s A B C t1 2 1 1D E
+12
+4F
+43
+(a) Composition of sidetrack edgess A B C D t1 2 4 1 2E
+1 2
+F2 1
+(b) Juxtaposition of sidetrack edges
+Figure 2: Example of suboptimal solution paths with various sidetrack edges
+As a consequence of the preceding Lemma, the computation of all suboptimal solution paths2in the solution
+set Π can be computed from[
+z∈ZJzKwhere Zis the set of all centroids of our problem with cost less than or equal
+toC∗
+φ, and JzKis the set of all paths that use centroid z. We show next that a unique centroid zrepresents an
+arbitrary number of suboptimal solution paths JzKthat can each contain a different number of sidetrack edges.
+The only possible cases are shown in Figure 2. Figure 2a shows the case where the sidetrack edges of centroids
+(shown with thick lines) can be composed to create suboptimal solution paths which are larger. In particular, the
+cost of the path ⟨s, D, E, C, t ⟩, 8, is smaller than the cost of the solution path ⟨s, F, D, E, C, t ⟩, 14, which results
+of the composition of the sidetrack edge defining its centroid ⟨eF,D,14⟩with the defining sidetrack edge of the
+centroid representing the former, ⟨eE,C,8⟩. Figure 2b shows a more interesting case, where the sidetrack edges of
+two centroids (shown with thick lines) can be juxtaposed so that taking them creates a suboptimal solution path
+which is larger than the cost of any suboptimal solution path that uses only one of the two edges. To be clear, the
+solution set Π with κ= 4 is shown next:
+π0:⟨s, A, B, C, D, t ⟩ C∗
+0: 10 −
+π1:⟨s, A, E, B, C, D, t ⟩ C∗
+1: 11 ⟨eE,B,11⟩
+π2:⟨s, A, B, C, F, D, t ⟩ C∗
+2: 12 ⟨eF,D,12⟩
+π3:⟨s, A, E, B, C, F, D, t ⟩C∗
+3: 13 ⟨eE,B,13⟩
+Restricting attention only to the suboptimal paths, π1uses the sidetrack edge eE,Band has an overall cost
+C∗
+1= 11, so that the centroid ⟨eE,B,11⟩represents it. Note that this sidetrack splits π1into its prefix ϕ=⟨s, A, E ⟩
+and its suffix σ=⟨B, C, D, t ⟩. Because, there is a path from B to twith cost 7, gb(B) = 7, then the overall cost
+of the path can be computed as g∗(E) +ω(E, B) +gb(B) = 2 + 2 + 7 = 11. However, π3contains both sidetracks
+eE,BandeF,D. According to Definition (3), it is the first sidetrack edge in π3,eE,Bwhich splits π3into its prefix
+ϕ=⟨s, A, E ⟩and its suffix σ=⟨B, C, F, D, t ⟩. The cost of the suffix is the gbcost of node Bfor constructing
+π3, which is equal to gb(B) = 9, hence C∗
+3=C(π3) =g∗(E) +ω(E, B) +gb(B) = 2 + 2 + 9 = 13. As a result,
+the node B has two gbcosts, 7 and 9 used respectively for π1andπ3. In conclusion, the juxtaposition of several
+sidetrack edges in the same suboptimal solution path is represented with different gbvalues in the same node. The
+last column above shows the centroid of each suboptimal path, where it can be seen that the sidetrack eE,Bhas
+been used twice to generate π1andπ3.
+To conclude, any suboptimal solution path results from either the consideration of solely the defining sidetrack
+edge of a centroid, or the combination of an arbitrary number of them, either composed, juxtaposed or a combination
+of both.
+4 BELA 0
+We consider first the uninformed variant of our search algorithm, BELA 0, where heuristics are not available. From
+the preceding Section, the computation of the κshortest-paths can be computed from the union of all centroids
+with cost less than or equal to C∗
+φ, where every centroid is defined as the association of a sidetrack edge and an
+overall cost. As indicated in the Definitions, C∗
+0is the cost of all the optimal solution paths and an ordinary
+application of Dijkstra’s can be used to compute all of them. For the case of a centroid zsuch that Cz=C∗
+i,i≥1,
+we will soon show how to compute its set of paths from its cost and sidetrack edge.
+The first extension that we propose to Dijkstra’s algorithm consists of storing all edges traversed in the closed
+list. When a duplicate is found (e.g., node Din Figure 2a), the edge to it (i.e., eF,D) is stored in closed , and the
+node is not re-expanded. This way, all existing sidetrack edges can be easily distinguished from tree edges: Given
+a node ninclosed , one of its incoming edges em,nis a sidetrack edge if and only if g∗(n)< g∗(m) +ω(m, n).
+This operation can be performed in O(1) because Dijkstra’s algorithm already stores in closed the optimal cost to
+2Note that the solution set Π is not required to contain all suboptimal solution paths with the last cost, C∗
+φ.
+4
+reach each node from the start state, g∗(·), and so does BELA 0. According to the normal operation of Dijkstra’s,
+when the goal state is about to be expanded it knows that a new direct (either optimal or suboptimal) path has
+been found. Because it also knows the cost of the new path and its parent is already in closed , it can output the
+new solution path by following all backpointers. Conducting a depth-first search in closed where the next node
+is a parent of the current one with a g∗-value equal to the g∗-value of the current node minus the cost of the edge
+that joins them, delivers all the direct solution paths with a cost equal to the desired one. We call this process
+prefix construction .
+More specifically, prefix construction, shown in Algorithm 1, is the process of computing all optimal paths
+from the start state to a designated node in closed by following the backpointers from it, and also discovering
+new centroids if any exist. When using a centroid ⟨eu,v, Cz⟩only one specific gb-value is used among all in the
+ending vertex, gb=Cz−g∗(u)−ω(u, v). Thus, the gb-value of any node selected when enumerating a prefix
+can be computed as the sum of the gb-value of its descendant plus the cost of the edge as shown in Lines 1–2
+of Algorithm 1. Moreover, once a new gb-value is discovered, the existence of new centroids can be verified by
+checking the condition given in Definition (2), see Line 4. Finally, the enumeration of prefixes is done recursively
+in Lines 8–10, where ⊗denotes the cross-product of its arguments.
+Algorithm 1: Pseudocode of GetPrefixes
+Data: A node nand a backward g-cost, gb
+Result: All optimal paths from ston. In addition, it creates new centroids if any is found.
+1ifgb/∈gb(n)then
+2 insert (gb(n),gb)
+3 forevery parent pnof node ndo
+4 ifg∗(n)< g∗(pn) +ω(pn, n)then
+5 insert( Z,g∗(pn) +ω(pn, n) +gb)
+6ifn=sthen
+7 return {s}
+8forevery parent pnof node ndo
+9 ifg∗(pn) +ω(pn, n) =g∗(n)then
+10 ϕ←ϕ∪GetPrefixes( pn,gb+ω(pn, n))⊗{n};
+11return ϕ
+Given a centroid z, i.e., a sidetrack edge and a known overall cost Cz, all solution paths that go from sto the
+starting vertex of the sidetrack edge, traverse it and then arrive at the goal state with overall cost Cz, or simply, the
+paths of the centroid, are computed as the cross-product of all prefixes and suffixes corresponding to the centroid.
+As in the case of prefix construction, all suffixes with a given cost can be found by conducting a depth-first search
+inclosed where the next node selected is a child of the current one with a gb-value equal to the gb-value of its
+parent minus the cost of the edge that joins them, until the goal state is reached. This procedure is known as suffix
+construction .
+Algorithm 2 shows the pseudocode of BELA 0/BELA∗, where Zis the set of the current centroids and pn
+represents the parent of a node n. The function GetPaths computes all paths represented by the centroid given to
+it as the cross-product of all its prefixes and suffixes. To guarantee admissibility the algorithm first checks whether
+there is a centroid with a cost strictly less or equal than the current f(n) value, with nbeing the node just popped
+out from open . If so, all its paths are added to the solution path until no more centroids can be used, or κshortest
+paths have been found, in which case the algorithm returns. Otherwise, if a direct path to the goal has been found,
+then a new centroid with the cost of this solution is added and the current iteration is skipped. Because Dijkstra
+expands nodes in ascending order of cost, this guarantees that the next iteration will start by outputting all paths
+corresponding to the centroid just added. In case the current node, n, has been already expanded, its edge is added
+to the closed list and, before skipping the current iteration, it is verified whether there are known gb-values of
+it inclosed . If so, this node has known suffixes, therefore, new centroids have been discovered, so we add them
+to the set of centroids, Z. Finally, the current node is expanded and its children are added to the open list in
+increasing order of their f-value.
+Note that the open list can be exhausted without having found κshortest paths. In such case, the algorithm
+considers all centroids in increasing order of their cost adding their solution paths to Π. While computing these
+paths, new centroids might be discovered and so the loop proceeds until κpaths have been found. If after considering
+all centroids, κpaths are not found, the algorithm simply returns those that were found.
+It is noted that Algorithm 2 follows the same mechanics as Dijkstra’s/A∗, the only difference being that it uses
+information in closed to reconstruct the κpaths and, for this, it uses an ordered set of centroids to generate paths
+from, Z. Hence, its theoretical properties naturally derive from those of Dijkstra’s/A∗.
+Lemma 4 (Sufficient condition for expansion) .BELA 0expands all nodes with f(n)< C∗
+φ.
+5
+Algorithm 2: Pseudocode of BELA 0/BELA∗
+Data: A graph G(V, E) and two designated vertices s, t∈V
+Result: Solution set Π with κshortest paths
+1closed ←∅,Z←∅
+2open← {s}with g(s) = 0
+3while open̸=∅do
+4 n←pop( open )
+5 while ∃z∈Z,Cz≤f(n)do
+6 z←pop(Z)
+7 Π = Π ∪GetPaths (z)
+8 if|Π| ≥κthen
+9 return Π
+10 ifn=tthen
+11 insert( Z,⟨ept,t, g(n)⟩)in increasing order of cost
+12 continue
+13 ifn∈closed then
+14 add(closed ,epn,n)
+15 forevery gb-value in ndo
+16 insert( Z,⟨epn,n, g∗(pn) +ω(pn, n) +gb⟩)in increasing order of cost
+17 continue
+18 insert( closed ,n)
+19 forci∈children( n)do
+20 g(ci) =g(n) +ω(n, ci)
+21 insert( open,ci)in increasing order of f(·)
+22while Z̸=∅do
+23 z←pop(Z)
+24 Π = Π ∪GetPaths (z)
+25 if|Π| ≥κthen
+26 return Π
+27return Π
+Proof : Once BELA 0discovers a centroid, it is stored in Zfor consideration only once the f(n) value of the
+current node from open is greater or equal than the cost of the cheapest centroid in Z—see Line 5 in Algorithm 2.
+Because f(n) =g(n) is monotonically increasing and nodes from open are expanded in ascending order of f(n),
+theκpaths can be discovered only once C∗
+φ≤f(n), thus, after expanding all nodes with f(n)< C∗
+φ. 2
+Lemma 5 (Necessary condition for expansion) .BELA 0never expands nodes with f(n)> C∗
+φ. Thus, a necessary
+condition for expansion in BELA 0isf(n)≤C∗
+φ.
+Proof : Once a centroid zis considered and κpaths are generated, the algorithm halts execution —see Line 9.
+From the proof of the preceding Lemma, it is observed that this happens as soon as C∗
+φ≤f(n) and the considered
+centroid yields the necessary number of paths to complete the search of κshortest paths, i.e., no node with
+f(n)> C∗
+φis ever expanded. 2
+Theorem 1 (Commpleteness and Admissibility) .BELA 0finds all paths in Πas given in Definition (1).
+Proof : Let πidenote a path in Π, and let us consider two different cases: Either πiis a direct path or it is
+indirect —see Definition (4).
+If it is a direct path, its node corresponding to twill eventually be expanded, and thus inserted in Zin Line 11.
+Because nodes in open are considered in increasing order of cost, the next node to expand will have a cost equal
+or greater than the cost of πiand thus, all paths represented by the latest centroid will be discovered in the loop
+of Lines 5–9.
+If it is an indirect path, then it must contain at least one sidetrack edge, see Definition (3). Let eu,vdenote its
+first sidetrack edge and let Czdenote its cost. There are two cases to consider: Either the ending vertex of the
+sidetrack edge, v, has at least one gb-value when reached from u, or it does not. In the case it has at least one
+gb-value, then a new centroid z, with Cz=g∗(u) +ω(u, v) +gb(v), is created for every gb-value of vin Line 16.
+Once the centroid representing πiis created, it will be eventually considered and πifound as soon as the first node
+nwith f(n)≥Czis popped out from open . Note that this has to happen because πiis assumed to have a cost
+strictly less or equal than C∗
+φ, and the sufficient and necessary conditions for expansion guarantee that a node n
+with f(n)≥C∗
+φ≥Czshould be eventually popped out from open . In case that vertex vhas no gb-values when
+reached from u, then according to Lemma (1) there shall exist a path πj∈Π, such that C(πj)≤C(πi), and v
+belongs to the prefix of πj. Upon discovery of the path πj, the prefix construction procedure necessarily will set a
+gb-value for vertex vand it will discover eu,v, and thus a centroid zwill be created that represents πi. As in the
+previous case, this centroid will be eventually considered and πiwill be found. 2
+6
+s0s1
+s2
+s3s43
+21 12
+13
+2
+(a) Simple example of BELA 0.s0is
+the start vertex and s4is the goal ver-
+tex.s0s1
+s2
+s3s43
+21 12
+13
+2
+(b) The result of the first five iter-
+ations of BELA 0. The solid lines
+represent edges stored in closed ,
+whereas dotted lines represent edges
+whose start nodes have only been
+generated, but not expanded and are
+therefore not in closed .s0s1
+s2
+s3s43
+21 12
+13
+2
+(c) Result of the fifth iteration of
+BELA 0.s4is chosen for expansion
+next, at the beginning of the sixth it-
+eration
+s0s1
+s2
+s3s43
+21 12
+13
+2
+(d) Beginning of the ninth iteration
+of BELA 0.s0s1
+s2
+s3s43
+21 12
+13
+2
+(e) End of the ninth iteration of
+BELA 0. All nodes have been ex-
+panded and open is empty
+Figure 3: Example of BELA 0
+The following result ensures that BELA 0preserves the best known asymptotic worst-case complexity:
+Theorem 2 (Algorithmic complexity) .BELA 0runs in O(|E|+|V|log|V|+κ|V|).
+Proof : Algorithm 2 has a complexity at least as bad as Dijkstra’s, O(|E|+|V|log|V|)(Dechter & Pearl, 1985).
+On top of this, it has to output κpaths in explicit form, which come from the cross-product of all prefixes and
+suffixes of each centroid. In the worst case every centroid yields a single prefix and suffix, and thus, the added
+complexity is O(κ|V|), with |V|being the length of the shortest paths in the worst case, resulting in a worst-case
+time complexity of O(|E|+|V|log|V|+κ|V|). 2
+To conclude the presentation of the brute-force variant of our algorithm, the first example introduced in the
+description of K∗(Aljazzar, 2009; Aljazzar & Leue, 2011) is solved using BELA 0. The example considered is shown
+in Figure 3, where it is requested to find three shortest paths between s0ands4in the graph shown in Figure 3a,
+i.e.,κ= 3. The algorithm shown in Pseudocode 2 is considered next using f(n) =g(n), i.e., ignoring any heuristic
+guidance.
+Figure 3b shows the first five iterations of BELA 0. Because no centroids have been discovered yet, the algorithm
+proceeds in exactly the same fashion as Dijkstra’s. The expansion order (with the g∗-values shown between
+parenthesis) is s0(g= 0), s2(g= 2), s1(g= 3), s3(g= 3), and s2(g= 4). Here, ties are broken favoring nodes
+which enter open earlier. A solid line in Figure 3b indicates that the start vertex of the edge has been expanded,
+and thus, it is present in closed . At this point, the contents of open (with the g-values shown between parenthesis)
+are:s4(g= 4), s4(g= 5), s1(g= 5), s2(g= 5). The dotted lines are incoming edges of nodes that have only been
+generated, but not expanded, and are thus only in open and not closed .
+In the sixth iteration, s4(g= 4) is popped out from open , which is detected to be the goal on Line 10 of
+Algorithm 2. As a consequence, the first centroid, ⟨es1,s4,4⟩is added to the set of centroids Z, and the current
+iteration is skipped without generating any children.
+Next, the node s4(g= 5) is popped from open , but before it is examined it is observed that there is a centroid
+with cost 4, being less or equal than the g-value of the current node, 5, on Line 5. Thus, the centroid ⟨es1,s4,4⟩is
+7
+popped from Z(so that it becomes empty) and all paths represented by this centroid are computed by GetPaths .
+The prefixes of the starting vertex of the centroid, s1are all the optimal paths from the start state, s0to it. There
+is only one such prefix, namely ⟨s0, s1⟩with a cost equal to 3. Recall that while prefixes are computed, all visited
+nodes are checked for incoming sidetrack edges, which give us new centroids. Currently, s1only has one incoming
+edge which is a tree edge, and s0has no incoming edges, so no new centroids are found. Because the cost of the
+prefix plus the cost of the defining edge of the centroid is equal to the overall cost of the centroid, 4, there are no
+suffixes to compute. Therefore, the first path found is π1:⟨s0, s1, s4⟩.
+After examining all paths represented by the centroid considered, the next iteration proceeds as usual. Next,
+s4(g= 5) is popped from open open .s4is found to represent the goal vertex on Line 10, so the centroid ⟨es2,s4,5⟩
+is added to Z, and the current iteration is terminated without expanding s4.
+At the beginning of the eighth iteration, the contents of closed are still the same as those shown in Figure 3c,
+but the open list has shrunk. Now, it only contains s1(g= 5) and s2(g= 5). Thus, the next node chosen for
+expansion on Line 4 is s1. However, before proceeding, it is observed that there is currently a centroid, ⟨es2,s4,5⟩
+with a cost less than or equal to the g-value of the node just popped from open , soGetPaths is invoked again
+on this centroid.
+GetPaths starts by assigning a gb-value of 3 to node s2, because that is the cost of the centroid under
+consideration minus the cost of the prefix. It then starts computing the prefixes from the starting vertex of the
+centroid, s2. First, it discovers an incoming sidetrack edge of s2,es1,s2. Because s2has a gb-value 3, the g∗-value
+ofs1is 3, and the edge cost of the sidetrack edge is 1, a new centroid, ⟨es1,s2,7⟩is added to Zwhich now only
+contains this centroid. It then continues following backpointers, reaching the start state, which has no incoming
+edges. Thus, the full list of prefixes just contains ⟨s0, s2⟩. Like earlier, the list of suffixes is empty because the
+ending vertex of the centroid currently under consideration is the goal state itself, and thus has a gb-value equal to
+0. Hence, the only path returned is π2:⟨s0, s2, s4⟩.
+We still have not returned κ= 3 paths, so we continue with the eighth iteration. The current node, s1is already
+inclosed , so the new edge (the self-loop, es1,s1) is added to closed on Line 14. Before continuing to the next
+iteration, it is observed that s1contains one gb-value, 1, and thus, a new centroid ⟨es1,s1,6⟩is added to Z. The
+cost of the new centroid, 6, is computed as the sum of the g∗-value of node s1, plus the cost of the sidetrack edge,
+2, plus the gb-value, 1. Currently, the list of centroids stored is: ⟨es1,s1,6⟩,⟨es1,s2,7⟩. Because the node popped
+out from open was a duplicate, the current iteration is terminated before expansion.
+In the ninth iteration, there is only one node in open ,s2(g= 5), and the closed list has been updated to
+contain the self-loop of node s1as shown in Figure 3d. At this point, Zcontains two centroids, but none of
+them have a cost less than or equal to the g-value of the node popped from open , so they are ignored. Because
+s2is not the goal state, it is looked up in closed and it is found to be a duplicate, so the edge es3,s2is added
+toclosed . Recall that node s2had a known gb-value equal to 3, and thus the loop on lines 19–21 adds a new
+centroid, ⟨es3,s2,8⟩, where the cost of the centroid is computed as follows: g∗(s3)+ω(s3, s2)+gb(s2) = 3+2+3 = 8.
+Currently, Z={⟨es1,s1,6⟩,⟨es1,s2,7⟩,⟨es3,s2,8⟩}. Because this node has been found in closed the current iteration
+ends. The result of this iteration is shown in Figure 3e
+At the end of the ninth iteration, the open list is empty, meaning all nodes have already been expanded, so
+execution continues in the loop starting at Line 22. From this point on, BELA 0only uses information from the
+closed list to find new paths. Note it can update closed with new centroids if any are found during prefix
+computation.
+The first centroid popped is ⟨es1,s1,6⟩. Exactly as it happened in the eighth iteration, the prefix computation
+starts by setting a new gb-value of 3 for the starting vertex of this centroid, s1, equal to the cost of the current
+centroid, 6, minus the cost of the prefix, 3. While computing the prefixes from s1it realizes (again) that the self-loop
+es1,s1is a sidetrack edge, as it did in the eighth iteration, so a new centroid ⟨es1,s1,8⟩is added to Zwith the cost
+of the centroid computed like so: g∗(s1) +ω(s1, s1) +gb(s1) = 3 + 2 + 3 = 8. The next node visited is s0, which has
+no incoming edges, so the prefix computation ends, returning the path ⟨s0, s1⟩. This time, the suffix computation
+produces a non-empty path. Starting at s1with a gb-value equal to 1, it chooses all descendants n′with a gb-value
+equal to gb(s1)−ω(s1, n′). There is only one such descendant, s4, so the only suffix produced is ⟨s1, s4⟩. Finally,
+GetPaths computes the cross-product of all prefixes and suffixes giving us the path π3:⟨s0, s1, s1, s4⟩, with a cost
+equal to 6. Because the number of paths produced so far, 3, is equal to the desired number of paths, κ= 3, the
+algorithm terminates on Line 26, returning the following paths:
+π1⟨s0, s1, s4⟩ C∗
+0= 4
+π2⟨s0, s2, s4⟩ C∗
+1= 5
+π3⟨s0, s1, s1, s4⟩C∗
+2= 6
+5 BELA∗
+This Section considers the availability of a heuristic function, h(·), which is assumed to be consistent and thus,
+admissible . As a matter of fact, all of the discussion from the previous Section apply to this one and only a few
+novel remarks are necessary. Indeed, Algorithm 2 becomes BELA∗when using f(n) =g(n) +h(n).
+8
+A
+B
+CD
+E t4
+4
+46
+5
+55
+4 01
+1
+11
+4
+Figure 4: Expansion order of BELA∗
+The first observation is that f(·) is monotonically increasing, provided that h(·) is consistent, as assumed.
+From this, Lemmas (4) and (5) are still valid for BELA∗.
+The case of Theorem (1) deserves further consideration, though. Consider Figure 4, where the g-value of each
+node is shown below it to the left, and its h-value appears below it to the right in italics. Consider next the
+order expansion of BELA 0and how it contrasts with the order expansion of BELA∗. BELA 0first expands node C
+(g∗=4), generating node E; next it expands nodes B ( g∗= 4) and A ( g∗= 4), which generate two copies of node
+D with g∗= 5. After expanding node E ( g∗= 5), the goal is generated with a cost equal to 9. The first copy of
+node D is expanded immediately after, adding a new copy of node E ( g∗= 6) to the open list. The next node in
+open is the second copy of node D ( g∗= 5) which is found to be a duplicate and thus, it is skipped for expansion
+after adding the edge ⟨A, D⟩to the closed list. The next node popped from open is the node E ( g∗= 6) which,
+as in the previous case, is found to be a duplicate so that the edge ⟨D, E⟩is added to closed . The last node in
+open ist, which generates a new centroid with a cost equal to 9. In the next iteration, the centroid just created
+is considered and, while constructing its prefixes, node E gets a gb-value equal to 4 which is propagated backwards
+from the goal as the sum of all cost edges traversed so far. At this point, the prefix construction procedure notes
+that there is an incoming sidetrack edge, ⟨D, E⟩, and hence a new centroid with cost C=g∗(D) +ω(D, E) +gb=
+5 + 1 + 4 = 10 is added. The prefix construction will continue moving backwards to C and from there eventually
+reaching the start state s, setting gbvalues for all nodes traversed. The important aspect to note is that, if κnodes
+have not been produced yet, BELA 0will consider the centroid ⟨eD,E,10⟩created in the last prefix construction.
+Proceeding as in the previous case, it will search both prefixes starting from node D, one through A and the other
+one through B. As it can be seen, BELA 0provides a one to many mapping of centroids to solution paths, in
+contrast to K∗which provides a one to one mapping from paths in the path graph and paths in the true graph.
+Still, the same observation is true for BELA∗, but the cardinality of this mapping might shrink as a result
+oftie-breaking rules of f-values. When using BELA∗nodes are expanded in increasing order of their f-value.
+Succinctly, C ( f= 9) and B ( f= 9) are expanded first generating E ( f= 9) and D ( f= 10), respectively. After
+expanding E ( f= 9), the goal is generated with cost 9 which becomes the first node in open , so it is selected for
+expansion in the next iteration, triggering the prefix construction, which returns all optimal paths from stotwith
+a cost equal to 9 that use the edge ⟨E, t⟩. Note, however, that node Dis still in open and thus, the sidetrack edge
+⟨eD,E,10⟩has not been discovered yet, as with BELA 0. There are two nodes in open at this point, A ( f= 10) and
+D (f= 10). The expansion order matters indeed and if A is expanded before D, paths will be discovered in the
+same order as BELA 0. Assuming the opposite, the expansion of D ( f= 10) generates E ( f= 10), which is found
+to be a duplicate, and the edge ⟨D, E⟩is added to closed . This time, before skipping its expansion, Lines 15–16
+in Algorithm 2 add a new centroid because node E was already given a gb-value equal to 4. Because the new
+centroid has a cost equal to 10 units, which is equal to the f-value of the next node in open , it is considered before
+expanding node A. Because A has not yet been expanded, the incoming edge ⟨A, D⟩is not discovered in prefix
+construction. BELA∗will have to wait for the expansion of node A to realize that a new centroid can be created
+and thus, the existence of new paths. Consequently, only one prefix will be considered even though there are two.
+There are two important consequences of the expansion order of BELA∗: On one hand, the consideration of a
+centroid might yield less paths than the number of paths returned by BELA 0when considering the same centroid;
+On the other hand, and only in the context of BELA∗, centroids can be constructed from a tree edge! Note that
+in the last example, the eventual expansion of node A ( f= 10) generates D ( f= 10) which, when being expanded
+is observed to have a gb-value equal to 4, and thus a new centroid is generated. However, the edge ⟨A, D⟩is a tree
+edge. There remains a third consequence. In spite of the effects of tie-breaking policies on the expansion order of
+BELA∗, all cases considered in the Proof of Theorem (1) are still valid and thus, BELA∗is both complete and
+admissible. Moreover, like A∗when contrasted with Dijkstra’s, BELA∗should considerably reduce the number of
+expansions in comparison with BELA 0by avoiding the consideration of all nodes with f(n)> C∗
+φ. The accuracy
+of the heuristic function plays a major role in the level of reduction. The better the heuristic, the larger the
+improvement in the number of necessary expansions.
+To conclude, note that when using a consistent heuristic, duplicates are never expanded, thus Theorem (2) still
+9
+applies.
+6 Empirical evaluation
+This last section provides all relevant details of the experiments described in the main paper. All of the source
+code, along with documentation, unit tests, and various scripts for running the experiments and generating figures
+and tables are available on github3. All the instances for all experiments are stored in Zenodo (Linares L´ opez
+& Herman, 2024). The selection of domains considers both map-like and combinatorial domains, with branching
+factors ranging from slightly above 2 (in the roadmap domain), to two-digit branching factors in the N-Pancake
+domain; depths ranging from dozens of vertices (as in the N-Puzzle or the N-Pancake domains) to several hundreds,
+often exceeding 1,000 —as in the Random Maps and the Roadmap domains. We also consider both unit cost and
+non-unit cost versions (the definition of non-unit costs is domain dependent). The selection of κvalues has been
+always from 1 to 10, from 10 to 100 in steps of 10, next getting to 1,000 in steps of 100 and, finally, to 10,000 in
+steps of 1,000, unless inferior values were enough to compare the selected algorithms, or too hard to solve. The
+benchmarking suite has been configured so that every algorithm is able to solve all instances for all the selected
+values of κ.
+In each domain, we measure runtime, number of expansions, and memory usage for each algorithm. Importantly,
+memory usage is simply the memory measured at the termination of the algorithm, with the memory needed for
+storing solutions subtracted. Data is provided first, as figures, and also in tabular form in Appendix A.
+All the experiments have been executed on a machine with 8 core i7 and 32 Gb of RAM. All algorithms have
+been implemented in c++-17.
+6.1 Roadmap
+The roadmap domain was used in the empirical evaluation of K∗in (Aljazzar & Leue, 2011) and thus, it is considered
+in this section. It is taken from the 9th DIMACS Shortest-Path Challenge. Two variants are considered, dimacs
+and unit. The first uses the provided edge costs. The latter considers all edges to have cost 1.
+6.1.1 9th DIMACS Challenge
+Figures 5–10 show the results of running BELA∗, mA∗, K∗, and their brute-force variants over a selection of maps
+from the 9th DIMACS Shortest Paths Challenge. In the empirical evaluation of K∗only NY and E were used.
+Table 1 shows all of the available maps and their size measured in the number of vertices and edges. The figures
+show the runtime (in seconds), memory usage (in Mbytes) and number of expansions of each algorithm. Every
+point has been averaged over 100 instances randomly generated where, as in the original evaluation of K∗a random
+pairs−twas accepted if and only if the distance between them was at least 50 km measured as the great-circle
+distance using the haversine function, as described in (Aljazzar & Leue, 2011).
+Name Description # Vertices # Edges
+USA Full USA 23,947,347 58,333,344
+CTR Central USA 14,081,816 34,292,496
+W Western USA 6,262,104 15,248,146
+E Eastern USA 3,598,623 8,778,114
+LKS Great Lakes 2,758,119 6,885,658
+CAL California and Nevada 1,890,815 4,657,742
+NE Northeast USA 1,524,453 3,897,636
+NW Northwest USA 1,207,945 2,840,208
+FLA Florida 1,070,376 2,712,798
+COL Colorado 435,666 1,057,066
+BAY San Francisco Bay Area 321,270 800,172
+NY New York City 264,346 733,846
+Table 1: 9th DIMACS Shortest Path Challenge
+Figure 5 compares only BELA 0, K 0and mDijkstra, and it shows a clear trend. Even if K 0is faster than
+BELA 0for large values of κ, this only occurs in the smallest graphs, NY and BAY. In larger graphs, the margin of
+improvement in runtime provided by BELA 0increases with the κ— see Figures 5d and 5f. Note that mDijkstra,
+the brute-force variant of mA∗performs so poorly that it was not practically possible to compute more than κ= 10
+paths with it, while either BELA 0of K 0output 10,000 paths in roughly the same amount of time.
+3https://github.com/clinaresl/ksearch
+10
+Regarding memory usage, Figure 6a shows an effect that will be seen in other experiments as well, i.e., that
+memory usage in either BELA 0or BELA∗can decrease when increasing the number of paths to seek, κ. This
+phenomena is attributed to the fact that the number of centroids can decrease when looking for more paths and
+thus, less memory is required to store all the necessary information, as shown in the example discussed in Section 4.
+Figure 8 shows the runtime (in seconds) of BELA∗, mA∗and K∗. Again, the same trend we observed before is
+seen here. Even though K∗performs better than BELA∗in smaller graphs, this margin shrinks as the size of the
+graph increases, and, eventually, it performs worse in the larger map, E. The relatively good performance of K∗in
+this domain is attributed to a variety of factors. On one hand, the maximum number of paths requested, 10,000
+does not require expanding the whole graph as Figure 10 shows. Second, all of the graphs where K∗performs better
+than BELA∗are rather small (the largest one with less than 2 million vertices). Third, of all the benchmarks tried,
+this is the one with the lowest branching factor. Most importantly, the heuristic function suggested in (Aljazzar
+& Leue, 2011) is very poor. Figure 13 (where mA∗has been removed due to its poor performance) shows that the
+reduction in the number of expansions is always around 10% both for BELA∗and K∗, which is too small to pay
+off for the extra work at each node for computing the heuristic function. In fact, the brute-force variants of both
+K∗and BELA∗, i.e., K 0and BELA 0, outperform their heuristic counterparts in all maps, as shown in Figure 11,
+with the only exception being the smallest graphs, NY and BAY. As a consequence of the poor performance of the
+heuristic function, mA∗performs the worst, as it expands nodes near the start state many times.
+In the end, BELA 0is the fastest among all algorithms tried in this domain in the majority of cases.
+6.1.2 Unit variant
+The edge costs found in the dimacs variant of the roadmap domain vary quite a lot and are decently large. Weighting
+every edge with these costs makes the mapping between centroids and solution paths provided by BELA∗to be
+very poor, because each centroid can only be expected to represent a few paths. For example, BELA∗exploits
+about 1,800 centroids to generate 10,000 paths in the NY map, whereas in the E map (which is larger), on average,
+it uses almost 1,100 centroids to generate the same number of solution paths. Thus, every centroid generated in the
+dimacs variant of this domain approximately represents 5 to 9 paths. Simply using unit costs produces a dramatic
+change in these figures. Of course, doing so invalidates the heuristic function used in the dimacs variant and thus,
+only the brute-force versions are considered in this case. In the unit variant of the roadmap domain, BELA 0needs
+15 centroids on average to generate 10,000 paths in the NY map, and a little bit more than 18 in the E map to
+generate the same number of paths, improving the number of paths per centroid by about two orders of magnitude.
+The experiments conducted in the unit variant aim to demonstrate how BELA 0can benefit from this increase
+in the number of paths per centroid. Figure 14 shows the runtime (in seconds) of all brute-force search algorithms
+in the unit variant. Again, mDijkstra performs so poorly that only κ= 10 paths can be computed in the time used
+by K 0and BELA 0to find 10,000 distinct paths. As Figure 14 shows, the difference in running time between K 0
+and BELA 0increases with larger values of κin all maps, regardless of their size.
+Thus, BELA 0strongly dominates both K 0and mDijkstra in the unit variant of the roadmap domain, being
+three or four times faster than K 0.
+6.2 Random maps
+The random map is taken from the 2d Pathfinding movingai benchmark4. Only the first instance from the random
+maps benchmark has been used (with 512 ×512 locations), but considering different percentages of obstruction: 10,
+15, 20, 25, 30 and 35, yielding a total of 6 different random maps. For each map, 100 instances were randomly
+generated where the heuristic distance between the start and goal state is at least 90% of the largest possible
+distance. All results are averaged over all runs.
+6.2.1 Unit variant
+In the first variant it is only possible to move either horizontally or vertically, and the cost of all operators is equal
+to 1. Both brute-force and heuristic variants of all search algorithms are considered. The heuristic function used
+is the Manhattan distance.
+Figures 17–19 show the runtime (in seconds), the memory usage (in Mbytes), and the number of expansions
+of BELA 0, K 0, and mDijkstra. The first observation is that with the absence of a heuristic function, mDijkstra
+performs even worse than in the previous domain, and it only finds κ= 4 paths before using more time than
+BELA 0takes to output 10,000 different paths. This shows a difference of several orders of magnitude in runtime.
+The performance of K∗in this domain deserves attention. First, it performs much worse than BELA 0in all maps.
+In fact, K 0was requested only to find κ= 1,000 paths, yet it always takes significantly longer than BELA 0takes
+to compute κ= 10,000 paths, even if it expands around the same number of nodes as shown in Figure 19. This
+indicates a difference in runtime of several orders of magnitude. Secondly, as conjectured in the roadmap domain,
+K0’s performance improves as the branching factor is reduced. As the percentage of obstruction increases, the
+4https://movingai.com/benchmarks/grids.html
+11
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 5: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+12
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 6: Memory usage (in Mbytes) in the roadmap (dimacs) domain with brute-force search algorithms
+13
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 7: Number of expansions in the roadmap (dimacs) domain with brute-force search algorithms
+14
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 8: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+15
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 9: Memory usage (in Mbytes) in the roadmap (dimacs) domain with heuristic search algorithms
+16
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 10: Number of expansions in the roadmap (dimacs) domain with heuristic search algorithms
+17
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 11: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+18
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 12: Memory usage (in Mbytes) in the roadmap (dimacs) domain with mixed search algorithms
+19
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+(j)
+ (k)
+ (l)
+Figure 13: Number of expansions in the roadmap (dimacs) domain with mixed search algorithms
+20
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+Figure 14: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+21
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+Figure 15: Memory usage (in Mbytes) in the roadmap (unit) domain with brute-force search algorithms
+22
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+(g)
+ (h)
+ (i)
+Figure 16: Number of expansions in the roadmap (unit) domain with brute-force search algorithms
+23
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 17: Runtime (in seconds) in the maps (unit) domain with brute-force search algorithms
+runtime improves. For example, it takes roughly 1 second to compute only 1,000 paths when 10% of the locations
+are occupied, but it can find the same number of paths in less than 0.65 seconds when the obstruction percentage
+gets to its maximum, 35.
+When considering the application of the heuristic search algorithms, the differences between K 0and BELA 0
+become more acute, with a difference in runtime of one order of magnitude. K∗computes κ= 1,000 different
+paths in around the same amount of time it takes for BELA∗to find ten times that amount of paths. Even if the
+heuristic funtion is not very well informed (in particular, for percentages of obstruction equal to 25 or larger), the
+difference in the number of expansions, shown in Figure 22 is of various orders of magnitude often, in particular
+in those cases with low percentages of obstruction. This difference is explained with an increase of the branching
+factor, which is conjectured to harm performance of K∗but, more importantly, by the observation that, in this
+domain in particular, the number of paths grow exponentially, so that a single centroid is enough to deliver even
+several billions of paths. BELA∗can take advantage of this possibility and, in the end, it runs various orders of
+magnitude faster than K∗.
+As for mA∗, the consideration of the heuristic function makes it improve its runtime marginally and it can now
+findκ= 10 solution paths. The reason for this low number is, as explained above, because the heuristic function
+is not very well informed.
+6.2.2 Octile variant
+In this variant, in addition to horizontal and vertical moves, it is also possible to move to cells diagonally adjacent
+to the current cell, provided they are not marked as inaccessible. This doubles the branching factor from 4 to 8.
+In addition, the octile variant is a non-unit domain because the diagonal moves have a cost equal to 14, whereas
+horizontal and vertical moves have a cost equal to 10 units. The heuristic function used is the octile distance.
+This variant is harder than the previous variant for all algorithms. Again, mDijkstra is only able to find κ= 4
+different paths, usually taking longer than the other algorithms which find either two orders of magnitude or even
+four orders of magnitude more paths in the same allotted time, as shown in Figure 23. This time, K 0is restricted
+to find only κ= 100 different paths (10 times less than in the unit domain) and it consistently takes one order of
+magnitude more time than BELA 0, which computes κ= 10,000 solution paths. Even if BELA 0also takes longer
+than it does in the unit variant, it still performs much better than all the other algorithms, being able to compute
+up to 10,000 paths in less than a second (averaged over each map). The difference in runtime between K 0and
+BELA 0can not be attributed neither to an increase in graph size (since they are the same than in the unit variant),
+nor the number of expansions performed by each algorithm. shown in Figure 25, since the difference is rather small.
+The degradation in performance of K 0is therefore attributed to the increase in the branching factor which forces
+K0to consume more time in building and maintaining the path graph. Regarding BELA 0, its performance does
+not decrease significantly and, again, it delivers κ= 10,000 solution paths in less than a second on average across
+24
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 18: Memory usage (in Mbytes) in the maps (unit) domain with brute-force search algorithms
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 19: Number of expansions in the maps (unit) domain with brute-force search algorithms
+25
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 20: Runtime (in seconds) in the maps (unit) domain with heuristic search algorithms
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 21: Memory usage (in Mbytes) in the maps (unit) domain with heuristic search algorithms
+26
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 22: Number of expansions in the maps (unit) domain with heuristic search algorithms
+all maps. One of the reasons for this performance is that in this variant, one single centroid suffices to deliver all
+solution paths.
+6.3 N-Pancake
+TheN-Pancake domain defines a permutation state space with a size equal to N!. It is thus a significant challenge,
+as it also has a large branching-factor, N−1. The heuristic used is the gap heuristic (Helmert, 2010), which
+is known to be very well informed in the unit variant discussed next. This allows current state-of-the-art solvers
+to solve instances of the 60-Pancake in less than 30 seconds on average per instance. In all cases, 100 instances
+were randomly generated and only those instances where the heuristic distance between the start state and the
+goal state was greater than or equal to ( N−2) were accepted. All of the points in the following plots have been
+averaged over 100 runs each. This domain has never been used, to the best of the authors’ knowledge, as a testbed
+for algorithms solving the κshortest path problem.
+6.3.1 Unit variant
+The unit variant is the classic version of the N-Pancake problem (Dweighter, 1975), where an arbitrary permutation
+of the symbols {1, . . . , N }has to be transformed into the identity permutation by performing prefix reversals, all
+of which have cost 1.
+The brute-force variants of the algorithms under consideration were only tested on the 10-Pancake, because
+this state space is big enough for them, with 3,628,800 different states. The results are shown in Figures 29–31.
+Only BELA 0was able to find 10 different paths in less than 25 seconds on average. In this domain, mDijkstra
+performed significantly better than K 0, but only for very low values of κ. In fact, mDijkstra was requested to find
+onlyκ= 3 different solutions, because finding a fourth solution exhausts the available memory for some instances.
+K0performed much worse than BELA 0, doubling the number of expansions, being almost five times slower in the
+end, and taking also five times more memory than it.
+Experiments using the gap heuristic were particularly interesting. K∗is indeed the worst algorithm in this
+domain. For example, in the 20-Pancake (see Figure 32a) it takes a huge amount of time for finding only κ= 10
+paths, while mA∗and BELA∗can find up to 1,000 solutions in much less time. Indeed, both mA∗and BELA∗
+are already two orders of magnitude faster with κ= 10, the maximum value attempted with K∗. In the end,
+BELA∗is one order of mangitude faster for finding two orders of magnitude more solutions. This degradation in
+the running time of K∗is attributed to two different factors: On one hand, the large branching factor which forces
+K∗to spend much more time updating and maintaining its path graph; secondly, it expands significantly more
+nodes than BELA∗, which is likely caused by the swapping criterion used. For the first time, mA∗seems to be
+competitive with BELA∗, even if it consistently performs worse than it over all values of κ. This behavior is due to
+the accuracy of the heuristic function. Observing the results in the 30 and 40-Pancake (see Figures 32b and 32c)
+27
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 23: Runtime (in seconds) in the maps (octile) domain with brute-force search algorithms
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 24: Memory usage (in Mbytes) in the maps (octile) domain with brute-force search algorithms
+28
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 25: Number of expansions in the maps (octile) domain with brute-force search algorithms
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 26: Runtime (in seconds) in the maps (octile) domain with heuristic search algorithms
+29
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 27: Memory usage (in Mbytes) in the maps (octile) domain with heuristic search algorithms
+(a)
+ (b)
+ (c)
+(d)
+ (e)
+ (f)
+Figure 28: Number of expansions in the maps (octile) domain with heuristic search algorithms
+30
+(a)
+Figure 29: Runtime (in seconds) in the n-pancake (unit) domain with brute-force search algorithms
+(a)
+Figure 30: Memory usage (in Mbytes) in the n-pancake (unit) domain with brute-force search algorithms
+we can see that that the difference between mA∗and BELA∗increases with the growth of κ. mA∗seems to be
+particularly competitive with BELA∗in the 40-pancake where the latter is roughly 15% faster only. However, mA∗
+takes more memory in this domain (see Figure 33c), and it exhausts all the available memory with κ= 30 while
+BELA∗is able to find solutions up to κ= 40.
+Note that in the 30 and 40-Pancake only values for κ= 1 are given for K∗, which are one order of magnitude
+worse than the runtime of the other algorithms.
+6.3.2 Heavy-cost variant
+In the heavy-cost variant, the cost of each prefix reversal is defined as the size of the disc that becomes first in the
+permutation after the reversal. This variant is much harder than the unit version, because the gapheuristic is not
+so well informed now, even if a weighted version of the gap heuristic is being used. In the weighted variant of the
+gap heuristic, each gap gets weighted by the size of the smaller disc adjacent to it. As a result of its hardness,
+experiments in the octile variant of the N-Pancake were conducted with 32Gb of RAM memory.
+Figures 35–37 show the results using the brute-force search algorithms. As before, only the 10-Pancake was
+tested. As shown in Figure 35a BELA 0takes an average time slightly above 30 seconds to find κ= 10 solutions,
+whereas mDijkstra can solve instances only with κ≤2 with a much worse average time than BELA 0forκ= 2; K 0
+(a)
+Figure 31: Number of expansions in the n-pancake (unit) domain with brute-force search algorithms
+31
+(a)
+ (b)
+ (c)
+Figure 32: Runtime (in seconds) in the n-pancake (unit) domain with heuristic search algorithms
+(a)
+ (b)
+ (c)
+Figure 33: Memory usage (in Mbytes) in the n-pancake (unit) domain with heuristic search algorithms
+(a)
+ (b)
+ (c)
+Figure 34: Number of expansions in the n-pancake (unit) domain with heuristic search algorithms
+32
+(a)
+Figure 35: Runtime (in seconds) in the n-pancake (heavy-cost) domain with brute-force search algorithms
+(a)
+Figure 36: Memory usage (in Mbytes) in the n-pancake (heavy-cost) domain with brute-force search algorithms
+behaves also much worse than BELA 0even if it manages to find solutions with up to κ= 5. Figure 35a clearly shows
+a trend where BELA 0outperforms its contenders by a large margin in running time. As in the unit variant, K 0
+expands significantly more nodes than BELA 0. It is important to remark that this figure indicates a general trend
+observed in most experiments throughout all domains, this is, that mDijkstra with κ= 1 is faster than BELA 0.
+This is not surprising at all, since mDijkstra with κ= 1 becomes vanilla Dijkstra with no significant overhead,
+whereas both BELA 0and K 0have an overhead necessary for efficiently solving problems with larger values of κ.
+Namely, the runtime cost originating from maintaining the closed lists in both algorithms. Nevertheless, just like
+most experiments conducted, mDijkstra (and also mA∗) becomes immediately worse than BELA 0(and BELA∗,
+respectively) for low values of κ, even just 2, as shown in Figure 35a.
+As a consequence of the degradation in performance of the heuristic function, experiments with the heavy-cost
+variant with the informed versions of all algorithms for values of Nlarger than 10 took too long and, in many
+cases memory was exhausted. For this reason, only experiments in the 10-Pancake were conducted, though with
+a larger value of κ, 100. Figures 38–40 show a dramatic difference in performance. Again, BELA∗is one order of
+magnitude faster for finding up to one order of magnitude more solutions when compared to either mA∗or K∗:
+While BELA∗finds 100 different solutions in less than a second on average, both mA∗and K∗take 3 and almost
+5 seconds each on average respectively, for computing only 10 solutions.
+(a)
+Figure 37: Number of expansions in the n-pancake (heavy-cost) domain with brute-force search algorithms
+33
+(a)
+Figure 38: Runtime (in seconds) in the n-pancake (heavy-cost) domain with heuristic search algorithms
+(a)
+Figure 39: Memory usage (in Mbytes) in the n-pancake (heavy-cost) domain with heuristic search algorithms
+(a)
+Figure 40: Number of expansions in the n-pancake (heavy-cost) domain with heuristic search algorithms
+34
+(a)
+Figure 41: Runtime (in seconds) in the n-puzzle (unit) domain with brute-force search algorithms
+(a)
+Figure 42: Memory usage (in Mbytes) in the n-puzzle (unit) domain with brute-force search algorithms
+6.4 N-Puzzle
+TheN-Puzzle is a classical combinatorial task (W. A. Johnson, 1879) that has a state space withN2!
+2different
+states. Up to N2−1 different symbols are arranged over a square matrix (though other arrangements are possible),
+leaving only one blank position, so that only symbols horizontally or vertically adjacent to it can swap their
+locations. The goal is to re-arrange all symbols into the identity permutation where the blank tile must be located
+in the upper-left corner. The 8-Puzzle and the 15-Puzzle were used for our experiments. In the first case, 100
+random instances were randomly generated, whereas in the 15-Puzzle the 40 easiest instances of the Korf’s test
+suite were selected (E. Korf, 1985). As a matter of fact, this test suite is known to extremely difficult for best-first
+search strategies when using the Manhattan distance (Burns et al., 2012), even without trying to find κ >1 solution
+paths. As in the case of the N-Pancake, this is the first time this domain is used as a testbed for κshortest path
+algorithms to the best of the authors’ knowledge.
+6.4.1 Unit variant
+In the unit variant, all operators cost the same and thus, they are all equal to one. There are various heuristic
+functions for this domain. The current state-of-the-art uses Additive Pattern Databases (Felner et al., 2004).
+However, they are known to be inconsistent and thus they have been discarded for our experimentation, and the
+Manhattan distance is used instead.
+Experiments with the brute-force variants were restricted to the 8-Puzzle, with 181,440 states. Figures 41-43
+show the running time, memory usage and number of expansions. In this domain, K 0is roughly twice as slow as
+BELA 0forκ= 10,000, while mDijkstra performs very poorly due to the lack of a heuristic function.
+Figures 44–46 show the results when using heuristic search algorithms, both in the 8-Puzzle (with κ= 10,000)
+and the 15-Puzzle —with κ= 100. The results in the 15-Puzzle (see Figure 44b) show huge improvements in
+running time when using BELA∗, which finds the best 100 solutions in roughly 5 seconds on average, whereas both
+K∗and mA∗take one order of magnitude more time for very low values of κ. As observed in Figures 45 and 46,
+the profiles shown in running time are closely followed by those for memory usage and the number of expansions.
+6.4.2 Heavy-cost variant
+In the heavy-cost variant, the cost of a movement is equal to the content of the tile exchanged with the blank. A
+weighted variant of the Manhattan distance, where the distance of each tile is multiplied by its content is used as
+our heuristic. The resulting variant is much harder than the previous one, and thus only experiments with the
+35
+(a)
+Figure 43: Number of expansions in the n-puzzle (unit) domain with brute-force search algorithms
+(a)
+ (b)
+Figure 44: Runtime (in seconds) in the n-puzzle (unit) domain with heuristic search algorithms
+(a)
+ (b)
+Figure 45: Memory usage (in Mbytes) in the n-puzzle (unit) domain with heuristic search algorithms
+(a)
+ (b)
+Figure 46: Number of expansions in the n-puzzle (unit) domain with heuristic search algorithms
+36
+(a)
+ (b)
+Figure 47: Runtime (in seconds) in the n-puzzle (heavy-cost) domain with heuristic search algorithms
+(a)
+ (b)
+Figure 48: Memory usage (in Mbytes) in the n-puzzle (heavy-cost) domain with heuristic search algorithms
+heuristic versions were conducted.
+Results in the 8-Puzzle are almost identical to those in the unit variant — compare Figures 44 and 47. The
+reason is that the state space of the 8-Puzzle is too small as to pose any significant challenge when using a heuristic.
+Things change entirely when considering the 15-Puzzle, see Figure 47b: K∗takes almost 20 seconds on average to
+find a single optimal solution, and mA∗is able to compute the three best solutions in almost 14 seconds; BELA∗,
+however, finds the best 10 solutions in roughly 6 seconds on average. The profiles shown in Figure 47b show
+differences of various orders of magnitude in running time.
+A Tables
+This appendix provides the same information given in section 6 but in tabular form for a selected collection of κ
+values. Only runtime is provided. In all cases, the best result is shown in boldface.
+A.1 Roadmap
+Tables 2–46 summarize the results in the roadmap domain for all variants and graphs. The size of each graph is
+given in Table 1.
+(a)
+ (b)
+Figure 49: Number of expansions in the n-puzzle (heavy-cost) domain with heuristic search algorithms
+37
+Runtime (seconds) - BAY Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.23 0.23 0.24 0.24 0.25 0.25 0.31 0.38
+K0 0.50 0.51 0.51 0.51 0.54 0.57 0.86 1.22
+mDijkstra 0.22 1.64 – – – – – –
+Table 2: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - CAL Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 1.15 1.16 1.17 1.17 1.20 1.21 1.32 1.46
+K0 2.49 2.50 2.52 2.52 2.59 2.66 3.40 4.34
+mDijkstra 1.04 7.92 – – – – – –
+Table 3: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+A.1.1 9th DIMACS Challenge
+The first tables provide all results in tabular form in the dimacs domain: Tables 2–13 show the runtime of the
+brute-force variants; Tables 14–25 show the runtime of the heuristics variants, and Tables 26–37 show a comparison
+among both brute-force and heuristic variants.
+A.1.2 Unit variant
+Next, Tables 38–46 show the results in the unit variant of the roadmap domain.
+A.2 Maps
+Tables 47–70 show the runtime of all algorithms in the maps domain.
+A.2.1 Unit variant
+Tables 47–52 show the results of the brute-force variants being compared, whereas Tables 53–58 show the runtime
+for the heuristic variants, in the unit variant for all sizes of maps being tested.
+A.2.2 Octile variant
+Tables 59–64 show the runtime of the brute-force variants, and Tables 65–70 show the same statistics for the
+heuristic variants, in the octile variant for all sizes of maps being tested.
+A.3 N-Pancake
+Tables 71–76 show the runtime of all algorithms in the N-Pancake domain.
+A.3.1 Unit variant
+Table 71 shows the runtime of the brute-force search algorithms tested in the 10-Pancake in the unit variant.
+Tables 72–74 show the runtime of the heuristic search algorithms in the 20-, 30- and 40-Pancake, respectively, in
+the unit variant.
+Runtime (seconds) - COL Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.29 0.29 0.29 0.29 0.30 0.31 0.41 0.53
+K0 0.59 0.60 0.61 0.61 0.65 0.70 1.15 1.71
+mDijkstra 0.26 1.90 – – – – – –
+Table 4: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+38
+Runtime (seconds) - CTR Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 9.85 10.04 10.17 10.17 10.48 10.52 12.01 13.85
+K0 18.97 19.09 19.16 19.31 19.50 19.54 21.73 24.63
+Table 5: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - E Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 2.15 2.17 2.22 2.22 2.24 2.26 2.43 2.65
+K0 4.79 4.81 4.84 4.84 4.96 5.07 6.28 7.87
+mDijkstra 2.05 15.85 – – – – – –
+Table 6: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - FLA Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.74 0.77 0.77 0.77 0.78 0.79 0.88 1.00
+K0 1.63 1.64 1.66 1.66 1.71 1.77 2.31 3.00
+mDijkstra 0.67 5.34 – – – – – –
+Table 7: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - LKS Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 1.58 1.63 1.63 1.64 1.65 1.67 1.81 2.00
+K0 3.56 3.58 3.60 3.61 3.72 3.84 5.05 6.78
+mDijkstra 1.41 10.73 – – – – – –
+Table 8: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - NE Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.97 0.99 1.00 1.00 1.01 1.02 1.13 1.27
+K0 2.18 2.19 2.21 2.21 2.29 2.36 3.09 4.02
+mDijkstra 0.86 6.76 – – – – – –
+Table 9: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - NW Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.68 0.69 0.69 0.70 0.71 0.72 0.83 0.97
+K0 1.48 1.49 1.50 1.51 1.56 1.64 2.29 3.13
+mDijkstra 0.62 4.52 – – – – – –
+Table 10: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - NY Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.23 0.23 0.24 0.23 0.24 0.25 0.30 0.36
+K0 0.50 0.50 0.51 0.51 0.54 0.57 0.87 1.25
+mDijkstra 0.21 1.60 – – – – – –
+Table 11: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+39
+Runtime (seconds) - USA Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 017.15 17.62 17.83 17.66 18.00 18.35 20.60 23.29
+K0 34.07 34.02 34.32 34.22 34.63 35.08 38.09 42.70
+Table 12: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - W Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 04.33 4.55 4.56 4.58 4.78 5.03 6.43 8.22
+K0 8.46 8.53 8.72 8.61 8.76 9.00 10.30 12.57
+Table 13: Runtime (in seconds) in the roadmap (dimacs) domain with brute-force search algorithms
+Runtime (seconds) - BAY Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.37 0.37 0.39 0.40 0.52 0.65 1.63 2.79
+mA∗0.33 2.37 – – – – – –
+Table 14: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - CAL Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗1.83 1.87 1.90 1.93 2.12 2.36 4.15 6.31
+K∗3.07 3.12 3.15 3.16 3.27 3.37 4.40 5.80
+mA∗1.66 11.44 – – – – – –
+Table 15: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - COL Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.53 0.53 0.55 0.57 0.69 0.84 1.93 3.24
+K∗0.83 0.84 0.85 0.86 0.92 0.99 1.65 2.50
+mA∗0.48 3.01 – – – – – –
+Table 16: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - CTR Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗10.84 11.06 11.19 11.38 11.61 11.80 14.06 17.03
+K∗19.70 19.73 20.05 20.00 20.34 20.34 22.54 25.38
+Table 17: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - E Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗3.31 3.41 3.46 3.51 3.78 4.07 6.52 9.49
+K∗5.77 5.83 5.89 5.91 6.09 6.28 8.03 10.52
+mA∗2.94 21.63 – – – – – –
+Table 18: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+40
+Runtime (seconds) - FLA Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗1.20 1.24 1.26 1.28 1.47 1.69 3.41 5.49
+K∗2.05 2.09 2.11 2.11 2.23 2.32 3.30 4.64
+mA∗1.07 7.37 – – – – – –
+Table 19: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - LKS Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗2.62 2.70 2.75 2.79 3.09 3.45 6.08 9.17
+mA∗2.30 15.87 – – – – – –
+Table 20: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - NE Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗1.53 1.58 1.61 1.63 1.82 2.05 3.81 5.91
+K∗2.66 2.71 2.73 2.74 2.85 2.95 4.01 5.44
+mA∗1.40 10.47 – – – – – –
+Table 21: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - NW Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗1.11 1.14 1.16 1.18 1.36 1.60 3.24 5.24
+K∗1.84 1.87 1.89 1.90 1.99 2.09 2.95 4.13
+mA∗1.00 6.60 – – – – – –
+Table 22: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - NY Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.39 0.39 0.41 0.42 0.54 0.67 1.65 2.81
+K∗0.65 0.66 0.67 0.67 0.73 0.79 1.28 1.92
+mA∗0.34 2.72 – – – – – –
+Table 23: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - USA Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗19.17 19.52 19.63 19.84 20.25 20.73 24.73 29.46
+K∗35.80 35.91 35.99 36.09 36.32 36.61 39.94 44.42
+Table 24: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+Runtime (seconds) - W Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗4.86 5.01 5.05 5.04 5.35 5.72 8.21 11.16
+K∗8.78 8.91 8.97 9.00 9.18 9.36 10.76 12.85
+Table 25: Runtime (in seconds) in the roadmap (dimacs) domain with heuristic search algorithms
+41
+Runtime (seconds) - BAY Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 00.33 0.33 0.34 0.35 0.43 0.51 1.15 1.91
+K0 0.56 0.56 0.57 0.58 0.63 0.68 1.14 1.74
+BELA∗0.37 0.37 0.39 0.40 0.52 0.65 1.63 2.79
+Table 26: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - CAL Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 01.60 1.62 1.64 1.65 1.78 1.93 3.05 4.43
+K0 2.85 2.89 2.93 2.94 3.04 3.16 4.17 5.58
+BELA∗1.83 1.87 1.90 1.93 2.12 2.36 4.15 6.31
+K∗3.07 3.12 3.15 3.16 3.27 3.37 4.40 5.80
+Table 27: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - COL Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 00.47 0.48 0.49 0.50 0.58 0.68 1.37 2.21
+K0 0.76 0.77 0.78 0.79 0.85 0.92 1.58 2.44
+BELA∗0.53 0.53 0.55 0.57 0.69 0.84 1.93 3.24
+K∗0.83 0.84 0.85 0.86 0.92 0.99 1.65 2.50
+Table 28: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - CTR Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 9.85 10.04 10.17 10.17 10.48 10.52 12.01 13.85
+K0 18.97 19.09 19.16 19.31 19.50 19.54 21.73 24.63
+BELA∗10.84 11.06 11.19 11.38 11.61 11.80 14.06 17.03
+K∗19.70 19.73 20.05 20.00 20.34 20.34 22.54 25.38
+Table 29: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - E Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 02.81 2.85 2.90 2.92 3.08 3.27 4.72 6.51
+K0 5.39 5.43 5.47 5.51 5.68 5.88 7.66 10.15
+BELA∗3.31 3.41 3.46 3.51 3.78 4.07 6.52 9.49
+K∗5.77 5.83 5.89 5.91 6.09 6.28 8.03 10.52
+Table 30: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - FLA Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 01.05 1.07 1.08 1.10 1.22 1.36 2.45 3.75
+K0 1.87 1.90 1.92 1.93 2.03 2.13 3.13 4.43
+BELA∗1.20 1.24 1.26 1.28 1.47 1.69 3.41 5.49
+K∗2.05 2.09 2.11 2.11 2.23 2.32 3.30 4.64
+Table 31: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+42
+Runtime (seconds) - LKS Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 02.27 2.33 2.38 2.40 2.59 2.80 4.41 6.33
+K0 4.14 4.20 4.27 4.28 4.49 4.71 6.65 9.29
+BELA∗2.62 2.70 2.75 2.79 3.09 3.45 6.08 9.17
+Table 32: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - NE Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 01.34 1.37 1.40 1.41 1.53 1.68 2.79 4.09
+K0 2.44 2.48 2.50 2.52 2.62 2.73 3.79 5.21
+BELA∗1.53 1.58 1.61 1.63 1.82 2.05 3.81 5.91
+K∗2.66 2.71 2.73 2.74 2.85 2.95 4.01 5.44
+Table 33: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - NW Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 01.02 1.04 1.06 1.08 1.19 1.33 2.37 3.62
+K0 1.74 1.77 1.79 1.79 1.89 1.99 2.85 4.03
+BELA∗1.11 1.14 1.16 1.18 1.36 1.60 3.24 5.24
+K∗1.84 1.87 1.89 1.90 1.99 2.09 2.95 4.13
+Table 34: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - NY Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 00.32 0.34 0.34 0.35 0.42 0.50 1.11 1.82
+K0 0.59 0.59 0.61 0.62 0.66 0.72 1.20 1.84
+BELA∗0.39 0.39 0.41 0.42 0.54 0.67 1.65 2.81
+K∗0.65 0.66 0.67 0.67 0.73 0.79 1.28 1.92
+Table 35: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - USA Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 017.15 17.62 17.83 17.66 18.00 18.35 20.60 23.29
+K0 34.07 34.02 34.32 34.22 34.63 35.08 38.09 42.70
+BELA∗19.17 19.52 19.63 19.84 20.25 20.73 24.73 29.46
+K∗35.80 35.91 35.99 36.09 36.32 36.61 39.94 44.42
+Table 36: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+Runtime (seconds) - W Roadmap dimacs
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 04.33 4.55 4.56 4.58 4.78 5.03 6.43 8.22
+K0 8.46 8.53 8.72 8.61 8.76 9.00 10.30 12.57
+BELA∗4.86 5.01 5.05 5.04 5.35 5.72 8.21 11.16
+K∗8.78 8.91 8.97 9.00 9.18 9.36 10.76 12.85
+Table 37: Runtime (in seconds) in the roadmap (dimacs) domain with mixed search algorithms
+43
+Runtime (seconds) - BAY Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.23 0.23 0.24 0.24 0.25 0.25 0.31 0.38
+K0 0.50 0.51 0.51 0.51 0.54 0.57 0.86 1.22
+mDijkstra 0.22 1.64 – – – – – –
+Table 38: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+Runtime (seconds) - CAL Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 1.15 1.16 1.17 1.17 1.20 1.21 1.32 1.46
+K0 2.49 2.50 2.52 2.52 2.59 2.66 3.40 4.34
+mDijkstra 1.04 7.92 – – – – – –
+Table 39: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+Runtime (seconds) - COL Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.29 0.29 0.29 0.29 0.30 0.31 0.41 0.53
+K0 0.59 0.60 0.61 0.61 0.65 0.70 1.15 1.71
+mDijkstra 0.26 1.90 – – – – – –
+Table 40: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+Runtime (seconds) - E Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 2.15 2.17 2.22 2.22 2.24 2.26 2.43 2.65
+K0 4.79 4.81 4.84 4.84 4.96 5.07 6.28 7.87
+mDijkstra 2.05 15.85 – – – – – –
+Table 41: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+Runtime (seconds) - FLA Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.74 0.77 0.77 0.77 0.78 0.79 0.88 1.00
+K0 1.63 1.64 1.66 1.66 1.71 1.77 2.31 3.00
+mDijkstra 0.67 5.34 – – – – – –
+Table 42: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+Runtime (seconds) - LKS Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 1.58 1.63 1.63 1.64 1.65 1.67 1.81 2.00
+K0 3.56 3.58 3.60 3.61 3.72 3.84 5.05 6.78
+mDijkstra 1.41 10.73 – – – – – –
+Table 43: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+Runtime (seconds) - NE Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.97 0.99 1.00 1.00 1.01 1.02 1.13 1.27
+K0 2.18 2.19 2.21 2.21 2.29 2.36 3.09 4.02
+mDijkstra 0.86 6.76 – – – – – –
+Table 44: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+44
+Runtime (seconds) - NW Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.68 0.69 0.69 0.70 0.71 0.72 0.83 0.97
+K0 1.48 1.49 1.50 1.51 1.56 1.64 2.29 3.13
+mDijkstra 0.62 4.52 – – – – – –
+Table 45: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+Runtime (seconds) - NY Roadmap unit
+Algorithm k=1 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.23 0.23 0.24 0.23 0.24 0.25 0.30 0.36
+K0 0.50 0.50 0.51 0.51 0.54 0.57 0.87 1.25
+mDijkstra 0.21 1.60 – – – – – –
+Table 46: Runtime (in seconds) in the roadmap (unit) domain with brute-force search algorithms
+Runtime (seconds) - Maps 10 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 00.22 0.22 0.22 0.22 0.22 0.22 0.23 0.22 0.23 0.23 0.28 0.34
+K0 0.72 0.71 0.72 0.72 0.72 0.72 0.73 0.74 0.86 1.00 2.14 4.25
+mDijkstra 0.26 0.48 0.68 0.88 1.09 2.15 14.53 42.94 – – – –
+Table 47: Runtime (in seconds) in the maps (unit) domain with brute-force search algorithms
+Runtime (seconds) - Maps 15 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.28 0.28 0.28 0.28 0.28 0.28 0.28 0.28 0.29 0.29 0.37 0.46
+K0 0.67 0.66 0.66 0.67 0.67 0.67 0.68 0.69 0.82 0.94 2.07 4.14
+mDijkstra 0.25 0.44 0.63 0.81 1.01 1.96 13.17 39.12 – – – –
+Table 48: Runtime (in seconds) in the maps (unit) domain with brute-force search algorithms
+Runtime (seconds) - Maps 20 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.26 0.26 0.26 0.26 0.26 0.26 0.26 0.26 0.27 0.27 0.35 0.42
+K0 0.62 0.62 0.62 0.62 0.62 0.63 0.63 0.65 0.79 0.90 2.02 4.09
+mDijkstra 0.23 0.40 0.57 0.73 0.90 1.75 11.43 34.39 – – – –
+Table 49: Runtime (in seconds) in the maps (unit) domain with brute-force search algorithms
+Runtime (seconds) - Maps 25 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 00.18 0.18 0.18 0.18 0.18 0.18 0.18 0.18 0.18 0.19 0.24 0.29
+K0 0.58 0.58 0.58 0.58 0.58 0.59 0.60 0.61 0.73 0.84 1.96 4.02
+mDijkstra 0.22 0.38 0.53 0.68 0.83 1.60 10.18 31.07 – – – –
+Table 50: Runtime (in seconds) in the maps (unit) domain with brute-force search algorithms
+Runtime (seconds) - Maps 30 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.22 0.22 0.22 0.22 0.22 0.22 0.22 0.22 0.23 0.23 0.31 0.39
+K0 0.46 0.46 0.46 0.46 0.47 0.47 0.48 0.49 0.58 0.68 1.80 3.85
+mDijkstra 0.20 0.33 0.46 0.59 0.72 1.38 8.71 25.91 – – – –
+Table 51: Runtime (in seconds) in the maps (unit) domain with brute-force search algorithms
+45
+Runtime (seconds) - Maps 35 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.18 0.18 0.18 0.18 0.18 0.18 0.18 0.18 0.19 0.19 0.27 0.34
+K0 0.40 0.40 0.40 0.40 0.40 0.40 0.41 0.42 0.51 0.63 1.82 3.96
+mDijkstra 0.16 0.28 0.39 0.50 0.61 1.18 7.31 21.67 – – – –
+Table 52: Runtime (in seconds) in the maps (unit) domain with brute-force search algorithms
+Runtime (seconds) - Maps 10 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.02 0.04 0.08
+K∗0.06 1.60 1.79 1.93 1.94 1.94 1.96 1.96 2.07 2.16 3.03 4.16
+mA∗0.01 0.01 0.02 0.03 0.03 0.06 0.32 0.90 8.06 – – –
+Table 53: Runtime (in seconds) in the maps (unit) domain with heuristic search algorithms
+Runtime (seconds) - Maps 15 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.03 0.03 0.06 0.11
+K∗0.06 1.25 1.52 1.65 1.65 1.65 1.67 1.68 1.79 1.88 2.75 3.90
+mA∗0.01 0.02 0.03 0.03 0.04 0.08 0.43 1.18 10.41 – – –
+Table 54: Runtime (in seconds) in the maps (unit) domain with heuristic search algorithms
+Runtime (seconds) - Maps 20 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.08 0.14
+K∗0.09 1.02 1.17 1.31 1.31 1.31 1.33 1.34 1.44 1.53 2.41 3.63
+mA∗0.02 0.04 0.05 0.07 0.08 0.16 0.87 2.42 21.51 – – –
+Table 55: Runtime (in seconds) in the maps (unit) domain with heuristic search algorithms
+Runtime (seconds) - Maps 25 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.05 0.05 0.09 0.16
+K∗0.09 0.82 1.03 1.08 1.08 1.08 1.10 1.11 1.21 1.30 2.24 3.60
+mA∗0.02 0.04 0.05 0.07 0.09 0.17 0.91 2.55 22.95 – – –
+Table 56: Runtime (in seconds) in the maps (unit) domain with heuristic search algorithms
+Runtime (seconds) - Maps 30 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.02 0.02 0.02 0.02 0.02 0.02 0.03 0.02 0.03 0.03 0.07 0.12
+K∗0.08 0.31 0.34 0.35 0.35 0.35 0.36 0.37 0.46 0.55 1.59 3.41
+mA∗0.02 0.04 0.05 0.07 0.09 0.17 0.91 2.51 23.71 – – –
+Table 57: Runtime (in seconds) in the maps (unit) domain with heuristic search algorithms
+Runtime (seconds) - Maps 35 unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.06 0.07 0.07 0.12 0.19
+K∗0.14 0.15 0.15 0.15 0.15 0.15 0.16 0.17 0.25 0.35 1.44 3.48
+mA∗0.03 0.06 0.09 0.12 0.15 0.29 1.63 4.65 44.51 – – –
+Table 58: Runtime (in seconds) in the maps (unit) domain with heuristic search algorithms
+46
+Runtime (seconds) - Maps 10 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 00.46 0.46 0.46 0.47 0.47 0.46 0.47 0.47 0.47 0.47 0.51 0.55
+K0 1.50 1.49 1.50 1.50 1.50 1.50 1.51 1.52 1.57 1.62 2.33 3.48
+mDijkstra 0.52 0.96 1.37 1.80 2.33 5.06 31.55 94.43 – – – –
+Table 59: Runtime (in seconds) in the maps (octile) domain with brute-force search algorithms
+Runtime (seconds) - Maps 15 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.59 0.59 0.59 0.59 0.59 0.59 0.59 0.59 0.59 0.60 0.66 0.72
+K0 1.25 1.25 1.25 1.25 1.26 1.25 1.26 1.26 1.32 1.37 2.10 3.34
+mDijkstra 0.47 0.85 1.21 1.58 2.01 4.32 27.50 83.26 – – – –
+Table 60: Runtime (in seconds) in the maps (octile) domain with brute-force search algorithms
+Runtime (seconds) - Maps 20 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.54 0.54 0.54 0.54 0.54 0.54 0.54 0.54 0.54 0.55 0.61 0.68
+K0 1.14 1.14 1.14 1.14 1.14 1.14 1.15 1.16 1.21 1.27 1.99 3.31
+mDijkstra 0.42 0.76 1.08 1.40 1.75 3.71 24.15 73.40 – – – –
+Table 61: Runtime (in seconds) in the maps (octile) domain with brute-force search algorithms
+Runtime (seconds) - Maps 25 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.48 0.48 0.48 0.48 0.48 0.48 0.48 0.48 0.49 0.49 0.53 0.58
+K0 1.05 1.05 1.05 1.05 1.05 1.05 1.06 1.06 1.12 1.17 1.92 3.22
+mDijkstra 0.38 0.68 0.96 1.24 1.55 3.20 20.96 63.91 – – – –
+Table 62: Runtime (in seconds) in the maps (octile) domain with brute-force search algorithms
+Runtime (seconds) - Maps 30 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.43 0.43 0.43 0.43 0.43 0.43 0.43 0.43 0.44 0.43 0.48 0.54
+K0 0.95 0.94 0.95 0.95 0.95 0.95 0.96 0.96 1.01 1.07 1.83 3.20
+mDijkstra 0.34 0.60 0.85 1.09 1.35 2.72 18.01 55.21 – – – –
+Table 63: Runtime (in seconds) in the maps (octile) domain with brute-force search algorithms
+Runtime (seconds) - Maps 35 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 00.27 0.27 0.27 0.27 0.27 0.27 0.27 0.27 0.27 0.27 0.30 0.32
+K0 0.75 0.75 0.75 0.75 0.76 0.76 0.76 0.77 0.83 0.89 1.68 3.12
+mDijkstra 0.29 0.52 0.73 0.93 1.16 2.30 15.32 47.21 – – – –
+Table 64: Runtime (in seconds) in the maps (octile) domain with brute-force search algorithms
+Runtime (seconds) - Maps 10 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.02 0.04 0.07
+K∗0.05 0.22 0.23 0.23 0.24 0.24 0.26 0.26 0.31 0.36 0.97 2.09
+mA∗0.02 0.03 0.04 0.06 0.07 0.14 0.77 2.16 – – – –
+Table 65: Runtime (in seconds) in the maps (octile) domain with heuristic search algorithms
+47
+Runtime (seconds) - Maps 15 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.05 0.08 0.13
+K∗0.07 0.10 0.11 0.11 0.11 0.12 0.13 0.13 0.18 0.23 0.89 2.14
+mA∗0.03 0.06 0.08 0.11 0.14 0.28 1.67 4.67 – – – –
+Table 66: Runtime (in seconds) in the maps (octile) domain with heuristic search algorithms
+Runtime (seconds) - Maps 20 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.10 0.13
+K∗0.08 0.10 0.10 0.10 0.11 0.11 0.12 0.13 0.17 0.22 0.92 2.29
+mA∗0.04 0.08 0.11 0.15 0.18 0.37 2.18 5.98 – – – –
+Table 67: Runtime (in seconds) in the maps (octile) domain with heuristic search algorithms
+Runtime (seconds) - Maps 25 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.05 0.05 0.05 0.05 0.06 0.05 0.06 0.06 0.06 0.06 0.10 0.14
+K∗0.10 0.11 0.11 0.12 0.12 0.12 0.13 0.13 0.18 0.24 0.94 2.27
+mA∗0.05 0.09 0.13 0.18 0.22 0.44 2.63 7.34 – – – –
+Table 68: Runtime (in seconds) in the maps (octile) domain with heuristic search algorithms
+Runtime (seconds) - Maps 30 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.04 0.05 0.07 0.10
+K∗0.12 0.13 0.13 0.13 0.13 0.13 0.14 0.15 0.19 0.25 0.98 2.36
+mA∗0.05 0.10 0.15 0.20 0.25 0.50 3.00 8.38 – – – –
+Table 69: Runtime (in seconds) in the maps (octile) domain with heuristic search algorithms
+Runtime (seconds) - Maps 35 octile
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.12 0.17
+K∗0.12 0.13 0.13 0.14 0.14 0.14 0.15 0.16 0.20 0.27 1.02 2.42
+mA∗0.06 0.11 0.16 0.21 0.26 0.54 3.17 9.09 – – – –
+Table 70: Runtime (in seconds) in the maps (octile) domain with heuristic search algorithms
+Runtime (seconds) - 10-Pancake heavy-cost
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10
+BELA 0 29.05 29.92 30.69 31.04 31.39 32.31
+K0 79.06 87.47 91.24 92.22 93.03 –
+mDijkstra 25.88 52.56 – – – –
+Table 71: Runtime (in seconds) in the n-pancake (unit) domain with brute-force search algorithms
+Runtime (seconds) - 20-Pancake unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=20 k=40 k=50 k=100 k=500 k=900 k=1000
+BELA∗0.00 0.00 0.01 0.01 0.01 0.01 0.02 0.04 0.04 0.07 0.24 0.38 0.43
+K∗0.02 1.44 1.77 2.65 2.91 4.83 – – – – – – –
+mA∗0.00 0.00 0.01 0.01 0.01 0.02 0.03 0.05 0.06 0.12 0.54 0.96 1.05
+Table 72: Runtime (in seconds) in the n-pancake (unit) domain with heuristic search algorithms
+48
+Runtime (seconds) - 30-Pancake unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=20 k=40 k=50 k=100 k=500 k=900
+BELA∗0.05 0.08 0.11 0.13 0.16 0.28 0.43 0.66 0.74 1.24 3.47 4.49
+K∗0.41 – – – – – – – – – – –
+mA∗0.05 0.09 0.12 0.14 0.18 0.30 0.48 0.85 0.99 1.70 7.36 –
+Table 73: Runtime (in seconds) in the n-pancake (unit) domain with heuristic search algorithms
+Runtime (seconds) - 40-Pancake unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=20 k=40
+BELA∗0.61 0.92 1.19 1.48 1.72 2.89 4.50 7.16
+K∗6.12 – – – – – – –
+mA∗0.60 0.92 1.27 1.64 1.90 3.19 5.30 –
+Table 74: Runtime (in seconds) in the n-pancake (unit) domain with heuristic search algorithms
+A.3.2 Heavy-cost variant
+The results in the heavy-cost variant are shown in Tables 75–76. The first table shows the results of the brute-
+force variants. The last table shows the results of the heuristic search algorithms. Due to its difficulty, only the
+10-Pancake was used.
+A.4 N-Puzzle
+The runtime of all algorithms being tested is shown in Tables 77–81, both in the 8- and 15-Puzzle.
+A.4.1 Unit variant
+Table 77 shows the runtime of the brute-force search algorithms in the 8-Puzzle. Tables 78–79 show the runtime
+of the heuristic search algorithms in the 8- and the 15-Puzzle respectively, in the unit variant.
+A.4.2 Heavy-cost variant
+The heavy-cost variant has being tried only with the heuristic variants. Tables 80–81 show the runtime of all
+algorithms being tested.
+Runtime (seconds) - 10-Pancake heavy-cost
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10
+BELA 0 29.05 29.92 30.69 31.04 31.39 32.31
+K0 79.06 87.47 91.24 92.22 93.03 –
+mDijkstra 25.88 52.56 – – – –
+Table 75: Runtime (in seconds) in the n-pancake (heavy-cost) domain with brute-force search algorithms
+49
+Runtime (seconds) - 10-Pancake heavy-cost
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=40 k=50 k=100
+BELA∗0.39 0.41 0.42 0.43 0.44 0.47 0.58 0.61 0.67
+K∗1.99 2.47 3.04 3.32 3.44 4.85 – – –
+mA∗0.38 0.74 1.10 1.41 1.79 3.50 – – –
+Table 76: Runtime (in seconds) in the n-pancake (heavy-cost) domain with heuristic search algorithms
+Runtime (seconds) - 8-Puzzle unit
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA 0 0.22 0.25 0.27 0.28 0.29 0.30 0.33 0.37 0.41 0.42 0.53 0.59
+K0 0.52 0.67 0.71 0.73 0.75 0.77 0.83 0.87 0.92 0.93 1.03 1.11
+mDijkstra 0.20 0.42 0.64 0.84 1.03 1.83 – – – – – –
+Table 77: Runtime (in seconds) in the n-puzzle (unit) domain with brute-force search algorithms
+Runtime (seconds) - 8-Puzzle heavy-cost
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.01 0.01 0.02 0.08 0.15
+K∗0.01 0.01 0.01 0.02 0.02 0.02 0.03 0.03 0.04 0.05 0.13 0.21
+mA∗0.00 0.00 0.01 0.01 0.01 0.01 0.05 0.12 0.86 2.49 – –
+Table 78: Runtime (in seconds) in the n-puzzle (unit) domain with heuristic search algorithms
+Runtime (seconds) - 15-Puzzle heavy-cost
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10
+BELA∗5.26 5.43 5.75 5.74 5.81 6.17
+K∗18.58 – – – – –
+mA∗4.98 8.95 13.59 – – –
+Table 79: Runtime (in seconds) in the n-puzzle (unit) domain with heuristic search algorithms
+Runtime (seconds) - 8-Puzzle heavy-cost
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10 k=50 k=100 k=500 k=1000 k=5000 k=10000
+BELA∗0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.01 0.01 0.02 0.08 0.15
+K∗0.01 0.01 0.01 0.02 0.02 0.02 0.03 0.03 0.04 0.05 0.13 0.21
+mA∗0.00 0.00 0.01 0.01 0.01 0.01 0.05 0.12 0.86 2.49 – –
+Table 80: Runtime (in seconds) in the n-puzzle (heavy-cost) domain with heuristic search algorithms
+Runtime (seconds) - 15-Puzzle heavy-cost
+Algorithm k=1 k=2 k=3 k=4 k=5 k=10
+BELA∗5.26 5.43 5.75 5.74 5.81 6.17
+K∗18.58 – – – – –
+mA∗4.98 8.95 13.59 – – –
+Table 81: Runtime (in seconds) in the n-puzzle (heavy-cost) domain with heuristic search algorithms
+50
+References
+Aljazzar, H. (2009). Directed diagnostics of system dependability models [Doctoral dissertation, University of Kon-
+stanz].
+Aljazzar, H., & Leue, S. (2011). K∗: A heuristic search algorithm for finding the kshortest paths. Artificial Intel-
+ligence , 1–40.
+Burns, E., Hatem, M., Leighton, M. J., & Ruml, W. (2012). Implementing fast heuristic search code. International
+Symposium on Combinatorial Search (SoCS) , 1–8.
+Dechter, R., Flerova, N., & Marinescu, R. (2012). Search algorithms for m best solutions for graphical models.
+Association for the Advancement of Artificial Intelligence (AAAI) , 1895–1901.
+Dechter, R., & Pearl, J. (1985). Generalized best-first strategies and the optimality of A∗.Journal of the Association
+for Computing Machinery ,32(3), 505–536.
+Dweighter, H. (1975). Problem E2569. American Mathematical Monthly ,1010 (82).
+E. Korf, R. (1985). Depth-first iterative-deepening: An optimal admissible tree search. Artificial Intelligence ,27,
+97–109.
+Eppstein, D. (1998). Finding the k shortest paths. SIAM Journal on Computing ,28(2), 652–673.
+Felner, A., Korf, R. E., & Hanan, S. (2004). Additive pattern database heuristics. Journal of Artificial Intelligence
+Research (JAIR) ,22, 279–318.
+Flerova, N., Marinescu, R., & Dechter, R. (2016). Searching for the m best solutions in graphical models. Journal
+of Artificial Intelligence Research (JAIR) ,55, 889–952.
+Helmert, M. (2010). Landmark heuristics for the pancake problem. Proceedings of the Third Annual Symposium on
+Combinatorial Search (SoCS) , 109–110.
+Katz, M., & Lee, J. (2023). K∗search over orbit space for top-k planning. Proceedings of the Thirty-Second Inter-
+national Joint Conference on Artificial Intelligence (IJCAI) , 5368–5376.
+Linares L´ opez, C., & Herman, I. (2024). Experimental evaluation of BELA 0/BELA∗(ECAI 2024). https://doi.
+org/10.5281/zenodo.13293103
+P. E. Hart, N. J. Nilsson, & B. Raphael. (1968). A formal basis for the heuristic determination of minimum cost
+paths. IEEE Transactions of Systems Science and Cybernetics ,SSC-4 (2), 100–107.
+W. A. Johnson. (1879). Notes on the 15 puzzle 1. American Journal of Mathematics ,2(4), 397–399.
+51

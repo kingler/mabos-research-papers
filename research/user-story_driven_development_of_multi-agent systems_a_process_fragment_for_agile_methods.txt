@@ -1,0 +1,809 @@
+Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+Contents  lists available  at ScienceDirect  
+Computer  Languages,  Systems  & Structures  
+journal  homepage:  www.elsevier.com/locate/cl  
+User-story  driven  development  of multi-agent  systems:  A 
+process  fragment  for agile  methods  
+Yves Wautelet  a , ∗, Samedi  Heng  b , Soreangsey  Kiv b , Manuel  Kolp b 
+a Centre for Information  Management,  KU Leuven, Warmoesberg,  26, Brussels 10 0 0, Belgium 
+b LouRIM/CEMIS,  Université catholique  de Louvain, Place des doyens, 1, 1348 Louvain-la-Neuve,  Belgium 
+a r t i c l e i n f o 
+Article history: 
+Received  29 August 2016 
+Revised 19 June 2017 
+Accepted  30 June 2017 
+Available  online 9 July 2017 
+Keywords:  
+Agent software  engineering  
+Agile development  
+User story 
+Multi-agent  system 
+Process fragment  
+Rationale  tree 
+JAVA Agent DEvelopment  framework  
+JADE 
+i ∗-based software  process modeling  a b s t r a c t 
+Agile software  development  methods  are mostly built as a set of managerial  guidelines  and 
+development  concepts  on how to handle a software  development  but are not bounded  
+to software  development  paradigms  like object or agent orientation.  Some methods,  like 
+eXtreme  Programming  and SCRUM are driven by operational  requirements  representation  
+models called User Stories. These User Stories can be used as an anchoring  point to agile 
+methods;  this means that we could take a User Stories set to drive a software  transfor-  
+mation approach  embedded  in a particular  development  paradigm.  This paper presents  a 
+process fragment  for Multi-Agent  Systems  development  with agile methods  based on User 
+Stories sets. The process fragment  indeed takes advantage  of an initial set of User Sto- 
+ries to build a reasoning  model (called the Rationale  Tree; typically  several of these are 
+built for a single project)  that documents  decompositions  and means-end  alternatives  in 
+scenarios  for requirements  realization.  A Rationale  Tree can then be aligned with a Multi- 
+Agent design and implemented  in an agent-oriented  development  language.  In this paper 
+the transformation  is targeted  to the JAVA Agent DEvelopment  (JADE) framework.  The pro- 
+cess fragment  (at least partially)  covers the Requirements  Analysis,  Multi-Agent  System De- 
+sign and Multi-Agent  System Implementation  phases. Transformation  from one phase to the 
+other is overseen  and illustrated  on an example.  
+©2 0 1 7 Elsevier  Ltd. All rights reserved.  
+1. Introduction  
+1.1. Research  focus and scope 
+Agile software  development  methods  are nowadays  well known  and widely used in the software  industry  [1] . They 
+are based on a set of principles  and assumptions  (described  in [2,3] ) that work particularly  well for the development  of 
+software  applications  for which innovation  is a key aspect [4] . Such methods  do not imply heavy requirements  analysis  and 
+rigid software  architecture;  they rather encourage  building  ﬂexible  software  that is continuously  modiﬁed  and reﬁned  during 
+the project  due to the strong involvement  of end users and other stakeholders.  They thus require  the fast development  of 
+software  prototypes  or units to be tested in early phases of the project  life cycle. Flexibility  and change  management  of the 
+software  under development  are key aspects  to allow implementing  modiﬁcations  and increments  rapidly  and easily. 
+∗Corresponding  author. 
+E-mail address: yves.wautelet@kuleuven.be  (Y. Wautelet).  
+http://dx.doi.org/10.1016/j.cl.2017.06.007  
+1477-8424/© 2017 Elsevier Ltd. All rights reserved.  
+160 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+Table 1 
+Instantiation  of our process fragment.  
+Element Deﬁnition  (from [9] ) Instantiation  to our process fragment  i ∗Representation  
+Design process Design process from which the fragment  has been 
+extracted.  User Story based Agile Methods like XP or 
+SCRUM . N/A 
+phase A speciﬁcation  of the fragment  position in the design 
+workﬂow.  Usually referring to a taxonomy  . Requirements  Analysis, Multi-Agent  System 
+Design, Multi-Agent  System Implementation  . Goal 
+Goal The process-oriented  objective of the fragment  . The integration  of agent software development  in 
+agile and US-based  development.  N/A 
+Activity A portion of work assignable  to to a performer  (role) . Build Rationale  Tree, Tag User Story elements,  
+Link User Story Elements,  Remove redundant  
+requirements,  Identify missing requirements,  
+Align Multi-Agent  System Design with 
+Rationale  Tree, Deﬁne Multi-Agent  System 
+structure,  Specify temporal  exchange  of 
+messages,  Implement  software in an 
+agent-oriented  programming  language  . Task 
+Work product The resulting product of the work done in the 
+fragment;  it can be realized in different ways also 
+depending  on the speciﬁc adopted notation . Structured  User Story, Initial User Story Set, 
+Reﬁned User Story Set, Consistent  Rationale  
+Tree, Multi-Agent  System Design, Software 
+Unit, Reﬁned User Story Subset . Resource  
+Role The stakeholder  performing  the work in the process 
+and responsible  of producing  a work product (or 
+part of it) . Agile Product Owner, Software Analyst, Software 
+Designer,  Software Developer,  System Tester, 
+User . Actor 
+System meta-Model  
+construct  The concept of the fragment  deals with, for instance a 
+fragment  aimaing at deﬁning the system 
+requirements  has to deﬁned and to identify the 
+concept or requirements  . The Uniﬁed User Story Model (from [13] ), The 
+JADE Meta-Model  (from [14] ). N/A 
+Descrip-tion  It is the textual and pictural description  of the 
+fragment;  it provides a bird-eye on the whole 
+process the fragments  come from and the fragment  
+overview  in terms of tasks to be performed,  roles 
+and work product kind to be delivered  . The i ∗Process Model of Fig. 1 . A Strategic  
+rationale  
+diagram 
+Compos-ition  
+guideline  A set of guidelines  for assembling/composing  the 
+fragments  with others . The transformation  rules expressed  in 
+Section 5 . N/A 
+Agile methods  like eXtreme  Programming  (XP) [5] and SCRUM  [6] mostly use sets of User Stories ( US ) as main require-  
+ment artifacts.  User stories are short, simple descriptions  of a feature told from the perspective  of the person who desires the new 
+capability,  usually  a user or customer  of the system [7] . They dynamically  describe  actions  performed  by roles involved  in the 
+proper execution  of the produced  software;  they are thus driven by run-time  system  behavior.  US are, in this perspective,  
+particularly  well suited to describe  software  systems  in which human  and organizational  aspects  play a key role like for 
+example  nowadays’  mobile  apps. 
+We suggest  to extend US-based  agile software  development  methods  with the adoption  of Multi-Agent  Systems  ( MAS ) 
+technology  at the design and implementation  stages. We will show that a precise  study of US elements  and interdependen-  
+cies enriched  with further  domain  knowledge  allows to build a reasoning  model that can ultimately  be mapped  to run-time  
+MAS behavior.  The transformation  process  of a consistent  US set into a MAS design can then lead to the fast development  of 
+ﬂexible  prototypes;  the so-developed  software  thus integrates  the overall beneﬁts  of MAS technology.  Therefore,  this paper 
+introduces  a (software  development)  process  fragment  for agent-based  development  in agile methods.  As an initial US set 
+is used to build a graphical  model that is then transformed  into a MAS design and implementation,  it can be characterized  
+as model-driven  (see [8] ). 
+In the context  of this paper, we adopt the deﬁnition  of Seidita et al. [9] for a Process  Fragment  , i.e. a portion  of design 
+process  adequately  created  and structured  for being reused during the composition  and enactment  of new design processes  both 
+in the ﬁeld of agent oriented  software  engineering  and in other ones . Although  we do not fully instantiate  each concept  deﬁned  
+in Seidita et al. [9] , we rely on their terminology  when deﬁning  our process  fragment  (see Section  4 ). When, in this paper, 
+the concepts  from [9] are ﬁrstly used and instanciated  to our process  fragment,  we have put the concept  in italic and bold 
+(this way concepts  from their process  engineering  framework  are recognizable  at ﬁrst sight). We systematically  invite the 
+reader to refer to that source for further  explanation  of each concept;  each instantiated  concept  deﬁnition  is nevertheless  
+transcripted  in Section  4 . 
+1.2. Contributions  and discussion  
+The paper constitutes  a ﬁrst attempt  to integrate  agent-technology  with agile software  development.  The contribution  of 
+the present  paper is the process  fragment  itself. Table 1 of Section  4 summarizes  the meta-model  process  fragment  elements  
+of [9] that are instantiated  to our particular  case. All of these instances  are necessary  for implementing  the process  fragment  
+and constitute  a whole for its proper application.  
+Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 161 
+A subset of these elements  are depicted  in the form of an i ∗Strategic  Rationale  diagram  [10–12]  . This allows to show 
+the dependencies  and place where each of these elements  need to be used. The i ∗diagram  also constitutes  a reference  for 
+practitioners  or researchers  willing  to apply our contribution.  
+More importantly,  the application  of the process  fragment  induces  the transformation  from requirements  models  to MAS 
+design and implementation.  To this end, rules (called Composition  Guidelines  ) to transform  elements  from the US uniﬁed  
+model of [13] (i.e. the requirements  meta-model)  to the JAVA Agent DEvelopment  ( JADE ) framework  meta-model  of [14] are 
+deﬁned  in the paper. These two models  are System Meta-Model  Constructs  ( SMMC ) of the process  fragment  and the Compo-  
+sition Guidelines  constitute  another  of our main contributions.  
+For a proper integration  of the process  fragment  within an agile method  we only point to one prerequisite:  a US set 
+expressed  through  a WHO, WHAT and WHY dimension  describing  the main aspects  of the system to-be . One might argue that 
+we could have given up US in agile development  and point to building  other kinds of requirements  artifacts  speciﬁcally  
+targeted  to the development  of MAS. Nevertheless,  US writing  remains  a fundamental  practice  in agile methods  [15] so we 
+believe  that it constitutes  the adequate  anchoring  point for further  agent-based  development.  The prerequisite  is met by 
+most of agile developments  based on XP and SCRUM.  
+Finally,  a speciﬁc  Computer-Aided  Software  Engineering  (CASE) tool has also been developed  to support  the use of our 
+process  fragment.  
+1.3. Paper structure  
+The paper is structured  as follows.  Section  2 depicts  the research  context.  Section  3 the applied  research  method.  
+Section  4 depicts  the agent development  process  fragment  for agile methods  that constitutes  the core contribution  of the 
+paper. Section  5 overviews  the mapping  rules – referred  to as composition  guidelines  for the process  fragment  –o f the 
+Rationale  Tree elements  with the ones of the JADE framework  as well as the speciﬁcally  developed  CASE-Tool.  Section  6 il- 
+lustrates  the proposal  on the development  of a carpooling  example.  Section  7 describes  the related  work. Section  8 discusses  
+the validity,  the threats  to the validity,  as well as the scalability  of the approach  and future work. Finally,  Section  9 concludes  
+the paper. 
+2. Research  context  
+Currently,  there is no uniﬁcation  in the use of US templates  [13] . Indeed,  the commonly  used pattern  (which  is the one 
+tackled  in this paper with no further  extensions)  relates a WHO, a WHAT and possibly  a WHY dimension  1 ( Appendix  A 
+documents  how we decompose  US), but several  concepts  can be found in literature  or blogs to represent  these dimensions  
+(e.g., Mike Cohn’s As a < type of user > , I want < some goal > so that < some reason > [7] ). Moreover,  no deﬁnitions  (i.e. 
+semantics)  are ever associated  to these concepts  (see Wautelet  et al. [13] ). Consequently,  in 2013, Wautelet  et al. [13] col- 
+lected an exhaustive  set of US templates  used by practitioners  classiﬁed  them and related  deﬁnitions  to each concept.  These 
+deﬁnitions  were found in various  sources  and frameworks,  i.e. [10,16–18]  ; some are based on Goal-Oriented  Requirements  
+Engineering  (GORE,  see [19] ). After removing  redundant  concepts,  a uniﬁed  model for US templates  was built (see A.2 ). Most 
+of the deﬁnitions  and concepts  of this uniﬁed  model come from the i ∗framework.  The reader interested  in the full research  
+process  to build the uniﬁed  US model is invited  to refer to Wautelet  et al. [13] . 
+A US tagged with the uniﬁed  model evoked  in previous  section  furnishes  information  on the nature and granularity  of 
+the US element  in the WHAT and/or WHY dimensions.  If the tagging  is done by respecting  the deﬁnitions  associated  to the 
+concepts  as well as the internal  consistency  of the US set, we can structure  the set of US and use it to build a graphical  
+model. Granularity  identiﬁcation  of US has been identiﬁed  in literature  as an issue to be solved for an adequate  structuring  
+of requirements  [20] . In an agile project,  we can better support  requirements  engineering  by enhancing  the structure  of the 
+to-be software  system  when the exact granularity  of a US element  is determined.  Through  domain  analysis,  US elements  
+can also be linked towards  means-end  and other decomposition  links to depict scenarios  of behaviors  solving  parts of the 
+software  problem.  This was shown in [21] through  the building  of a graphical  model of which the instance  is called a 
+Rationale  Tree (see A.3 for more information).  The graphical  analysis  of the US set using a Rationale  Tree not only allows us 
+to structure  requirements  but also allows to evaluate  the consistency  of the US set. 
+A consistent  Rationale  Tree built out of the requirements  analysis  describes  (part of) a software  solution  behavior  that 
+can be aligned  with the design of a MAS. Such a MAS is thus intended  to map human  behavior  with system  run-time  
+behavior.  The process  fragment  developed  in this paper aims to ﬁrst build the Rationale  Tree for a speciﬁc  project  and map 
+it to a MAS design compliant  to the JADE framework.  
+3. Research  method  
+The present  research  is built as design science meaning  that we do not try to understand  reality as in social sciences  
+but rather to build a framework  that can serve human  purposes  [22] . We have thus proceeded  to a problem  identiﬁcation  
+1 Examples  are provided  in Table 2 . 
+162 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+namely  the integration  of agent software  development  in agile and US-based  development  ; this constitutes  the process  fragment  
+Goal . The process  fragment  itself is a solution  for it. 
+To such an extend,  we have ﬁrstly deﬁned  an abstract  view of the process  fragment  using an i ∗strategic  rationale  diagram  
+[10] . This view has been built by identifying  the principal  stakeholders  involved  in a traditional  agile development  and 
+enhancing  it with the practices  and models  required  for agent-oriented  development.  The process  elements  have been kept 
+minimal  and serve as a guidance  for development.  A speciﬁc  software  engineering  meta-model  like the Software  & Systems  
+Process  Engineering  Metamodel  ( SPEM ) [23] could have been used to make such a description  (see for example  [24,25]  for an 
+application  in the ﬁeld of agent software  development)  but we wanted  to keep the Description  light and limited  to essentials.  
+Also, we wanted  to explicitly  show the dependencies  of Work Products  among  the Roles which is easier with i ∗(by nature 
+driven by elements  dependencies  and decompositions)  then with meta-models  like for example  the SPEM. 
+Then, we have deﬁned  transformation  Composition  Guidelines  from the Rationale  Tree developed  in previous  works to a 
+MAS architecture  in JADE. These Composition  Guidelines  have been built by making  a Cartesian  product  between  the elements  
+of the Rationale  Tree as presented  in Wautelet  et al. [21] and the elements  of the JADE framework  as presented  in Bellifemine  
+et al. [14] . This allowed  to determine  the best possible  mapping  to implement  a Rationale  Tree and its reasoning  abilities  as 
+a MAS in JADE. 
+As evoked  in Section  2 , the research  to build a process  for integrating  MAS in agile development  is based on previously  
+validated  works. The uniﬁed  model for US templates  as well as the related  Rationale  Tree are two previous  contributions.  
+4. Agent development  process  fragment:  a description  
+Table 1 documents  all of the  process fragment elements  deﬁned in Seidita  et al. [9] that are instantiated  onto our contri- 
+bution.  
+As already  evoked,  to show the Roles involved  in the process  fragment,  their Work Product  dependencies  and their , we 
+use a pictorial  Description  using the i ∗framework  in Fig. 1 . For the sake of clarity, we insist that each of the Roles can, of 
+course,  be played by several  individuals  in a same project;  similarly  a same individual  can play different  Roles in a project.  
+We distinguish  several  types of stakeholders,  all having various  objectives  and expectations,  i.e.: 
+•The Agile Product  Owner ( APO ) Role is a senior manager  that is mainly  in charge of developing  a vision of the software  
+system  that needs to be built and propagate  that vision over the development  team; it is a key stakeholder  of the project.  
+His/her  Activities  are essentially  outside  the scope of our process  fragment  and are guided  by the adopted  agile method;  
+we nevertheless  identify  and represent  the APO Role here because  the output of some of his/her  activities  are required  by 
+our process  fragment.  The APO Role indeed  uses the product  backlog  (see [26,27]  ) to store the Initial User Story Set Work 
+Product  . The Software  Modeler  Role thus depends  on the APO Role for obtaining  the Initial User Story Set Work Product  ; 
+that is why it is represented  as a Resource  dependency  in the i ∗diagram  of Fig. 1 . This Initial User Story Set is required  for 
+composition  with our process  fragment;  it is typically  collected  over several  future system  (end) Users Role in the form 
+of a Structured  User Story Work Product  . The APO Role thus depends  on the (end) User Role for obtaining  the Structured  
+User Story Work Product  ; that is why it is represented  as a Resource  dependency  in the i ∗diagram  of Fig. 1 . At the end of 
+the Requirements  Analysis  Phase , the Software  Analyst  Role furnishes  a Reﬁned  User Story Set Work Product  to the APO Role 
+(see next bullet);  
+•The Software  Analyst  Role is in charge of understanding  the software  problem  by studying  the application  domain  as 
+well as to prepare  a structured  view and speciﬁcation  of user requirements.  The ﬁrst process  fragment  Activities  are 
+performed  by this role. These are performed  in the context  of the Requirements  Analysis  Phase which is represented  as an 
+i ∗Goal in Fig. 1 . A means-end  decomposition  then allows to reﬁne the i ∗Goal representing  the Phase . Indeed,  to fulﬁll 
+this i ∗Goal, the Software  Analyst  Role performs  the Activity  Build Rationale  Tree . In itself, the latter Activity  requires  a 
+set of other Activities  to be achieved  (as shown through  the decompositions  in Fig. 1 ). The ﬁrst one is to Tag the user 
+story elements  of the Initial User Story Set Work Product  ). Then, the Software  Analyst  Role , can Link the User Story elements  
+in the Rationale  View of the CASE-Tool  (see Section  5 ). The purpose  of this Activity  is to link related  US elements  in 
+the Rationale  View through  means-end  and traditional  decompositions  (see A.3 ) to build a ﬁrst version  of the Rationale  
+Tree. More domain  knowledge  is usually  needed  to fully perform  this Activity  so that the Software  Analyst  Role needs to 
+discuss  elements  with the APO Role or immediately  with (end) Users . Simultaneously,  the Software  Analyst  Role needs to 
+Ensure consistency  in the User Story set and to Identify  missing  requirements  ; these are two other Activities  of the process  
+fragment  represented  as i ∗Tasks in Fig. 1 . Concretely,  several  US elements  may express  the same requirement  and some 
+elements  are not expressed  in US yet are needed  to ensure a consistent  system.  The purpose  of these two last Activities  
+is to solve these issues. As an output,  the Software  Analyst  Role sets at disposal  of the APO Role a Reﬁned  User Story Set 
+Work Product  and at disposal  of the Software  Architect  a Consistent  Rationale  Tree (for both of these Work Products  see the 
+i ∗Resource  dependencies  between  the two related  roles in Fig. 1 ); 
+•The Software  Designer  Role is in charge of transforming  software  speciﬁcations  to a software  architecture  and design.  
+Activities  of the process  fragment  are performed  by this role in the context  of the Multi-Agent  System Design Phase 
+which is represented  as an i ∗Goal in Fig. 1 . A means-end  decomposition  then allows to reﬁne the i ∗Goal represent-  
+ing the Phase . Indeed,  to fulﬁll this i ∗Goal, the Software  Designer  Role performs  the Activity  Align Multi-Agent  System 
+Design with Rationale  Tree . In itself, the latter Activity  requires  two other Activities  to be achieved  (as shown through  the 
+Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 163 
+Software 
+Analyst
+Agile 
+Product 
+Owner
+Identify 
+missing 
+requirements
+Software 
+DesignerRemove 
+redundant 
+requirements
+UserInitial User 
+Story Set
+Refined User 
+Story Set
+Tag User 
+Story 
+elements
+Consistent
+Rationale
+Tree
+Software 
+Developer
+Define Multi-Agent 
+System structureRequirements 
+Analysis
+Build Rationale Tree
+Align Multi-Agent 
+System Design with 
+Rationale Tree
+Specify temporal 
+exchange of 
+messagesMulti-Agent 
+System DesignImplement software in an 
+agent-oriented programming 
+languageLink User Story 
+elements
+ActorActor 
+BoundaryGoal Task ResourceLegend:
+Softgoal
+Dependency LinkAND 
+decompositionMeans-End 
+decompositionSoftware Unit
+System
+TesterMulti-Agent System 
+Design
+Multi-Agent System 
+Implementation
+Feedback on 
+Software UnitStructured
+User StoryRefined User 
+Story Subset
+Fig. 1. Process (fragment)  for integrating  agent-oriented  development  in agile projects. 
+decompositions  in Fig. 1 ). The ﬁrst one is to Deﬁne the Multi-Agent  System Structure  . In our case, we point to the use of 
+the transformation  rules depicted  in Section  5 ; these are speciﬁc  to the JADE framework  but other agent-oriented  lan- 
+guages  could also be adopted.  Then, the Software  Designer  Role , can Specify the temporal  exchange  of messages  in order 
+to give further  documentation  on the execution  of user (or business)  processes  to the Software  Developper  . Both of these 
+atomic  Activities  are supported  in the Design View of the CASE-Tool  (also depicted  in Section  5 ). The Multi-Agent  System 
+Design Work Product  is transmitted  to the Software  Developer  Role for further  implementation;  
+•The Software  Developer  Role is in charge of associating  code (JADE code in our case) to the Multi-Agent  System Design . 
+Activities  of the process  fragment  are performed  by this role in the context  of the Multi-Agent  System Implementation  
+Phase which is represented  as an i ∗Goal in Fig. 1 . A means-end  decomposition  then allows to reﬁne the i ∗Goal repre- 
+senting  the Phase . Indeed,  to fulﬁll this i ∗Goal, the Software  Developer  Role performs  the Activity  Implement  software  in 
+an agent-oriented  programming  language  . This Activity  requires  speciﬁc  technical  knowledge  of the agent-oriented  devel- 
+opment  language  in use (JADE in our case). As output,  the Software  Developer  Role furnishes  a Software  Unit Work Product  
+to the System Tester . The latter Work Product  can be a prototype  of a deﬁned  module  addressing  speciﬁc  requirements  or 
+a (partial)  ﬁnal implementation  to be validated.  In any case it must be an executable  release  on which feedback  can be 
+collected;  
+•The System Tester is in charge of ensuring  the system  tests for the Software  Unit Work Product  is valid. We thus focus here 
+on evaluation  related  to the (end) User only. The System Tester Activities  are outside  the scope of our process  fragment  
+and are guided  by the adopted  agile method;  
+•The (end) User Role uses the software  application  and is thus in charge of providing  the Feedback  on Software  Unit Work 
+Product  . The portion  of the Rationale  Tree covered  by the Software  Unit Work Product  (implementation)  is reﬁned  on the 
+basis of the (end) User Role Feedback  on Software  Unit Work Product  furnished  by the System Tester Role to the Software  
+Analyst  Role in the form of a Reﬁned  User Story Subset Work Product  . The Software  Analyst  Role then reﬁnes the Rationale  
+Tree on this basis (the Build Rationale  Tree Activity  ). 
+164 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+Fig. 2. Transformation  from US elements  to MAS Design (adapted  from [13,14] ). 
+5. Composition  guidelines  for transformation  and CASE-Tool  
+Fig. 2 graphically  illustrates  the transformation  Composition  Guidelines  . As already  said, the meta-model  for the require-  
+ments analysis  phase has been developed  in Wautelet  et al. [13] . The meta-model  for the MAS Design and MAS Implementa-  
+tion phases is taken from Bellifemine  et al. [14] . The mapping  has been built following  the method  evoked  in the Section  3 . 
+•The US uniﬁed  model Role element  represents  the actions  and social behavior  taken by an individual  or a system;  it 
+consequently  aligns with the Agent concept.  Roles distinguished  in US (so in the Requirements  Analysis  Phase ) thus 
+transform  into JADE Agents in the Multi-Agent  System Design Phase . In the Multi-Agent  System Implementation  Phase , each 
+instance  of the Role will be a new system  Agent (e.g., each individual  Driver instantiates  a new Driver Agent);  
+•Hard-goals  represent  the most abstract  and coarse-grained  functional  elements  present  in the US. We suggest  as a good 
+practice  during requirements  analysis  to always deﬁne a counterpart  to the Hard-goal  in the form of a Task that realizes  
+that particular  US element  Hard-goal.  In other words, our point is that the Hard-goal  is part of the problem  domain  so 
+that we do not transform  it as such to the MAS design;  the Task corresponding  to a solution  to the Hard-goal  and thus 
+part of the solution  domain  will be transformed  to the MAS design;  
+•Tasks and Capabilities  represent  (operational)  functional  elements  of the software  solution.  In other words, they describe  
+how a Role performs  actions  to achieve  an Hard-goal  or contribute  to a Soft-goal.  These elements  constitute  the core 
+of the (future)  Agent behavior;  that is why they become  JADE Behaviors  in the MAS. There is nevertheless  a difference  
+between  the transformation  of Tasks and Capabilities  to JADE Behaviors  . Indeed,  since the Task is, by nature,  complex  
+so not atomic,  it is transformed  into a CompositeBehaviour  (itself composed  of other behaviors)  and the Capability  –b y 
+nature atomic  –i s transformed  in a SimpleBehaviour  ; 
+•Soft-goals  have no clear cut criteria  to be achieved,  they are considered  as being “satisﬁced” if  achieved  to a degree 
+considered  acceptable  [13] . The choices  that will be made in the software  solution  and in the MAS design will thus have 
+a positive  or negative  impact  on the resolution  of the Soft-goal  itself. The Soft-goal  is thus not transformed  as such to 
+Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 165 
+Fig. 3. The supporting  CASE-Tool.  
+the MAS design but the impact  (positive  or negative)  of design choices  could be traced from design elements  like JADE 
+Behaviors  to the Soft-goal.  This could for example  be done using the Rationale  tree in the fashion  of the NFR framework  
+(see [28] ). This is, however,  not currently  supported  and left for future work. 
+In order to support  the editing  of US sets on US cards as well as the Rationale  Tree, we have built an add-on  to the 
+cloud version  of our Descartes  Architect  CASE-Tool  [29] . Fig. 3 illustrates  two screens  of the CASE-tool;  for the purpose  of 
+166 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+the process  fragment,  three views are relevant:  
+•The User Story View ( USV ) to edit US through  virtual US cards. Each US element  in a dimension  must be tagged with a 
+concept  of the uniﬁed  model;  
+•The Rationale  View ( RV ) to edit Rationale  Trees following  the speciﬁcation  made in [21] and in this paper. The graphical  
+elements  can be automatically  generated  from the US deﬁned  in the USV; the modeler  is then in charge of further  editing  
+the links between  elements.  When changes  are made to graphical  elements  in the RV, the elements  are automatically  
+updated  in the USV and vice-versa.  These do indeed  form a same logical element  represented  in different  views; 
+•the Design View ( DV ) to edit a JADE Class diagrams;  
+•next to this, we can also edit classical  UML diagrams.  
+Once again, as a prerequisite,  the set of US needs to be tagged to start the transformation  and round-trip  between  
+the views. The editing  process  is continuous  and intensive  over the Requirements  Analysis  Phase 2 and to a certain  extend 
+over the entire project  life cycle (see Reﬁned  User Story Work Product  in Section  4 ). This is of course fully supported  by the 
+tool and leads to automatic  updates  of complementary  views; consistency  is ensured  by separating  the conceptual  element  
+in the CASE-Tool  memory  from its representation  in a view so that if a change  is made to an element  in one view it is 
+automatically  impacted  to the same element  in the other view. 
+6. Illustrative  example  
+Our proposal  will be illustrated  using a running  example  about carpooling.  Carpooling  deals with sharing  car journeys  
+so that more than one person  travels within a car. It, indeed,  becomes  increasingly  important  to save gas, reduce traﬃc, 
+save driving  time and control  pollution.  ClubCar  [30] is a multi-channel  application  available  as an Android  application,  SMS 
+service  and IVR system.  Users of ClubCar  are riders and/or drivers  that can register  by SMS, voice or through  an Android  
+app. Roughly  speaking,  the software  allows drivers  to propose  rides and submit  their details with dates, times, sources  and 
+destinations  while riders can search for available  rides. 
+The solution  presented  here is not considered  as a full case study since the solution  was designed  ex-post  of the solution  
+built in [31] . This means that we took over the US set and made another  development  based on a MAS and that the MAS 
+was not the original  solution  proposed  for this problem.  Nevertheless,  this illustrative  example  contributes  to showing  the 
+applicability  and performance  of the approach.  
+At the beginning  of the Requirements  Analysis  Phase , the responsibility  and accountability  (in the sense deﬁned  in [32] ) 
+of our process  fragment  starts up. The illustrative  example  consequently  starts with that Phase . Similarly,  it ﬁnishes  with the 
+Multi-Agent  System Implementation  Phase ; ex-post  activities  are outside  the responsibility  and accountability  of the process  
+fragment  and are dependent  on the agile method  the process  fragment  is embedded  in. 
+6.1. Phase: requirements  analysis  
+6.1.1. Activity:  tag user story elements  
+Table 2 shows a sample  of the Initial User Story Set Work Product  that has been furnished  by the APO Role . To save some 
+space, the US presented  in the Table have already  been associated  with a tag; this was thus the ﬁrst Activity  of the Software  
+Analyst  Role . The reader should keep in mind that there are much more US written  for this project  and that the scope of the 
+project  is much broader.  We have made here an ad-hoc  selection  of a sample  related  to speciﬁc  modules  (and thus Rationale  
+Trees decompositions).  The sample  of the US of the ClubCar  application  has indeed  been selected  to illustrate  at best the 
+research  developed  in this paper. 
+6.1.2. Activity:  link user story elements  
+After the tagging  of the Initial User Story Set , the ﬁrst Rationale  Tree can be produced.  Out of the Initial User Story Set we 
+generate  the ﬁrst Rationale  Tree that is represented  in Fig. 4 . At this preliminary  stage, the different  US elements  are not yet 
+interlinked.  
+Fig. 5 represents  the Rationale  Tree obtained  after the US elements  have been linked 3 .). Further  domain  analysis  is usually  
+required  to achieve  such a stage, it includes  more discussions  with users, clients and other stakeholders.  In practice,  during 
+this stage –w h e n  using the CASE-Tool  –t h e r e  is continuous  round-trip  between  the US View and the Rationale  View. 
+6.1.3. Activities:  Remove  redundant  requirements  & identify  missing  requirements  
+Building  a consistent  Rationale  Tree leads, for instance,  to include  the US containing  the Task “propose  ride via ClubCar”
+for the Role “Driver”.  This Task is required  for linking  the (more abstract)  Hard-goal  “share a ride from A to B” – that  is part 
+2 In practice, during Requirements  Analysis some US elements  are “retagged” in  an ad-hoc manner in later modeling  stages. Indeed, the composition  of 
+the Rationale  Tree mostly leads to reconsider  the nature of some elements  (of which the granularity  and structure  was hard to determine  when only seen 
+in an isolated manner in the ﬁrst stages) like in most modeling  approaches.  
+3 In order to save space, the diagram also includes elements  added during the Activities  of Section 6.1.3 
+Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 167 
+Table 2 
+US sample of the ClubCar application.  
+Dimen- sion Element D_C Type 
+WHO As a RIDER, Role 
+WHAT I want to register to the ClubCar service, Task 
+WHY so that I can have access to rides from A to B. Hard-goal  
+WHO As a RIDER, Role 
+WHAT I want to see the list of rides based on my criteria, Capability  
+WHY so that I can choose the one I prefer. Soft-goal  
+WHO As a RIDER, Role 
+WHAT I want to get access to the details of a ride, Capability  
+WHY so that I can choose the one I prefer. Soft-goal  
+WHO As a RIDER, Role 
+WHAT I can cancel a ride, Capability  
+WHY so that the DRIVER knows about it. Hard-goal  
+WHO As a RIDER, Role 
+WHAT I can access to the history of rides I got, Capability  
+WHY so that I have visibility.  Soft-goal  
+WHO As a RIDER, Role 
+WHAT I want to rate a DRIVER and share comments,  Capability  
+WHY so that others can use that information.  Soft-goal  
+WHO As a RIDER, Role 
+WHAT I want to search for a ride, Capability  
+WHY so that I can go from A to B. Soft-goal  
+WHO As a DRIVER, Role 
+WHAT I want to log in to the platform,  Capability  
+WHY so that I can register to the service. Task 
+WHO As a DRIVER, Role 
+WHAT I want to propose a ride from A to B with the price, location and time of 
+departure,  and number of seats available.  Task 
+WHO As a DRIVER, Role 
+WHAT I want to select the ride characteristics.  Capability  
+WHO As a DRIVER, Role 
+WHAT I want to conﬁrm the proposal.  Capability  
+WHO As a DRIVER, Role 
+WHAT I want to register to the ClubCar service, Capability  
+WHY so that I can propose ride to go from A to B. Soft-goal  
+Fig. 4. Initial rationale  tree built from the US set. 
+of the problem  domain  –t o the solution  domain  in a means-end  analysis  fashion.  Other US derived  from elements  added 
+in the Rationale  Tree are also included.  
+A Consistent  Rationale  Tree is the Work Product  that will be used in the next stage for transformation  to MAS 
+design.  
+168 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+Fig. 5. Reﬁned rationale  tree built from the US set. 
+Fig. 6. ClubCar JADE (Partial) class diagram.  
+6.2. Phase: multi-agent  system design 
+6.2.1. Activity:  deﬁne multi-agent  system architecture  
+As discussed,  the transformation  process  to the MAS Design takes roots in the Rationale  Tree; elements  are transformed  
+following  the rules seen previously  in Section  5 . 
+The roles Driver and Rider are transformed  in individual  agents (i.e., Driver and Rider) in JADE. For illustrating  our ap- 
+proach,  we show here the transformed  architecture  for the agent Driver only. Fig. 6 presents  the internal  architecture  of 
+the Driver agent transformed  from the Rationale  Tree. Typically,  the Task Propose  ride via ClubCar  is transformed  
+to a CompositeBehaviour  ProposeRideFromAtoB  . In addition,  the latter behavior  is composed  of three other Compos-  
+iteBehaviours  SubmitRideProposal  , RegisterToClubCar  , and AcceptRideRequest  which are respectively  trans- 
+formed  from Tasks SubmitRideProposal  , Register  to ClubCar  service  and accept  ride requests  . How- 
+ever, within our illustrative  example  we only focus on the SubmitRideProposal  behavior.  The SubmitRideProposal  
+behavior  is further  composed  of two SimpleBehaviours  SelectRideCharacteristic  and LoginClubCar  which are re- 
+spectively  transformed  from the Capabilities  Select  the ride characteristics  and login  to the platform  . 
+The architecture  obtained  through  the transformation  process  and illustrated  in Fig. 6 only provides  the signature  of the 
+behaviors  of the Driver agent; but not how this agent it effectively  behaves  (and thus reacts) when an ACLMessage  is 
+received;  this is determined  and described  by the analyst  on a case by case basis through  domain  knowledge  (so not on the 
+basis of the user stories themselves).  
+6.2.2. Activity:  Specify temporal  exchange  of messages  
+Other diagrams  like communication  and dynamic  diagrams  (see [32] ) allow to visualize  the interaction  between  the 
+agents when they send ACLMessage  s. By doing so, we can we further  discover  the interaction  between  agents.  This aspect 
+remains  out of the scope of the present  paper because  we focus on the software  development  process  and transformation  
+abilities.  
+Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 169 
+Fig. 7. ClubCar architecture.  
+6.3. Phase: Multi-agent  system implementation  
+6.3.1. Activity:  Implement  software  in an agent-oriented  programming  language  
+We have basically  adopted  the client-server  architecture  for implementing  the ClubCar  system  as shown in Fig. 7 . The 
+GUI constitutes  the client side for interacting  with the MAS implemented  as a mobile  application.  The MAS constitutes  the 
+server side implemented  with the JADE framework.  
+The JADE MAS, thus the server side constitutes  the part transformed  from the Rationale  Tree. JADE uses the Java language  
+for implementing  agents and uses ACLMessage  s for communicating  between  agents.  
+When a mobile  application  is launched  by the end-user,  an Agent is created  within the JADE platform  for handling  
+all the requests  from that (end) User (in our implementation  we create a session  for each application  launched  and the 
+ID session  has become  the Agent ID for the corresponding  Agent in the JADE platform).  For an effective  execution  of the 
+application  we need to allow the mobile  application  to communicate  directly  with the Agents present  in the JADE platform.  
+When an action is performed  at the level of the GUI, the Agent concerned  with the transaction  receives  what the mobile  
+application  has sent. We propose  in our implementation  an encapsulation  mechanism  that allows the mobile  application  
+to send or receive  content  to/from  the concerned  agent directly.  This means that the agents send and receive  the requests  
+composed  within the client (meaning  at the level of the GUI) in real-time.  We use JSON formats  for communication  between  
+the mobile  application  and the MAS since this format is popular  in web technologies  and light weight  compared  to other 
+formats  like XML. In addition,  it allows the mobile  application  to directly  update  its interface  after getting  the data from the 
+corresponding  agent. In order to achieve  this, the request  of the client is, as a ﬁrst step, encapsulated  in the HTTP request.  
+When the Servlet  receives  any HTTP request  from the client, it reads the content  of this request  in JSON data format and 
+writes it into a Java Object.  Then, as a second  step, it sends that object to the JADE gateway.  
+Finally,  the Gateway  reads the JSON data from the Java Object sent and builds the ACLMessage  using the JSON data. 
+The ACLMessage  is sent to the corresponding  agent. Since JSON can also be operated  in JADE, we do not re-translate  the 
+client content  into the XML format that is normally  used in the JADE platform.  An example  of the JSON format encapsulated  
+in ACLMessage  is given in Fig. 8 . The ontology-based  communication  is out of the scope of this paper and implementation.  
+7. Related  work 
+First of all, in line with [8,33] , our work can be said to be model-driven  because  the MAS implementation  is partially  
+built and deduced  from a high level analysis  model, the Rationale  Tree. We thus start with further  studying  the model 
+driven software  development  for MAS. 
+Hahn et al. [34] propose  a meta-model  for agent systems  that abstracts  from existing  agent-oriented  methodologies,  pro- 
+gramming  languages  and platforms.  It deﬁnes  the abstract  syntax of a proposed  domain  speciﬁc  modeling  language  for MAS; 
+the latter is a base to generate  code in agent-oriented  languages  like JACK [35] or JADE. Their approach  is not immediately  
+comparable  to ours since we directly  aim to generate  code in a speciﬁc  language  without  having an in-depth  platform  in- 
+dependent  MAS design.  The idea of such a middle  layer has been studied  in [36] but we aim to generate  code as fast as 
+possible  to be complied  with agile principles.  Similarly,  [33,37,38]  have built a domain  speciﬁc  modeling  language  for ab- 
+stracting  and supporting  the development  of a MAS. Their approach  is nevertheless  deeply anchored  in the semantic  web 
+paradigm  because  it speciﬁcally  takes into account  the interactions  of semantic  web agents with semantic  web services.  It 
+is thus more speciﬁc  than for example  [34] . Besides,  [33,37,38]  also depict MAS analysis  in terms of high level structures  
+170 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+Fig. 8. ClubCar application.  
+like Roles, Goals, Plans or even Capabilities.  Nevertheless  they devote speciﬁc  effort to design a semantic  web solution.  Once 
+again, we do not spend time making  an enhanced  design stage and turn immediately  to code. 
+Then, [39] proposes  a meta-model  for the integration  of diverse  agent-oriented  modeling  languages  that use the power-  
+type pattern  (e.g., Tropos,  Prometheus,  Ingenias  and AUML).  Our uniﬁed  model for user story based modeling  could be an 
+instance  of the inter-methodology  MAS metamodel  proposed  in [39] . This shows the suitability  of the analysis  stage to be 
+aligned  with a MAS implementation.  Moreover,  [40] extends  the MAS-ML  metamodel  and enhance  its tool to support  the 
+modeling  of not only proactive  agents but also several  other architectures  described  in the literature.  Their contribution  is 
+mainly  located  in the detailed  design of MAS and goes deep in the possible  agents description.  We do not intend to do this 
+to keep our practices  as agile as possible  and immediately  target a speciﬁc  implementation  language.  Also, their aim is the 
+integration  of heterogeneous  sources;  we essentially  target collaborating  agents in an homogeneous  environment.  
+We can also focus on the use of US in agent methods.  In Agile PASSI [41] , US are used as requirement  artifact  for 
+communication  but it is their only usage. US, speciﬁcally  in MaSE [42] , is one source of requirements  for capturing  the 
+goal of the agent [43] but without  formal transformation.  [44] uses fuzzy theory to provide  a systematic  and methodical  
+approach  to explore  various  dependencies  such as goal, task, resource  or Soft-goal  from US. Again, the technique  is limited  
+to the analysis  stage with no transformation  to design.  In contrast,  Tenso et al . [45] adopt agent-oriented  modeling  in agile 
+development.  They provide  a method  for decomposing  a goal into sub-goals  and link them to US elements.  Carrera  et al. 
+[46] use US as testing mechanism  for agent-oriented  software  development.  Only one US template  is used and aligned  to 
+JBehave  ( http://jbehave.org  ). 
+Prometheus  and INGENIAS  [47] are two agent-oriented  methods  allowing  to generate  JADE code on the basis of a MAS 
+design.  We do not recommend  to build a full generic  MAS architecture  like in these methods  before generating  code but 
+Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 171 
+rather to faster go to the basic code produced  and complete  it immediately  in the JADE development  language  to be con- 
+sistent with agile principles.  
+Finally,  our work can also be compared  to Tropos [4 8,4 9] because  Tropos builds a MAS out of an i ∗Strategic  Rationale  
+Diagram  [10] (SRD). Our Rationale  Tree is largely inspired  by the SRD structure.  Nevertheless,  Tropos distinguishes  explicitly  
+a set of design artifacts  that need to be built as a middle  layer before implementing  the MAS. We do not point to such a 
+stage but rather immediately  bridge our Rationale  Tree to a speciﬁc  MAS implementation  language  (JADE in our case) for 
+fast implementation  and agility. 
+8. Validity,  threats  to the validity,  scalability  of the approach  and future work 
+As already  evoked,  the prerequisite  to the use of our approach  is to tag the US when setting  them up. For this ﬁrst 
+speciﬁc  task, in terms of time, the investment  is limited:  at most a few minutes  per US, including  the task to encode  them 
+in the CASE-Tool.  More time would then be necessary  to create and edit the links between  US elements  in the RV. This 
+is, however,  similar  to classical  software  solution  modeling.  Moreover,  we dispose  of a clustering  algorithm  based on US 
+syntax that allows to make clusters  of relating  US as a ﬁrst step in the analysis  process;  our approach  is comparable  to [50] . 
+This allows to start modeling  on the basis of clusters  of US that are rather similar  which can save considerable  time when 
+compared  to building  Rationale  Trees on the basis of a random  organization  of US. This allows a more consistent  ﬁrst basis 
+for US elements  structuring  and grouping.  
+A few threats  to validity  could also be pointed  out and should be clariﬁed  in later validation  of the work: 
+•Accuracy  in US tagging  could impact building  a consistent  Rationale  Tree . A study on the perception  of US elements’  gran- 
+ularity using the uniﬁed  model has been performed  in [51] . The study has distinguished  different  groups  of users from 
+students  to software  development  professionals.  The results were better with experienced  modelers,  but identifying  gran- 
+ularity did not lead to major issues in any group with the condition  that the set of US was taken as a consistent  whole. 
+This, indeed,  allows to evaluate  the relative  links and hierarchy  of US elements  leading  to adequate  granularity  identiﬁ-  
+cation and thus US elements  tagging.  As “stand alone” elements,  granularity  identiﬁcation  makes no sense and is almost 
+random;  
+•Accuracy  of the Rationale  Tree with respect to the understanding  of user requirements  . The Rationale  Tree is built out of the 
+initial US set thus derived  from the primary  source of requirements  in the agile project.  As said, further  domain  analysis  
+is made during the Requirements  Analysis  Phase in order to establish  dependencies  between  US elements  and identify  
+gaps in the software  solution.  The Rationale  Tree is not an adequate  Work Product  to be used for requirements  validation  
+with Users; nevertheless  early prototypes  generated  on its basis can be quickly  validated  by users in order to evaluate  
+its adequacy  and possible  changes  to be made in the requirements  and their understanding.  The highly iterative  nature 
+of agile methods  thus limit this second  threat to validity.  
+The technique  of transforming  a set of US into Rationale  Trees is virtually  applicable  to all sizes of projects.  The complex-  
+ity of the Rationale  Trees may then vary from project  to project  and the larger the number  of US, the larger the modeling  
+effort required.  The tricky question  of scalability  can thus legitimately  be posed. The requirements  analysis  stage of our tech- 
+nique could be compared  to User Story Mapping  ( USM [52] ); the latter is applied  to projects  of any size. Splitting  US through  
+their three dimensions  will induce more modeling  effort but using the CASE-Tool  will save effort by adding  ﬂexibility  in 
+model management  comparing  to build a USM on a board or on the ground  as it is the case for larger projects.  Building  
+Rationale  Trees requires  time from the software  development  team so that the time spend during the requirements  analysis  
+stage will be increased.  Nevertheless,  the time for the design and implementation  will be lowered  thanks to this modeling  
+and structuring  effort. 
+Experience  of the process  application  on multiple  US sets showed  us that the key to the successful  application  of the 
+method  is the distance  between  the Initial User Story set and reaching  a Consistent  Rationale  Tree . The latter indeed  consti-  
+tutes the required  artifact  for be transformed  into an intelligent  system:  if it cannot be reached,  the transformation  will not 
+deliver  a satisfying  prototype.  More work should then be made on the building  of the Consistent  Rationale  Tree . So far we 
+considered  reaching  consistency  in the Rationale  Tree through  domain  analysis,  fast(er)  prototyping  should/could  also be en- 
+visaged  to reach such results.  The Rationale  Tree could then evolve from iteration  to iteration  in order to reach consistency.  
+In any case, at least basic domain  analysis  is required  to link elements  to reduce the ﬁeld of possible  organizations  between  
+US elements  and rapidly  converge  to a relevant  solution.  
+Future work also includes  the application  of the technique  on more real-life  case studies.  We will notably  proceed  to a 
+statistical  analysis  of the stakeholder’s  perception  of the relevancy  and contribution  of the Rationale  Tree for projects  they 
+have worked  on as well as the pros and cons of the agent-oriented  prototype.  The cost of the approach  in terms of time 
+and resources  and effort also still needs to be evaluated.  
+9. Conclusion  
+Agile development  methodologies  mostly focus on techniques  to manage  a software  project  in a very intuitive  and down 
+to earth way; they are not bound to a particular  implementation  technology  or paradigm.  Since requirements  are expressed  
+in a very informal  and operational  way through  US, lots of elements  relative  to the software  problem  and solution  are mixed 
+172 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+into the project  backlog.  What, at ﬁrst, may seem to be a huge drawback  in the perspective  of structuring  and studying  
+requirements  can in fact also be seen as an interesting  advantage.  Indeed,  US are expressed  in a directive  way close to the 
+way users and other stakeholders  behave  in a real life organizational  environment.  If the US set’s elements  interdependency  
+can be established,  realization  scenarios  can be built. The completeness  and redundancy  of these scenarios  can be overseen  
+as well as means-end  alternatives.  This is precisely  the way abstract  intelligent  reasoning  systems  work and, with the use of 
+agent-technology,  we can map organizational  and system  behavior.  US sets, made consistent  in the Rationale  Tree, can thus 
+be aligned  with an MAS design and be implemented  in an agent-oriented  development  language  like JADE. 
+The process  fragment  overviewed  in this paper takes advantage  of the organizational  and operational  aspects  of US to 
+build a model-driven  software  development  methodology.  As evoked  in the paper, the success  of the method’s  application  
+is mainly  dependent  on the quality  of the ﬁrst US set used as input; preliminary  work is thus required  from the APO Role to 
+deliver  a qualitative  US set. Further  work includes  the evaluation  of the maximum  distance  between  the initial US set and 
+a consistent  Rationale  Tree for the process  fragment  to deliver  value successfully.  Current  ﬁndings  have been illustrated  on 
+the development  of an android  app for carpooling.  
+Appendix  A. Requirements  analysis:  Building  a consistent  rationale  tree from a user story set 
+This section  positions  the use that we make in our agent process  fragment  of previous  contributions  at the level of the 
+requirements  analysis  stage. First of all, Section  A.1 positions  the US concept  and how we tackle US sets. The goal is to 
+start from US sets and to develop  a consistent  requirements  model providing  reasoning  abilities  that can lead to the design 
+(and implementation)  of a MAS. To this end, we tag the US set using the uniﬁed  model of US templates  (see Section  A.2 ) 
+and generate  a ﬁrst Rationale  Tree (see Section  A.3 ) that provides  the relationships  between  US elements.  Further  domain  
+analysis  is required  to enhance  the Rationale  Tree since the initial US set cannot furnish  all the required  information  for 
+building  a consistent  Rationale  Tree: round-tripping  between  the US-set view and the Rationale  Tree view is then made 
+(see Section  6.1 ). 
+A.1. Research  structure:  decomposing  a user story in descriptive  concepts  
+Fig. A.1 depicts  a meta-model  that describes  the conceptual  foundations  of the requirements  analysis  stage of our process  
+fragment.  A full description  of the meta-model  can be found in [21] , we only point here out the following  elements.  
+When eliciting  requirements,  we do not take US as a whole but decompose  it on the basis of their WHO, WHAT and –
+when available  –WHY dimensions.  These elements  are all referred  to as Descriptive_Concepts  ( D_C ) in our research.  When a 
+US set is decomposed  into D_C , possible  (decomposition)  relationships  between  various  D_C are identiﬁed  through  domain  
+analysis  (see A.2 ). To represent  the fact that various  D_C can be linked, the Link class is introduced  in the meta-model.  The 
+possible  instances  of the Link class are deﬁned  in A.3 . 
+A.2. Uniﬁed-model  of user stories’ descriptive_concepts  
+As evoked,  [13] suggests  to build a uniﬁed  model for designing  US templates.  The interested  reader can refer to the 
+latter reference  for the research  details and process,  and we use this model as reference.  Fig. A.2 shows the meta-model  of 
+Fig. A.1. A Meta-model  for user story structuring  (from [21] ). 
+Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 173 
+Fig. A.2. Uniﬁed model for user story descriptive  concepts  (from [13] ). 
+US templates.  A US template  can be designed  taking an element  from the WHO, WHAT and possibly  WHY dimensions.  The 
+link between  the classes  conceptually  represents  the link from one dimension  to the other. Concretely,  the unidirectional  
+association  from the Role to one of the Capability,  Task or Goal classes  implies  that the target class instantiates  an element  
+of the WHAT dimension  (always  tagged as wants/wants  to/needs/can/would  like in the model).  This means that “As a Role , I 
+want/want  to/need/can/would  a Capability  / Task / Goal ”a r e three possible  instances  of US template  valid with respect  to the 
+uniﬁed  US model;  the Role is thus in the WHO dimension  and the Capability,  Task or Goal is in the WHAT dimension  of the 
+US. Then, the unidirectional  association  from one of these classes  instantiating  the WHAT dimension  to one of the classes  
+instantiating  the WHY dimension  (always  tagged as so that into the model)  implies  that the target class possibly  (since 
+0 is the minimal  cardinality)  instantiates  an element  of the WHY dimension.  In other words, the templates  “As a Role , I 
+want/want  to/need/can/would  a Capability  ”a n d “As a Role , I want/want  to/need/can/would  a Capability  so that Goal ”a r e two 
+valid templates  of the US model. The second  one includes  a WHY dimension  and the ﬁrst one not. Another  US template  
+supported  by our model is for instance:  As a < Role > , I would like < Task > so that < Hard-goal  > . 
+Each concept  is associated  with a particular  syntax (identical  to the name of the class in Fig. A.2 ) and a semantic.  The 
+syntax and semantics  of the model are summarized  here. As a result of the research  conducted  in [13] , the couples  syn- 
+tax/semantic  are the following:  
+•A Role is an abstract  characterization  of the behavior  of a social actor within some specialized  context  or domain  of endeavor  ; 
+•A Task speciﬁes  a particular  way of attaining  a goal ; 
+•A Capability  represents  the ability of an actor to deﬁne, choose,  and execute  a plan for the fulﬁllment  of a goal, given certain 
+world conditions  and in the presence  of a speciﬁc  event ; 
+•A Hard-goal  is a condition  or state of affairs in the world that the stakeholders  would like to achieve  ; 
+•A Soft-goal  is a condition  or state of affairs in the world that the actor would like to achieve.  But unlike a hard-goal,  there are 
+no clear-cut  criteria  for whether  the condition  is achieved,  and it is up to the developer  to judge whether  a particular  state of 
+affairs in fact achieves  suﬃciently  the stated Soft-goal  . 
+More information  about the elements,  their granularity  and relative  position  can be found in [13,21,53]  . 
+A.3. A rationale  tree for user story sets representation  
+[21] has developed  a graphical  representation  in the form of a Rationale  Tree for US sets tagged with the uniﬁed  model 
+for US templates  depicted  previously.  These used icons as well as the possible  links between  the US elements  are summa-  
+rized in Fig. A.3 . 
+Further  comments  and explanations  can be given about the different  relationships  (links) that we can have between  the 
+different  US elements.  These are links between  elements  of the WHAT and/or of the WHY dimension.  [21] distinguishes  3 
+types of links: 
+•Means-end  links which indicate  a relationship  between  an end, and a means for attaining  it. The “means” is  expressed  in the 
+form of a task, since the notion of task embodies  how to do something,  with the “end” is  expressed  as a goal. In the graphical  
+notation,  the arrowhead  points from the means to the end [10] ; 
+•Decomposition  links are more speciﬁcally  associated  to tasks, indeed  a task element  is linked to its component  nodes by 
+decomposition  links [10] . Moreover,  A task can be decomposed  into four types of elements:  a Sub-goal,  a Sub-task,  a Resource,  
+and/or a Soft-goal  - corresponding  to the four types of elements.  The task can be decomposed  into one to many of these 
+elements...  [10] ; 
+174 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+Fig. A.3. Icons used within the representation  of the us elements  using the strategic rationale  reasoning  (from [21] ). 
+•Contribution  links for contributions  to Soft-goals,  indeed  any of these Contribution  Links can be used to link any of the 
+elements  to a Soft-goal  to model the way any of these Elements  contributes  to the satisfaction  or fulﬁllment  of the Soft-goal  
+[10] . 
+The modeler  has to create the links between  the D_C in function  of the requirements/domain  analysis.  The study and 
+linking  of elements  lead to a tree hierarchy.  That way, an analysis  (i) of the alternatives  (means-end),  (ii) of the possibly  
+missing  elements  and (iii) of the possible  redundant  elements  (in the decompositions)  can be performed.  
+References  
+[1] Dingsøyr  T, Nerur SP, Balijepally  V, Moe NB. A decade of agile methodologies:  towards explaining  agile software  development.  J Syst Softw 
+2012;85(6):1213–21.  doi: 10.1016/j.jss.2012.02.033  . 
+[2] Turk DE, France RB, Rumpe B. Assumptions  underlying  agile software-development  processes.  J Database  Manag 2005;16(4):62–87.  doi: 10.4018/jdm.  
+20 0510 0104 . 
+[3] Turk D, France RB, Rumpe B. Assumptions  underlying  agile software  development  processes.  J Database  Manag 2005;16(4):62–87  . Url: http://arxiv.org/  
+abs/1409.6610  
+[4] Highsmith  J, Cockburn  A. Agile software  development:  the business  of innovation.  IEEE Comput 2001;34(9):120–2.  doi: 10.1109/2.947100  . 
+[5] Beck K , Andres C . Extreme programming  explained:  embrace  change (2nd edition). Addison-Wesley  Professional;  2004 . 
+[6] Vlaanderen  K, Jansen S, Brinkkemper  S, Jaspers E. The agile requirements  reﬁnery:  applying  scrum principles  to software  product management.  Inf 
+Softw Technol 2011;53(1):58–70.  doi: 10.1016/j.infsof.2010.08.004  . 
+[7] Cohn M . Succeeding  with agile: software  development  using scrum. 1st. Addison-Wesley  Professional;  2009 . 
+[8] da Silva AR. Model-driven  engineering:  a survey supported  by the uniﬁed conceptual  model. Comput Lang Syst Struct 2015;43:139–55.  doi: 10.1016/j.  
+cl.2015.06.001  . 
+[9] Seidita V , Cossentino  M , Chella A . A proposal  of process fragment  deﬁnition  and documentation.  In: Cossentino  M, Kaisers M, Tuyls K, Weiss G, editors. 
+9th european  workshop  on multi-agent  systems - EUMAS 2011. Lecture Notes in Computer  Science, vol. 7541. Maastricht,  The Netherlands:  Springer;  
+2011. p. 221–37 . Revised Selected Papers 
+[10] Yu E , Giorgini P , Maiden N , Mylopoulos  J . Social modeling  for requirements  engineering.  MIT Press; 2011 . 
+[11] Yu ESK . Social modeling  and i ∗. In: Conceptual  modeling:  foundations  and applications  - essays in honor of John Mylopoulos,  vol. 5600. Information  
+Systems and Applications,  incl. Internet/Web,  and HCI, Springer Verlag Berlin Heidelberg;  2009. p. 99–121 . 
+[12] Yu ESK . Towards modeling  and reasoning  support for early-phase  requirements  engineering.  In: Proceedings  of the 3rd IEEE international  symposium  
+on requirements  engineering  (RE’97). Annapolis,  MD, USA: IEEE Computer  Society; 1997. p. 226–35 . 
+[13] Wautelet  Y , Heng S , Kolp M , Mirbel I . Unifying and extending  user story models. In: Jarke M, Mylopoulos  J, Quix C, Rolland C, Manolopoulos  Y, 
+Mouratidis  H, et al., editors. Proceedings  of CAISE 2014. LNCS, vol. 8484. Thessaloniki,  Greece,: Springer;  2014. p. 211–25 . 
+[14] Bellifemine  F , Caire G , Greenwood  D . Developing  multi-agent  systems with JADE, vol. 5. Wiley; 2007 . 
+[15] Lucassen  G , Dalpiaz F , van der Werf JMEM , Brinkkemper  S . The use and effectiveness  of user stories in practice. In: Daneva M, Pastor O, editors. 
+Proceedings  of 22nd international  working conference  on requirements  engineering:  foundation  for software  quality - REFSQ 2016. Lecture Notes in 
+Computer  Science, vol. 9619. Gothenburg,  Sweden:  Springer;  2016a. p. 205–22 . 
+[16] Van Lamsweerde  A . Requirements  engineering:  from system goals to UML models to software  speciﬁcations.  Wiley; 2009 . 
+[17] OMG . Business  Process Model and Notation  (BPMN). version 2.0.1. Technical  Report. Object Management  Group; 2013 . 
+[18] Glinz M. A glossary of requirements  engineering  terminology,  International  Requirements  Engineering  Board, version 1.4; 2012. 
+[19] van Lamsweerde  A. Goal-oriented  requirements  engineering:  a roundtrip  from research to practice. In: Proceedings  of the 12th IEEE international  
+conference  on requirements  engineering  (RE 2004). Kyoto, Japan: IEEE Computer  Society; 2004. p. 4–7. doi: 10.1109/RE.2004.25  . 
+[20] Liskin O , Pham R , Kiesling S , Schneider  K . Why we need a granularity  concept for user stories. In: Cantone G, Marchesi  M, editors. Proceedings  of the 
+15th international  conference  on agile processes  in software  engineering  and extreme programming  - XP 2014. LNBIP, vol. 179. Rome, Italy: Springer;  
+2014. p. 110–25 . 
+[21] Wautelet  Y, Heng S, Kolp M, Mirbel I, Poelmans  S. Building a rationale  diagram for evaluating  user story sets. In: Proceedings  of the 10th IEEE inter- 
+national conference  on research challenges  in information  science, RCIS 2016. Grenoble,  France: IEEE; 2016a. p. 1–12. doi: 10.1109/RCIS.2016.7549299  . 
+[22] Simon HA . The sciences of the artiﬁcial (3rd ed.). Cambridge,  MA, USA: MIT Press; 1996 . 
+[23] Anonymous  . Software  & systems process engineering  meta-model  speciﬁcation.  version 2.0. Techical Report. Object Management  Group; 2008 . 
+[24] Faulkner  S , Kolp M , Wautelet  Y , Achbany Y . A formal description  language  for multi-agent  architectures.  In: Kolp M, Henderson-Sellers  B, Mouratidis  H, 
+Garcia A, Ghose A, Bresciani  P, editors. Proceedings  of the 8th international  bi-conference  workshop  on agent-oriented  information  systems IV, AOIS 
+2006. Lecture Notes in Computer  Science, vol. 4898. Hakodate,  Japan, Luxembourg,  Luxembourg:  Springer;  2006. p. 143–63 . Revised Selected Papers 
+[25] Kolp M, Faulkner  S, Wautelet  Y. Social structure  based design patterns for agent-oriented  software  engineering.  Int J Intell Inf Technol 2008;4(2):1–23.  
+doi: 10.4018/jiit.2008040101  . 
+Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 175 
+[26] Paetsch F , Eberlein A , Maurer F . Requirements  engineering  and agile software  development.  In: Proceedings  of the 12th IEEE international  workshops  
+on enabling  technologies  infrastructure  for collaborative  enterprises  (WETICE)  2003). Linz, Austria: IEEE Computer  Society; 2003. p. 308–13 . 
+[27] Cervone HF . Understanding  agile project management  methods  using scrum. OCLC Syst Serv 2011;27(1):18–22  . 
+[28] Chung L , do Prado Leite JCS . On non-functional  requirements  in software  engineering.  In: Conceptual  modeling:  foundations  and applications  - essays 
+in honor of John Mylopoulos,  vol. 5600. Information  Systems and Applications,  incl. Internet/Web,  and HCI, Springer Verlag Berlin Heidelberg;  2009. 
+p. 363–79 . 
+[29] M. Kolp and Y. Wautelet,  DesCARTES  Architect:  Design CASE Tool for Agent-Oriented  Repositories,  Techniques,  Environments  and Systems.  Louvain 
+School of Management,  Université catholique  de Louvain, 2016. URL http://www.isys.ucl.ac.be/descartes/  . 
+[30] Shergill MPK , Scharff C  . Developing  multi-channel  mobile solutions  for a global audience:  the case of a smarter energy solution.  SARNOFF’12.  New 
+Jersey; 2012 . 
+[31] Scharff C,  Heng S, Kulkarni V. On the diﬃculties  for students  to adhere to scrum on global software  development  projects:  preliminary  results. In: 
+Faulk SR, Weiss DM, Young M, Yu L, editors. Proceedings  of the Second international  workshop  on collaborative  teaching of globally distributed  
+software  development,  CTGDSD 2012. Zurich, Switzerland:  IEEE; 2012. p. 25–9. doi: 10.1109/CTGDSD.2012.6226946  . 
+[32] Wautelet  Y, Kolp M. Business  and model-driven  development  of BDI multi-agent  systems. Neurocomputing  2016;182:304–21.  doi: 10.1016/j.neucom.  
+2015.12.022  . 
+[33] Challenger  M, Mernik M, Kardas G, Kosar T. Declarative  speciﬁcations  for the development  of multi-agent  systems. Comput Stand Interfaces  
+2016;43:91–115.  doi: 10.1016/j.csi.2015.08.012  . 
+[34] Hahn C, Madrigal-Mora  C, Fischer K. A platform-independent  metamodel  for multiagent  systems. Auton Agents Multi-Agent  Syst 2009;18(2):239–66.  
+doi: 10.1007/s10458-  008- 9042- 0 . 
+[35] Winikoff M  . Jack tm intelligent  agents: an industrial  strength platform.  In: Bordini RH, Dastani M, Dix J, Fallah-Seghrouchni  AE, editors. Multi-agent  
+programming:  languages,  platforms  and applications.  Multiagent  Systems,  Artiﬁcial  Societies,  and Simulated  Organizations,  vol. 15. Springer;  2005. 
+p. 175–93 . 
+[36] Wautelet  Y, Heng S, Kolp M, Scharff C.  Towards an agent-driven  software  architecture  aligned with user stories. In: van den Herik HJ, Filipe J, editors. 
+Proceedings  of the 8th international  conference  on agents and artiﬁcial intelligence  (ICAART 2016), vol. 2. Rome, Italy: SciTePress;  2016b. p. 337–45. 
+doi: 10.5220/0  0 05706103370345  . 
+[37] Challenger  M, Demirkol  S, Getir S, Mernik M, Kardas G, Kosar T. On the use of a domain-speciﬁc  modeling  language  in the development  of multiagent  
+systems. Eng Appl AI 2014;28:111–41.  doi: 10.1016/j.engappai.2013.11.012  . 
+[38] Getir S, Challenger  M, Kardas G. The formal semantics  of a domain-speciﬁc  modeling  language  for semantic  web enabled multi-agent  systems. Int J 
+Coop Inf Syst 2014;23(3):1450  0 05. doi: 10.1142/S021884301450  0 051 . 
+[39] García-Magariño  I. Towards the integration  of the agent-oriented  modeling  diversity  with a powertype-based  language.  Comput Stand Interfaces  
+2014;36(6):941–52.  doi: 10.1016/j.csi.2014.02.002  . 
+[40] Gonçalves  EJT, Cortés MI, de Campos GAL, Lopes YS, Freire ESS, da Silva VT, et al. MAS-ML  2.0: Supporting  the modelling  of multi-agent  systems with 
+different  agent architectures.  J Syst Softw 2015;108:77–109.  doi: 10.1016/j.jss.2015.06.008  . 
+[41] Chella A , Cossentino  M , Sabatucci  L , Seidita V . Agile passi: an agile process for designing  agents. Int J Comput Syst Sci Eng 2006;21(2):133–44  . 
+[42] DeLoach SA , Matson ET , Li Y . Applying  agent oriented software  engineering  to cooperative  robotics. In: Proceedings  of FLAIRS conference;  2002. 
+p. 391–6 . 
+[43] Wood MF , DeLoach SA . An overview  of the multiagent  systems engineering  methodology.  In: Agent-oriented  software  engineering.  Springer;  2001. 
+p. 207–21 . 
+[44] Gaur V , Soni A . A novel approach  to explore inter agent dependencies  from user requirements.  Proc Technol 2012;1:412–19  . 
+[45] Tenso T , Taveter K . Requirements  engineering  with agent-oriented  models. In: Proceedings  of Evaluation  of Novel Approaches  to Software  Engineering  
+ENASE; 2013. p. 254–9 . 
+[46] Carrera Á, Iglesias CA , Garijo M . Beast methodology:  an agile testing methodology  for multi-agent  systems based on behaviour  driven development.  
+Info Syst Front 2014;16(2):169–82  . 
+[47] Gascueña  JM , Fernández-Caballero  A . Prometheus  and INGENIAS  agent methodologies:  a complementary  approach.  In: Luck M, Gómez-Sanz  JJ, editors. 
+Proceedings  of the 9th international  workshop  on agent-oriented  software  engineering  IX, AOSE 2008. Lecture Notes in Computer  Science, vol. 5386. 
+Estoril, Portugal:  Springer;  2008. p. 131–44 . Revised Selected Papers 
+[48] Bresciani  P , Perini A , Giorgini P , Giunchiglia  F , Mylopoulos  J . Tropos: an agent-oriented  software  development  methodology.  Auton Agents Multi-Agent  
+Syst 2004;8(3):203–36  . 
+[49] Castro J , Kolp M , Mylopoulos  J . Towards requirements-driven  information  systems engineering:  the Tropos project. Inf Syst 2002;27(6):365–89  . 
+[50] Lucassen  G , Dalpiaz F , van der Werf JMEM , Brinkkemper  S . AQUSA: the automatic  quality user story artisan for agile software  development.  In: 
+Joint proceedings  of workshops,  doctoral symposium,  research method track, and poster track co-located  with the 22nd international  conference  on 
+requirements  engineering:  foundation  for software  quality (REFSQ 2016). Gothenburg,  Sweden;  2016 . 
+[51] Velghe M. Requirements  engineering  in agile methods:  contributions  on user story models, Belgium:  KU Leuven; 2015. Master’s thesis . Url: http: 
+//www.isys.ucl.ac.be/descartes/ThesisMattijs.pdf  
+[52] Patton J , Economy  P . User story mapping:  discover the whole story, build the right product. 1st. O’Reilly Media, Inc.; 2014 . 
+[53] Wautelet  Y , Heng S , Hintea D , Kolp M , Poelmans  S . Bridging user story sets with the use case model. In: Link S, Trujillo J, editors. Proceedings  of 
+Workshops  in Advances  in Conceptual  Modeling  - ER 2016 , AHA, MoBiD, MORE-BI,  MReBA, QMMQ, SCME, and WM2SP. Lecture Notes in Computer  
+Science, vol. 9975. Gifu, Japan; 2016c. p. 127–38 . 
+Yves Wautelet  is an Assistant  Professor  in Information  Systems at KU Leuven, Belgium.  He formerly  has been an IT project manager  and a Postdoc Fellow at 
+Universitécatholique  de Louvain, Belgium.  He completed  a Ph.D. thesis focusing on project and risk management  issues in large enterprise  software  design. 
+Yves also holds a Master of Management  Sciences as well as a Master of Information  Systems.  His research interests  include various aspects of software  
+engineering  and enterprise  information  systems such as life-cycle  management,  requirements  engineering,  agent-oriented  development  and e-learning.  He 
+also focuses on the application  of his research into industrial  environments.  
+Samedi Heng is a research assistant  at the Louvain Research  Institute in Management  and Organization  attached  to the Center in Management  Information  
+Systems at the Universitécatholique  de Louvain. He was previously  a lecturer in Computer  Science at the Institute of Technology  of Cambodia  (ITC) from 
+2007 to 2010. He got a Ph.D. degree in Information  Systems from the Universitécatholique  de Louvain in 2017 with a PhD untitled “Impact of Uniﬁed User- 
+Story-Based  Modeling  on Agile Methods:  Aspects on Requirements,  Design and Life Cycle Management.”He  also obtained  a Master’s degree in Networking  
+and Telecommunication  from the Institut National Politechnique  de Toulouse,  France in 2007 supported  by the French Government  Scholarships  and an 
+engineering  degree in Computer  Science from ITC in 2006. His research interests  include Software  Engineering,  Agile Methods,  Requirements  Engineering,  
+Multi-Agent  Systems,  Business  Intelligence  and Business  (Re)engineering.  
+Soreangsey  Kiv holds an engineering  degree in Computer  Science from the Institute of Technology  of Cambodia  (ITC) in 2011 including  a ﬁnal year at the 
+Polytechnic  University  of Turin, Italy under the Eramus Mundus exchange  program.  She then obtained  in 2012 a Master’s degree in Advanced  Information  
+Systems and Software  Engineering  from the Joseph Fourier University,  Grenoble,  France. She worked as a lecturer in Computer  Science at ITC from 2012 to 
+2014 then as a research engineer  for a start-up company  in France. Since September  2015, SoreangseyKiv  has been working as a Ph.D. research assistant  
+at the Louvain Research  Institute in Management  and Organization  (LouRIM)  attached  to the Center in Management  Information  Systems (CEMIS). Her 
+research interests  include Software  Engineering,  Agile Methods,  Requirement  Engineering,  Enterprise  Resource  Planning  and Business  (Re)engineering.  
+176 Y. Wautelet  et al. / Computer  Languages,  Systems & Structures  50 (2017) 159–176 
+Manuel Kolp is Full Professor  in IT Management  and Information  Systems at UCLouvain  where he heads the Center in Management  Information  Systems.He  
+was previously  Adjunct Professor  at the Faculty of Information  and Senior Research  Associate  at the Department  of Computer  Science at the University  of 
+Toronto, Canada. He is or has been appointed  invited professor  at KULeuven,  the University  of Brussels,  the University  of Namur and the University  Saint- 
+Louis-Brussels.Manuel  Kolp has about 150 publications  in international  journals,  books and scientiﬁc  conferences  and has supervised  a dozen of Ph.D. 
+theses. He acts regularly  as an expert for the European  Commission  and foreign and national research agencies on projects focusing on IT and software  
+engineering.  He will be co-general  chair of RCIS 2019, the IEEE 13th International  Conference  on Research  Challenges  in Information  Science.His  main 
+expertise  is related to Information  Systems Analysis and Design, Data and Information  Management,  Software  Project Management,  Business  Process and 
+Requirements  Modeling  and Agent-Oriented/Knowledge  Systems,  ﬁelds for which he also serves regularly  as an expert, consultant  and executive  educator  
+for (IT) companies  and managers.He  did a PostDoc in Computer  Science (Requirements  Engineering  and Multi-Agent  Systems)  at the University  of Toronto, 
+Canada and got a Ph.D. degree in Information  Sciences (Information  Systems)  from the University  of Brussels supported  by the Belgian National Fund for 
+Scientiﬁc  Research  (FNRS). He also holds an MIS and an M.A. degrees from the same university.  

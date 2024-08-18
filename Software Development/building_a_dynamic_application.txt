@@ -1,0 +1,235 @@
+1Paper 21-27
+Library and File Management: 
+Building a Dynamic Application
+Arthur L. Carpenter, Data Explorations
+Richard O. Smith, Data Explorations
+ABSTRACT
+In order for a SAS® application to be dynamic, it
+must be able to automatically find the programsthat make it work and the data that it is to workagainst.  It must know where to write its output andwhere to store any new data sets that it creates. More importantly it must do these things withoutintervention on the part of the user.  Even moreimportantly the application must not confuse thecomponents of one project or task with those ofanother.  The structure and organization of thelibraries and directories is central to this ability.
+Dynamic applications are written to be portable
+across projects and a key component of theapplication must necessarily be the structure andlocation of appropriate files and libraries.  Whilemany different styles of organization are possible, ahigh degree of organization is required.  Of courseyou will need to know what type and how muchstructure is required for your projects.
+This paper discusses the issues surrounding the
+organization of the libraries and directoriesassociated with a dynamic application. 
+KEYWORDS
+dynamic application, directory structure,
+AUTOCALL libraries, compiled stored macros,autoexec
+INTRODUCTION
+Applications that will be used across projects,
+systems, and even platforms must be written toaccommodate the variety of situations that will beencountered.  As a developer of the application,
+you will need to take into consideration a numberof aspects that will need to be coordinated withinthe framework of the application.  One of yourcritical issues will be to build into the applicationthe ability to locate and use, not only the programsthat make up the application, but also the data thatare specific to a particular project or task within theapplication.  The overall structure of the directories, namingconventions used within the application, and thelocation of libraries and files all play pivotal rolesin determining the success and maintainability ofyour application.  You need to be able to create alogical directory structure that will be reusable foreach project.  Since many of the programs andmacros used within the application will requiredynamic project specific information, namingconventions must be established and strictlyadhered to.  The location of data, both projectspecific and data general to the overall application,must be specified and consistent.  These locationsusually depend heavily on the directory structure.
+The examples in this paper are based on
+applications developed by the authors.  We want toshow you how we solved various problems,however these solutions are not dictates or evennecessarily the best solution for your ownapplication.  We instead present these solutionsbecause they have worked for us.
+Although the examples in this paper are all based
+on applications written for Directory basedoperating systems, the concepts apply equally wellto file based systems such as MVS.  Also the
+SUGI 27 Applications Development
+ 
+2choices of path and directory structures presented
+here are specific to the presented application andare not intended to be dictates for yourapplications.
+USING THE AUTOEXEC.SAS
+By default whenever the SAS System is started, it
+searches for a program called AUTOEXEC.SAS inthe !SASROOT directory, and when present, thisprogram is automatically executed.  TheAUTOEXEC.SAS  is an ordinary SAS program; itcan contain DATA steps, macro calls, and macrovariable definitions just as can any other program. Typically AUTOEXEC.SAS is used to define theenvironment of the current SAS session.
+Actually you can customize this process by
+renaming the program and/or by placing it in someother directory.  Usually the program name ofAUTOEXEC.SAS is not changed but its location isoften changed to a project or task specific location. SAS must be pointed to the new location, andunder Windows operating systems, this isaccomplished through the use of the -AUTOEXECoption that is invoked at system initialization.  Thisoption is demonstrated in the example dealing withcreating shortcuts below.  For other operatingsystems you should consult your SAS Companionfor more details.
+Portions of a sample AUTOEXEC.SAS program
+are shown below.  This AUTOEXEC is used to setup the environment for an application, which isthen also started from within the AUTOEXEC.
+In this AUTOEXEC three macro variables that will
+be used throughout the application are globalized/Gcf.  These are &PATH, &TST, and &PROJECT.  
+Each will be explained in more detail in the sectionon Path Control.  The macro variable &PATH isused to declare the top of the directory structure /Gd0. 
+Since all aspects of the application are beneath thisportion of the path, this makes the applicationportable from machine to machine or from oneplace on the network to another.  The macrovariable &TST is used to setup a parallel
+test/production environment.  During production itis set to null /Gd1.  A project specific name or code is
+stored in &PROJECT /Gd2.  Together these three
+macro variables are used to define the full directorystructure down to the project level.
+* Establish GLOBAL Macro variables for this
+application;
+%global tst path project; /Gcf
+* Set up the general path for this application;%let path = e:\clinical\bigprojs; 
+/Gd0
+* tst - test (tst) or production ( ); %let tst = ;       * Production; 
+/Gd1
+*%let tst = tst;    * test environment;
+* Project title;
+%let project = XYZ; /Gd2
+The three macro variables &PATH, &TST, and
+&PROJECT are used in the next portion of theAUTOEXEC to name the location for the macroautocall libraries /Gd3, which are used to store macro
+definitions.  Autocall libraries and libraries ofcompiled stored macros are discussed later in thispaper.  The %LIBNAMES macro /Gd4 is used to
+define ALL of the application's  librefs  and filerefs
+and its definition is stored in the autocall library. The application is then started by using a DMstatement /Gd5.
+* Define the location for the macros;
+optionsnoxwait xsync mautosource
+sasautos=("&path\&project&tst\pgms\sasmacro" 
+/Gd3
+          "&path\allproj\pgms\sasmacro");
+* Define Librefs and Filerefs for this project;
+%libnames /Gd4
+* Execute the application;dm "af cat=appls.&project..userid.program" af; 
+/Gd5
+Usually you will want to use a different
+AUTOEXEC.SAS program for each project or taskthat you are working on.  Under Windows this iseasily accomplished by creating a shortcut for eachtask and by making sure that each shortcut points to
+SUGI 27 Applications Development
+ 
+3
+its own specific AUTOEXEC program.
+In the properties for the shortcut, look under the
+SHORTCUT tab for the TARGET: dialog box.  Itis here that you will find the command to executeSAS.  Following the ....\SAS.EXE add the-AUTOEXEC execution option with theappropriate path to the AUTOEXEC program:
+.....\sas.exe -autoexec
+e:\clin\bigproj\xyz\pgms\autoexec.sas 
+FOLDER OR DIRECTORY STRUCTURE
+There is more than one philosophy regarding the
+appropriate use of folder and directory structurewhen setting up a project or study.  Aside from theall too often encountered, 'put it anywhere-locationdoes not really matter' philosophy known asanarchy, there are four structures that arecommonly attempted.  These structure typesinclude:• data • flat (no discernable sub-folder structure)•t a s k• project
+The determining factor as to which type of
+structure will be chosen will be based on where inthe structure hierarchy the primary or commonelement resides.
+DATA STRUCTURE
+When a large common data base is established tobe used by a number of projects or tasks, the datasets themselves may drive the structure making ithigher in the file hierarchy.  A structure builtaround a data base for 'InPatient’ and ‘AdverseEvent’ information might be something like:In this scheme the programs for all projects and
+tasks reside in directories under the type of datawith which they are associated.
+FLAT STRUCTURES
+Flat structures minimize subdirectories by placingmost data and program folders on the same level. While this structure is the least complex (nothing ishidden in sub-folders), it is not really suitable foranything other than simple projects and tasks. Because all folders for all projects are on the samelevel, individual projects may be harder toorganize.  Simple projects that make use of thisstructure probably do not need to take advantage ofthe concepts discussed in this paper.
+TASK STRUCTURES
+Task oriented structures are used when the task orreport is foremost.  This structure might beemployed when a common task is applied acrossprojects and for a variety of data sets.  The taskitself is the constant.  A task structure mightinclude:
+SUGI 27 Applications Development
+ 
+4
+In this type of structure the data from different
+studies  may or may not share a common sub-directory.  Usually this structure is used when thedata sets are very similar and the analysis and dataprep programs will work for any study underconsideration.
+PROJECT STRUCTURE
+Since many of the applications that we haveinstalled are project based, each with their ownindependent data sets and analysis programs, wemost commonly employ a project orientedstructure.  We have found that this gives us themost flexibility when establishing applications thatneed to be portable and dynamic.  The structurefollows a hierarchy with the project highest in thedirectory tree.  A typical structure is shown below.We have found that some programs, especially
+macro tools, are used by all projects.  We locatethese programs and macros in the \AllProj folder,which is made available to all the projects byincluding it in the AUTOCALL macro libraries. 
+Because all information specific to a project is
+stored under one folder, it is very easy to move,archive, and locate information on that project. When the same structure is used consistently foreach project, it becomes fairly easy to locatespecific information across all projects e.g. the AE
+data in the \Analysis subdirectory for all projects. The examples shown below assume a PROJECTstructure, but would apply equally to either theDATA or TASK structures.
+PATH CONTROL
+By creating global macro variables that can be used
+to identify the locations of the directory structure ofinterest it is possible, to construct ALL
+ references
+to location (typically libref s and fileref s) to be
+independent of file structure except in terms of
+SUGI 27 Applications Development
+ 
+5these variables.
+&PATH
+This macro variable contains all of the structureabove the project name.  Usually this starts at thedrive letter and extends as many levels as isnecessary to get down to the level above theproject.
+&PROJECT
+This is a project name or code.  Since this variablemay also be used in the titles of project reports oreven as a constant in some of the data sets, itshould be descriptive but not overly long.  Whenthe length of this variable is a problem because ofcompeting uses, having two variables, one to holdthe project code and another to hold the projectlabel, may prove to be useful.  
+&TST
+Often it is useful to set up two parallel structuresone for testing and another for production.  Sincewe want to use the same software for both, but onlywant to point to different locations, we can set up amacro variable that takes on a null value forproduction and some code for testing (we use TSTbelow).
+Combining these there macro variables allows us to
+specify the all items that change from project toproject outside of the application.
+filename critvar
+"&path\&project&tst\list\gnrlrpts\critvar.lst";libname  audit    "&path\&project&tst\data\live\audit";              
+When in the test environment ( %let tst=tst; ) for
+the definitions used above, these two statements
+become:
+filename critvar 
+"e:\clinical\bigprojs\xyztst\list\gnrlrpts\critvar.lst";libname  audit   "e:\clinical\bigprojs\xyztst\data\live\audit";              
+When starting a new project or when moving aproject from one network drive to another,
+changing ALL libref s in all the programs is as
+simple as changing one macro variable definition inone place in the AUTOEXEC.SAS program.  Afurther discussion of the definition of libref s and
+fileref s is included below in the section “Unified
+Libref and Fileref  Definitions”.
+USING MACRO LIBRARIES
+The use of macros is essential to an automated and
+flexible system.  This implies that the control of themacro code is very important to the maintenance ofthe application.  All to often macro definitionsbecome buried within the programs that use them. The result is often a proliferation of multipleversions of similar macros.  Parallel code, twoprograms or macros that do essentially the samething, is an especially difficult problem in largeapplications that are maintained by multipleprogrammers.  Even when there is only oneprogrammer, there is a tendency to “clone withslight modifications” a program.  
+Macro libraries are used to avoid this problem by
+providing a single location for all macrodefinitions.  Rather than cloning the macro, it isadapted (generalized) to fit each of its callingprograms and then stored in one of the libraries. Obviously this requires documentation as well asdiligence.  Part of the solution is to place ALLmacro definitions in a common library, which isaccessible to all programs in the application.  Atleast this way no macro definition will be 'buried'within a program.
+There are three types of macro libraries.  The least
+sophisticated is the use of %INCLUDE files tostore macro definitions.  While this solution canavoid the problems associated with duplicate code,it is usually inefficient because macro definitionsthat are not needed are often loaded along with theones that are needed.  The AUTOCALL andCompiled Stored Macros Libraries provide moreefficient solutions.
+SUGI 27 Applications Development
+ 
+6Macros are compiled before they are executed and
+it is possible to store the compiled code for futureuse.  Compiled macros are stored in a catalogcalled SASMACR.  By default this catalog isstored in the WORK library and when a macro iscalled, SAS automatically searches this catalog forthe compiled macro.  Permanently compiled storedmacros are written to a catalog with the samename, but which is stored in a different library. The library is specified using the SASMSTORE=option.  Normally the options to make use of thislibrary are turned off (NOMSTORED).  
+The following OPTIONS statement turns on the
+use of compiled stored macros and designates thetwo libref s PROJSTOR and ALLMSTOR as the
+locations to search for the compiled stored macrocatalog.  If the compiled macro is in both catalogs,the definition first found will be used (read left toright).
+options mstored sasmstore=(projstor allmstor);
+The compiled version of the macro is stored byincluding the /STORE option on the %MACROstatement.  For the SASMSTORE definition abovethe macro AERPT below will be stored in the PROJSTOR.SASMACR catalog.
+%macro aerpt(dsn, stdate, aelist) / store;
+When a macro is not found in the compiled storedmacro library the AUTOCALL library is searched. This library consists of macro definitions (the code)that have not yet been compiled.  By default theability to make use of the AUTOCALL facility isturned on (MAUTOSOURCE).  When a macro iscalled, SAS searches for a file in the AUTOCALLlocation with the SAME name as the name of themacro.  The code in the corresponding file is thensubmitted for processing.  Since this file containsthe macro definition, the macro is then compiledand made available for execution.   
+The following code makes sure that the autocall
+facility is available (MAUTOSOURCE) andspecifies the FILEREF s of the locations
+(SASAUTOS=) that contain the SAS programswith the macro definitions. 
+options mautosource sasautos=(projauto allauto
+sasautos);
+Be sure that you use fileref s NOT libref s, and
+include the automatic fileref  SASAUTOS so that
+the autocall macros provided with SAS will also beavailable. 
+UNIFIED LIBREF  AND FILEREF
+DEFINITIONS
+Once the library structure has been formalized it is
+equally important that the assignment of librefs
+(and filerefs ) be controlled in a unified way.  The
+first step is to never use path information instead oflibref s and fileref s within the program.  This means
+that LIBNAME and FILENAME statements will beused to define (all if possible) locations.  Thisapproach makes the programs much more portablewhen path information changes.
+Additional control can be maintained if as many, as
+is possible, of the libref s and fileref s are defined at
+a single location within the application.  We use amacro (%LIBNAMES) that contains theLIBNAME and FILENAME statements.  This is anAUTOCALL macro, and it is called from withinthe AUTOEXEC.
+A portion of the %LIBNAME macro might
+contain:
+%macro libnames;
+* Libnames used in applications;libname appls ("&path\allproj\pgms\appls"              "&path\&project&tst\pgms\appls")               access=readonly;
+* Filenames;
+filename dbdirsas  "&path\allproj\pgms\primary\dedsn.sas";filename vrdirsas  "&path\allproj\pgms\primary\devar.sas";filename cmprlog "&path\&project&tst\list\compare\compare.log";
+SUGI 27 Applications Development
+ 
+7
+filename cmprlst
+"&path\&project&tst\list\compare\compare.lst";
+* Primary Project libnames;
+libname coded  "&path\&project&tst\dictnary\live\coded";libname notcoded  "&path\&project&tst\dictnary\live\notcoded";libname editlog  "&path\&project&tst\data\live\editlog";%mend libnames;
+                       
+Notice that each of the paths utilizes the global&PATH macro variable and each of the projectspecific paths also includes the &PROJECT and&TST macro variables which were describedabove.
+SUMMARY
+Dynamic applications require a very structured
+approach to the organization of the data andprograms.  The use of macros and macro librariesprovides a essential tool in the tracking of thevarious components, however unless you arecareful when you set up the very structure of thefolders and sub-folders, it becomes very difficult tocoordinate the activities of the application.  
+How you organize your data and programs should
+depend on the kinds of tasks that you perform. Your application can then be written to takeadvantage of this structure.  You will need to thinkabout how your work is performed, and to whatuses your application will be put.  When the sameprograms are run on similar data sets acrossprojects, a DATA driven structure may beappropriate.  When the task itself drives what youwill be doing e.g. various programs on the AE data,you may want to take a TASK approach to theorganization.  PROJECT structures apply wheneach project or protocol is unique or distinct andtasks within the project vary.
+The use of the AUTOEXEC and of macro libraries
+(Compiled/Stored or AUTOCALL) will greatlyassist in the automation of your application.  Dynamic applications are automated applications. 
+They require planning and forethought, but therewards are tremendous gains in efficiency andorganization.
+ABOUT THE AUTHORS
+Richard Smith and Art
+Carpenter are senior partnersat Data Explorations.  Data
+Explorations, a SAS Quality Partner
+TM, provides
+data management, analyses, and SAS programmingservices nationwide.
+Arthur L. Carpenter
+Art Carpenter is a  SAS
+Certified Professional
+TM. 
+His publications list
+includes three books on SAS topics ( Annotate:
+Simply the Basics , Quick Results with
+SAS/GRAPH® Software , and Carpenter's Complete
+Guide to the SAS® Macro Language ), two chapters
+in Reporting from the Field , and numerous papers
+and posters presented at various user groupconferences.  Art has been using SAS since 1976and has served in a variety of positions in usergroups at the local, regional, and national level.
+Richard O. Smith
+Richard Smith has a masters in Biology/Ecology
+and has provided complete data management andanalysis services for numerous environmentalresearch projects as a senior biologist, SASprogrammer, and project manager.  He has alsoprovided programming and management servicesfor the health related industries.  He has been usingSAS extensively since 1981.
+AUTHOR CONTACT
+Data Explorations
+2270 Camino Vida Roble, Suite LCarlsbad, CA 92009
+SUGI 27 Applications Development
+ 
+8Arthur L. Carpenter
+(760) 945-0613art@caloxy.com
+Richard O. Smith(760) 438-1336ROSmith@SciX.com
+REFERENCES
+Burlew, Michele M., SAS® Macro Programming
+Made Easy , Cary, NC: SAS Institute, Inc., 1998,
+280 pp.
+Carpenter, Arthur L., Carpenter's Complete Guide
+to the SAS® Macro Language , Cary, NC: SAS
+Institute Inc., 1998, 242 pp.
+Carpenter, Arthur L. and Richard O. Smith,
+"Clinical Data Management: Building a DynamicApplication", Proceedings of the PharmaSUG
+Annual Conference , 2000.  Also published in the
+Proceedings of the 7
+th Annual Conference of the
+Western Users of SAS Software , 2000, pp3-8. 
+SAS Institute Inc., SAS® Macro Language:
+Reference, First Edition , Cary, NC: SAS Institute
+Inc., 1997, 304 pp.
+TRADEMARK INFORMATION
+SAS, SAS Certified Professional, and SAS Quality
+Partner are registered trademarks of SAS InstituteInc. in the USA and other countries.® indicates USA registration.
+SUGI 27 Applications Development
+ 

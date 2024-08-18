@@ -1,0 +1,793 @@
+ScienceDirect
+Available online at www.sciencedirect.com
+Procedia Computer Science 159 (2019)  630–639
+1877-0509 © 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.
+10.1016/j.procs.2019.09.218
+10.1016/j.procs.2019.09.218 1877-0509© 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+An Ontology-based Approach for Failure Classiﬁcation in Predictive
+Maintenance Using Fuzzy C-means and SWRL Rules
+Qiushi Caoa,∗, Ahmed Sametb, Cecilia Zanni-Merka, Franc ¸ois de Bertrand de Beuvronb,
+Christoph Reichc
+aNormandie Universit´ e, INSA Rouen, LITIS, 76000 Saint- ´Etienne-du-Rouvray, France
+bICUBE/SDC Team (UMR CNRS 7357)-Pole API BP 10413, 67412 Illkirch, France
+cHochschule Furtwangen University, 78120 Furtwangen, Germany
+Abstract
+Within manufacturing processes, anomalies such as machinery faults and failures may lead to the outage situation of production
+lines. The outage of production lines is detrimental for the availability of production systems and may cause severe economicloss. To avoid the economic loss that may be caused by the outage situation, the prediction of anomalies on production lines is a
+crucial concern for manufacturers. Recently, data mining techniques have been applied to the manufacturing domain for predicting
+occurrence time of anomalies, such as the moment of machinery failure. However, existing predictive maintenance approaches
+have been limited to the prediction of the time of occurrence of machinery failures, while lacking the capability for identifying
+the criticality of the failures. This may lead to inappropriate maintenance plans and strategies. In this context, in this paper, we
+introduce a novel ontology-based approach to facilitate predictive maintenance in industry. The proposed approach is a combination
+use of fuzzy clustering and semantic technologies, where fuzzy clustering techniques are used to learn the criticality of failures
+based on machine historical data, and semantic technologies use the results of fuzzy clustering to predict the time of failures and
+the criticality of them. As results, a domain ontology for modeling predictive maintenance knowledge is developed, and a set of
+Semantic Web Rule Language (SWRL) predictive rules are proposed to reason about the time and criticality of machinery failures.
+A case study on a real-world industrial data set is followed to evaluate the usefulness and eﬀectiveness of the proposed approach.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords: Industry 4.0; Predictive maintenance; Ontologies; SWRL rules; Fuzzy clustering
+∗Corresponding author. Tel.: +33 769660272.
+E-mail address: qiushi.cao@insa-rouen.fr
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+An Ontology-based Approach for Failure Classiﬁcation in Predictive
+Maintenance Using Fuzzy C-means and SWRL Rules
+Qiushi Caoa,∗, Ahmed Sametb, Cecilia Zanni-Merka, Franc ¸ois de Bertrand de Beuvronb,
+Christoph Reichc
+aNormandie Universit´ e, INSA Rouen, LITIS, 76000 Saint- ´Etienne-du-Rouvray, France
+bICUBE/SDC Team (UMR CNRS 7357)-Pole API BP 10413, 67412 Illkirch, France
+cHochschule Furtwangen University, 78120 Furtwangen, Germany
+Abstract
+Within manufacturing processes, anomalies such as machinery faults and failures may lead to the outage situation of production
+lines. The outage of production lines is detrimental for the availability of production systems and may cause severe economicloss. To avoid the economic loss that may be caused by the outage situation, the prediction of anomalies on production lines is a
+crucial concern for manufacturers. Recently, data mining techniques have been applied to the manufacturing domain for predicting
+occurrence time of anomalies, such as the moment of machinery failure. However, existing predictive maintenance approaches
+have been limited to the prediction of the time of occurrence of machinery failures, while lacking the capability for identifying
+the criticality of the failures. This may lead to inappropriate maintenance plans and strategies. In this context, in this paper, we
+introduce a novel ontology-based approach to facilitate predictive maintenance in industry. The proposed approach is a combination
+use of fuzzy clustering and semantic technologies, where fuzzy clustering techniques are used to learn the criticality of failures
+based on machine historical data, and semantic technologies use the results of fuzzy clustering to predict the time of failures and
+the criticality of them. As results, a domain ontology for modeling predictive maintenance knowledge is developed, and a set of
+Semantic Web Rule Language (SWRL) predictive rules are proposed to reason about the time and criticality of machinery failures.
+A case study on a real-world industrial data set is followed to evaluate the usefulness and eﬀectiveness of the proposed approach.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords: Industry 4.0; Predictive maintenance; Ontologies; SWRL rules; Fuzzy clustering
+∗Corresponding author. Tel.: +33 769660272.
+E-mail address: qiushi.cao@insa-rouen.fr
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.1. Introduction
+With the current trend of automation and data exchange in manufacturing technologies, traditional manufacturing
+factories are transforming into so-called “smart factories”, which apply high-tech sensing and computation technolo-
+gies on diﬀerent manufacturing processes and production systems. As today’s manufacturing market is becoming more
+competitive, how to improve the availability, sustainability, and quality of manufacturing services in smart factories isa crucial concern for manufactures. This situation has triggered the demand for implementing predictive maintenanceon production lines, which refers to the maintenance activities that are performed to avoid failure occurrences and toimprove the availability and safety of the maintained system.
+In the domain of predictive maintenance, prediction of the moments of future anomalies (outliers) is an impor-
+tant aspect to prevent and resolve persistent dilemmas in maintenance management [2]. Normally, such a prediction
+approach starts with collecting and analyzing the historical data that are collected from the system being monitored.
+During the data collection and analysis phase, data mining techniques are widely used for automatically discoveringknowledge from data sets. However, existing predictive maintenance approaches in the manufacturing domain arelimited to the deployment of condition monitoring systems for detecting anomalies and predicting the time of ma-chinery failures in the future, while lacking the solutions for identifying the criticality of machinery failures, based on
+their temporal information [2]. Also, to have a comprehensive understanding of the data mining results, it is required
+for users to have a deep understanding of the domain. This may bring obstacles to novice users for planning and
+performing adequate maintenance strategies. To deal with this issue, using ontology-based approaches can serve as agood representation for data mining results, since they can represent the extracted patterns in a formal and structured
+format, and give rich semantics to the data mining results. By deﬁnition, an ontology is a speciﬁcation of represen-
+tational vocabulary for a shared domain, and it is developed to support the sharing and interpretation of formally
+represented knowledge in artiﬁcial intelligence systems [11]. In this context, to ease the interpretation and reuse of
+data mining results, and to facilitate the classiﬁcation of machinery failures according to their time of occurrences,
+semantic technologies, especially ontologies with their rule-based extensions are of paramount importance.
+In this paper, we propose a novel hybrid ontology-based approach for predictive maintenance in manufacturing
+processes. The proposed approach is a combination use of fuzzy clustering and semantics. Among them, fuzzy clus-
+tering approaches, such as fuzzy c-means (FCM) [5], is used to learn the criticality of diﬀerent failures in machine
+historical data. The diﬀerent time duration from normal conditions of machinery to the failures are used as training
+examples to FCM with three ﬁxed classes: High Criticality, Medium Criticality, and Low Criticality, which indicate
+the three levels of failure criticality. On the other hand, semantic technologies, such as ontologies and logic rules areused to predict the time and criticality of future failures. As results, the Manufacturing Failure Prediction Ontology
+(MFPO) is developed, and a set of Semantic Web Rule Language (SWRL) predictive rules [14] are proposed to rea-
+son about the criticality of machinery failures. To elaborate the proposed approach, a real-world data set about an
+industrial semi-conductor manufacturing process is used to demonstrate the whole process.
+The remainder of the paper is structured as follows. In Section 2, the related works about using ontology-based
+approaches for predictive maintenance are introduced. In Section 3, the proposed ontology-based approach is demon-
+strated, including the description of the MFPO ontology, and the fuzzy SWRL rules for classifying failures. Section4elaborates the proposed approach according to a real-world industrial data set. Section 5concludes the paper and
+outlines future perspectives.
+2. Related work
+As the manufacturing domain is becoming more dynamic and knowledge-intensive, the use of semantic technolo-
+gies, especially ontology-based approaches for predictive maintenance turned to be a notable research topic. Recently,
+several ontologies and their rule-based extensions were proposed to facilitate knowledge representation and reuse in
+the predictive maintenance domain. In this section we review the most relevant research works.
+The knowledge model for ﬂeet predictive maintenance, introduced in [16], was developed to handle contextual
+knowledge within a ﬂeet scale. In their work, the authors developed a domain ontology to categorize ﬂeet elements
+into three levels. This categorization of ﬂeet elements enables the analysis of contextual data from diﬀerent levels,
+thus enabling the analysis of abnormal health conditions from diﬀerent components within a ﬂeet system. For the pre-
+ Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639 631Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+An Ontology-based Approach for Failure Classiﬁcation in Predictive
+Maintenance Using Fuzzy C-means and SWRL Rules
+Qiushi Caoa,∗, Ahmed Sametb, Cecilia Zanni-Merka, Franc ¸ois de Bertrand de Beuvronb,
+Christoph Reichc
+aNormandie Universit´ e, INSA Rouen, LITIS, 76000 Saint- ´Etienne-du-Rouvray, France
+bICUBE/SDC Team (UMR CNRS 7357)-Pole API BP 10413, 67412 Illkirch, France
+cHochschule Furtwangen University, 78120 Furtwangen, Germany
+Abstract
+Within manufacturing processes, anomalies such as machinery faults and failures may lead to the outage situation of production
+lines. The outage of production lines is detrimental for the availability of production systems and may cause severe economicloss. To avoid the economic loss that may be caused by the outage situation, the prediction of anomalies on production lines is a
+crucial concern for manufacturers. Recently, data mining techniques have been applied to the manufacturing domain for predicting
+occurrence time of anomalies, such as the moment of machinery failure. However, existing predictive maintenance approaches
+have been limited to the prediction of the time of occurrence of machinery failures, while lacking the capability for identifying
+the criticality of the failures. This may lead to inappropriate maintenance plans and strategies. In this context, in this paper, we
+introduce a novel ontology-based approach to facilitate predictive maintenance in industry. The proposed approach is a combination
+use of fuzzy clustering and semantic technologies, where fuzzy clustering techniques are used to learn the criticality of failures
+based on machine historical data, and semantic technologies use the results of fuzzy clustering to predict the time of failures and
+the criticality of them. As results, a domain ontology for modeling predictive maintenance knowledge is developed, and a set of
+Semantic Web Rule Language (SWRL) predictive rules are proposed to reason about the time and criticality of machinery failures.
+A case study on a real-world industrial data set is followed to evaluate the usefulness and eﬀectiveness of the proposed approach.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords:
+Industry 4.0; Predictive maintenance; Ontologies; SWRL rules; Fuzzy clustering
+∗Corresponding author. Tel.: +33 769660272.
+E-mail address: qiushi.cao@insa-rouen.fr
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+Procedia Computer Science 00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+An Ontology-based Approach for Failure Classiﬁcation in Predictive
+Maintenance Using Fuzzy C-means and SWRL Rules
+Qiushi Caoa,∗, Ahmed Sametb, Cecilia Zanni-Merka, Franc ¸ois de Bertrand de Beuvronb,
+Christoph Reichc
+aNormandie Universit´ e, INSA Rouen, LITIS, 76000 Saint- ´Etienne-du-Rouvray, France
+bICUBE/SDC Team (UMR CNRS 7357)-Pole API BP 10413, 67412 Illkirch, France
+cHochschule Furtwangen University, 78120 Furtwangen, Germany
+Abstract
+Within manufacturing processes, anomalies such as machinery faults and failures may lead to the outage situation of production
+lines. The outage of production lines is detrimental for the availability of production systems and may cause severe economicloss. To avoid the economic loss that may be caused by the outage situation, the prediction of anomalies on production lines is a
+crucial concern for manufacturers. Recently, data mining techniques have been applied to the manufacturing domain for predicting
+occurrence time of anomalies, such as the moment of machinery failure. However, existing predictive maintenance approaches
+have been limited to the prediction of the time of occurrence of machinery failures, while lacking the capability for identifying
+the criticality of the failures. This may lead to inappropriate maintenance plans and strategies. In this context, in this paper, we
+introduce a novel ontology-based approach to facilitate predictive maintenance in industry. The proposed approach is a combination
+use of fuzzy clustering and semantic technologies, where fuzzy clustering techniques are used to learn the criticality of failures
+based on machine historical data, and semantic technologies use the results of fuzzy clustering to predict the time of failures and
+the criticality of them. As results, a domain ontology for modeling predictive maintenance knowledge is developed, and a set of
+Semantic Web Rule Language (SWRL) predictive rules are proposed to reason about the time and criticality of machinery failures.
+A case study on a real-world industrial data set is followed to evaluate the usefulness and eﬀectiveness of the proposed approach.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords:
+Industry 4.0; Predictive maintenance; Ontologies; SWRL rules; Fuzzy clustering
+∗Corresponding author. Tel.: +33 769660272.
+E-mail address: qiushi.cao@insa-rouen.fr
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.1. Introduction
+With the current trend of automation and data exchange in manufacturing technologies, traditional manufacturing
+factories are transforming into so-called “smart factories”, which apply high-tech sensing and computation technolo-
+gies on diﬀerent manufacturing processes and production systems. As today’s manufacturing market is becoming more
+competitive, how to improve the availability, sustainability, and quality of manufacturing services in smart factories isa crucial concern for manufactures. This situation has triggered the demand for implementing predictive maintenanceon production lines, which refers to the maintenance activities that are performed to avoid failure occurrences and toimprove the availability and safety of the maintained system.
+In the domain of predictive maintenance, prediction of the moments of future anomalies (outliers) is an impor-
+tant aspect to prevent and resolve persistent dilemmas in maintenance management [2]. Normally, such a prediction
+approach starts with collecting and analyzing the historical data that are collected from the system being monitored.
+During the data collection and analysis phase, data mining techniques are widely used for automatically discoveringknowledge from data sets. However, existing predictive maintenance approaches in the manufacturing domain arelimited to the deployment of condition monitoring systems for detecting anomalies and predicting the time of ma-chinery failures in the future, while lacking the solutions for identifying the criticality of machinery failures, based on
+their temporal information [2]. Also, to have a comprehensive understanding of the data mining results, it is required
+for users to have a deep understanding of the domain. This may bring obstacles to novice users for planning and
+performing adequate maintenance strategies. To deal with this issue, using ontology-based approaches can serve as agood representation for data mining results, since they can represent the extracted patterns in a formal and structured
+format, and give rich semantics to the data mining results. By deﬁnition, an ontology is a speciﬁcation of represen-
+tational vocabulary for a shared domain, and it is developed to support the sharing and interpretation of formally
+represented knowledge in artiﬁcial intelligence systems [11]. In this context, to ease the interpretation and reuse of
+data mining results, and to facilitate the classiﬁcation of machinery failures according to their time of occurrences,
+semantic technologies, especially ontologies with their rule-based extensions are of paramount importance.
+In this paper, we propose a novel hybrid ontology-based approach for predictive maintenance in manufacturing
+processes. The proposed approach is a combination use of fuzzy clustering and semantics. Among them, fuzzy clus-
+tering approaches, such as fuzzy c-means (FCM) [5], is used to learn the criticality of diﬀerent failures in machine
+historical data. The diﬀerent time duration from normal conditions of machinery to the failures are used as training
+examples to FCM with three ﬁxed classes: High Criticality, Medium Criticality, and Low Criticality, which indicate
+the three levels of failure criticality. On the other hand, semantic technologies, such as ontologies and logic rules areused to predict the time and criticality of future failures. As results, the Manufacturing Failure Prediction Ontology
+(MFPO) is developed, and a set of Semantic Web Rule Language (SWRL) predictive rules [14] are proposed to rea-
+son about the criticality of machinery failures. To elaborate the proposed approach, a real-world data set about an
+industrial semi-conductor manufacturing process is used to demonstrate the whole process.
+The remainder of the paper is structured as follows. In Section 2, the related works about using ontology-based
+approaches for predictive maintenance are introduced. In Section 3, the proposed ontology-based approach is demon-
+strated, including the description of the MFPO ontology, and the fuzzy SWRL rules for classifying failures. Section4elaborates the proposed approach according to a real-world industrial data set. Section 5concludes the paper and
+outlines future perspectives.
+2. Related work
+As the manufacturing domain is becoming more dynamic and knowledge-intensive, the use of semantic technolo-
+gies, especially ontology-based approaches for predictive maintenance turned to be a notable research topic. Recently,
+several ontologies and their rule-based extensions were proposed to facilitate knowledge representation and reuse in
+the predictive maintenance domain. In this section we review the most relevant research works.
+The knowledge model for ﬂeet predictive maintenance, introduced in [16], was developed to handle contextual
+knowledge within a ﬂeet scale. In their work, the authors developed a domain ontology to categorize ﬂeet elements
+into three levels. This categorization of ﬂeet elements enables the analysis of contextual data from diﬀerent levels,
+thus enabling the analysis of abnormal health conditions from diﬀerent components within a ﬂeet system. For the pre-
+632 Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639
+dictive maintenance in the wind energy domain, an ontology was developed and used as a basis of a fault detection and
+diagnosis system for wind turbines’ condition monitoring [19]. The ontology models vital characteristics of a WindEnergy Converter’s (WEC’s) gearbox, and it has been used to detect possible failures and their exact positions in theWEC’s gearbox, by executing SWRL rules and ontology queries. Among the existing research eﬀorts in the manu-facturing domain, the ontology introduced in [9] is one of the earliest contributions. In their work, a domain-speciﬁcontology [10] was developed to streamline the implementation of industrial condition monitoring and to standardize
+the exchange of condition monitoring data. During the implementation of the condition monitoring system, the de-
+veloped ontology served as a commonly accepted data and knowledge representation schema for diagnosis-orientedmaintenance. Another notable contribution is OntoProg [17], which is an ontological model developed for the Prog-nostics Health Management (PHM) of mechanical items of manufacturing systems. OntoProg uses PHM terms inInternational Organization for Standardization (ISO) and International Electrotechnical Commission (IEC) as knowl-
+edge source. The signiﬁcance of OntoProg is the standardization of the implementation of PHM in manufacturing
+systems, including the conceptualization of key concepts such as FailureMode, PotencialCause andSymptom. A set
+of SWRL rules were proposed to enhance the expressiveness of the ontology. At last, we mention PriMa, which isa prescriptive maintenance model for production systems in smart factories [2]. Within the framework of PriMa, on-tologies and case-based reasoning are used to build semantic learning and reasoning models. The implementation of
+PriMa in real production systems has shown signiﬁcant reduction of downtime.
+The review of the related research work reveals two issues. Firstly, there is a missing link between the temporal
+information of an anomaly (e.g., the occurrence time of a future machinery failure) and the criticality of the anomaly.To assess the availability of computing systems, the outage duration is a key consideration which indicates the criti-
+cality of a mechanical failure [4]. Therefore, predicting the moments of machinery failures are crucial for computingthe outage duration and the criticality of the failures. However, existing ontology-based approaches fail to propose
+decision makings about the criticality of machinery failures based on the occurrence times of future machinery fail-
+ures. This brings obstacles to users for performing appropriate maintenance actions with considering time limitations.
+Secondly, since most of the existing ontologies and rule-based approaches are based on crisp logic, they are not com-
+petent in dealing with uncertain situations in predictive maintenance. For the classiﬁcation of failures, using a fuzzy
+approach allows better expression of imprecise relations. For example, the classiﬁcation of a failure can be associatedwith a fuzzy index, indicating the degree of its membership to a “low” or “high” criticality level. By this, the crisp
+logic-based rules can be transformed into fuzzy rules, which enhances the representation of imprecise criticality level
+of machinery failures. In this way, compared with the crisp logic-based approaches, the fuzzy approach provides a
+better solution for solving the symbol anchoring problem [7].
+3. The hybrid ontology-based approach for predictive maintenance
+This section introduces the proposed hybrid ontology-based approach for failure classiﬁcation in predictive mainte-
+nance. The proposed approach starts with the implementation of sequential pattern mining (SPM) [1] on raw industrial
+data sets, after which frequent sequential patterns are obtained. The obtained frequent sequential patterns contain fail-
+ure events as well as the temporal information of these failures (e.g., the time stamp indicating when the failure will
+happen). After that, fuzzy clustering technique such as FCM clustering is applied to the extracted temporal information
+of failures, in order to classify diﬀerent failures according to their time. This classiﬁcation enables the identiﬁcationof failure criticality. Then, domain ontologies such as the MFPO ontology with its rule-based extension are used toformalize the domain knowledge and enable the prediction of the time and criticality of future failures. In this work,
+we consider the frequent sequential patterns that are in a rule format
+1This allows us to use these sequential patterns
+for ontology reasoning, to facilitate failure prediction in industry. Fig. 1shows the steps described above.
+1In this work we consider rules in the format A−−−−→
+[t1,t2]Failure where Ais the antecedent part of the rule that predicts a failure in [t 1,t2] time
+units.Fig. 1. Diﬀerent steps of the hybrid ontology-based approach for predictive maintenance.
+3.1. Predictive maintenance data collection and analysis
+In smart factories, predictive maintenance tasks are performed by learning from historical maintenance data and
+predicting future events [2]. Within manufacturing systems, system operation data are collected from sensors, actua-
+tors, and mobile devices that are located at machine components and also the manufacturing environment. Normally,
+data collected for predictive maintenance are represented as sets of sequences with time stamps [20]. To deal with
+this type of data format, SPM techniques have been used to mine frequently occurring sequential patterns. In our
+approach, the aim of applying SPM to industrial data sets is to derive the temporal information of failurs. This enablesthe implementation of fuzzy clustering techniques on SPM results, for the identiﬁcation of failure criticality based on
+their time of occurrences.
+3.2. Fuzzy classiﬁcation of failure criticality
+In our previous work [6], one issue encountered is the incorrect classiﬁcation of failure criticality. Since the failure
+classiﬁcation method introduced in [6] is based on crisp logic, it failed to classify the criticality of a failure into
+the correct category when there are uncertain situations. For example, if a failure is predicted to happen within a
+considerably short amount of time after a “normal” condition, then the criticality level of this failure is identiﬁed as
+“high”, meaning that maintenance actions need to be proposed immediately. However, if the predicted time durationbetween a “normal” condition and a failure falls into the “medium” category and the time duration is considerably
+close to the numerical threshold between “medium” and “high”, then the system failed to classify the criticality of
+this failure into the correct category. To cope with this issue, a fuzzy approach which is able to handle such type of
+uncertainty situations is required. It should be noted that the failure criticality descriptor we consider in this paper
+is the time duration among normal conditions and machinery failures. Other descriptors that may aﬀect the failure
+criticality, such as the level of mechanical component fracture and wear are out of the scope of this paper.
+To cope with the aforementioned uncertain situations, in this work, the FCM algorithm is used for fuzzy clustering
+of failure criticality. After implementing the SPM step introduced in section 3.1, the frequent sequential patterns
+which contain temporal information (e.g., the time duration among “normal” events and the failure events) of failure
+events are extracted. The temporal information is represented as data points during the implementation of the FCM
+algorithm. Then the FCM algorithm is used to classify the failures by grouping similar data points into clusters. This
+clustering is achieved by iteratively minimizing a objective function which is dependent on the distance of the datapoints to the cluster centers. The objective function is computed by the following equation:
+J=
+N/summationdisplay
+j=1C/summationdisplay
+i=1um
+ij||xj−ci||2, (1)
+ Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639 633
+dictive maintenance in the wind energy domain, an ontology was developed and used as a basis of a fault detection and
+diagnosis system for wind turbines’ condition monitoring [19]. The ontology models vital characteristics of a WindEnergy Converter’s (WEC’s) gearbox, and it has been used to detect possible failures and their exact positions in theWEC’s gearbox, by executing SWRL rules and ontology queries. Among the existing research eﬀorts in the manu-facturing domain, the ontology introduced in [9] is one of the earliest contributions. In their work, a domain-speciﬁcontology [10] was developed to streamline the implementation of industrial condition monitoring and to standardize
+the exchange of condition monitoring data. During the implementation of the condition monitoring system, the de-
+veloped ontology served as a commonly accepted data and knowledge representation schema for diagnosis-orientedmaintenance. Another notable contribution is OntoProg [17], which is an ontological model developed for the Prog-nostics Health Management (PHM) of mechanical items of manufacturing systems. OntoProg uses PHM terms inInternational Organization for Standardization (ISO) and International Electrotechnical Commission (IEC) as knowl-
+edge source. The signiﬁcance of OntoProg is the standardization of the implementation of PHM in manufacturing
+systems, including the conceptualization of key concepts such as FailureMode, PotencialCause andSymptom. A set
+of SWRL rules were proposed to enhance the expressiveness of the ontology. At last, we mention PriMa, which isa prescriptive maintenance model for production systems in smart factories [2]. Within the framework of PriMa, on-tologies and case-based reasoning are used to build semantic learning and reasoning models. The implementation of
+PriMa in real production systems has shown signiﬁcant reduction of downtime.
+The review of the related research work reveals two issues. Firstly, there is a missing link between the temporal
+information of an anomaly (e.g., the occurrence time of a future machinery failure) and the criticality of the anomaly.To assess the availability of computing systems, the outage duration is a key consideration which indicates the criti-
+cality of a mechanical failure [4]. Therefore, predicting the moments of machinery failures are crucial for computingthe outage duration and the criticality of the failures. However, existing ontology-based approaches fail to propose
+decision makings about the criticality of machinery failures based on the occurrence times of future machinery fail-
+ures. This brings obstacles to users for performing appropriate maintenance actions with considering time limitations.
+Secondly, since most of the existing ontologies and rule-based approaches are based on crisp logic, they are not com-
+petent in dealing with uncertain situations in predictive maintenance. For the classiﬁcation of failures, using a fuzzy
+approach allows better expression of imprecise relations. For example, the classiﬁcation of a failure can be associatedwith a fuzzy index, indicating the degree of its membership to a “low” or “high” criticality level. By this, the crisp
+logic-based rules can be transformed into fuzzy rules, which enhances the representation of imprecise criticality level
+of machinery failures. In this way, compared with the crisp logic-based approaches, the fuzzy approach provides a
+better solution for solving the symbol anchoring problem [7].
+3. The hybrid ontology-based approach for predictive maintenance
+This section introduces the proposed hybrid ontology-based approach for failure classiﬁcation in predictive mainte-
+nance. The proposed approach starts with the implementation of sequential pattern mining (SPM) [1] on raw industrial
+data sets, after which frequent sequential patterns are obtained. The obtained frequent sequential patterns contain fail-
+ure events as well as the temporal information of these failures (e.g., the time stamp indicating when the failure will
+happen). After that, fuzzy clustering technique such as FCM clustering is applied to the extracted temporal information
+of failures, in order to classify diﬀerent failures according to their time. This classiﬁcation enables the identiﬁcationof failure criticality. Then, domain ontologies such as the MFPO ontology with its rule-based extension are used toformalize the domain knowledge and enable the prediction of the time and criticality of future failures. In this work,
+we consider the frequent sequential patterns that are in a rule format
+1This allows us to use these sequential patterns
+for ontology reasoning, to facilitate failure prediction in industry. Fig. 1shows the steps described above.
+1In this work we consider rules in the format A−−−−→
+[t1,t2]Failure where Ais the antecedent part of the rule that predicts a failure in [t 1,t2] time
+units.
+Fig. 1. Diﬀerent steps of the hybrid ontology-based approach for predictive maintenance.
+3.1. Predictive maintenance data collection and analysis
+In smart factories, predictive maintenance tasks are performed by learning from historical maintenance data and
+predicting future events [2]. Within manufacturing systems, system operation data are collected from sensors, actua-
+tors, and mobile devices that are located at machine components and also the manufacturing environment. Normally,
+data collected for predictive maintenance are represented as sets of sequences with time stamps [20]. To deal with
+this type of data format, SPM techniques have been used to mine frequently occurring sequential patterns. In our
+approach, the aim of applying SPM to industrial data sets is to derive the temporal information of failurs. This enablesthe implementation of fuzzy clustering techniques on SPM results, for the identiﬁcation of failure criticality based on
+their time of occurrences.
+3.2. Fuzzy classiﬁcation of failure criticality
+In our previous work [6], one issue encountered is the incorrect classiﬁcation of failure criticality. Since the failure
+classiﬁcation method introduced in [6] is based on crisp logic, it failed to classify the criticality of a failure into
+the correct category when there are uncertain situations. For example, if a failure is predicted to happen within a
+considerably short amount of time after a “normal” condition, then the criticality level of this failure is identiﬁed as
+“high”, meaning that maintenance actions need to be proposed immediately. However, if the predicted time durationbetween a “normal” condition and a failure falls into the “medium” category and the time duration is considerably
+close to the numerical threshold between “medium” and “high”, then the system failed to classify the criticality of
+this failure into the correct category. To cope with this issue, a fuzzy approach which is able to handle such type of
+uncertainty situations is required. It should be noted that the failure criticality descriptor we consider in this paper
+is the time duration among normal conditions and machinery failures. Other descriptors that may aﬀect the failure
+criticality, such as the level of mechanical component fracture and wear are out of the scope of this paper.
+To cope with the aforementioned uncertain situations, in this work, the FCM algorithm is used for fuzzy clustering
+of failure criticality. After implementing the SPM step introduced in section 3.1, the frequent sequential patterns
+which contain temporal information (e.g., the time duration among “normal” events and the failure events) of failure
+events are extracted. The temporal information is represented as data points during the implementation of the FCM
+algorithm. Then the FCM algorithm is used to classify the failures by grouping similar data points into clusters. This
+clustering is achieved by iteratively minimizing a objective function which is dependent on the distance of the datapoints to the cluster centers. The objective function is computed by the following equation:
+J=
+N/summationdisplay
+j=1C/summationdisplay
+i=1um
+ij||xj−ci||2, (1)
+634 Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639
+where uijrepresents the degree of membership of the data point xjin the ith cluster, cjstands for the d-dimension
+center of the cluster, mis any real number greater than 1, and || · ||denotes any norm expressing the similarity between
+any measured data and the center.
+During the implementation of FCM algorithm, the objective function is minimized with the update of membership
+uijand the cluster centers cj. The update of these two parameters is described by the following equations:
+uij=1
+/summationtextc
+k=1(||xi−cj||
+||xi−ck||)2
+(m−1),cj=/summationtextN
+i=1um
+ij·xi
+/summationtextN
+i=1um
+ij. (2)
+By this, the FCM algorithm starts with an initial guess for cluster centers, and then iteratively updates the cluster
+centers and the degrees of membership for each data point. The iteration stops when max ij|u(k+1)
+ij−uk
+ij|<ε, where
+kis the number of iteration steps, and εis a termination criterion [5]. The whole process converges when a local
+minimum value of Jis obtained.
+In this work, the time duration from normal conditions to failures are used as training examples to FCM with three
+ﬁxed classes, and the three classes indicate three levels of failure criticality:
+•High Criticality: time from a normal condition to the failure is relatively short and the production line should
+be stopped for immediate maintenance.
+•Medium Criticality: the failure may happen after a moderate amount of time and machine operators need to
+plan maintenance in a limited time.
+•Low Criticality: the failure may happen in the long future and machine operators will have suﬃcient time to
+plan maintenance actions.
+The results of the FCM algorithm are formalized by the MFPO ontology and SWRL rules, which aim to predict
+the time of future failures and their criticality, thus facilitating the knowledge representation and interpretation inpredictive maintenance of industrial manufacturing process.
+3.3. The MFPO ontology
+Within an intelligent system, ontologies contain the domain knowledge to operate. They have long been used
+for formally describing entities within an area of reality and all relationships among those entities [3]. Normally,
+ontologies comprise well-deﬁned terms and well-deﬁned relationships, and they allow ontology reasoning by whichthe individuals are classiﬁed into appropriate classes. In smart factories, to facilitate the knowledge representation and
+reuse of the SPM results, also to enable the classiﬁcation of machinery failures according to their temporal information
+of occurrences, an ontology which formalizes knowledge of both manufacturing and predictive maintenance domainsis required. In this work, we present the MFPO ontology, which is developed to formalize the domain knowledge inpredictive maintenance.
+The global architecture of the MFPO ontology is shown in Fig. 2. We use UML class diagram to represent concepts
+and properties, where boxes are classes in the MFPO ontology, and solid arrows are object properties. Data propertiesare indicated by class attributes. For the purpose of clarity, only a subset of the whole classes and properties arepresented. The Web Ontology Language (OWL) [15] is chosen as the development language of the ontology. TheMFPO ontology is an extended work of the ontology introduced in [6], and the descriptions of the common classes ofthe two ontologies (e.g., RealizedPart, ManufacturingProcess, ManufacturingFacility...) can be found in [6].
+Compared to the ontology introduced in [6], the key extension proposed in the MFPO ontology is the capability
+of handling uncertainty. In the MFPO ontology, the nominal categories of classes are described by data properties.In this way, the classes in the MFPO ontology are associated with membership degrees which range from 0 to 1.For example, in the ontology introduced in [6], hasFailureCriticality is an object property whose domain is the class
+Failure, and range is the predeﬁned individuals Low, Medium andHigh. After applying the aforementioned method,
+this object property is replaced by three data properties: hasFailureCriticalityLow, hasFailureCriticalityMedium, andFig. 2. The global architecture of the MFPO ontology.
+hasFailureCriticalityHigh, and the sum of the numeric values of these three data properties is 1. By this, the Fail-
+ureclass in the MFPO ontology is associated with membership degrees to three nominal categories, thus enabling
+ontology reasoning of vague knowledge about this class.
+3.4. Ontology reasoning for failure prediction
+To predict the time of failures and also classify failures into diﬀerent categories based on their temporal information,
+we propose SWRL rules [14] for ontology reasoning. The proposed SWRL rules reason on the individuals in the
+MFPO ontology, and infer new knowledge about failure prediction.
+As stated in Fig. 2, the State of aManufacturingResource is determined by a set of ObservableProperties (with their
+associated values). Based on this deﬁnition, we construct the antecedent of a SWRL rule by describing quantitativevalues of ObservableProperties (attributes) and the temporal information of the failure. The consequent of such a rule
+comprises the time constraints of the failure and its criticality. In this paper, to enhance the prediction of failures, wefocus on the use of chronicles, which are a special type of sequential patterns. Inside a chronicle, events are orderedand temporal orders of events are quantiﬁed with numerical bounds [20]. Fig. 3shows an example chornicle, where
+time constraints that describe the pattern {A, B, C} are noted by A[2,5]B, B[1,5]C and A[6,7]C. Here [2,5], [1,5]
+and [6,7] are lower and upper bounds of the time intervals among events. The reason for choosing chronicles in our
+approach is that they can be used to predict not only the failure event but also the time interval of its occurrence, as
+time dimension is crucial in predictive maintenance.
+Fig. 3. A chronicle representing three events, within which the last event is a failure.
+ Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639 635
+where uijrepresents the degree of membership of the data point xjin the ith cluster, cjstands for the d-dimension
+center of the cluster, mis any real number greater than 1, and || · ||denotes any norm expressing the similarity between
+any measured data and the center.
+During the implementation of FCM algorithm, the objective function is minimized with the update of membership
+uijand the cluster centers cj. The update of these two parameters is described by the following equations:
+uij=1
+/summationtextc
+k=1(||xi−cj||
+||xi−ck||)2
+(m−1),cj=/summationtextN
+i=1um
+ij·xi
+/summationtextN
+i=1um
+ij. (2)
+By this, the FCM algorithm starts with an initial guess for cluster centers, and then iteratively updates the cluster
+centers and the degrees of membership for each data point. The iteration stops when max ij|u(k+1)
+ij−uk
+ij|<ε, where
+kis the number of iteration steps, and εis a termination criterion [5]. The whole process converges when a local
+minimum value of Jis obtained.
+In this work, the time duration from normal conditions to failures are used as training examples to FCM with three
+ﬁxed classes, and the three classes indicate three levels of failure criticality:
+•High Criticality: time from a normal condition to the failure is relatively short and the production line should
+be stopped for immediate maintenance.
+•Medium Criticality: the failure may happen after a moderate amount of time and machine operators need to
+plan maintenance in a limited time.
+•Low Criticality: the failure may happen in the long future and machine operators will have suﬃcient time to
+plan maintenance actions.
+The results of the FCM algorithm are formalized by the MFPO ontology and SWRL rules, which aim to predict
+the time of future failures and their criticality, thus facilitating the knowledge representation and interpretation inpredictive maintenance of industrial manufacturing process.
+3.3. The MFPO ontology
+Within an intelligent system, ontologies contain the domain knowledge to operate. They have long been used
+for formally describing entities within an area of reality and all relationships among those entities [3]. Normally,
+ontologies comprise well-deﬁned terms and well-deﬁned relationships, and they allow ontology reasoning by whichthe individuals are classiﬁed into appropriate classes. In smart factories, to facilitate the knowledge representation and
+reuse of the SPM results, also to enable the classiﬁcation of machinery failures according to their temporal information
+of occurrences, an ontology which formalizes knowledge of both manufacturing and predictive maintenance domainsis required. In this work, we present the MFPO ontology, which is developed to formalize the domain knowledge inpredictive maintenance.
+The global architecture of the MFPO ontology is shown in Fig. 2. We use UML class diagram to represent concepts
+and properties, where boxes are classes in the MFPO ontology, and solid arrows are object properties. Data propertiesare indicated by class attributes. For the purpose of clarity, only a subset of the whole classes and properties arepresented. The Web Ontology Language (OWL) [15] is chosen as the development language of the ontology. TheMFPO ontology is an extended work of the ontology introduced in [6], and the descriptions of the common classes ofthe two ontologies (e.g., RealizedPart, ManufacturingProcess, ManufacturingFacility...) can be found in [6].
+Compared to the ontology introduced in [6], the key extension proposed in the MFPO ontology is the capability
+of handling uncertainty. In the MFPO ontology, the nominal categories of classes are described by data properties.In this way, the classes in the MFPO ontology are associated with membership degrees which range from 0 to 1.For example, in the ontology introduced in [6], hasFailureCriticality is an object property whose domain is the class
+Failure, and range is the predeﬁned individuals Low, Medium andHigh. After applying the aforementioned method,
+this object property is replaced by three data properties: hasFailureCriticalityLow, hasFailureCriticalityMedium, and
+Fig. 2. The global architecture of the MFPO ontology.
+hasFailureCriticalityHigh, and the sum of the numeric values of these three data properties is 1. By this, the Fail-
+ureclass in the MFPO ontology is associated with membership degrees to three nominal categories, thus enabling
+ontology reasoning of vague knowledge about this class.
+3.4. Ontology reasoning for failure prediction
+To predict the time of failures and also classify failures into diﬀerent categories based on their temporal information,
+we propose SWRL rules [14] for ontology reasoning. The proposed SWRL rules reason on the individuals in the
+MFPO ontology, and infer new knowledge about failure prediction.
+As stated in Fig. 2, the State of aManufacturingResource is determined by a set of ObservableProperties (with their
+associated values). Based on this deﬁnition, we construct the antecedent of a SWRL rule by describing quantitativevalues of ObservableProperties (attributes) and the temporal information of the failure. The consequent of such a rule
+comprises the time constraints of the failure and its criticality. In this paper, to enhance the prediction of failures, wefocus on the use of chronicles, which are a special type of sequential patterns. Inside a chronicle, events are orderedand temporal orders of events are quantiﬁed with numerical bounds [20]. Fig. 3shows an example chornicle, where
+time constraints that describe the pattern {A, B, C} are noted by A[2,5]B, B[1,5]C and A[6,7]C. Here [2,5], [1,5]
+and [6,7] are lower and upper bounds of the time intervals among events. The reason for choosing chronicles in our
+approach is that they can be used to predict not only the failure event but also the time interval of its occurrence, as
+time dimension is crucial in predictive maintenance.
+Fig. 3. A chronicle representing three events, within which the last event is a failure.
+636 Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639
+After obtaining the chronicles, to enable the automatic generation of SWRL rules, in this work we propose a novel
+algorithm to transform chronicles (such as the one in Fig. 3) into predictive SWRL rules. Algorithm 1 demonstrates
+the general idea of our rule transformation method. It runs in ﬁve major steps:
+1.the function LastNonfailureState extracts the last non-failure state (event) within a chronicle, and the function
+LastNonfailureState extracts the failure within a chronicle.
+2.For each temporal constraint in a chronicle, the two functions ProceedingEvent andSubsequentEvent extract
+the proceeding and subsequent events of the time interval that is deﬁned in this temporal constraint. Then the
+two events and this time interval forms diﬀerent atoms in the antecedent of the rule, and they are treated as
+conjunctions.
+3.For the last non-failure state before the failure, extract the time interval and its duration between this state and the
+failure. Then the descriptions of all normal states and this time duration form diﬀerent atoms in the consequentof the rule, and they are treated as conjunctions.
+4.FCM algorithm is applied to classify the failures according to their criticality. The failures are classiﬁed into three
+categories, and three object properties in the MFPO ontology are used to represent the degrees of membership todiﬀerent clusters. The degrees of membership are treated as a conjunction, to form the consequent of the rule.
+5.At last, a rule is constructed as an implication between the antecedent and the consequent.
+Algorithm 1 Algorithm to transform a chronicle into a predictive SWRL rule.
+Require: SF: a chronicle within which the last state (event) is a failure, E: a set of the states that are described within
+a chronicle.
+Ensure: R ⊿R: the SWRL rule to be constructed.
+1:ls←LastNon f ailureS tate(S F,E) ⊿Extract the last non-failure state before the failure within a chronicle.
+2:f←theFailure(E) ⊿Extract the failure within a chronicle.
+3:R←∅ ,A←∅ ,C←∅ ,Atom a←∅ ,Atom c←∅ ,FFailureCriticalityLow =0,FFailureCriticalityMedium =0,
+FFailureCriticalityHigh =0. ⊿A: the antecedent of the SWRL
+rule. C: the consequent of the SWRL rule. Atom a: a subset of all atoms within the antecedent. Atom c: a subset of
+all atoms within the consequent. FFailureCriticalityLow ,FFailureCriticalityMedium ,FFailureCriticalityHigh : the three degrees of
+membership to the three categories of failure criticality.
+4:for each ei∈Edo
+5: pe←ProceedingS tate(e i,SF) ⊿Extract the proceeding state
+6: se←S ubsequentS tate(e i,SF) ⊿Extract the subsequent state
+7: Atom a←pe∧se
+8: A←Atom a∧pe∧se
+9:end for each
+10:f td←FailureTimeDuration(ls ,f)⊿Extract the time duration between the last non-failure state and the failure.
+11:FFailureCriticalityLow ←Degreeo f MembershipLow( f td)
+12:FFailureCriticalityMedium ←Degreeo f MembershipMedium( f td)
+13:FFailureCriticalityHigh ←Degreeo f MembershipHigh( f td) ⊿Use the FCM algorithm to compute the degrees of
+membership of this time duration to the three clusters.
+14:C←FFailureCriticalityLow ∧FFailureCriticalityMedium ∧FFailureCriticalityHigh ∧f td
+15:R←(A→C)
+16:return R
+4. Experimentation
+To evaluate the eﬀectiveness of our approach, we conduct experimentation on a real world data set. In this work,
+we apply our appraoch on the SECOM data set [8], which contains measurements of features of semi-conductorproductions within a semi-conductor manufacturing process. A software prototype is developed based on Java 10.0.2,Prot´eg´e 5.5.0, OWL API [13] and SWRL API [18]. Among them, the OWL API is used to build and manipulate
+the MFPO ontology, and SWRL rules are proposed to reason about the criticality of failures. To enable ontologyreasoning, the SWRL API, which includes a SWRL Rule Engine API, is used to create the transformed rules andthen execute them. At last, the inferred knowledge is returned to the OWL API, and stored in the new ontology. Therunning environment of the software prototype is Microsoft Windows 10.
+4.1. Frequent chronicle mining for failure prediction
+To predict the criticality of failures, we implement the frequent chronicle mining approach introduced in [20].
+The extraction of chronicles starts with feature selection method introduced in [12], after which a feature subset
+of the SECOM data set is obtained while retaining a suitably high accuracy in representing the original data set.As a result, 10 most relevant attributes are selected as the optimal sub-set of all 590 attributes. After the featureselection, data discretization is employed to discretize continuous values for obtaining nominal ones. Thereafter, data
+sequentialization is used to transform the data into the form of pairs (event, time stamp), where each sequence ﬁnishes
+with a failure. With obtaining sequences that contain failures, The CloSpan [22] algorithm is applied to the pre-processed data set, to extract frequent sequential patterns. Also, the frequent chronicle mining algorithm introduced in
+[20] is used to extract the temporal constraints among these sequential patterns. Up to this step, we are able to obtain
+frequent failure chronicles which contain temporal information about the failures.
+To improve the quality of failure prediction and criticality classiﬁcation, we take Chronicle Support as a reference
+measure, to select the most relevant failure chronicles. According to the deﬁnition in [20], the support of a chronicle
+Cin a set of sequences is the number of its occurrences. As a result, only a subset of all frequent chronicles are used
+for generating SWRL rules. Table 1shows the failure chronicles that have the 10 highest chronicle support. In Table
+1, each failure chronicle is described by the number of events that it contains, the number of time intervals amongevents, all the observed properties (attributes) that characterize the failure chronicle, and the chronicle support. For
+the ease of demonstration, we label the 590 attributes as A1,A2,A3... A590. After applying the the FCM algorithm to
+the numeric values of the minimum time duration ( Min
+TD) among the last normal events and the failures, the degrees
+of membership of failure criticality to diﬀerent categories are obtained. Table 2gives the classiﬁcation results.
+Table 1. Extracted failure chronicles that have the highest 10 chronicle support.
+Failure Chronicle Number of Events Number of Time Intervals Attributes Chronicle Support
+CF1 33 A63,A64,A102,A204,A209,A476 83.65%
+CF2 33 A63,A64,A102,A204,A209,A347,A476 82.69%
+CF3 33 A58,A64,A102,A204,A209,A476 82.69%
+CF4 33 A58,A63,A102,A204,A209,A347 81.73%
+CF5 33 A58,A63,A64,A102,A204,A209,A347,A476 81.73%
+CF6 33 A58,A102,A204,A209,A347,A476 80.77%
+CF7 33 A58,A204,A209,A347,A476 80.77%
+CF8 44 A63,A64,A102,A204,A209,A347,A476 78.84%
+CF9 44 A58,A63,A102,A204,A209,A347 78.84%
+CF10 44 A58,A204,A209,A347,A476 78.84%
+Table 2. The classiﬁcation results of the 10 failure chronicles.
+Failure Chronicle Min TD(Time unit: millisecond) Failure Criticality High Failure Criticality Medium Failure Criticality Low
+CF1 13800 0.056136 0.832054 0.111810
+CF2 12840 0.034679 0.046937 0.918384
+CF3 7440 0.256704 0.035270 0.708026
+CF4 10500 0.000722 0.000384 0.998893
+CF5 14640 0.069900 0.197297 0.732802
+CF6 2280 0.998489 0.000231 0.001280
+CF7 1020 0.988364 0.002024 0.009611
+CF8 22380 0.000099 0.999598 0.000303
+CF9 1560 0.000099 0.999598 0.000303
+CF10 4320 0.997523 0.000409 0.002068
+ Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639 637
+After obtaining the chronicles, to enable the automatic generation of SWRL rules, in this work we propose a novel
+algorithm to transform chronicles (such as the one in Fig. 3) into predictive SWRL rules. Algorithm 1 demonstrates
+the general idea of our rule transformation method. It runs in ﬁve major steps:
+1.the function LastNonfailureState extracts the last non-failure state (event) within a chronicle, and the function
+LastNonfailureState extracts the failure within a chronicle.
+2.For each temporal constraint in a chronicle, the two functions ProceedingEvent andSubsequentEvent extract
+the proceeding and subsequent events of the time interval that is deﬁned in this temporal constraint. Then the
+two events and this time interval forms diﬀerent atoms in the antecedent of the rule, and they are treated as
+conjunctions.
+3.For the last non-failure state before the failure, extract the time interval and its duration between this state and the
+failure. Then the descriptions of all normal states and this time duration form diﬀerent atoms in the consequentof the rule, and they are treated as conjunctions.
+4.FCM algorithm is applied to classify the failures according to their criticality. The failures are classiﬁed into three
+categories, and three object properties in the MFPO ontology are used to represent the degrees of membership todiﬀerent clusters. The degrees of membership are treated as a conjunction, to form the consequent of the rule.
+5.At last, a rule is constructed as an implication between the antecedent and the consequent.
+Algorithm 1 Algorithm to transform a chronicle into a predictive SWRL rule.
+Require: S
+F: a chronicle within which the last state (event) is a failure, E: a set of the states that are described within
+a chronicle.
+Ensure: R ⊿R: the SWRL rule to be constructed.
+1:ls←LastNon f ailureS tate(S F,E) ⊿Extract the last non-failure state before the failure within a chronicle.
+2:f←theFailure(E) ⊿Extract the failure within a chronicle.
+3:R←∅ ,A←∅ ,C←∅ ,Atom a←∅ ,Atom c←∅ ,FFailureCriticalityLow =0,FFailureCriticalityMedium =0,
+FFailureCriticalityHigh =0. ⊿A: the antecedent of the SWRL
+rule. C: the consequent of the SWRL rule. Atom a: a subset of all atoms within the antecedent. Atom c: a subset of
+all atoms within the consequent. FFailureCriticalityLow ,FFailureCriticalityMedium ,FFailureCriticalityHigh : the three degrees of
+membership to the three categories of failure criticality.
+4:for each ei∈Edo
+5: pe←ProceedingS tate(e i,SF) ⊿Extract the proceeding state
+6: se←S ubsequentS tate(e i,SF) ⊿Extract the subsequent state
+7: Atom a←pe∧se
+8: A←Atom a∧pe∧se
+9:end for each
+10:f td←FailureTimeDuration(ls ,f)⊿Extract the time duration between the last non-failure state and the failure.
+11:FFailureCriticalityLow ←Degreeo f MembershipLow( f td)
+12:FFailureCriticalityMedium ←Degreeo f MembershipMedium( f td)
+13:FFailureCriticalityHigh ←Degreeo f MembershipHigh( f td) ⊿Use the FCM algorithm to compute the degrees of
+membership of this time duration to the three clusters.
+14:C←FFailureCriticalityLow ∧FFailureCriticalityMedium ∧FFailureCriticalityHigh ∧f td
+15:R←(A→C)
+16:return R
+4. Experimentation
+To evaluate the eﬀectiveness of our approach, we conduct experimentation on a real world data set. In this work,
+we apply our appraoch on the SECOM data set [8], which contains measurements of features of semi-conductor
+productions within a semi-conductor manufacturing process. A software prototype is developed based on Java 10.0.2,Prot´eg´e 5.5.0, OWL API [13] and SWRL API [18]. Among them, the OWL API is used to build and manipulate
+the MFPO ontology, and SWRL rules are proposed to reason about the criticality of failures. To enable ontology
+reasoning, the SWRL API, which includes a SWRL Rule Engine API, is used to create the transformed rules andthen execute them. At last, the inferred knowledge is returned to the OWL API, and stored in the new ontology. Therunning environment of the software prototype is Microsoft Windows 10.
+4.1. Frequent chronicle mining for failure prediction
+To predict the criticality of failures, we implement the frequent chronicle mining approach introduced in [20].
+The extraction of chronicles starts with feature selection method introduced in [12], after which a feature subset
+of the SECOM data set is obtained while retaining a suitably high accuracy in representing the original data set.As a result, 10 most relevant attributes are selected as the optimal sub-set of all 590 attributes. After the featureselection, data discretization is employed to discretize continuous values for obtaining nominal ones. Thereafter, data
+sequentialization is used to transform the data into the form of pairs (event, time stamp), where each sequence ﬁnishes
+with a failure. With obtaining sequences that contain failures, The CloSpan [22] algorithm is applied to the pre-processed data set, to extract frequent sequential patterns. Also, the frequent chronicle mining algorithm introduced in
+[20] is used to extract the temporal constraints among these sequential patterns. Up to this step, we are able to obtain
+frequent failure chronicles which contain temporal information about the failures.
+To improve the quality of failure prediction and criticality classiﬁcation, we take Chronicle Support as a reference
+measure, to select the most relevant failure chronicles. According to the deﬁnition in [20], the support of a chronicle
+Cin a set of sequences is the number of its occurrences. As a result, only a subset of all frequent chronicles are used
+for generating SWRL rules. Table 1shows the failure chronicles that have the 10 highest chronicle support. In Table
+1, each failure chronicle is described by the number of events that it contains, the number of time intervals amongevents, all the observed properties (attributes) that characterize the failure chronicle, and the chronicle support. For
+the ease of demonstration, we label the 590 attributes as A1,A2,A3... A590. After applying the the FCM algorithm to
+the numeric values of the minimum time duration ( Min
+TD) among the last normal events and the failures, the degrees
+of membership of failure criticality to diﬀerent categories are obtained. Table 2gives the classiﬁcation results.
+Table 1. Extracted failure chronicles that have the highest 10 chronicle support.
+Failure Chronicle Number of Events Number of Time Intervals Attributes Chronicle Support
+CF1 33 A63,A64,A102,A204,A209,A476 83.65%
+CF2 33 A63,A64,A102,A204,A209,A347,A476 82.69%
+CF3 33 A58,A64,A102,A204,A209,A476 82.69%
+CF4 33 A58,A63,A102,A204,A209,A347 81.73%
+CF5 33 A58,A63,A64,A102,A204,A209,A347,A476 81.73%
+CF6 33 A58,A102,A204,A209,A347,A476 80.77%
+CF7 33 A58,A204,A209,A347,A476 80.77%
+CF8 44 A63,A64,A102,A204,A209,A347,A476 78.84%
+CF9 44 A58,A63,A102,A204,A209,A347 78.84%
+CF10 44 A58,A204,A209,A347,A476 78.84%
+Table 2. The classiﬁcation results of the 10 failure chronicles.
+Failure Chronicle Min TD(Time unit: millisecond) Failure Criticality High Failure Criticality Medium Failure Criticality Low
+CF1 13800 0.056136 0.832054 0.111810
+CF2 12840 0.034679 0.046937 0.918384
+CF3 7440 0.256704 0.035270 0.708026
+CF4 10500 0.000722 0.000384 0.998893
+CF5 14640 0.069900 0.197297 0.732802
+CF6 2280 0.998489 0.000231 0.001280
+CF7 1020 0.988364 0.002024 0.009611
+CF8 22380 0.000099 0.999598 0.000303
+CF9 1560 0.000099 0.999598 0.000303
+CF10 4320 0.997523 0.000409 0.002068
+638 Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639
+4.2. The transformation from chronicles to SWRL rules
+Based on Algorithm 1 and the failure classiﬁcation results in Table 2, the failure chronicles were transformed to
+SWRL rules. Fig. 4presents an example SWRL rule we obtained after implementing the whole process. Firstly, one
+frequent chronicle that contains a failure is extracted by applying the frequent chronicle mining approach. Secondly,
+after the mining of frequent failure chronicles, the numeric value of the Min TDbetween the last normal state (event)
+inside a failure chronicle and the failure is clustered by the FCM algorithm. The arrow at the right side of the ﬁgurerefers to the data point in the FCM classiﬁcation results that represents the Min
+TDvalue contained in the failure
+chronicle. Thirdly, one SWRL rule is constructed based on the degrees of membership to the three categories. Inthis rule, hasA63V, hasA102V, hasA209V, hasA347V, hasA476V are data properties in the MFPO ontology that link
+individuals of the State class with XML Schema Datatype values. They correspond to the quantitative values of
+the attributes A
+63,A102,A209,A347, and A476in the SECOM data set. TimeInterval corresponds to the root class
+of all individuals of time intervals. There are two object properties that link TimeInterval with State: hasSubState
+andhasProState, among which hasSubState corresponds to the subsequent state of a time interval, and hasProState
+indicates the proceeding state of a time interval. In this case, state S1is the proceeding state of the time interval
+between S1andS2, and state S2is the subsequent state of this time interval. To describe the numerical intervals which
+are obtained by discretization, SWRL Built-Ins are used to specify the upper and lower numerical boundaries. The
+consequent of this rule comprises time constraints of the failure, diﬀerent categories of failure criticatily, and their
+degrees of membership. The minimum and maximum time duration between a state with the failure is described bythe data property hasMinF andhasMaxF. The degrees of membership to diﬀerent criticality categories of the failure
+is given by the FCM algorithm, and they are computed based on the minimum time duration between a normal stateto the failure. By this way, the classiﬁcation of the failure is inferred by the launching of such a predictive SWRL rule.
+Following this procedure, the classiﬁcation results presented in Table. 2are formalized by the MFPO ontology and
+SWRL rules, which aim to facilitate the predictive maintenance of the semi-conductor manufacturing process.
+Fig. 4. The procedure of transforming a failure chronicle into a SWRL rule, based on the failure classiﬁcation results.
+5. Conclusion
+In this paper, we tackle the predictive maintenance task by introducing a hybrid ontology-based approach. The pro-
+posed approach is based on the combined use of fuzzy clustering and semantics, where fuzzy clustering techniques
+are used to learn the criticality of failures based on machine historical data, and semantic technologies use the results
+of fuzzy clustering to predict the time of failures and the criticality of them. The contributions of this paper lie ﬁrstly
+in the formalization of the predictive maintenance knowledge based on ontologies, by which the SPM results are
+formalized and the criticality of failures are inferred. Secondly, the classiﬁcation of failures is achieved by implement-ing an unsupervised learning approach. The unsupervised learning approach uses FCM algorithm to cluster failuresaccording to their time of occurrences, which reﬂects the criticality of them. Thirdly, the SWRL rules are proposedto formalize the classiﬁcation results, in order to facilitate knowledge representation and interpretation for predictivemaintenance.
+For our future work, we will be working on two diﬀerent issues. The ﬁrst issue is the capitalization of experience.
+When the introduced rules fail to provide satisfactory results about failure prediction, expert rules need to be proposed
+to provide appropriate solutions. In this way, when the next time that the system fails to predict the machinery failures
+properly, these expert rules will also be launched to facilitate decision making for failure prediction. The secondissue is the consideration of meta-knowledge, such as the context. Since the predictive maintenance systems arebecoming more context sensitive [6], diﬀerent sets of rules should be launched according to the diﬀerent contextof the monitored manufacturing process. To this end, context modeling and reasoning [21] will be used to facilitate
+context representation and context sharing.
+Acknowledgements
+This work has received funding from INTERREG Upper Rhine (European Regional Development Fund) and the
+Ministries for Research of Baden-Wrttemberg, Rheinland-Pfalz (Germany) and from the Grand Est French Region in
+the framework of the Science Oﬀensive Upper Rhine HALFBACK project.
+References
+[1]Agrawal, R., Srikant, R., et al., 1995. Mining sequential patterns, in: icde, pp. 3–14.
+[2]Ansari, F., Glawar, R., Nemeth, T., 2019. Prima: a prescriptive maintenance model for cyber-physical production systems. International Journal
+of Computer Integrated Manufacturing , 1–22.
+[3]Ashburner, M., Ball, C.A., Blake, J.A., Botstein, D., Butler, H., Cherry, J.M., Davis, A.P., Dolinski, K., Dwight, S.S., Eppig, J.T., et al., 2000.
+Gene ontology: tool for the uniﬁcation of biology. Nature genetics 25, 25.
+[4]Avizienis, A., Laprie, J.C., Randell, B., Landwehr, C., 2004. Basic concepts and taxonomy of dependable and secure computing. IEEE
+transactions on dependable and secure computing 1, 11–33.
+[5]Bezdek, J.C., Ehrlich, R., Full, W., 1984. Fcm: The fuzzy c-means clustering algorithm. Computers & Geosciences 10, 191–203.
+[6]Cao, Q., Giustozzi, F., Zanni-Merk, C., de Bertrand de Beuvron, F., Reich, C., 2019. Smart condition monitoring for industry 4.0 manufacturing
+processes: An ontology-based approach. Cybernetics and Systems , 1–15.
+[7]Coradeschi, S., Saﬃotti, A., 2003. An introduction to the anchoring problem. Robotics and Autonomous Systems 43, 85–96.
+[8]Dua, D., Graﬀ, C., 2017. UCI machine learning repository. URL: http://archive.ics.uci.edu/ml.
+[9]Emmanouilidis, C., Fumagalli, L., Jantunen, E., Pistoﬁdis, P., Macchi, M., Garetti, M., et al., 2010. Condition monitoring based on incremental
+learning and domain ontology for condition-based maintenance, in: 11th International Conference on Advances in Production Management
+Systems, APMS.
+[10] Fensel, D., 2001. Ontologies, in: Ontologies. Springer, pp. 11–18.
+[11] Gruber, T.R., 1993. A translation approach to portable ontology speciﬁcations. Knowledge acquisition 5, 199–220.
+[12] Guyon, I., Elisseeﬀ, A., 2003. An introduction to variable and feature selection. Journal of machine learning research 3, 1157–1182.
+[13] Horridge, M., Bechhofer, S., 2011. The owl api: A java api for owl ontologies. Semantic Web 2, 11–21.
+[14] Horrocks, I., Patel-Schneider, P.F., Boley, H., Tabet, S., Grosof, B., Dean, M., et al., 2004. Swrl: A semantic web rule language combining owl
+and ruleml. W3C Member submission 21.
+[15] McGuinness, D.L., Van Harmelen, F., et al., 2004. Owl web ontology language overview. W3C recommendation 10, 2004.
+[16] Monnin, M., Abichou, B., Voisin, A., Mozzati, C., 2011. Fleet historical cases for predictive maintenance, in: The International Conference
+Surveillance, pp. 25–26.
+[17] Nu˜nez, D.L., Borsato, M., 2018. Ontoprog: An ontology-based model for implementing prognostics health management in mechanical ma-
+chines. Advanced Engineering Informatics 38, 746–759.
+[18] O’Connor, M.J., Shankar, R.D., Musen, M.A., Das, A.K., Nyulas, C., 2008. The swrlapi: A development environment for working with swrl
+rules., in: OWLED.
+[19] Papadopoulos, P., Cipcigan, L., 2009. Wind turbines’ condition monitoring: an ontology model, in: 2009 International Conference on Sustain-
+able Power Generation and Supply, IEEE. pp. 1–4.
+[20] Sellami, C., Samet, A., Tobji, M.A.B., 2018. Frequent chronicle mining: Application on predictive maintenance, in: 2018 17th IEEE Interna-
+tional Conference on Machine Learning and Applications (ICMLA), IEEE. pp. 1388–1393.
+[21] Wang, X., Zhang, D., Gu, T., Pung, H.K., et al., 2004. Ontology based context modeling and reasoning using owl., in: Percom workshops,
+Citeseer. p. 22.
+[22] Yan, X., Han, J., Afshar, R., 2003. Clospan: Mining: Closed sequential patterns in large datasets, in: Proceedings of the 2003 SIAM international
+conference on data mining, SIAM. pp. 166–177.
+ Qiushi Cao  et al. / Procedia Computer Science 159 (2019) 630–639 639
+4.2. The transformation from chronicles to SWRL rules
+Based on Algorithm 1 and the failure classiﬁcation results in Table 2, the failure chronicles were transformed to
+SWRL rules. Fig. 4presents an example SWRL rule we obtained after implementing the whole process. Firstly, one
+frequent chronicle that contains a failure is extracted by applying the frequent chronicle mining approach. Secondly,
+after the mining of frequent failure chronicles, the numeric value of the Min TDbetween the last normal state (event)
+inside a failure chronicle and the failure is clustered by the FCM algorithm. The arrow at the right side of the ﬁgurerefers to the data point in the FCM classiﬁcation results that represents the Min
+TDvalue contained in the failure
+chronicle. Thirdly, one SWRL rule is constructed based on the degrees of membership to the three categories. Inthis rule, hasA63V, hasA102V, hasA209V, hasA347V, hasA476V are data properties in the MFPO ontology that link
+individuals of the State class with XML Schema Datatype values. They correspond to the quantitative values of
+the attributes A
+63,A102,A209,A347, and A476in the SECOM data set. TimeInterval corresponds to the root class
+of all individuals of time intervals. There are two object properties that link TimeInterval with State: hasSubState
+andhasProState, among which hasSubState corresponds to the subsequent state of a time interval, and hasProState
+indicates the proceeding state of a time interval. In this case, state S1is the proceeding state of the time interval
+between S1andS2, and state S2is the subsequent state of this time interval. To describe the numerical intervals which
+are obtained by discretization, SWRL Built-Ins are used to specify the upper and lower numerical boundaries. The
+consequent of this rule comprises time constraints of the failure, diﬀerent categories of failure criticatily, and their
+degrees of membership. The minimum and maximum time duration between a state with the failure is described bythe data property hasMinF andhasMaxF. The degrees of membership to diﬀerent criticality categories of the failure
+is given by the FCM algorithm, and they are computed based on the minimum time duration between a normal stateto the failure. By this way, the classiﬁcation of the failure is inferred by the launching of such a predictive SWRL rule.
+Following this procedure, the classiﬁcation results presented in Table. 2are formalized by the MFPO ontology and
+SWRL rules, which aim to facilitate the predictive maintenance of the semi-conductor manufacturing process.
+Fig. 4. The procedure of transforming a failure chronicle into a SWRL rule, based on the failure classiﬁcation results.
+5. Conclusion
+In this paper, we tackle the predictive maintenance task by introducing a hybrid ontology-based approach. The pro-
+posed approach is based on the combined use of fuzzy clustering and semantics, where fuzzy clustering techniques
+are used to learn the criticality of failures based on machine historical data, and semantic technologies use the results
+of fuzzy clustering to predict the time of failures and the criticality of them. The contributions of this paper lie ﬁrstly
+in the formalization of the predictive maintenance knowledge based on ontologies, by which the SPM results are
+formalized and the criticality of failures are inferred. Secondly, the classiﬁcation of failures is achieved by implement-ing an unsupervised learning approach. The unsupervised learning approach uses FCM algorithm to cluster failures
+according to their time of occurrences, which reﬂects the criticality of them. Thirdly, the SWRL rules are proposedto formalize the classiﬁcation results, in order to facilitate knowledge representation and interpretation for predictivemaintenance.
+For our future work, we will be working on two diﬀerent issues. The ﬁrst issue is the capitalization of experience.
+When the introduced rules fail to provide satisfactory results about failure prediction, expert rules need to be proposed
+to provide appropriate solutions. In this way, when the next time that the system fails to predict the machinery failures
+properly, these expert rules will also be launched to facilitate decision making for failure prediction. The secondissue is the consideration of meta-knowledge, such as the context. Since the predictive maintenance systems arebecoming more context sensitive [6], diﬀerent sets of rules should be launched according to the diﬀerent contextof the monitored manufacturing process. To this end, context modeling and reasoning [21] will be used to facilitate
+context representation and context sharing.
+Acknowledgements
+This work has received funding from INTERREG Upper Rhine (European Regional Development Fund) and the
+Ministries for Research of Baden-Wrttemberg, Rheinland-Pfalz (Germany) and from the Grand Est French Region in
+the framework of the Science Oﬀensive Upper Rhine HALFBACK project.
+References
+[1]Agrawal, R., Srikant, R., et al., 1995. Mining sequential patterns, in: icde, pp. 3–14.
+[2]Ansari, F., Glawar, R., Nemeth, T., 2019. Prima: a prescriptive maintenance model for cyber-physical production systems. International Journal
+of Computer Integrated Manufacturing , 1–22.
+[3]Ashburner, M., Ball, C.A., Blake, J.A., Botstein, D., Butler, H., Cherry, J.M., Davis, A.P., Dolinski, K., Dwight, S.S., Eppig, J.T., et al., 2000.
+Gene ontology: tool for the uniﬁcation of biology. Nature genetics 25, 25.
+[4]Avizienis, A., Laprie, J.C., Randell, B., Landwehr, C., 2004. Basic concepts and taxonomy of dependable and secure computing. IEEE
+transactions on dependable and secure computing 1, 11–33.
+[5]Bezdek, J.C., Ehrlich, R., Full, W., 1984. Fcm: The fuzzy c-means clustering algorithm. Computers & Geosciences 10, 191–203.
+[6]Cao, Q., Giustozzi, F., Zanni-Merk, C., de Bertrand de Beuvron, F., Reich, C., 2019. Smart condition monitoring for industry 4.0 manufacturing
+processes: An ontology-based approach. Cybernetics and Systems , 1–15.
+[7]Coradeschi, S., Saﬃotti, A., 2003. An introduction to the anchoring problem. Robotics and Autonomous Systems 43, 85–96.
+[8]Dua, D., Graﬀ, C., 2017. UCI machine learning repository. URL: http://archive.ics.uci.edu/ml.
+[9]Emmanouilidis, C., Fumagalli, L., Jantunen, E., Pistoﬁdis, P., Macchi, M., Garetti, M., et al., 2010. Condition monitoring based on incremental
+learning and domain ontology for condition-based maintenance, in: 11th International Conference on Advances in Production Management
+Systems, APMS.
+[10] Fensel, D., 2001. Ontologies, in: Ontologies. Springer, pp. 11–18.
+[11] Gruber, T.R., 1993. A translation approach to portable ontology speciﬁcations. Knowledge acquisition 5, 199–220.
+[12] Guyon, I., Elisseeﬀ, A., 2003. An introduction to variable and feature selection. Journal of machine learning research 3, 1157–1182.
+[13] Horridge, M., Bechhofer, S., 2011. The owl api: A java api for owl ontologies. Semantic Web 2, 11–21.
+[14] Horrocks, I., Patel-Schneider, P.F., Boley, H., Tabet, S., Grosof, B., Dean, M., et al., 2004. Swrl: A semantic web rule language combining owl
+and ruleml. W3C Member submission 21.
+[15] McGuinness, D.L., Van Harmelen, F., et al., 2004. Owl web ontology language overview. W3C recommendation 10, 2004.
+[16] Monnin, M., Abichou, B., Voisin, A., Mozzati, C., 2011. Fleet historical cases for predictive maintenance, in: The International Conference
+Surveillance, pp. 25–26.
+[17] Nu˜nez, D.L., Borsato, M., 2018. Ontoprog: An ontology-based model for implementing prognostics health management in mechanical ma-
+chines. Advanced Engineering Informatics 38, 746–759.
+[18] O’Connor, M.J., Shankar, R.D., Musen, M.A., Das, A.K., Nyulas, C., 2008. The swrlapi: A development environment for working with swrl
+rules., in: OWLED.
+[19] Papadopoulos, P., Cipcigan, L., 2009. Wind turbines’ condition monitoring: an ontology model, in: 2009 International Conference on Sustain-
+able Power Generation and Supply, IEEE. pp. 1–4.
+[20] Sellami, C., Samet, A., Tobji, M.A.B., 2018. Frequent chronicle mining: Application on predictive maintenance, in: 2018 17th IEEE Interna-
+tional Conference on Machine Learning and Applications (ICMLA), IEEE. pp. 1388–1393.
+[21] Wang, X., Zhang, D., Gu, T., Pung, H.K., et al., 2004. Ontology based context modeling and reasoning using owl., in: Percom workshops,
+Citeseer. p. 22.
+[22] Yan, X., Han, J., Afshar, R., 2003. Clospan: Mining: Closed sequential patterns in large datasets, in: Proceedings of the 2003 SIAM international
+conference on data mining, SIAM. pp. 166–177.

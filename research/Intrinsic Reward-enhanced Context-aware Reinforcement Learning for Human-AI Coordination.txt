@@ -1,0 +1,921 @@
+IReCa: Intrinsic Reward-enhanced Context-aware Reinforcement Learning
+for Human-AI Coordination
+Xin Hao1, Bahareh Nakisa1, Mohmmad Naim Rastgoo2, Richard Dazeley 1
+1School of Information Technology, Deakin University, Victoria, Australia
+2School of Computer and Mathematical Sciences, University of Adelaide, South Australia, Australia
+xin.hao@deakin.edu.au, bahar.nakisa@deakin.edu.au, naim.rastgoo@adelaide.edu.au, richard.dazeley@deakin.edu.au
+Abstract
+In human-AI coordination scenarios, human agents usually
+exhibit asymmetric behaviors that are significantly sparse and
+unpredictable compared to those of AI agents. These charac-
+teristics introduce two primary challenges to human-AI co-
+ordination: the effectiveness of obtaining sparse rewards and
+the efficiency of training the AI agents. To tackle these chal-
+lenges, we propose an Intrinsic Reward-enhanced Context-
+aware (IReCa) reinforcement learning (RL) algorithm, which
+leverages intrinsic rewards to facilitate the acquisition of
+sparse rewards and utilizes environmental context to enhance
+training efficiency. Our IReCa RL algorithm introduces three
+unique features: (i) it encourages the exploration of sparse
+rewards by incorporating intrinsic rewards that supplement
+traditional extrinsic rewards from the environment; (ii) it im-
+proves the acquisition of sparse rewards by prioritizing the
+corresponding sparse state-action pairs; and (iii) it enhances
+the training efficiency by optimizing the exploration and ex-
+ploitation through innovative context-aware weights of ex-
+trinsic and intrinsic rewards. Extensive simulations executed
+in the Overcooked layouts demonstrate that our IReCa RL
+algorithm can increase the accumulated rewards by approxi-
+mately 20% and reduce the epochs required for convergence
+by approximately 67% compared to state-of-the-art base-
+lines.
+Introduction
+In human-AI coordination scenarios, human agents and AI
+agents leverage each other’s capabilities to achieve a shared
+goal collaboratively (Zhao et al. 2023; Sarkar et al. 2022).
+While significant progress has been made in scenarios in-
+volving multiple AI agents coordinating through reinforce-
+ment learning (RL) approaches that can interact with the en-
+vironment smoothly (Vinyals et al. 2019; Berner et al. 2019;
+Silver et al. 2017), these approaches often assume that the
+coordinators are either optimal or similar to the ego AI agent
+itself (Carroll et al. 2019). This assumption can lead to dis-
+tributional shifts when the well-trained ego AI agent is de-
+ployed alongside human coordinators (Zhao et al. 2023), as
+the ego AI agent has not encountered the asymmetric behav-
+iors exhibited by human agents during their training phases.
+Due to the asymmetric behaviors of human and AI agents
+and the dynamic nature of their interactions in the environ-
+Copyright © 2025, Association for the Advancement of Artificial
+Intelligence (www.aaai.org). All rights reserved.ment (Goecks et al. 2019), human-AI coordination scenarios
+are inherently complicated (Ghosal et al. 2023; Zhao et al.
+2020). These complexities can intensify the challenge of ob-
+taining rewards, particularly in tricky environments where
+rewards are sparse. A common approach to mitigate the is-
+sue of sparse reward acquisition in RL is to encourage the AI
+agent to explore its environment more thoroughly (Jaques
+et al. 2019; Haarnoja et al. 2018). However, the ingrained
+trade-off between exploration and exploitation in RL (Sut-
+ton and Barto 2018; Mnih et al. 2016; Rashid et al. 2020)
+introduces a second challenge: the inefficiency of training.
+While augmenting exploration can improve the acquisition
+of sparse rewards, it simultaneously reduces exploitation ef-
+ficiency that is crucial for training efficiency (Lowe et al.
+2017; Hadfield-Menell et al. 2016; Pathak et al. 2017), there-
+fore problematizing the optimization of human-AI coordina-
+tion.
+To enhance the effectiveness of obtaining sparse rewards,
+we design innovative intrinsic rewards that facilitate thor-
+ough environmental exploration; whilst to improve the effi-
+ciency of the training process, we introduce context-aware
+weights to enhance training efficiency by optimizing the ex-
+ploration and exploitation.
+On the one hand, intrinsic rewards, unlike traditional ex-
+trinsic rewards obtained from the environment, are usu-
+ally derived from agents’ observations and can increase the
+likelihood of identifying sparse state-action pairs for ob-
+taining sparse rewards. Typical intrinsic rewards, such as
+maximum entropy (Haarnoja et al. 2018) and causal influ-
+ence (Jaques et al. 2019), enhance exploration by focusing
+on the actions of the AI agent and its coordinators. How-
+ever, their effectiveness in sparse human-AI coordination is
+limited by the high diversity of human actions. While recent
+work (Zhao et al. 2023) introduces a general approach that
+doesn’t rely on specific human data, the no free lunch theo-
+rems (Wolpert and Macready 1997) suggest that exploiting a
+specific subclass of problems is necessary for improved per-
+formance (Andrychowicz et al. 2016; Hao et al. 2023a,b).
+Incorporating a logarithmic term of the Kullback-Leibler
+(KL) divergence between the RL policy and the human pol-
+icy as a regularization term has proven effective in enhanc-
+ing accuracy in text summarization (Christiano et al. 2017;
+Stiennon et al. 2020). Motivated by this strategy, we pro-
+pose designing intrinsic rewards tailored to highlight sparsearXiv:2408.07877v1  [cs.AI]  15 Aug 2024
+state-action pairs in human-AI coordination, to effectively
+facilitate the acquisition of sparse rewards.
+On the other hand, to enhance the training efficiency
+of AI agents, we propose a novel approach that incorpo-
+rates context-aware weights into the reward structure. This
+method dynamically balances exploration and exploitation
+by adjusting the focus on intrinsic and extrinsic rewards
+based on their relevant changes over time. Inspired by adap-
+tive weighting in multi-task deep learning, which modifies
+task importance based on loss changes (Liu, Johns, and
+Davison 2019; Vaswani et al. 2017), our approach ensures
+that the IReCa RL algorithm effectively manages explo-
+ration with intrinsic rewards, reducing unnecessary explo-
+ration and thereby improving training efficiency.
+To facilitate effective human-AI coordination with sparse
+reward signals and asymmetric behaviors of human and
+AI agents, we propose a novel Intrinsic Reward-enhanced
+Context-aware (IReCa) RL algorithm. The contributions of
+this work are summarized as follows:
+• To improve the effectiveness of obtaining sparse rewards,
+we propose to incorporate intrinsic rewards, supplement-
+ing the traditional extrinsic reward, motivating the AI
+agent to explore the environment comprehensively, and
+avoiding the omission of any potentially existing sparse
+rewards.
+• We design innovative intrinsic rewards to prioritize
+sparse state-action pairs associated with sparse rewards,
+the AI agent pays attention to these valuable parts of the
+environment.
+• To enhance training efficiency, context-aware weights are
+introduced to optimize the exploration and exploitation
+by dynamically adjusting intrinsic and extrinsic rewards
+based on the changing context of the episode return,
+thereby improving the overall learning process.
+Experimental results demonstrate that our IReCa RL algo-
+rithm outperforms state-of-the-art algorithms in both accu-
+mulated reward and convergence speed, mapping an innova-
+tive path for effective human-AI coordination.
+Human-AI Coordination Scenario
+One of the primary objectives in human-AI coordination is
+to achieve the shared goal through seamless collaboration
+between AI agents and human coordinators (Goecks et al.
+2019; Zhao et al. 2020). Our IReCa RL algorithm aims to
+improve the effectiveness and efficiency of human-AI co-
+ordination by enhancing the AI agent’s ability to adapt to
+human behaviors and dynamic environments.
+Overcooked environment is a widely recognized bench-
+mark for human-AI collaboration scenarios that present
+complicated cooking tasks within a limited time, making
+it ideal for studying coordination dynamics. We experi-
+ment with two Overcooked layouts (Carroll et al. 2019).
+The first layout, Cramped Room , poses challenges related
+to low-level coordination due to its confined space, which
+often leads to agent collisions. In contrast, the second lay-
+out,Asymmetric Advantages , necessitates high-level strate-
+gic planning as agents begin in distinct areas with access to
+multiple cooking stations.
+Environment
+Context-aware
+weightsPPOBehavior cloning
+RewardHuman data
+H AI
+RFigure 1: The Intrinsic Reward-Enhanced Context-Aware
+(IReCa) RL algorithm for human-AI coordination. The AI
+agent is trained using our IReCa RL algorithm, which in-
+tegrates extrinsic rewards, intrinsic rewards, and context-
+aware weights. Extrinsic rewards are derived from the en-
+vironment, while intrinsic rewards are based on the ac-
+tions of both the human and AI agents. Context-aware
+weights are adjusted according to the episode return. In this
+figure, AI rewards-related are highlighted in blue, human
+rewards-related in green, and environmental rewards-related
+in brown to facilitate interpretation.
+In our experiments, we evaluate our IReCa designed for
+optimizing the AI agent’s policy and follow a commonly
+used approach for the human model in human-aligned RL
+research (Zhao et al. 2023; Carroll et al. 2019; Stiennon
+et al. 2020; Christiano et al. 2017). The human model is pre-
+trained from extensive human behavior data, which offers a
+scalable and practical alternative to real-time human interac-
+tion. By rigorously testing in the Overcooked human-AI co-
+ordination environment, we gain insights into the challenges
+and solutions for achieving effective and efficient human-AI
+coordination in real-world scenarios.
+IReCa Reinforcement Learning
+In this section, we first provide an overview of the IReCa
+RL algorithm. Subsequently, we clarify six key definitions
+integral to IReCa’s detailed design. Finally, we present the
+design specifics of our IReCa RL algorithm.
+IReCa Overview
+As illustrated in Fig. 1, the core concept of our approach
+lies in the design of the IReCa reward, which is composed
+of three key elements: (1) standard extrinsic rewards de-
+rived from interactions with the environment, (2) innova-
+tive intrinsic rewards based on the actions of both AI and
+human agents, and (3) context-aware weights that automat-
+ically balance exploration and exploitation by dynamically
+adjusting the importance of extrinsic and intrinsic rewards.
+Using the IReCa reward, the AI agent leverages an RL al-
+gorithm, such as proximal policy optimization (PPO), to
+smoothly interact and collaborate with human partners. We
+follow the methodology outlined in(Carroll et al. 2019), em-
+ploying a human model pre-trained using a behavior cloning
+algorithm on human data. The use of an RL algorithm is es-
+sential, as it allows the AI agent to learn from its interactions
+with both the human coordinator and the environment.
+For symbol simplicity, the following description is based
+on one AI agent coordinating with one human agent, but it
+can be easily extended to scenarios considering more agents.
+The IReCa reward of the AI agent is given by
+rA
+t=κE
+nrE
+t+κIA
+nrIA
+t+κIH
+nrIH
+t, (1)
+where rE
+tis the extrinsic reward obtained from the envi-
+ronment in the t-th timestep, rIA
+tandrIH
+tare a pair of in-
+trinsic rewards in the t-th timestep, which encourages the
+AI agent to explore the environment comprehensively from
+the distinct behaviors of AI and its human coordinator. The
+κE
+n,κIAn, and κIHnare the context-aware weights in the n-
+th epoch, where n=⌊t/T⌋,tis the current timestep, Tis
+a predefined constant representing the number of timesteps
+in each epoch. We note that the use of distinguishable su-
+perscripts for the extrinsic reward and its corresponding
+context-aware weight is intentional to emphasize their dis-
+tinct design rationale, which will be elaborated in the fol-
+lowing subsections.
+Key Definitions
+In RL research, terms such as episode andepoch are often
+used interchangeably, which can hinder precise understand-
+ing. To avoid such confusion and ensure clarity within the
+context of our IReCa RL algorithm, it is essential to clearly
+define these six key terms we use: horizon, episode, epoch,
+reward, episode return, and long-term return. Establishing
+these precise definitions will facilitate a more accurate inter-
+pretation of our detailed design.
+Horizon refers to the sequence of future timesteps that
+an agent considers when planning its policy. The task is
+terminated if the number of timesteps reaches the horizon
+length (Sutton and Barto 2018). Episode is defined as a se-
+quence of states, actions, and rewards that concludes when
+a terminal state is reached (Achiam and OpenAI 2018). It
+represents one complete trial of the task and comprises mul-
+tiple timesteps. The number of timesteps in an episode is
+fewer than or equal to the horizon length. Epoch (indexed
+bynin IReCa) refers to a predefined number of timesteps
+used for training the model. In our approach, the policy is
+typically updated after each epoch.
+Reward defines the instantaneous objective in an RL
+problem, and is a scalar value provided by the environment
+at each timestep. Episode Return is the undiscounted sum-
+mation of all rewards accumulated during a single episode,
+representing the cumulative reward from the start to the
+end of the episode (Achiam and OpenAI 2018). Long-term
+Return is defined as the infinite-horizon discounted return,
+where future rewards are discounted by a factor γto account
+for their present value.Detailed Design
+Based on the six key concepts clarified above, we present
+the detailed design of our IReCa RL algorithm.
+Extrinsic Reward In complex human-AI coordination
+scenarios with sparse reward signals, achieving the desired
+sparse rewards often requires leveraging the intermediate-
+stage rewards to guide the exploration and exploitation of
+key preliminary actions that lead to the target sparse re-
+wards (Ng, Harada, and Russell 1999; Hu et al. 2020). For
+example, in the Overcooked environment, placing an onion
+in the pot is a crucial preliminary action for earning the
+sparse reward associated with cooking onion soup. Stage re-
+wards are typically present during the early stages of train-
+ing but tend to diminish as training progresses. We follow
+the design outlined in (Carroll et al. 2019), in which the ex-
+trinsic reward is composed of the target sparse reward, rES
+t,
+and a linearly fading stage reward, rEG
+t, and is given by:
+rE
+t=rES
+t+ max
+0,1−λEG·t	
+rEG
+t, (2)
+where max{·}is the maximum function, and λEGis a con-
+stant coefficient of the extrinsic stage reward that controls
+the fading speed of the stage reward.
+Both the sparse reward and the stage reward are derived
+from the environment and represent the combined contri-
+butions of both the AI and human agents. Following the
+approach in (Carroll et al. 2019), these rewards can be ex-
+pressed as:
+rES
+t(k) =X
+kRES(ot(k), at(k)), (3)
+and
+rEG
+t(k) =X
+kREG(ot(k), at(k)), (4)
+where RES(·)andREG(·)denote the sparse and stage re-
+ward functions, respectively, and ot(k)andat(k)repre-
+sent the observation and action of the k-th agent at the t-th
+timestep.
+Intrinsic Reward While stage rewards can assist in this
+process, they also pose the risk of leading the learning pro-
+cess into local optima due to excessive exploitation. To
+counteract this limitation, intrinsic rewards serve as a pow-
+erful mechanism to enhance the exploration capabilities of
+AI agents (Song et al. 2020; Du et al. 2024).
+In human-AI coordination scenarios with sparse rewards,
+to effectively collaborate with human coordinators who be-
+have diversely and sparsely, a focus on the critical state-
+action pairs for obtaining those sparse rewards is necessary.
+Drawing inspiration from the approach in (Stiennon et al.
+2020), which introduced a regularization term that improved
+upon state-of-the-art reward functions, we propose a novel
+method. Traditional regularization terms such as entropy,
+KL divergence, and cross-entropy often underestimate the
+impact of these sparse state-action pairs due to their low
+probability of occurrence. To address this, we introduce a
+logarithmic term to emphasize the significance of these low-
+probability pairs, thereby enhancing the learning process.
+Our intrinsic reward consists of two components: the self-
+motivated intrinsic reward for the AI agent and the human
+coordinator-motivated intrinsic reward.
+a) Self-motivated The self-motivated intrinsic reward is
+designed to encourage the AI agent to adopt a more diverse
+policy, and it is defined as
+rIA
+t=λIA·EπA
+−log 
+πA(aA
+toA
+t)
+, (5)
+where λIAis a constant coefficient that determines the sig-
+nificance of the self-motivated intrinsic reward, E[·]denotes
+the expectation, πA(·)is the AI agent’s policy, aA
+trepresents
+the AI agent’s action at the t-th timestep, and oA
+tis the AI
+agent’s observation at the same timestep.
+b) Human Coordinator-motivated To enhance coordi-
+nation between the AI agent and the human, prior re-
+search (Jaques et al. 2019) has explored the benefits of en-
+couraging coordinators to adjust their behavior based on the
+AI agent’s actions. However, in human-AI coordination sce-
+narios, a key challenge arises from the fact that human coor-
+dinator models are often pre-trained and remain untrainable
+during the AI agent’s training phase (Carroll et al. 2019; Sti-
+ennon et al. 2020; Christiano et al. 2017).
+To address this limitation, we propose optimizing the AI
+agent’s policy to be more adaptable, using the known ac-
+tions of the human coordinator at each timestep. Similar
+to the intrinsic reward mechanism that encourages explo-
+ration by discounting low-probability events in the KL di-
+vergence, the human coordinator-motivated intrinsic reward
+is calculated by selectively emphasizing significant state-
+action pairs. This approach guides the AI agent toward more
+effective collaboration with the human coordinator. The hu-
+man coordinator-motivated intrinsic reward is given by
+rIH
+t=λIH·EπA"log 
+πA
+t 
+aA
+toA
+t
+˜πA
+t 
+˜aA
+t˜oA
+t 
+aH
+t, oA
+t!#
+,(6)
+where λIHis a constant representing the weight of the in-
+trinsic reward driven by the human agent. The term | · |
+denotes the absolute value function, and ˜oA
+t 
+aH
+t, oA
+t
+repre-
+sents the counterfactual observation of the AI agent when
+only the human agent takes action aH
+tat the t-th timestep.
+The policy ˜πA
+tcorresponds to the AI agent’s behavior in this
+counterfactual scenario.
+Context-aware Weights Incorporating stage rewards into
+the extrinsic reward can enhance the acquisition of sparse
+rewards by guiding exploration. However, it also introduces
+the risk of the AI agent becoming trapped in local optima,
+particularly in the early training stages when the stage re-
+ward is greater than the sparse reward. While intrinsic re-
+wards can help mitigate this issue by encouraging explo-
+ration, excessive exploration can also be detrimental. There-
+fore, a desirable policy must be context-aware – able to op-
+timize exploration and exploitation based on the current sit-
+uation. Specifically, the policy should increase exploration
+when the AI agent is at risk of converging to suboptimal
+solutions and favor exploitation when the current policy is
+performing effectively.To achieve this balance, we introduce context-aware
+weights that adaptively adjust the AI agent’s exploration and
+exploitation strategies based on the evolving context. The
+core idea is to assign greater weight to intrinsic rewards
+when the extrinsic reward shows minimal improvement and
+reduce this weight when the extrinsic reward is increasing
+steadily. To maintain policy robustness, these context-aware
+weights are updated at each epoch, in synchronization with
+the policy updates.
+We first define the average episode return to quantify the
+changes in extrinsic and intrinsic rewards by
+¯RE
+n=1
+T(n+1)TX
+t=nT
+rE
+t
+=1
+T(n+1)TX
+t=nT
+rES
+t+rEG
+t
+,
+¯RIA
+n=1
+T(n+1)TX
+t=nT
+rIA
+t
+,
+¯RIH
+n=1
+T(n+1)TX
+t=nT
+rIH
+t
+,(7)
+where Tis the number of timesteps in each epoch. In our
+design, we assign equal weight to both sparse and stage re-
+turns, based on the premise that stage rewards correspond to
+preliminary actions that ideally lead to the target sparse re-
+wards. Therefore, the ratio between sparse and stage returns
+should remain consistent, reflecting an effective policy. This
+approach contrasts with the design of the extrinsic reward,
+where the stage reward component is linearly faded out over
+time, as it is not the ultimate objective. The primary goal
+is to maximize the sparse reward, which drives the desired
+behavior.
+Next, based on the changes in the episode returns, the
+context-aware weights are computed using the Softmax
+function as
+ˆκE
+n,ˆκIA
+n,ˆκIH
+n=λR·softmax ¯RE
+n−1
+¯REn,¯RIA
+n−1
+¯RIAn,¯RIH
+n−1
+¯RIHn!
+,
+(8)
+where λRis a constant coefficient that controls the magni-
+tude of the context-aware weights. The rationale behind this
+design is straightforward: if the episode return is increas-
+ing, it suggests that the current policy is effective and re-
+quires minimal updates. Conversely, if the episode return is
+decreasing, it signals that the policy is underperforming and
+should be adjusted more significantly.
+To prevent excessive exploration in later stages of train-
+ing, we limit the exploration by applying a threshold on the
+episode number Nth. Finally, the context-aware weights are
+determined as follows:
+κE
+n= ˆκE
+n·1{n < N th}+1{n≥Nth},
+κIA
+n= ˆκIA
+n·1{n < N th},
+κIH
+n= ˆκIH
+n·1{n < N th},(9)
+where 1(·)is the indicator function.
+Hyper-parameters Values
+Episodes in each epoch 5
+Horizon length in each episode 400
+Clip-ratio 0.03
+Learning rate of actor networks 1×10−4
+Learning rate of critic networks 3×10−4
+Constant coefficientsλEG= 4×10−6
+λIA= 0.02
+λIH= 1
+λR= 3
+Table 1: Key Hyper-parameters
+(a) Cramped Room.
+ (b) Asymmetric Advantages.
+Figure 2: Layouts of Overcooked human-AI coordination
+environment. Cramped Room presents low-level coordina-
+tion challenges: in this shared, confined space it is very
+easy for the agents to collide. Asymmetric Advantages tests
+whether players can choose high-level strategies that play to
+their strengths (Carroll et al. 2019).
+Experiments
+Environment
+Our experiments are conducted in the Overcooked environ-
+ment (Carroll et al. 2019), where a human agent and an AI
+agent work together to prepare as many onion soups as pos-
+sible within a limited number of timesteps across a vari-
+ety of layouts. The goal is to serve the soup in the desig-
+nated area, earning a sparse reward of 20points for each
+successfully served soup. Achieving this requires complet-
+ing a sequence of actions that correspond to stage rewards:
+picking up onions from a specified location, placing three
+onions into a pot, and serving the soup after cooking it for
+20timesteps. In this collaborative scenario, both sparse and
+stage rewards are equally shared between the agents.
+Agent Policies
+For the human agent, we follow the methodology outlined
+in (Carroll et al. 2019) and model the human agent’s be-
+havior by using the behavior cloning policy. Specifically,
+the human behavior data is split into training and testing
+datasets (Carroll 2024) and the behavior cloning models
+used in the training and testing phases employed the respec-
+tive datasets.
+For the AI agent, we utilize the RL algorithm to develop
+its policy since we need to interact with its dynamic hu-
+man coordinator and the environment. The RL algorithm’sstate space corresponds to the Overcooked grid world, and
+its action space includes six discrete actions: move up, move
+down, move left, move right, stay, and interact. The “inter-
+act” action is context-sensitive, enabling the agent to pick
+up or place onions, plates, or soup, depending on the current
+state of the environment. Our implementation is based on the
+Gym-compatible Overcooked environment given in (Carroll
+2024).
+To evaluate the performance of our proposed IReCa RL
+algorithm, we compare it with two baseline RL algorithms,
+training and testing the AI agent using each of the three poli-
+cies.
+PPO BCis a baseline algorithm employing the traditional
+proximal policy optimization (PPO) policy, where the re-
+ward consists of both the sparse reward and a linearly faded
+stage reward, as described in (Carroll et al. 2019).
+Causal is a baseline algorithm that incorporates an intrinsic
+causal influence reward supplementing the extrinsic reward
+in PPO BC. The causal influence reward encourages the AI
+agent to take actions that can lead to significant changes in
+its coordinator’s actions (Jaques et al. 2019).
+IReCa is our proposed IReCa RL algorithm, which incorpo-
+rates our innovative intrinsic rewards and the context-aware
+weights supplementing the extrinsic reward in PPO BC.
+For fair comparisons, these three RL algorithms share the
+same neural network architecture and hyper-parameters. The
+PPO structure follows the classical PPO algorithm given
+in (Schulman et al. 2017; Chrysovergis 2024). The archi-
+tecture of both the actor and critic networks comprise three
+convolutional layers (with filter sizes of 5×5,3×3, and3×3,
+each containing 25filters), followed by two fully connected
+layers with 64hidden units each. Key hyper-parameters are
+summarized in Table 1, and further details for parameter set-
+tings can be found in our GitHub repository.
+Results and Analysis
+As shown in Fig. 2, we present experimental results in
+two distinct layouts of the Overcooked environment. The
+Cramped Room layout shown in Fig. 2a poses significant
+low-level coordination challenges due to the confined space,
+leading to a high susceptibility to agent collisions. In con-
+trast, the Asymmetric Advantages layout depicted in Fig. 2b
+evaluates the ability of agents to adopt high-level strategies
+that leverage their individual strengths.
+For each layout, the training phase consists of statistical
+results from 18independent experiments, with each exper-
+iment plotting the episode return over 400epochs, using a
+human model trained on the corresponding dataset. In the
+testing phase, we provide the average episode return from
+400independent runs using the human model derived from
+the testing dataset.
+In the experimental results, we address following two key
+questions:
+1) Is our IReCa RL algorithm more effective and efficient
+than the baseline algorithms?
+2) If so, what factors contribute to the superior performance
+of IReCa compared to the baselines?
+0 100 200 300 400
+Epoch050100150200Sparse return PPOBC
+Causal
+IReCaTraining
+Sparse return050100150200 Testing
+(a) Average sparse episode return.
+0 100 200 300 400
+Epoch050100150200Stage returnPPOBC
+Causal
+IReCaTraining
+Sparse return050100150200 Testing
+(b) Average stage episode return.
+0 100 200 300 400
+Epoch050100150200Return of PPOBCSparse
+Stage
+PPOBC
+0 100 200 300 400
+Epoch050100150200Return of CausalSparse
+Stage
+Causal Causal
+0 100 200 300 400
+Epoch050100150200Return of IReCaSparse
+Stage
+Intrinsic: RH
+Intrinsic: RA
+ IReCa
+(c) Effectiveness analysis of the intrinsic rewards.
+0 25 50 75 100 125 150
+Epoch0.00.51.01.52.0Context-aware weightn
+κE
+0 25 50 75 100 125 150
+Epoch0.00.51.01.52.0Context-aware weightA
+n
+κIA
+0 25 50 75 100 125 150
+Epoch0.00.51.01.52.0Context-aware weightH
+n
+ κIH
+(d) Context-aware weights in the training phase.
+Figure 3: Simulation results in Cramped Room layout of Overcooked environment depicted in Fig 2a. By using the intrinsic
+rewards to have comprehensive exploration and context-aware weights to highlight the exploration in the early training phases,
+our IReCa RL algorithm achieves higher sparse rewards compared with the baselines.
+Cramped Room Fig. 3 presents the simulation results for
+the Cramped Room layout of the Overcooked environment.
+As shown in Fig. 3a, the IReCa algorithm can achieve
+approximately 20% higher average sparse episode returns
+compared to baseline methods during both the training and
+testing phases. These results indicate that IReCa is more
+effective than the baselines, and validate that our IReCa
+is more effective in identifying and exploring sparse state-
+action pairs that lead to targeted sparse rewards. Further-
+more, the superior episode returns observed during testing
+experiments suggest that IReCa not only enhances explo-
+ration but also exhibits robustness and generalization capa-
+bilities, ensuring that the performance gains are due to ef-
+fective exploration rather than overfitting to the training en-
+vironment.
+Previous studies have identified two primary factors con-
+tributing to performance degradation for AI agents in the
+Cramped Room layout: collisions with the human coordina-
+tor (Carroll et al. 2019) and waiting for the human agent to
+vacate the AI agent’s preferred path (Zhao et al. 2023). Our
+analysis extends this by hypothesizing that the AI agent mayalso become trapped in local optima by prioritizing stage re-
+turns over sparse rewards. This is because the stage episode
+returns are significantly higher than the sparse episode re-
+turns in the early training epochs, which may lead the AI
+agent to engage in unnecessary and redundant actions aimed
+at optimizing stage rewards.
+Fig. 3c further investigates the role of intrinsic rewards
+in this process. As depicted in the figure, these intrinsic re-
+wards are significantly higher than those in the causal base-
+line, helping the AI agent avoid local optima and achieve
+better overall performance. Since the primary objective in
+the Overcooked environment is task completion, indepen-
+dent exploration of the AI agent’s action space is crucial.
+The intrinsic rewards in IReCa facilitate this exploration,
+complementing the human agent’s actions and improving
+both coordination and efficiency.
+Lastly, Fig. 3d illustrates the evolution of context-aware
+weights during training. In the initial epochs, the weights
+assign higher values to intrinsic rewards and lower values
+to extrinsic rewards. This trend aligns with our expectation
+that comprehensive early-stage exploration will ultimately
+0 100 200 300 400
+Epoch050100150200Sparse return PPOBC
+Causal
+IReCaTraining.
+Sparse return050100150200 Testing.
+(a) Average sparse episode return.
+0 100 200 300 400
+Epoch050100150200Stage returnPPOBC
+Causal
+IReCaTraining.
+Sparse return050100150200 Testing.
+(b) Average stage episode return.
+0 100 200 300 400
+Epoch050100150200Return of PPOBCSparse
+Stage
+PPOBC
+0 100 200 300 400
+Epoch050100150200Return of CausalSparse
+Stage
+Causal Causal
+0 100 200 300 400
+Epoch050100150200Return of IReCaSparse
+Stage
+Intrinsic: RH
+Intrinsic: RA
+ IReCa
+(c) Effectiveness analysis of the intrinsic rewards.
+0 50 100 150 200
+Epoch0.00.51.01.52.0Context-aware weightn
+κE
+0 50 100 150 200
+Epoch0.00.51.01.52.0Context-aware weightA
+n
+κIA
+0 50 100 150 200
+Epoch0.00.51.01.52.0Context-aware weightH
+n
+ κIH
+(d) Context-aware weights in the training phases.
+Figure 4: Simulation results in Asymmetric Advantages layout of Overcooked environment depicted in Fig 2b, which is easier
+to explore compared with Cramped Room depicted in Fig. 2a. By using the designed context-aware weights to highlight the
+exploitation, our IReCa RL algorithm converges significantly faster than the baselines.
+lead to better sparse rewards in human-AI coordination.
+Asymmetric Advantages Fig. 4 presents the experimental
+results for the Asymmetric Advantages layout (see Fig. 2b).
+In this layout, agents start in different areas and have access
+to two pots for cooking onion soup, which reduces the like-
+lihood of collisions compared to the Cramped Room layout.
+Similar to the Cramped Room results, Figs.4a, 4b, and 4c
+show that IReCa consistently outperforms the baseline algo-
+rithms in sparse, stage, and intrinsic episode returns, respec-
+tively. Interestingly, the gains of the episode returns are less
+pronounced during the training phases. This phenomenon is
+due to the reduced frequency of collisions and waiting times
+compared with the Cramped Room layout, as the agents are
+spatially separated and have access to more pots.
+Despite this, IReCa reduces the training epochs required
+for convergence by approximately 67% compared to the
+baselines. This acceleration is attributed to the context-
+aware weights (Fig. 4d), which prioritize updates to extrinsic
+rewards and optimize the AI agent’s exploration of its action
+space. This trend of the context-aware weights is in contrastto the Cramped Room layout, where additional exploration
+is necessary to minimize waiting times.
+The testing results in Figs. 4a and 4b further support
+that in human-AI coordination scenarios employing the pre-
+trained human model, IReCa is more effective than tradi-
+tional causal influence rewards that are valuable in purely
+MARL contexts.
+Conclusion
+To enhance human-AI coordination, we introduced an In-
+trinsic Reward-enhanced Context-aware (IReCa) reinforce-
+ment learning algorithm. This approach incorporated inno-
+vative intrinsic rewards to facilitate comprehensive explo-
+ration and novel context-aware weights to optimize explo-
+ration and exploitation, supplementing traditional extrinsic
+rewards. Extensive experimental training results in two lay-
+outs of the Overcooked environment demonstrated that our
+IReCa increased episode returns by approximately 20% and
+reduced the number of epochs required for convergence
+by approximately 67%. Testing experiments further under-
+scored the algorithm’s robustness and generalization abili-
+ties across different human-AI coordination layouts. These
+findings highlighted IReCa’s potential applicability in real-
+world domains requiring critical human-AI coordination and
+environment demanding seamless human-AI interaction.
+Acknowledgement
+This work was supported by Asian Office of Aerospace Re-
+search and Development under Grants 23IOA087.
+References
+Achiam, J.; and OpenAI. 2018. Introduction to RL: Part
+1: Key Concepts in RL. https://spinningup.openai.com/en/
+latest/spinningup/rl intro.html. Accessed: 2024-07-13.
+Andrychowicz, M.; Denil, M.; Colmenarejo, S. G.; Hoff-
+man, M. W.; Pfau, D.; Schaul, T.; Shillingford, B.; and
+de Freitas, N. 2016. Learning to learn by gradient descent
+by gradient descent. In Proceedings of the 30th Interna-
+tional Conference on Neural Information Processing Sys-
+tems, NIPS’16, 3988–3996. Red Hook, NY , USA: Curran
+Associates Inc.
+Berner, C.; Brockman, G.; Chan, B.; Cheung, V .; Debiak,
+P.; Dennison, C.; Farhi, D.; Fischer, Q.; Hashme, S.; Hesse,
+C.; J ´ozefowicz, R.; Gray, S.; Olsson, C.; Pachocki, J. W.;
+Petrov, M.; de Oliveira Pinto, H. P.; Raiman, J.; Salimans,
+T.; Schlatter, J.; Schneider, J.; Sidor, S.; Sutskever, I.; Tang,
+J.; Wolski, F.; and Zhang, S. 2019. Dota 2 with Large Scale
+Deep Reinforcement Learning. ArXiv , abs/1912.06680.
+Carroll, M. 2024. HumanCompatibleAI, overcooked-
+ai. https://github.com/HumanCompatibleAI/overcooked ai.
+Accessed: 2024-07-13.
+Carroll, M.; Shah, R.; Ho, M. K.; Griffiths, T. L.; Seshia,
+S. A.; Abbeel, P.; and Dragan, A. 2019. On the utility of
+learning about humans for human-AI coordination. In Pro-
+ceedings of the 33rd International Conference on Neural In-
+formation Processing Systems . Red Hook, NY , USA: Curran
+Associates Inc.
+Christiano, P. F.; Leike, J.; Brown, T.; Martic, M.; Legg, S.;
+and Amodei, D. 2017. Deep Reinforcement Learning from
+Human Preferences. In Guyon, I.; Luxburg, U. V .; Bengio,
+S.; Wallach, H.; Fergus, R.; Vishwanathan, S.; and Garnett,
+R., eds., Advances in Neural Information Processing Sys-
+tems, volume 30. Curran Associates, Inc.
+Chrysovergis, I. 2024. Code examples, Proximal Policy Op-
+timization. https://keras.io/examples/rl/ppo cartpole/. Ac-
+cessed: 2024-07-13.
+Du, X.; Ye, Y .; Zhang, P.; Yang, Y .; Chen, M.; and Wang, T.
+2024. Situation-Dependent Causal Influence-Based Cooper-
+ative Multi-Agent Reinforcement Learning. In Proceedings
+of the AAAI Conference on Artificial Intelligence , 17362–
+17370.
+Ghosal, G. R.; Zurek, M.; Brown, D. S.; and Dragan, A. D.
+2023. The Effect of Modeling Human Rationality Level on
+Learning Rewards from Multiple Feedback Types. Proceed-
+ings of the AAAI Conference on Artificial Intelligence , 37(5):
+5983–5992.Goecks, V . G.; Gremillion, G. M.; Lawhern, V . J.; Valasek,
+J.; and Waytowich, N. R. 2019. Efficiently Combining Hu-
+man Demonstrations and Interventions for Safe Training of
+Autonomous Systems in Real-Time. Proceedings of the
+AAAI Conference on Artificial Intelligence , 33(01): 2462–
+2470.
+Haarnoja, T.; Zhou, A.; Abbeel, P.; and Levine, S. 2018.
+Soft Actor-Critic: Off-Policy Maximum Entropy Deep Re-
+inforcement Learning with a Stochastic Actor. In Dy, J.; and
+Krause, A., eds., Proceedings of the 35th International Con-
+ference on Machine Learning , volume 80 of Proceedings of
+Machine Learning Research , 1861–1870. PMLR.
+Hadfield-Menell, D.; Dragan, A.; Abbeel, P.; and Rus-
+sell, S. 2016. Cooperative inverse reinforcement learn-
+ing. In Proceedings of the 30th International Confer-
+ence on Neural Information Processing Systems , NIPS’16,
+3916–3924. Red Hook, NY , USA: Curran Associates Inc.
+ISBN 9781510838819.
+Hao, X.; She, C.; Yeoh, P. L.; Liu, Y .; Vucetic, B.; and Li, Y .
+2023a. Hybrid-Task Meta-Learning: A Graph Neural Net-
+work Approach for Scalable and Transferable Bandwidth
+Allocation. arXiv:2401.10253.
+Hao, X.; Yeoh, P. L.; Liu, Y .; She, C.; Vucetic, B.; and Li, Y .
+2023b. Graph Neural Network-Based Bandwidth Allocation
+for Secure Wireless Communications. In 2023 IEEE Inter-
+national Conference on Communications Workshops (ICC
+Workshops) , 332–337.
+Hu, Y .; Wang, W.; Jia, H.; Wang, Y .; Chen, Y .; Hao, J.; Wu,
+F.; and Fan, C. 2020. Learning to utilize shaping rewards: a
+new approach of reward shaping. In Proceedings of the 34th
+International Conference on Neural Information Processing
+Systems , NIPS ’20. Red Hook, NY , USA: Curran Associates
+Inc. ISBN 9781713829546.
+Jaques, N.; Lazaridou, A.; Hughes, E.; C ¸ aglar G ¨ulc ¸ehre; Or-
+tega, P. A.; Strouse, D.; Leibo, J. Z.; and de Freitas, N.
+2019. Social Influence as Intrinsic Motivation for Multi-
+Agent Deep Reinforcement Learning. In Proceedings of the
+International Conference on Machine Learning .
+Liu, S.; Johns, E.; and Davison, A. J. 2019. End-To-End
+Multi-Task Learning With Attention. In 2019 IEEE/CVF
+Conference on Computer Vision and Pattern Recognition
+(CVPR) , 1871–1880.
+Lowe, R.; WU, Y .; Tamar, A.; Harb, J.; Pieter Abbeel,
+O.; and Mordatch, I. 2017. Multi-Agent Actor-Critic for
+Mixed Cooperative-Competitive Environments. In Guyon,
+I.; Luxburg, U. V .; Bengio, S.; Wallach, H.; Fergus, R.;
+Vishwanathan, S.; and Garnett, R., eds., Advances in Neural
+Information Processing Systems , volume 30. Curran Asso-
+ciates, Inc.
+Mnih, V .; Badia, A. P.; Mirza, M.; Graves, A.; Lillicrap, T.;
+Harley, T.; Silver, D.; and Kavukcuoglu, K. 2016. Asyn-
+chronous Methods for Deep Reinforcement Learning. In
+Balcan, M. F.; and Weinberger, K. Q., eds., Proceedings of
+The 33rd International Conference on Machine Learning ,
+volume 48 of Proceedings of Machine Learning Research ,
+1928–1937. New York, New York, USA: PMLR.
+Ng, A. Y .; Harada, D.; and Russell, S. J. 1999. Policy Invari-
+ance Under Reward Transformations: Theory and Applica-
+tion to Reward Shaping. In Proceedings of the Sixteenth
+International Conference on Machine Learning , ICML ’99,
+278–287. San Francisco, CA, USA: Morgan Kaufmann Pub-
+lishers Inc. ISBN 1558606122.
+Pathak, D.; Agrawal, P.; Efros, A. A.; and Darrell, T.
+2017. Curiosity-driven exploration by self-supervised pre-
+diction. In Proceedings of the 34th International Conference
+on Machine Learning - Volume 70 , ICML’17, 2778–2787.
+JMLR.org.
+Rashid, T.; Samvelyan, M.; De Witt, C. S.; Farquhar, G.; Fo-
+erster, J.; and Whiteson, S. 2020. Monotonic value function
+factorisation for deep multi-agent reinforcement learning. J.
+Mach. Learn. Res. , 21(1).
+Sarkar, B.; Talati, A.; Shih, A.; and Sadigh, D. 2022. Pan-
+theonRL: A MARL Library for Dynamic Training Interac-
+tions. Proceedings of the AAAI Conference on Artificial In-
+telligence , 36(11): 13221–13223.
+Schulman, J.; Wolski, F.; Dhariwal, P.; Radford, A.; and
+Klimov, O. 2017. Proximal Policy Optimization Algorithms.
+CoRR , abs/1707.06347.
+Silver, D.; Hubert, T.; Schrittwieser, J.; Antonoglou, I.; Lai,
+M.; Guez, A.; Lanctot, M.; Sifre, L.; Kumaran, D.; Graepel,
+T.; Lillicrap, T. P.; Simonyan, K.; and Hassabis, D. 2017.
+Mastering Chess and Shogi by Self-Play with a General Re-
+inforcement Learning Algorithm. ArXiv , abs/1712.01815.
+Song, Y .; Wang, J.; Lukasiewicz, T.; Xu, Z.; Zhang, S.; Wo-
+jcicki, A.; and Xu, M. 2020. Mega-Reward: Achieving
+Human-Level Play without Extrinsic Rewards. Proceedings
+of the AAAI Conference on Artificial Intelligence , 34(04):
+5826–5833.
+Stiennon, N.; Ouyang, L.; Wu, J.; Ziegler, D. M.; Lowe, R.;
+V oss, C.; Radford, A.; Amodei, D.; and Christiano, P. 2020.
+Learning to summarize from human feedback. In Proceed-
+ings of the 34th International Conference on Neural Infor-
+mation Processing Systems , NIPS ’20. Red Hook, NY , USA:
+Curran Associates Inc. ISBN 9781713829546.
+Sutton, R. S.; and Barto, A. G. 2018. Reinforcement Learn-
+ing: An Introduction . The MIT Press, second edition.
+Vaswani, A.; Shazeer, N.; Parmar, N.; Uszkoreit, J.; Jones,
+L.; Gomez, A. N.; Kaiser, L.; and Polosukhin, I. 2017. At-
+tention is all you need. In Proceedings of the 31st Inter-
+national Conference on Neural Information Processing Sys-
+tems, NIPS’17, 6000–6010. Red Hook, NY , USA: Curran
+Associates Inc. ISBN 9781510860964.
+Vinyals, O.; Babuschkin, I.; Czarnecki, W. M.; Mathieu, M.;
+Dudzik, A.; Chung, J.; Choi, D. H.; Powell, R. E.; Ewalds,
+T.; Georgiev, P.; Apps, C.; and Silver, D. 2019. Grandmaster
+level in StarCraft II using multi-agent reinforcement learn-
+ing. Nature , 575(7782): 350–354.
+Wolpert, D.; and Macready, W. 1997. No free lunch theo-
+rems for optimization. IEEE Transactions on Evolutionary
+Computation , 1(1): 67–82.
+Zhao, R.; Song, J.; Yuan, Y .; Hu, H.; Gao, Y .; Wu, Y .; Sun,
+Z.; and Yang, W. 2023. Maximum Entropy Population-Based Training for Zero-Shot Human-AI Coordination. Pro-
+ceedings of the AAAI Conference on Artificial Intelligence ,
+37(5): 6145–6153.
+Zhao, T.; Liu, L.; Huang, G.; Li, H.; Liu, Y .; GuiQuan, L.;
+and Shi, S. 2020. Balancing Quality and Human Involve-
+ment: An Effective Approach to Interactive Neural Machine
+Translation. Proceedings of the AAAI Conference on Artifi-
+cial Intelligence , 34(05): 9660–9667.

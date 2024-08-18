@@ -1,0 +1,635 @@
+Eﬃcient Agent Communication
+in Multi-agent Systems
+Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+Department of Computer Science
+University of Illinois at Urbana-Champaign,
+Urbana IL 61801, USA
+{mjang,amrmomen,agha }@uiuc.edu
+Abstract. In open multi-agent systems, agents are mobile and may
+leave or enter the system. This dynamicity results in two closely re-
+lated agent communication problems, namely, eﬃcient message passing
+and service agent discovery. This paper describes how these problems areaddressed in the Actor Architecture (AA). Agents in AA obey the oper-
+ational semantics of actors, and the architecture is designed to supportlarge-scale open multi-agent systems. Eﬃcient message passing is facil-itated by the use of dynamic names: a part of the mobile agent name
+is a function of the platform that currently hosts the agent. To facil-
+itate service agent discovery, middle agents support application agent-oriented matchmaking and brokering services. The middle agents may
+accept search objects to enable customization of searches; this reduces
+communication overhead in discovering service agents when the matchingcriteria are complex. The use of mobile search objects creates a security
+threat, as codes developed by diﬀerent groups may be moved to the same
+middle agent. This threat is mitigated by restricting which operations amigrated object is allowed to perfo rm. We describes an empirical eval-
+uation of these ideas using a large scale multi-agent UAV (UnmannedAerial Vehicle) simulation that was developed using AA.
+1 Introduction
+In open agent systems, new agents may be created and agents may move from
+one computer node to another. With the growth of computational power andnetwork bandwidth, large-scale open agent systems are a promising technology
+to support coordinated computing. For example, agent mobility can facilitate
+eﬃcient collaboration with agents on a particular node. A number of multi-agentsystems, such as EMAF [3], JADE [4], InfoSleuth [16], and OAA [8], support
+open agent systems. However, before the vision of scalable open agent systems
+can be realized, two closely relat ed problems must be addressed:
+–Message Passing Problem : In mobile agent systems, eﬃciently sending mes-
+sages to an agent is not simple because they move continuously from one
+agent platform to another. For example, the original agent platform on which
+an agent is created should manage the location information about the agent.
+R. Choren et al. (Eds.): SELMAS 2004, LNCS 3390, pp. 236–253, 2005.
+c/circlecopyrtSpringer-Verlag Berlin Heidelberg 2005
+Eﬃcient Agent Communication in Multi-agent Systems 237
+However, doing so not only increases the message passing overhead, but it
+slows down the agent’s migration: before migrating, the agent’s current host
+platform must inform the the original platform of the move and may wait
+for an acknowledgement before enabling the agent.
+–Service Agent Discovery Problem :I na no p e na g e n ts y s t e m ,t h em a i la d -
+dresses or names of all agents are not globally known. Thus an agent maynot have the addresses of other agents with whom it needs to communi-
+cate. To address this diﬃculty, middle agent services, such as brokering and
+matchmaking services [25], need to be supported. However, current middle
+agent systems suﬀer from two problems: lack of expressiveness –not all search
+queries can be expressed using the middle agent supported primitives; andincomplete information –a middle agent does not possess the necessary in-
+formation to answer a user query.
+We address the message passing problem for mobile agents in part by provid-
+ing a richer name structure: the names of agents include information about their
+current location. When an agent moves, the location information in its name isupdated by the platform that currently hosts the agent. When the new name
+is transmitted, the location information is used by other platforms to ﬁnd the
+current location of that agent if it is the receiver of a message. We address the
+service agent discovery problem in large-scale open agent systems by allowing
+client agents to send search objects to be executed in the middle agent addressspace. By allowing agents to send their own search algorithms, this mitigates
+both the lack of expressiveness and incomplete information.
+We have implemented these ideas in a Java-based agent system called the
+Actor Architecture (orAA). AA supports the actor semantics for agents: each
+agent is an autonomous object with a unique name (address), message pass-
+ing between agents is asynchronous, new agents may be dynamically created,
+and agent names may be communicated [1]. AA has been designed with a
+modular, extensible, and application-independent structure. While AA is be-ing used to develop tools to facilitate large-scale simulations, it may also be
+used for other large-scale open agent applications. The primary features of AA
+are: a light-weight implementation of agents, reduced communication overhead
+between agents, and improved expressiveness of middle agents.
+This paper is organized as follows. Section 2 introduces the overall structure
+and functions of AA as well as the agent life cycle model in AA. Section 3
+explains our solutions to reduce the message passing overhead for mobile agents
+in AA, while Section 4 shows how the search object of AA extends the basicmiddle agent model. Section 5 descries the experimental setting and presents an
+evaluation of our approaches. Related work is explained in Section 6, and ﬁnally,
+Section 7 concludes this paper with future research directions.
+2 The Actor Architecture
+AA provides a light-weight implementation of agents as active objects or ac-tors [1]. Agents in AA are implemented as threads instead of processes. They
+238 Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+use object-based messages instead of string-based messages, and hence, they do
+not need to parse or interpret a given string message, and may use the type
+information of each ﬁeld in a delivered message. The actor model provides the
+infrastructure for a variety of agent systems; actors are social and reactive, but
+they are notexplicitly required to be “autonomous” in the sense of being proac-
+tive [28]. However, autonomous actors may be implemented in AA, and manyof our experimental studies require proactive actors. Although the term agent
+has been used to mean proactive actors, for our purposes the distinction is not
+critical. In this paper, we use the terms ‘agent’ and ‘actor’ as synonyms.
+The Actor Architecture consi sts of two main components:
+–AA platforms which provide the system environment in which actors exist
+and interact with other actors. In o rder to execute actors, each computer
+node must have one AA platform. AA platforms provide actor state man-agement, actor communication, actor migration, and middle agent services.
+–Actor library which is a set of APIs that facilitate the development of agents
+on the AA platforms by providing the user with a high level abstraction ofservice primitives. At execution time, the actor library works as the interface
+between actors and their respective AA platforms.
+An AA platform consists of eight components (see Fig. 1): Message Manager,
+Transport Manager, Transp ort Sender, Transport Receiver, Delayed Message
+Manager, Actor Manager, Actor Migration Manager, and ATSpace.
+AA Platform
+AA PlatformMessage ManagerActor Manager Actor Migration Manager
+Delayed Message Manager
+Transport ReceiverTransport Receiver Transport Sender
+Transport SenderATSpace
+Transport Manager
+Transport ManagerActor
+Fig. 1. Architecture of an AA Platform.
+Eﬃcient Agent Communication in Multi-agent Systems 239
+TheMessage Manager handles message passing between actors. Every mes-
+sage passes through at least one Mess age Manager. If the receiver actor of a
+message exists on the same AA platform, the Message Manager of that platform
+directly delivers the message to the receive r actor. However, if the receiver actor
+is not on the same AA platform, this Message Manager delivers the message to
+the Message Manager of the platform wher e the receiver currently resides, and
+ﬁnally that Message Manager delivers t he message to the receiver actor. The
+Transport Manager maintains a public port for message passing between diﬀer-
+ent AA platforms. When a sender actor sends a message to another actor on adiﬀerent AA platform, the Transport Sender residing on the same platform as
+the sender receives the message from the Message Manager of that platform and
+delivers it to the Transport Receiver on the AA platform of the receiver. If there
+is no built-in connection between these two AA platforms, the Transport Sender
+contacts the Transport Manager of the AA platform of the receiver actor to open
+a connection so that the Transport Man ager can create a Transport Receiver for
+the new connection. Finally, the Tran sport Receiver receives the message and
+delivers it to the Message Manager on the same platform.
+TheDelayed Message Manager temporarily holds messages for mobile actors
+while they are moving from one AA platform to another. The Actor Manager of
+an AA platform manages the state of actors that are currently executing as well
+as the locations of mobile actors created on this platform. The Actor Migration
+Manager manages actor migration.
+TheATSpace provides middle agent services, such as matchmaking and bro-
+kering services. Unlike other system co mponents, an ATSpace is implemented
+as an actor. Therefore, any actor may create an ATSpace, and hence, an AAplatform may have more than one ATSpaces. The ATSpace created by an AA
+platform is called the default ATSpace of the platform, and all actors can obtain
+the names of default ATSpaces. Once an actor has the name of an ATSpace,
+the actor may send the ATSpace messages in order to use its services for ﬁnding
+other actors that mat ch a given criteria.
+In AA, actors are implemented as active objects and are executed as threads;
+actors on an AA platform are executed with that AA platform as part of one
+process. Each actor has one actor life cycle state on one AA platform at anytime (see Fig. 2). When an actor exists on its original AA platform, its state
+information appears within only its original AA platform. However, the state
+of an actor migrated from its original AA platform appears both on its original
+AA platform and on its current AA platform. When an actor is ready to process
+a message its state becomes Active and stays so while the actor is processing
+the message. When an actor initiates migration, its state is changed to Transit .
+Once the migration ends and the actor restarts, its state becomes Active on
+the new AA platform and Remote on the original AA platform. Following a user
+request, an actor in the Active state may move to the Suspended state.
+In contrast to other agent life cycle models (e.g. [10,18]), the AA life cycle
+model uses the Remote state to indicate that an actor that was created on the
+current AA platform is working on another AA platform.
+240 Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+Move Start
+Suspend
+Move StartResume
+Destroy
+Create or
+ExecuteUnknown
+ExecuteRemote
+Transit ActiveSuspended
+EndMove
+Fig. 2. Actor Life Cycle Model.
+3 Optimized Message Delivery
+We describe the message delivery mechanisms used to support inter-actor com-
+munications. Speciﬁcally, AA uses two approaches to reduce the communicationoverhead for mobile actors that are not on their original AA platforms: location-
+based message passing anddelayed message passing .
+3.1 Location-Based Message Passing
+Before an actor can send messages to other actors, it should know the names
+of the intended receiver actors. In AA, each actor has its own unique name
+called UAN (Universal Actor Name ). The UAN of an actor includes the location
+information and the unique identiﬁcation number of the actor as follows:
+uan://128.174.245.49:37
+From the above name, we can infer that the actor exists on the host whose IP
+address is 128.174.245.49 , and that the actor is distinguished from other actors
+on the same platform with its unique identiﬁcation number 37.
+When the Message Manager of a sender actor receives a message whose re-
+ceiver actor has the above name, it chec ks whether the receiver actor exists
+on the same AA platform. If they are on the same AA platform, the Message
+Manager ﬁnds the receiver actor on this AA platform and directly delivers themessage. Otherwise, the Message Manager of the sender actor delivers the mes-
+sage to the Message Manager of the receiver actor. In order to ﬁnd the AA
+platform where the Message Manager of t he receiver actor exists, the location
+information 128.174.245.49 in the UAN of the receiver actor is used. When the
+Message Manager on the AA platform with IP address 128.174.245.49 receives
+the message, it ﬁnds the receiver actor there and delivers the message.
+The above actor naming and message de livery scheme works correctly when
+all actors are on their original AA pla tforms. However, because an actor may
+Eﬃcient Agent Communication in Multi-agent Systems 241
+migrate from one AA platform to another, we extend the basic behavior of the
+Message Manager with a forwarding service: when a Message Manager receives
+a message for an actor that has migrated, it delivers the message to the current
+AA platform of the mobile actor. To facilitate this service, each AA platform
+maintains the current locations of actor s that were created on it, and updates
+the location information of actors that have come from other AA platforms ontheir original AA platforms.
+The problem with using only universal actor names for message delivery is
+that every message for a migrated actor still has to pass through the original AAplatform in which the actor was created (Fig. 3.a). This kind of blind indirection
+may happen even in situations where the receiver actor is currently on an AA
+platform that is near the AA platform of the sender actor. Since message passing
+between actor platforms is relatively expensive, AA uses Location-based Actor
+Name (LAN) for mobile actors in order to generally eliminate the need for
+this kind of indirection. Speciﬁcally, the LAN of an actor consists of its current
+location and its UAN as follows:
+lan://128.174.244.147//128.174.245.49:37
+The current location of a mobile actor is set by an AA platform when the
+actor arrives on the AA platform. If the current location is the same as the
+location where an actor was created, the LAN of the actor does not have any
+special information beyond its UAN.
+Under the location-based message passing scheme, when the Message Man-
+ager of a sender actor receives a message for a remote actor, it extracts the
+current location of the receiver actor fr om its LAN and delivers the message to
+the AA platform where the receiver actor exists. The rest of the procedure formessage passing is similar to that in the UAN-based message passing scheme.
+Fig. 3.b shows how the location-based message passing scheme works. Actor one
+with ual://C//A:15 sends its ﬁrst message to actor twothrough the original
+AA platform of actor twobecause actor onedoes not know the location of ac-
+tortwo. This message includes the location information about actor oneas the
+sender actor. Therefore, when actor tworeceives the message, it knows the loca-
+tion of actor one, and it can now directly send a message to actor one. Similarly,
+when actor onereceives a message from actor two, it learns the location of actor
+two. Finally, the two actors can directly communicate with each other without
+mediation by their original AA platforms.
+In order to use the LAN address scheme, the location information in a LAN
+should be recent. However, mobile acto rs may move repeatedly, and a sender
+actor may have old LANs of mobile actors. Thus a message for a mobile actormay be delivered to its previous AA platform from where the actor left. This
+problem is addressed by having the old AA platform deliver the message to the
+original AA platform where the actor was created; the original platform alwaysmanages the current addresses of its acto rs. When the receiver actor receives the
+message delivered through its original AA platform, the actor may send a null
+242 Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+b. Location−based Message PassingPlatform A Platform B Platform Ca. UAN−based Message PassingPlatform A Platform B Platform C
+Actor one (uan://A:15) 
+migrates to Platform C.
+Agent two (uan://A:16) 
+migrates to Platform B.
+Agent one sends 
+a message to actor two.
+Agent two replies to
+actor one.
+a message to actor one.Agent two sends 
+Agent one replies to
+actor two.Actor one (uan://A:15) 
+migrates to Platform C.
+Agent two (uan://A:16) 
+migrates to Platform B.
+Agent one sends 
+a message to actor two.
+Agent two replies to
+actor one.
+a message to actor one.Agent two sends 
+Agent one replies to
+actor two.
+Fig. 3. Message Passing between Mobile Actors.
+Eﬃcient Agent Communication in Multi-agent Systems 243
+message with its LAN to update its location at the sender actor. Therefore, the
+sender actor can use the updated information for subsequent messages.
+3.2 Delayed Message Passing
+While a mobile actor is moving from one AA platform to another, the current AA
+platform of the actor is not well deﬁned. In AA, because the location informationof a mobile actor is updated after it ﬁnishes migration, its original AA platform
+thinks the actor still exists on its old AA platform during migration. Therefore,
+when the Message Manager of the origin al AA platform receives a message for
+a mobile actor, it sends the message to the Message Manager of the old AA
+platform thinking that it is still there. After the Message Manager of the old AAplatform receives the message, it forwa rds the message to the Message Manager
+of the original AA platform. Thus, a message is continuously passed between
+these two AA platforms until the mobile actor updates the Actor Manager of itsoriginal AA platform with its new location.
+In order to avoid unnecessary message thrashing, we use the Delayed Message
+Manager in each AA platform. After the actor starts its migration, the Actor
+Manager of the old AA platform changes its state to be Transit .F r o mt h i s
+moment, the Delayed Message Manager of this platform holds messages for thismobile actor until the actor reports that its migration has ended. After the mobile
+actor ﬁnishes its migration, its new AA platform sends its old AA platform and
+its original AA platform a message to inform them that the migration processhas ended. When these two AA platform s receive this message, the original AA
+platform changes the state of the mobile actor from Transit toRemote while
+the old AA platform removes all information about the mobile actor, and the
+Delayed Message Manager of the old AA platform forwards the delayed messages
+to the Message Manager of the new AA platform of the actor.
+4 Active Brokering Service
+An ATSpace supports active brokering services by allowing agents to send their
+own search algorithms to be executed in the ATSpace address space [14]. We
+compare this service to current middle agent services.
+Many middle agents are based on attribute-based communication . Service
+agents register themselves with the middle agent by sending a tuple whose at-
+tributes describe the service they advert ise. To ﬁnd the desired service agents, a
+client agent supplies a tuple template with constraints on attributes. The middle
+agent then tries to ﬁnd service agents whose registered attributes match the sup-
+plied constraints. Systems vary more or less according to the types of constraints
+(primitives) they support. Typically, a middle agent provides exact matching or
+regular expression matching [2,11,17]. As we mentioned earlier, this solutionsuﬀers from a lack of expressiveness and incomplete information.
+For example, consider a middle agent with information about seller agents.
+Each service agent (seller) advertises itself with the following attributes <actor
+244 Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+name, seller city, product name, product price> . A client agent with the
+following query is stuck:
+Q1:What are the best two (in terms of price) sellers that oﬀer computers and
+whose locations are roughly within 50 miles of me ?
+Considering the current tuple space technology, the operator “best two” is
+clearly not supported (expressiveness problem). Morever, the tuple space doesnot include distance information between cities (incomplete information prob-
+lem). Faced with these diﬃculties, a u ser with this complex query Q1 has to
+transform it into a simpler one that is accepted by the middle agent which re-
+trieves a superset of the data to be ret rieved by Q1. In our example, a simpler
+query could be:
+Q2:Find all tuples about sellers that sell computers.
+An apparent disadvantage of the above approach is the movement of a large
+amount of data from the middle agent space to the buyer agent, especially if Q2is semantically distant from Q1. In order to reduce communication overhead,
+ATSpace allows a sender agent to send its own search algorithm to ﬁnd service
+agents, and the algorithm is executed in the ATSpace. In our example, the buyer
+agent would send a search object that would inspect tuples in the middle agent
+and select the best two sellers th at satisfy the buyer criteria.
+4.1 Security Issues
+Although active brokering services mitigate the limitations of middle agents, such
+as brokers or matchmakers, they also introduce the following security problems
+in ATSpaces:
+–Data Integrity : A search object may not modify tuples owned by other actors.
+–Denial of Service : A search object may not consume too much processing
+time or space of an ATSpace, and a client actor may not repeatedly sendsearch objects to overload an ATSpace.
+–Illegal Access : A search object may not carry out unauthorized accesses or
+illegal operations.
+We address the ﬁrst problem by preventing the search object from modifying
+tuple data of other actors. This is done by supplying methods of the search objectwith a copy of the data in the ATSpace. However, when the number of tuples
+in the ATSpace is large, this solution requires extra memory and computation
+resources. Thus the ATSpace supports the option of delivering a shallow copy
+of the original tuples to the search object at the risk of data being changed by
+search objects as such scheme may compromise the data integrity.
+To prevent malicious objects from exhausting the ATSpace computational
+resource, we deploy user-level thread scheduling as depicted in Fig. 4. When
+a search object arrives, the object is executed as a thread and its priority is
+Eﬃcient Agent Communication in Multi-agent Systems 245
+job queues
+prioritypriorityhigh
+priority
+lowmiddleTuple Space Tuple Space Manager
+ATSpace
+ManagerATSpace
+tuple
+tuple
+tuple
+obj. obj.obj. obj.
+obj. obj.tuple
+Fig. 4. Architecture of an ATSpace.
+set to high. If the thread executes for a long time, its priority is continuously
+downgraded. Moreover, if the running time of a search object exceeds a certain
+limit, it may be destroyed by the tuple space manager.
+To prevent unauthorized accesses, if the ATSpace is created with an access
+key, then this key must accompany every message sent from client actors. In this
+case, actors are allowed only to modify their own tuples. This prevents removalor modiﬁcation of tuples by unauthorized actors.
+5 Experiments and Evaluation
+The AA platforms and actors have been implemented in Java language to sup-port operating system independent actor mobility. The Actor Architecture isbeing used for large-scale UAV (Unmanned Aerial Vehicle) simulations. These
+simulations investigate the eﬀects of diﬀ erent collaborative behaviors among a
+large number of micro UAVs during their surveillance missions over a large num-
+ber of moving targets [15]. For our experiments, we have tested more than 1,000
+actors on four computers: 500 micro UAVs, 500 targets, and other simulationpurpose actors are executed. The following two sections evaluate our solutions.
+5.1 Optimized Message Delivery
+According to our experiments, the location-based message passing scheme in AA
+reduces the number of hops (over AA platforms) that a message for a mobile
+actor goes through. Since an agent has the location information about its col-
+laborating agents, the agent can carry this information when it moves from one
+AA platform to another. With location-based message passing, the system ismore fault-tolerant; since messages for a mobile actor need not pass through the
+original AA platform of the actor, the messages may be correctly delivered to
+the actor even when the act or’s original AA platform is not working correctly.
+246 Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+Moreover, delayed message passing re moves unnecessary message thrashing
+for moving agents. When delayed message passing is used, the old AA platform
+of a mobile actor needs to manage its state information until the actor ﬁnishes
+its migration, and the new platform of the mobile actor needs to report the
+migration state of the actor to its old AA platforms. In our experiments, this
+overhead is more than compensated; without delayed message passing the samemessage may get delivered seven or eight ti mes between the original AA platform
+and the old AA platform while a mobile actor is moving. If a mobile actor takes
+more time for its migration, this number may be even greater.
+5.2 Active Brokering Service
+The performance beneﬁt of ATSpace can b e measured by comparing its active
+brokering services with the data retriev al services of a templ ate-based general
+middle agent supporting the same service along four diﬀerent dimensions: the
+number of messages, the total size of messages, the total size of memory spaceon the client and middle agent AA platforms, and the computation time for the
+whole operation. To analytically evaluate ATSpaces, we will use the scenario
+mentioned in section 4 where a service requesting agent has a complex query
+that is not supported by the template-based model.
+First, with the template-based s ervice, the number of messages is n+2 where
+nis the number of service agents that satis fy a complex query. This is because the
+service requesting agent has to ﬁrst send a message to the middle agent to bring a
+superset of its ﬁnal result. This costs t wo messages: a service request message to
+the middle agent ( Service
+Request template ) that contains Q2 and a reply mes-
+sage that contains agent information satisfying Q2 ( Service
+ Reply template ).
+Finally, the service requesting agent sends nmessages to the service agents that
+match its original criteria. With the ac tive brokering service, the total number
+of messages is n+1. This is because the service requesting agent need not worry
+about the complexity of his query and only sends a service request message
+(Service
+ Request ATSpace ) to the ATSpace. This message contains the code
+that represents its criteria along with the message that should be sent to the
+agents which satisfy these criteria. The last nmessages have the same explana-
+tion as in the template-based service.
+While the number of messages in the two approaches does not diﬀer that
+much, the total size of these messages may have a huge diﬀerence. In bothapproaches, a set of nmessages needs to be sent to the agents that satisfy the
+ﬁnal matching criteria. Therefore, the question of whether or not active brokering
+services result in bandwidth saving depends on the relative size of the othermessages. Speciﬁcally the diﬀerence in bandwidth consumption ( DBC) between
+the template-based middle agent and the ATSpace is given by the following
+equation:
+DBC =[ size(Service
+Request template )−
+size(Service
+ Request ATSpace )] +
+size(Service
+ Reply template )
+Eﬃcient Agent Communication in Multi-agent Systems 247
+In general, since the service request message in active brokering services is
+larger as it has the search object, the ﬁr st component is negative. Therefore,
+active brokering services will only result in a bandwidth saving if the increase in
+the size of its service request message is smaller than the size of the service reply
+message in the template-based service. This is likely to be true if the original
+query (Q1) is complex such that turning it into a simpler one (Q2) to retrievea superset of the result would incur a great semantic loss and as such would
+retrieve much extra agent information from the middle agent.
+Third, the two approaches put a conﬂicting requirement on the amount of
+space needed on both the client and middle agent machines. In the template-
+based approach the client agent needs to provide extra space to store the tuples
+returned by Q2. On the hand, the ATSpace needs to provide extra space to store
+copies of tuples given to search object s. However, a compromise can be made
+here as the creator of the ATSpace can choose to use the shallow copy of tuples.
+Fourth, the diﬀerence in computation times of the whole operation in the two
+approaches depends on two factors: the time for sending messages and the time
+for evaluating queries on tuples. The tuples in the ATSpace are only inspectedonce by the search object sent by the service requesting agent. However, in the
+template-based middle agent, some tuples are inspected twice. First, in order
+to evaluate Q2, the middle agent needs to inspect all the tuples that it has.
+Second, these tuples that satisfy Q2 are sent back to the service requesting
+agent to inspect them again and retain only those tuples that satisfy Q1. If Q1is complex then Q2 will be semantically distant from Q1, which in turns has two
+ramiﬁcations. First, the time to evaluate Q2 against all the tuples in the middle
+agent is small relative to the time needed to evaluate the search object over them.
+Second, most of the tuples on the middle agent would pass Q2 and be sent back
+to be re-evaluated by the service reques ting agent. This reevaluation has nearly
+the same complexity as running the search object code. Thus we conclude that
+when the original query is complex and external communication cost is high, the
+active brokering service will result in time saving.
+Apart from the above analytical evaluation, we have run a series of experi-
+ments on the UAV simulation to substantiate our claims. (Interested readers may
+refer to [13] for more details.) Fig. 5 demonstrates the saving in computationaltime of an ATSpace compared to a template-based middle agent that provides
+data retrieval services with the same semantic. Fig. 6 shows the wall clock time
+ratio of a template-based middle agent to an ATSpace. In these experiments,
+UAVs use either active brokering servi ces or data retrieval services to ﬁnd their
+neighboring UAVs. In both cases, the middle agent includes information aboutlocations of UAVs and targets. In case of the active brokering service, UAVs send
+search objects to an ATSpace while the U AVs using data retrieval service send
+tuple templates. The simulation time for each run is around 35 minutes, and thewall clock time depends on the number of agents. When the number of agents
+is small, the diﬀerence between the two a pproaches is not signiﬁcant. However,
+as the number of agents is increased, the diﬀerence becomes large.
+248 Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+200 400 600 800 10000100200300400500600
+Number of AgentsWall Clock Time (Min)ATSpace
+Template−based Middle Agent
+Fig. 5. Wall Clock Time (Min) for
+ATSpace and Template-based Middle
+Agent.200 400 600 800 10001.31.41.51.61.71.81.922.12.22.3
+Number of AgentsWall Clock Time Ratio
+Fig. 6. Wall Clock Time Ratio
+of Template-based Middle Agent-to-ATSpace.
+Fig. 7 depicts the number of messages required in both cases. The number
+of messages in the two approaches is quite similar but the diﬀerence is slightly
+increased according to the number of agents. Note that the messages increase
+almost linearly with the number of agents, and that the diﬀerence in the number
+of messages for a template-based middle agent and an ATSpace is small; it is infact less than 0.01% in our simulations.
+200 400 600 800 10000246810121416182022
+Number of AgentsNumber of Messages (M)ATSpace
+Template−based Middle Agent
+Fig. 7. The Number of Messages for ATSpace and Template-based Middle Agent.
+Fig. 8 shows the total message size required in the two approaches, and Fig. 9
+shows the total message size ratio. When the search queries are complex, the total
+message size in the ATSpace approach is much less than that in the template-
+based middle agent approach. In our UAV simulation, search queries are rather
+complex and require heavy mathematical calculations, and hence, the ATSpaceapproach results in a considerable bandwidth saving. It is also interesting to
+note the relationship between the whole operation time (as shown in Fig. 5) and
+the bandwidth saving (as shown in Fig. 8). This relationship supports our claim
+Eﬃcient Agent Communication in Multi-agent Systems 249
+200 400 600 800 100005101520253035
+Number of AgentsTotal Size of Messages (GBytes)ATSpace
+Template−based Middle Agent
+Fig. 8. Total Message Size (GBytes)
+for ATSpace and Template-basedMiddle Agent.200 400 600 800 10001.21.31.41.51.61.71.8
+Number of AgentsTotal Size of Message Ratio
+Fig. 9. Total Message Size Ratio
+for Template-based Middle Agent-
+to-ATSpace.
+that the saving in the total operation time by the ATSpace is largely due to its
+superiority in eﬃciently utilizing the bandwidth.
+6 Related Work
+The basic mechanism of location-based message passing is similar to the mes-
+sage passing in Mobile IP [20], although its application domain is diﬀerent. The
+original and current AA platforms of a mobile actor correspond to the home and
+foreign agents of a mobile client in Mobile IP, and the UAN and LAN of a mo-
+bile actor are similar to the home address and care-of address of a mobile clientin Mobile IP. However, while the sender node in Mobile IP manages a binding
+cache to map home addresses to care-of addresses, the sender AA platform in
+AA does not have a mapping table. Another diﬀerence is that in mobile IP, thehome agent communicates with the sender node to update the binding cache.
+However, in AA this update can be done by the agent itself when it sends a
+message that contains its address.
+The LAN (Location-based Actor Name) may also be compared to UAL (Uni-
+versal Actor Locator) in SALSA [27]. In SALSA, UAL represents the location of
+an actor. However, SALSA uses a middle agent called Universal Actor Naming
+Server to locate the receiver actor. SAL SA’s approach requires the receiver ac-
+tor to register its location at a certain middle agent, and the middle agent mustmanage the mapping table.
+The ATSpace approach, which is based on the tuple space model, is related
+toLinda [6]. In the Linda model, processes communicate with other processes
+through a shared common space called a blackboard or a tuple space without
+considering references or names of other processes [6,21]. This approach was used
+in several agent frameworks, for example EMAF [3] and OAA[8]. However, these
+models support only primitive features for pattern-based communication among
+processes or agents. From the middle agent perspective, Directory Facilitator in
+250 Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+theFIPA platform [10], ActorSpace [2], and Broker Agent inInfoSleuth [16] are
+related to our research. However, these systems do not support customizable
+matching algorithms.
+From the expressiveness perspective, some work has been done to extend
+the matching capability of the basic tuple space model. Berlinda [26] allows a
+concrete entry class to extend the matching function, and TS[12] uses policy
+closures in a Scheme-like language to customize the behavior of tuple spaces.
+However, these approaches do not allow the matching function to be changed
+during execution time. At the other hand, OpenSpaces [9] provides a mechanism
+to change matching polices during the execution time. OpenSpaces groups en-
+tries in its space into classes and allows each class to have its individual matching
+algorithm. A manager for each class of entries can change the matching algo-
+rithm during execution time. All agents that use entries under a given class are
+aﬀected by any change to its matching algorithm. This is in contrast to theATSpace where each agent can supply its own matching algorithm without af-
+fecting other agents. Another diﬀerence between OpenSpaces and ATSpaces is
+that the former requires a registration step before putting the new matchingalgorithm into action, but ATSpace has no such requirement.
+Object Space [22] allows distributed applications implemented in the C++
+programming language to use a matching function in its template. This matching
+function is used to check whether an object tuple in the space is matched with the
+tuple template given in rdandinoperators. However, in the ATSpace the client
+agent supplied search objects can have a global overview of the tuples stored
+in the shared space and hence can support global search behavior rather than
+the one tuple based matching behavior supported in Object Space. For example,using the ATSpace a client agent can ﬁnd the best ten service agents according
+to its criteria whereas this behavior cannot be achieved in Object Space.
+TuCSoN [19] and MARS [5] provide programmable coordination mechanisms
+for agents through Linda-like tuple spaces to extend the expressive power of tu-
+ple spaces. However, they diﬀer in the way they approach the expressivenessproblem; while TuCSoN and MARS use reactive tuples to extend the expres-
+sive power of tuple spaces, the ATSpace uses search objects to support search
+algorithms deﬁned by client agents. A reactive tuple handles a certain type oftuples and aﬀects various clients, wher eas a search object handles various types
+of tuples and aﬀects only its creator agent. Therefore, while TuCSoN and MARS
+extend the general search ability of middle agents, ATSpace supports application
+agent-oriented searching on middle agents.
+Mobile Co-ordination [23] allows agents to move a set of multiple tuple space
+access primitives to a tuple s pace for fault tolerance. In Jada[7], one primitive
+may use multiple matching templates. In ObjectPlaces [24], dynamic objects are
+used to change their state whenever corre sponding objecplace operations are
+being called. Although these approaches improve the searching ability of tuple
+spaces with a set of search templates o r dynamic objects, ATSpace provides
+more ﬂexibility to application agents with their own search code.
+Eﬃcient Agent Communication in Multi-agent Systems 251
+7 Conclusion and Future Work
+In this papers we addressed two closely r elated agent communication issues: eﬃ-
+cient message delivery and service agent discovery. Eﬃcient message delivery has
+been addressed using two techniques. First, the agent naming scheme has been
+extended to include the location information of mobile agents. Second, messageswhose destination agent is moving are postponed by the Delayed Message Man-
+ager until the agent ﬁnishes its migration . For eﬃcient service agent discovery,
+we have addressed the ATSpace, Active Tuple Space. By allowing application
+agents to send their customized search algorithms to the ATSpace, application
+agents may eﬃciently ﬁnd service agents. We have synthesized our solutions tothe mobile agent addressing and service agent discovery problems in a multi-
+agent framework.
+The long term goal of our research is to build an environment that allows for
+experimental study of various issues that pertains to message passing and ser-
+vice agent discovery in open multi-agent systems and provide a principled way
+of studying possible tensions that arise when trying to simultaneously optimize
+each service. Other future directions include the followings: for eﬃcient message
+passing, we plan to investigate various trade-oﬀs in using diﬀerent message pass-ing schemes for diﬀerent situations. We also plan to extend the Delayed Message
+Manager to support mobile agents who are contiguously moving between nodes.
+For service agent discovery, we plan to elaborate on our solutions to the securityissues introduced with ac tive brokering services.
+Acknowledgements
+The authors would like to thank the anonymous reviewers and Naqeeb Abbasi
+for their helpful comments and suggestions. This research is sponsored by the
+Defense Advanced Research Projects A gency under contract number F30602-00-
+2-0586.
+References
+1. G. Agha. Actors: A Model of Concurrent Computation in Distributed Systems .
+MIT Press, 1986.
+2. G. Agha and C.J. Callsen. ActorSpaces: An Open Distributed Programming
+Paradigm. In Proceedings of the 4th ACM Symposium on Principles and Prac-
+tice of Parallel Programming , pages 23–32, May 1993.
+3. S. Baeg, S. Park, J. Choi, M. Jang, and Y. Lim. Cooperation in Multiagent
+Systems. In Intelligent Computer Communications (ICC ’95) , pages 1–12, Cluj-
+Napoca, Romania, June 1995.
+4. F. Bellifemine, A. Poggi, and G. Rimassa. JADE - A FIPA-compliant Agent
+Framework. In Proceedings of Practical Application of Intelligent Agents and Multi-
+Agents (PAAM ’99) , pages 97–108, London, UK, April 1999.
+5. G. Cabri, L. Leonardi, and F. Zambonelli. MARS: a Programmable Coordination
+Architecture for Mobile Agents. IEEE Computing , 4(4):26–35, 2000.
+252 Myeong-Wuk Jang, Amr Ahmed, and Gul Agha
+6. N. Carreiro and D. Gelernter. Linda in Context. Communications of the ACM ,
+32(4):444–458, 1989.
+7. P. Ciancarini and D. Rossi. Coordinating Java Agents over the WWW. World
+Wide Web , 1(2):87–99, 1998.
+8. P.R. Cohen, A.J. Cheyer, M. Wang, and S. Baeg. An Open Agent Architecture.
+InAAAI Spring Symposium , pages 1–8, March 1994.
+9. S. Ducasse, T. Hofmann, and O. Nierstrasz. OpenSpaces: An Object-Oriented
+Framework for Reconﬁgurable Coordination Spaces. In A. Porto and G.C. Roman,
+editors, Coordination Languages and Models, LNCS 1906 , pages 1–19, Limassol,
+Cyprus, September 2000.
+10. Foundation for Intellig ent Physical Agents. SC00023J: FIPA Agent Management
+Speciﬁcation , December 2002. http://www.ﬁpa.org/specs/ﬁpa00023/.
+11. N. Jacobs and R. Shea. The Role of Java in InfoSleuth: Agent-based Exploita-
+tion of Heterogeneous Information Resources. In Proceedings of Intranet-96 Java
+Developers Conference , April 1996.
+12. S. Jagannathan. Customization of First-Class Tuple-Spaces in a Higher-Order Lan-
+guage. In Proceedings of the Conference on Parallel Architectures and Languages
+- Vol. 2, LNCS 506 , pages 254–276. Springer-Verlag, 1991.
+13. M. Jang, A. Ahmed, and G. Agha. A Flexible Coordination Framework for
+Application-Oriented Matchmaking and Brokering Services. Technical Report
+UIUCDCS-R-2004-2430, Department of Computer Science, University of Illinoisat Urbana-Champaign, 2004.
+14. M. Jang, A. Abdel Momen, and G. Agha. ATSpace: A Middle Agent to Support
+Application-Oriented Matchmaking and Brokering Services. In IEEE/WIC/ACM
+IAT(Intelligent Agent Technology)-2004 , pages 393–396, Beijing, China, September
+20-24 2004.
+15. M. Jang, S. Reddy, P. Tosic, L. Chen, and G. Agha. An Actor-based Simulation
+for Studying UAV Coordination. In 15th European Simulation Symposium (ESS
+2003), pages 593–601, Delft, The Netherlnds, October 26-29 2003.
+16. R.J. Bayardo Jr., W. Bohrer, R. Brice, A. Cichocki, J. Fowler, A. Helal,
+V. Kashyap, T. Ksiezyk, G. Martin, M. Nodine, M. Rashid, M. Rusinkiewicz,
+R. Shea, C. Unnikrishnan, A. Unruh, and D. Woelk. InfoSleuth: Agent-Based
+Semantic Integration of Information in Open and Dynamic Environments. ACM
+SIGMOD Record , 26(2):195–206, June 1997.
+17. D.L. Martin, H. Oohama, D. Moran, and A. Cheyer. Information Brokering in
+an Agent Architecture. In Proceedings of the Second International Conference on
+the Practical Application of Intelligent Agents and Multi-Agent Technology , pages
+467–489, London, April 1997.
+18. D.G.A. Mobach, B.J. Overeinder, N.J.E. Wijngaards, and F.M.T. Brazier. Man-
+aging Agent Life Cycles in Open Distributed Systems. In Proceedings of the 2003
+ACM symposium on Applied Computing , pages 61–65, Melbourne, Florida, 2003.
+19. A. Omicini and F. Zambonelli. TuCSoN: a Coordination Model for Mobile In-
+formation Agents. In Proceedings of the 1st Workshop on Innovative Internet
+Information Systems , Pisa, Italy, June 1998.
+20. C.E. Perkins. Mobile IP. IEEE Communications Magazine , 35:84–99, May 1997.
+21. K. Pﬂeger and B. Hayes-Roth. An Introduction to Blackboard-Style Systems Orga-
+nization. Technical Report KSL-98-03, Stanford Knowledge Systems Laboratory,
+January 1998.
+22. A. Polze. Using the Object Space: a Distributed Parallel make. In Proceedings
+of the 4th IEEE Workshop on Future Trends of Distributed Computing Systems ,
+pages 234–239, Lisbon, September 1993.
+Eﬃcient Agent Communication in Multi-agent Systems 253
+23. A. Rowstron. Mobile Co-ordination: Providing Fault Tolerance in Tuple Space
+Based Co-ordination Languages. In Proceedings of the Third International Con-
+ference on Coordination Languages and Models , pages 196–210, 1999.
+24. K. Schelfthout and T. Holvoet. ObjectPlaces: An Environment for Situated Multi-
+Agent Systems. In Third International Joint Conference on Autonomous Agents
+and Multiagent Systems - Volume 3 (AAMAS’04) , pages 1500–1501, New York
+City, New York, July 2004.
+25. K. Sycara, K. Decker, and M. Williamson. Middle-Agents for the Internet. In
+Proceedings of the 15th Joint Conference on Artiﬁcial Intelligences (IJCAI-97) ,
+pages 578–583, 1997.
+26. R. Tolksdorf. Berlinda: An Object-oriented Platform for Implementing Coordi-
+nation Language in Java. In Proceedings of COORDINATION ’97 (Coordination
+Languages and Models), LNCS 1282 , pages 430–433. Pringer-Verlag, 1997.
+27. C.A. Varela and G. Agha. Programming Dynamically Reconﬁgurable Open Sys-
+tems with SALSA. ACM SIGPLAN Notices: OOPSLA 2001 Intriguing Technology
+Track, 36(12):20–34, December 2001.
+28. M. Wooldridge. An Introduction to MultiAgent Systems . John Wiley & Sons, Ltd,
+2002.

@@ -1,0 +1,444 @@
+http://exp.telecomitalialab.com
+exp - Volume 3 - n. 3 - September 20036
+F. Bellifemine, G. Caire, A. Poggi, G. Rimassa
+INTRODUCTION
+JADE [1,9] is an enabling technology, a mmiiddddllee--
+wwaarreefor the development and run-time execution
+of ppeeeerr--ttoo--ppeeeerrapplications which are based on
+the aaggeennttssparadigm and which can seamlesswork and interoperate both in wired and wireless
+environment. In order to understand this definition, the odd termsit includes, and the context, Section “Referencetechnologies” introduces some reference tech-
+nologies. Two major aspects of the conceptualJADE
+A White Paper
+ABSTRACT - THIS WHITE PAPER GIVES AN OVERVIEW OF THE JADE PLATFORM , PRESENTS ITS
+ARCHITECTURE AND MAIN FUNCTIONALITIES , AND OUTLINES THE CONCEPTUAL MODEL UNDERLYING
+JADE . TWO MAJOR ASPECTS OF THE CONCEPTUAL MODEL ARE PRESENTED : DISTRIBUTED SYSTEM
+TOPOLOGY WITH PEER -TO-PEER NETWORKING , AND SOFTWARE COMPONENT ARCHITECTURE WITH
+AGENT PARADIGM . THE NETWORK TOPOLOGY AFFECTS HOW THE VARIOUS COMPONENTS ARE
+LINKED TOGETHER , WHEREAS THE COMPONENT ARCHITECTURE SPECIFIES WHAT THE COMPONENTS
+ARE SUPPOSED TO EXPECT FROM ONE ANOTHER . THE RELEVANCE OF STANDARDS FOR SOFTWARE
+INTEROPERABILITY , AND IN PARTICULAR THE COMPLIANCE WITH FIPA, IS ALSO HIGHLIGHTED . 
+THE PAPER TRIES ALSO TO ADDRESS THE VITAL TECHNOLOGY TRANSFER ISSUE , WHICH IS CRUCIAL
+FOR A SYSTEM SUCH AS JADE, MOVING RIGHT NOW FROM SOFTWARE RESEARCH TOWARDS
+ADVANCED BUSINESS APPLICATIONS . RECOGNIZING THAT TECHNOLOGY TRANSFER IS LARGELY A
+PEOPLE CENTERED PROCESS , THE PAPER ADDRESSES THE ORGANIZATION OF THE PEOPLE USING
+AND DEVELOPING THE JADE CORE, ITS EXTENSIONS AND APPLICATIONS LEVERAGING JADE
+INFRASTRUCTURE . THE TWO MAIN INSTITUTIONS DEALING WITH JADE ARE OUTLINED : THE OPEN
+SOURCE COMMUNITY AND THE JADE GOVERNING BOARD . 
+FINALLY , THE MAIN FEATS OF THE JADE APPROACH ARE SUMMED UP , WITH THE INTENT OF HELP -
+ING READERS DECIDING WHETHER JADE CANFULFILL THEIR NEEDS AND IN WHICH APPLICATION
+DOMAINS JADE CANPROVE MOST USEFUL .JADE:
+Java Agent
+DEvelopment
+Framework
+in search of inn ovation
+exp - Volume 3 - n. 3 - September 2003 7model are presented: distributed system topology
+with peer-to-peer networking, and software com-ponent architecture with agent paradigm. The net-work topology affects how the various components
+are linked together, whereas the component archi-tecture specifies what the components are sup-
+posed to expect from one another. The section al-so provides some information about the concept ofmiddleware and the advantages in application de-velopment, and about the profiling structure of the
+Java technology, which is the programming lan-guage of JADE and of the applications using JADE.Section “What is JADE?” describes the JADE plat-form, its main functionalities, the architectural mod-
+el, and some technical information. JADE is an Open Source project around which acommunity of users and contributors has grown up,and recently also an International Governing Boardhas been formed. Section “The JADE Community”outlines this community, describes the open sourceproject and how its organization is evolving throughthe creation of the Governing Board.Finally, Section “Why using JADE?” presents someconsiderations to highlight the advantages of JADEand which application domains it can prove mostuseful as enabling technology.
+REFERENCE TECHNOLOGIES 
+The peer-to-peer model“Client-Server” (C/S) is the reference model, well-known and widely-diffused, for distributed appli-
+Fabio L. Bellifemine is a senior project manager at the De-
+partment of Services and Multi-media of TILAB, Torino.He graduated in Computer Science from the University ofTorino in 1988 and, prior to joining TILAB, until 1994 he
+held a researcher position at the Italian National ResearchCouncil. His research interests covered several aspects ofmulti-media, including signal processing and video com-pression, software architecture, system integration, appli-cations, user modeling and software agents. Since 1997, he is interested in the multi-agent system re-search and he is involved in the FIPA standardizationbody where he currently chairs the FIPA Architecture
+Board. In 1999 and 2002 he received a diploma from FI-PA for its outstanding contribution to the activity. He par-
+ticipated to several research projects, and he leaded theFACTS Work Package that, in April 2000, received an
+award for achieving first place in the FIPA competition foragent-based applications. He is the leader of the JADEproject and author of over 50 publications in proceedingsof international conferences and journal papers. He is PCmember of several workshops and conferences relatedto multi-agent system and user modeling research. 
+F. Bellifeminefabio.bellifemine@telecomitalia.it
+cations. The model is based on a rigid distinction
+of roles between the client nodes (resource re-quester) and the server nodes (resource providers). 
+The server nodes provide the services, more in gen-eral the capabilities of the distributed system, butthey are not capable of taking any initiative asthey are fully reactive and they can just wait for be-ing invocated by the client nodes. Client nodes, asopposite, concentrate all the initiative of the sys-tem: they a ccess and use the services, typically,
+but not necessarily, upon user requests, but theydo never provide any capability. Clients can appear and disappear at any time;generally, they have dynamic addresses, while
+servers must typically provide some guarantees ofstability and generally listen to a well-known andstatic address. Clients communicate with the servers, but theycannot communicate with other clients. On theother hand, server cannot communicate with theirclients until the clients have taken the initiative anddecided to activate a communication session withthe server. The web is a typical example of application basedon the client-server model. The servers are the
+sites/portals , which own the entire application log-
+ic and information resources. The clients are the
+browsers, only a tool to manage the interface with
+the user and whose only task is to retrieve, upon ex-plicit user request, information located on Internetsites and to present (render) it. A large family of distributed applications exist,however, that are not well adapted to this model.
+exp - Volume 3 - n. 3 - September 20038For instance, a simple “chat” application, as well
+as a distributed file sharing system (such as Nap-ster or Gnutella) or a multiplayer game, requirethe active nodes on the users terminals to be ca-pable of communicating each other. Even if im-plementing such an application by using theclient-server model is still possible (and it is alsoquite often done), it will loose advantages of bet-
+ter software practices and architectures. In the
+case of the “chat” application, for instance, a userclient should send messages to a central serverfrom which they should be retrieved by the clientof another user: the server is not necessary but it isthere just as an implementation artefact while the“peer-to-peer” (P2P) model would have beenmore appropriate.In the peer-to-peer model, in fact, there is no moreany distinction of roles and each peer is capableof a mix of initiative and capability: each nodecan initiate the communication, be subject or ob-ject of a request, be proactive, provide capabili-ties; the application logics is no more concentrat-ed on the server but distributed between all thepeers of the network; each node is capable of dis-cover each other, it can enter, join or leave the net-work anywhere anytime. The system is fully distrib-
+uted as well as the value of the service is distrib-uted across the network and new business modelsmight be enabled.An important consequence of the differences be-tween the 2 models is the way the nodes can bediscovered. In the C/S systems, clients must know
+their servers but they do not need to know otherclients (of course, given that client-to-client com-munication is never expected to happen). In P2Psystems, who-knows-whom is fully arbitrary and thesystem must provide proper services that allowpeers to enter, join, or leave the network at anytime as well as to search and discover other peers.These services are usually the white and yellowpage mechanisms that allow publishing and dis-covering the features and the services offered by apeer. On the basis of the implementation of thesemechanisms, two basic P2P network models canbe identified (see figure 1 ): pure P2P networks (al-
+so called decentralized), and hybrid P2P networks(also called with central index).A pure P2P network is fully decentralized and thepeers are fully autonomous. The absence of anyreference node makes more difficult to maintain
+the coherence of the network and the discovery ofthe peers, with a complexity and bandwidth thattends to grow exponentially with the number of
+nodes. Also security is quite demanding as eachnode is entitled to join the network without anycontrol mechanism.The hybrid architectures, instead, are based on aspecial node that provides a service that simplifiesthe look-up and discovery of the active peers, theirlist of capabilities, and their list of provided services.These types of networks, usually, generate less traf-fic and are more secure as they tend to require al-
+a) Client/Server b) Hybrid P2P c) Pure P2PFigure 1
+Client/Server (left), pure P2P (right), hybrid P2P (centre)
+in search of inn ovation
+exp - Volume 3 - n. 3 - September 2003 9so the registration and authentication of the peers.
+On the other hand, their functioning depends onthe availability of the index nodes that might be-come a central point of failure and attack.
+The agents paradigm 
+The agents paradigm applies concepts from artifi-cial intelligence and speech act theory to the dis-tributed object technology. The paradigm is basedon the 
+agent abstraction, a software component
+that is autonomous, proactive and social:•
+autonomous : agents have a degree of control
+on their own actions, they own their thread ofcontrol and, under some circumstances, theyare also able to take decisions;
+•
+proactive: agents do not only react in response
+to external events (i.e. a remote method call) but
+they also exhibit a goal-directed behaviour and,where appropriate, are able to take initiative;
+•
+social: agents are able to, and need to, interact
+with other agents in order to accomplish their taskand achieve the complete goal of the system.
+Agent-based systems are intrinsically peer-to-peer:
+each agent is a peer that potentially needs to ini-tiate a communication with any other agent aswell as it is capable of providing capabilities to the
+rest of the agents. The role of the communication
+is very important in an agent-based system, and itsmodel is based on three main features:
+1. agents are active entities, they can say ‘no’, and
+they are loosely coupled . This set of interrelated
+properties is the basis for the choice of message-based asynchronous communication betweenagents instead of remote procedure call: anagent wishing to communicate has just to senda message to a certain destination. This modal-ity of communication, in fact, allows the receiverto select which messages to serve and which to
+discard, as well as which messages to serve firstand which later in time. It also allows the senderto control its thread of execution and not to be
+blocked until the receiver reads and serves themessage. Finally, it also removes any temporaldependency between the sender and the re-ceiver: the receiver might not be available at thetime the sender sends the message, or it mighteven not exist at that time, or, also, it might even
+be not known by the sender that, instead, de-fines the receiver intensionaly (e.g. all agents in-terested into ‘football’) or mediates the commu-
+nication through a proxy (e.g. propagate thismessage to all agents in the domain X).
+2. agents perform actions and communication is
+just a type of action. Making communication at
+the same level of actions allows an agent, for in-stance, to reason about a plan that includesboth physical actions (e.g. turning on the left)and communicative actions (e.g. asking toopen the door). In order to make communica-tion plannable, effects and preconditions ofeach possible communication needs to beclearly defined.
+3.communication carries a semantics meaning .
+When an agent is the object of a communica-tive action (i.e. when it receives a message), itmust be able to properly understand the mean-ing of that action and, in particular, why that ac-tion has been performed (i.e. the communica-tive intention of the sender of the message). Thisproperty turns into the needs for a universal se-mantics and the need for a standard. 
+Inspired by the vision that “agents will remain just a
+dream if end-to-end interoperability across differ-ent manufacturers and operators is not preserved”[2], in 1996 TILAB (formerly CSELT) promoted the cre-ation of FIPA (Foundation for Intelligent PhysicalAgents) [3], an international non-profit association
+of companies and organizations sharing the goaland the effort to produce standard specificationsfor agent technology. TILAB, and in particular the
+JADE team, supported and leaded at several lev-els this initiative starting from the presidency ofLeonardo Chiariglione, continuing with the editingof specifications and the leadership of TechnicalCommittees and of the FIPA Architecture Board.JADE also participated with success to both FIPA In-teroperability Tests, in 1999 and in 2001. 
+Based on the first set of specifications released in1997, at the end of 2002 FIPA finally released the
+standard. The standard targets interoperabilityand, as a consequence, it focuses on the externalbehaviour of the system components, leaving
+exp - Volume 3 - n. 3 - September 200310open the implementation details and the internal
+architectures. In fact, the internal architecture ofJADE is unique even if it fully complies with FIPA. TheFIPA standard fully embraces the agent paradigmand, in particular, it defines the reference model ofan agent platform and a set of services that shouldbe provided. The collection of these services, andtheir standard interfaces, represents the normativerules that allow a society of agents to exist, oper-
+ate, and be managed.Being agents social and needing to communi-cate, the Agent Communication Language is oneof the main assets of the FIPA standard. The FIPAACL is based on the speech act theory and on the
+assumptions and requirements of the agents par-adigm described above. FIPA standardized an ex-tensib le library of 22 communicative acts that al-
+low representation of different communicative in-tentions (such as requesting, proposing, informing,
+querying, calling for a proposal, refusing,...). FIPA
+also defined the structure of a message that allowsto represent and convey information useful to iden-
+tify sender and receivers, the content of the mes-sage and its properties (e.g. the encodings andthe representation language), and, in particular, in-formation useful to identify and follow threads of
+conversation between agents and to representtimeouts for the communication. Common pat-terns of conversations have been also defined by
+FIPA, the so-called interaction protocols, that pro-vide agents with a library of patterns to achievecommon tasks, such as delegating an action, call-ing for a proposal,... Figure 3 represents the model
+of communication defined by FIPA and the rela-tionships between its composing elements. One ofthe main assets of these FIPA standards is their‘standard’ status, defined and accepted by theagent community.
+The middleware
+The term 
+middleware is meant to describe all
+those higher-level libraries that enable easier andmore effective application development by pro-viding generic services useful not just for a singleapplication but rather for a variety of applications,for instance communication, data access, en-
+codings, resource control. These same servicesare provided by operative systems, but the ideabehind middleware is to provide better, OS inde-pendent APIs aggregating native facilities intoServiceprovides
+Normative O ptional
+Agent-Software
+Integration
+Ontology Service
+Human Agent
+Interaction
+Message Transport
+serviceYellow page
+serviceWhite page
+serviceLife cycle
+ManagementAgent PlatformFigure 2
+FIPA Standard: Services provided by a Platform
+in search of inn ovation
+exp - Volume 3 - n. 3 - September 2003 11simple-to-reuse building blocks. On the other
+hand, the implementation of these services oftenmight require considerable time, if not the same,in respect to the development of the applicationlogics. The capability of reusability across severalapplication domains suggest the name of ‘hori-zontal’ approach as opposed to ‘vertical’ ap-proach where an ad-hoc solution for a specificapplication should be provided. Middleware-based approaches allows to reduce footprint anddevelopment time of applications. 
+The Java technology 
+An overview of the Java technology is out of thescope of this paper but, in order to better under-
+stand some of the features of JADE and its rela-tionships with the Java world, it is important to re-member that the Java technology is structured in-to 4 
+editions (as named by Sun itself) according to
+the target device and the expected supportedfunctionalities: server-based applications (J2EE),desktop-type applications (J2SE), portable andmobile-phone devices (J2ME), SIM/smart-card de-vices (Java Card). JADE has been implementedfully in Java language and, at the time of writingthis paper, it can be seamless executed on everytype of Java Virtual Machine with exception of theJava Card. 1 isTransmittedOver
+isExpressedIn1..*contains
+1 1..*belongsTo1
+1isExpressedIn
+0..*contains1
+containsTransportProtocol
+ACL
+ContentLanguage
+Ontology SymbolContentMessageEnvelope
+InteractionProtocolEnvelopeEncodingScheme
+ACLEncodingScheme
+CLEncodingScheme
+111
+1
+1
+1Figure 3
+FIPA Standard: components of the communication model
+MiddlewareApplications
+OS / HWFigure 4
+Role of the middleware: “vertical” approach (left) vs. “horizontal” approach (right)
+exp - Volume 3 - n. 3 - September 200312WHAT IS JADE?
+JADE [1,9] is the middleware developed by TILAB for
+the development of distributed multi-agent appli-cations based on the peer-to-peer communicationarchitecture. Both the intelligence, the initiative, theinformation, the resources and the control can befully distributed on mobile terminals as well as oncomputers in the fixed network. The environmentcan evolve dynamically with 
+peers , that in JADE are
+called agents , that appear and disappear in the
+system according to the needs and the require-ments of the application environment. Communi-cation between the peers, regardless of whetherthey are running in the wireless or wireline network,is completely symmetric with each peer being ableto play both the initiator and the responder role.
+JADE is fully developed in JJaavvaaand is based of the
+following driving principles:
+•IInntteerrooppeerraabbiilliittyy– JADE is compliant with the FIPA
+specifications [3]. As a consequence, JADEagents can interoperate with other agents, pro-
+vided that they comply with the same standard.
+•UUnniiffoorrmmiittyy  aanndd  ppoorrttaabbiilliittyy– JADE provides a ho-
+mogeneous set of APIs that are independent fromthe underlying network and Java version. More indetails, the JADE run-time provides the same APIsboth for the J2EE, J2SE and J2ME environment. Intheory, application developers could decide theJava run-time environment at deploy-time.
+•EEaassyy  ttoo  uussee– The complexity of the middleware is
+hidden behind a simple and intuitive set of APIs.
+•PPaayy--aass--yyoouu--ggoo  pphhiilloossoopphhyy– Programmers do not
+need to use all the features provided by the mid-dleware. Features that are not used do not re-quire programmers to know anything about
+them, neither add any computational overhead.
+The Architectural model
+JADE includes both the libraries (i.e. the Java class-es) required to develop application agents andthe run-time environment that provides the basic
+Figure 5
+The Java technology
+in search of inn ovation
+exp - Volume 3 - n. 3 - September 2003 13services and that must be active on the device be-
+fore agents can be executed. Each instance of the
+JADE run-time is called container (since it “con-
+tains” agents). The set of all containers is called
+platform and provides a homogeneous layer thathides to agents (and to application developers al-so) the complexity and the diversity of the under-lying tires (hardware, operating systems, types ofnetwork, JVM).As depicted in figure 6 , JADE is compatible with
+the J2ME CLDC/MIDP1.0 environment. It has al-ready been tested on the fields over the GPRS net-
+work with diff erent mobile terminals among
+which: Nokia 3650, Motorola Accompli008,Siemens SX45, PalmVx, Compaq iPaq, Psion5MX,HP Jornada 560. The JADE run-time memory foot-print, in a MIDP1.0 environment, is around 100 KB,but can be further reduced until 50 KB using theROMizing technique [4], i.e. compiling JADE to-
+gether with the JVM. JADE is extremely versatileand therefore, not only it fits the constraints of en-vironments with limited resources, but it has al-ready been integrated into complex architectures
+such as.NET or J2EE [5] where JADE becomes aservice to execute multi-party proactive applica-
+tions. The lliimmiitteedd  mmeemmoorryy  ffoooottpprriinnttallows in-
+stalling JADE on all mobile phones provided that
+they are Java-enabled.An analysis and a bbeenncchhmmaarrkk  ooff  SSccaallaabbiilliittyy  aanndd
+PPeerrffoorrmmaanncceeof the JADE Message Transport Sys-
+tem is re ported in [10].
+The Functional model
+From the functional point of view, JADE providesthe basic services necessary to distributed peer-to-peer applications in the fixed and mobile environ-ment. JADE allows each agent to ddyynnaammiiccaallllyy  ddiiss--
+ccoovveerrother agents and to ccoommmmuunniiccaatteewith
+them according to the peer-to-peer paradigm.From the application point of view, each agent isidentified by a unique name and provides a set ofservices. It can register and modify its servicesand/or search for agents providing given services,it can control its life cycle and, in particular, com-municate with all other peers.Agents communicate by exchanging asynchro-
+nous messages, a communication model almostuniversally accepted for ddiissttrriibbuutteedd  aanndd  lloooosseellyy--
+Internet Wireless environmentJADEMulti-agent distributed application
+JADE LAYER
+JAVA VM LAYERContainer Container Container Container
+PersonalJava CLDC J2EE J2SEFigure 6
+The JADE architecture
+exp - Volume 3 - n. 3 - September 200314ccoouupplleedd  ccoommmmuunniiccaattiioonnss1, i.e. between heteroge-
+neous entities that do not know anything abouteach other. In order to communicate, an agent justsends a message to a destination. Agents are iden-tified by a name (no need for the destination ob-ject reference to send a message) and, as a con-sequence, there is no temporal dependency be-tween communicating agents. The sender and thereceiver could not be available at the same time.
+The receiver may not even exist (or not yet exist) orcould not be directly known by the sender that canspecify a property (e.g. “all agents interested infootball”) as a destination. Because agents identi-
+fies each other by their name, hot change of theirobject reference are transparent to applications.Despite this type of communication, sseeccuurriittyyis pre-
+served, since, for applications that require it, JADEprovides proper mechanisms to authenticate andverify “rights” assigned to agents. When needed,
+therefore, an application can verify the identity ofthe sender of a message and prevent actions notallowed to perform (for instance an agent may beallowed to receive messages from the agent rep-resenting t he boss, but not to send messages to it).
+All messages exchanged between agents are car-ried out within an 
+envelope including only the in-
+formati on required by the transport layer. That al-
+lows, among others, to encrypt the content of amessage separately from the envelope. The structure of a message complies with the ACLlanguage defined by FIPA [3] and includes fields,such as variables indicating the context a messagerefers-to and timeout that can be waited before an
+answer is received, aimed at supporting complexinteractions and multiple parallel conversations. Tofurther support the implementation of ccoommpplleexx  ccoonn--
+vveerrssaattiioonnss, JADE provides a set of skeletons of typi-
+cal interaction patterns to perform specific tasks,such as negotiations, auctions and task delegation.By using these skeletons (implemented as Java ab-stract classes), programmers can get rid of the bur-den of dealing with synchronization issues, timeouts,error conditions and, in general, all those aspectsthat are not strictly related to the application logic.
+To facilitate the creation and handling of messages
+ccoonntteenntt, JADE provides support for automatically
+converting back and forth between the format suit-able for content exchange, including XML and RDF,and the format suitable for content manipulation(i.e. Java objects). This support is integrated withsome ontology creation tools, e.g. Protégé, allowingprogrammers to graphically create their ontology. JADE is opaque to the underlying inference enginesystem, if inferences are needed for a specific ap-plication, and it allows programmers to reuse theirpreferred system. It has been already integratedand tested with JESS and Prolog.To increase ssccaallaabbiilliittyyor also to meet the con-
+straints of environments with limited resources, JADE
+provides the opportunity of executing multiple par-allel tasks within the same Java thread. Several ele-mentary tasks, such as communication, may thenbe combined to form more complex tasks struc-tured as concurrent Finite States Machines. In the J2SE and Personal Java environments, JADEsupports mmoobbiilliittyy  ooff  ccooddee  aanndd  ooff  eexxeeccuuttiioonn  ssttaattee.
+That is, an agent can stop running on a host, migrateon a different remote host (without the need to havethe agent code already installed on that host), andrestart its execution from the point it was interrupted
+(actually, JADE implements a form of not-so-weakmobility because the stack and the programcounter cannot be saved in Java). This functionalityallows, for example, distributing computational loadat runtime by moving agents to less loaded ma-chines without any impact on the application.The platform also includes a naming service (ensur-ing each agent has a unique name) and a yyeellllooww
+ppaaggeessservice that can be distributed across multi-
+ple hosts. Federation graphs can be created in or-der to define structured domains of agent services.Another very important feature consists in the avail-ability of a rich suite of graphical tools supportingboth the ddeebbuuggggiinnggand mmaannaaggeemmeenntt//mmoonniittoorr--
+iinnggphases of application life cycle. By means of
+these tools, it is possible to remotely control agents,even if already deployed and running: agent con-
+versations can be emulated, exchanged mes-
+sages can be sniffed, tasks can be monitored,agent life-cycle can be controlled. 
+1A Gartner technical note [8] foresees that MOM (Message-Ori-
+ented-Middleware) will be the predominant form of communica-tion middleware for mobile applications in the business marketby 2004.
+in search of inn ovation
+exp - Volume 3 - n. 3 - September 2003 15The described pieces of functionality, and particu-
+larly the possibility of remotely activating (bothfrom code and from console), even on mobile ter-minals, tasks, conversations and new peers, makesJADE very well suited to support the developmentand execution of distributed, machine-to-machine,multi-party, intelligent and proactive applications.
+JADE in the mobile environment
+As already mentioned, the JADE run-time can beexecuted on a wide class of devices ranging fromservers to cell phones, for the latter the only re-quirement being Java MIDP1.0 (or higher versions).
+In order to properly address the memory and pro-cessing power limitations of mobile devices andthe characteristics of wireless networks (GPRS inparticular) in terms of bandwidth, latency, intermit-tent connectivity and IP addresses variability, and
+at the same time in order to be efficient when exe-cuted on fixed network hosts, JADE can be config-ured to adapt to the characteristics of the deploy-ment environment. JADE architecture, in facts, iscompletely modular and, by activating certainmodules instead of others, it is possible to meet dif-ferent requirements in terms of connectivity, mem-
+ory and processing power.More in details, a module called LEAP allows opti-mising all communication mechanisms whendealing with devices with limited resources and
+connected through wireless networks. By activatingthis module, a JADE container is “split”, as depict-ed in figure 7 into a 
+front-end , actually running on
+the mobile terminal, and a back-end running in
+the fixed network. A proper architectural element,called 
+mediator , must be already active and is in
+charge of instantiating and holding the back-ends(that basically are entries in the mediator itself). Toface work-load problems it is possible to deploy
+several mediators each one holding several back-ends. Each front-end is linked to its correspondingback-end by means of a permanent bi-directionalconnection. It is important to note that there is nodifference at all for application developers de-pending on whether an agent is deployed on anormal container or on the front-end of a split con-tainer, since both the available functionality and
+the APIs to access them are exactly the same.The approach has a number of advantages:•Part of the functionality of a container is dele-
+gated to the back-end, thus making the front-end extremely lightweight in terms of requiredmemory and processing power.
+•The back-end masks, to other containers, the actual
+IP address assigned to the wireless device and,among the others, allows hiding to the rest of themulti-agent system a possible change of IP address.
+FrontEnd Container BackEndJADE APIs“Split container”
+JADE APIs
+BackEnd
+Mediator
+permanent
+bi-directional
+connectionFrontEndFigure 7
+JADE architecture in the wireless environment
+16•The front-end is able to detect a loss of connec-
+tion with the back-end (for instance due to an outof coverage condition) and re-establish it as soonas possible.
+•Both the front-end and the back-end implement a
+store-and-forward mechanism: messages that can-not be transmitted due to a temporary disconnectionare buffered and delivered as soon as the connec-tion is re-established.
+•Several information that containers exchange (for in-
+stance to retrieve the container where an agent is cur-rently running) are handled only by the back-end. This
+approach, together with a bit-efficient encoding ofcommunications between the front-end and the back-end, allows optimising the usage of the wireless link. 
+Technical details
+The following table summarizes the JADE maincharacteristics.THE JADE COMMUNITY
+Though TILAB is the originator of the JADE project,there is an ever-growing community that partici-pates to the whole development process of theplatform. This community revolves around two ma-jor gathering points: the open source project andthe government board.
+The open source project
+The whole JADE source code is distributed under anopen source policy, the Lesser GNU Public License(LGPL for short) [6]. LGPL enables full exploitation ofJADE, even in a business environment, while en-forcing the constraint that any modification of JADE
+source code and any derivative work be returnedto the community under the LGPL license itself. No
+restrictions, instead, are put on applications and
+other categories of software that 
+uses JADE.
+A large user base, countingmore than a thousand mem-bers, gathered around this pro-ject; many among them arecontact points within their com-pany or university, bridging inter-nal JADE users with the world-wide community. Communitysubscribers come partly fromacademic environments (JADE isvery popular as a teaching sup-
+port environment in distributedAI courses), partly from R&D cen-ters of world leading companies
+such as Motorola, HP, Siemensand Rockwell Automation, andpartly from small start-ups suchas Mobile Tribe and Acklin, look-ing at JADE as an enabling tech-nology for their businesses. Out-standing contributions of Mo-torola , Siemens, and Broadcom
+have to be acknowledged be-cause, within the framework ofthe LEAP IST project [7], theystrongly contributed to port theJADE platform to the J2ME/MIDP
+environment.Name
+Provider
+Web site
+Contact point
+Language
+Availability
+Technical/functional
+characteristics
+Network
+environment
+Termi nalsJADE - Java Agent Development Framework
+TILAB
+http://jade.tilab.com/
+Fabio Bellifemine, email: fabio.bellifemine@tilab.com
+Java: J2EE, J2SE, J2ME CLDC/MIDP1.0 platforms
+Open Source, LGPL license
+If needed, commercial licenses for specific purposes or consultancyframeworks can be properly negotiated.
+Distributed, multi-party application with peer-to-peer communication.
+Compliance with the FIPA standard.Agent life cycle management.White pages and yellow pages services with the opportunity of creating
+federation graphs at run-time.
+Graphical tools supporting the debugging, management and monitoring
+phases.
+Support for agent code and execution state migration.Support for complex interaction protocols (e.g. contract-net).Support for messages content creation and management including XML
+and RDF.
+Support for integration in JSP pages by means of a tag library.Support for application level security (currently only in J2SE).Transport protocols selectable at run-time. Currently available: JAVA-RMI,
+JICP (JADE proprietary protocol), HTTP and IIOP .
+Already tested in the fields over Bluetooth, GPRS, W-LAN and the Internet.
+All terminals supporting Java MIDP1.0 or Personal Java or J2SE. Already
+tested on Nokia 3650, Motorola Accompli008, Siemens SX45, PalmVx,Compaq iPaq, Psion5MX, HP Joranda 560.
+Table 1
+Summary of JADE main characteristics
+exp - Volume 3 - n. 3 - September 2003
+in search of inn ovation
+exp - Volume 3 - n. 3 - September 2003 17The JADE project is supported by a web site [1]
+where users can download code and documen-tation, report possible bugs and browse a col-
+lection of useful links maintained by the JADEteam. Moreover, two mailing lists are available to
+developers for discussing technical issues or justfor staying tuned about the project, e.g. to be in-
+formed about new releases. Due to such an ac-
+tive user base, hundreds of JADE downloads wereregistered in peak days and the project counts
+now more than 40,000 downloads in total.JADE welcomes contributions of the OpenSource Community that can be given under dif-ferent forms: simply making publicly known the
+usage of JADE, reporting and, better, fixingbugs and documentation, replying and givingsupport to less-experienced users on the mail-ing list, contributing with new add-ons and soft-ware modules.
+The JADE Governing Board
+In May 2003 TILAB and Motorola launched a new
+initiative, the JADE Governing Board, a not-for-prof-it organization, with the intent of promoting theevolution and the adoption of JADE by the mobile
+telecommunications industries as a java-based
+de-facto standard middleware for agent-basedapplications in the mobile personal communica-tion sector. The mission of the JADE Governing Board is the in-dustrial affirmation of JADE through the estab-lishment of consensus and the contribution ofkey player s in the mobile sector in order to ex-
+pand consumer options and interest throughnew wireless agent applications. The JADE-boardpaves the way for mobile VAS services, wherepeer-to-peer communication and services onPCs, PDA’s and phones will enable tailored solu-tions for the mobile users and mobile teams tomeet the increasing demand for intelligent mo-bile lifestyles.The Board intends to leverage, continue andconsolidate the Open-source tradition throughthe continuous support and involvement of theJADE Open-source Community. The Board hasbeen formed as a contractual consortiumamong the Members, it is open and it wel-comes all those companies and organizations
+that have a concrete business interest in the ex-tension of JADE and that commit to contribute
+to its development and promotion. The JADE
+Web site provides information on how to join
+the Board.
+WHY USING JADE?
+JADE is a middleware that simplifies the develop-ment of applications. Several companies are al-ready using it for very different application sectors
+including supply chain management, holonicmanufacturing, rescue management, fleet man-agement, auctions, tourism, etc. Some papers ofthis special issue of the EXP journal already give ev-idence of the types of usage, while this section triesto describe which application features best bene-
+fit from JADE.
+Distributed applications composed of au-
+tonomous entitiesFirst of all, JADE simplifies the development of dis-tributed applications composed of autonomousentities that need to communicate and collabo-rate in or der to achieve the working of the entire
+system. A software framework that hides all com-plexity of the distributed architecture is madeavailable to application developers, who can fo-cus their software development just on the logicof the application rather than on middleware is-sues, such as discovering and contacting the en-tities of the system. This type of distributed applications enabled byJADE, in particular when applied to the mobileenvironment, ignite a new trend of evolution thatwe like to name smart-device smart-interconnec-
+tion: the software on each device is equippedwith autonomy, intelligence, and capability ofcollaboration and the value of the system is giv-en by the capabilities of the devices and by theirinteraction and collaboration capabilities. This isquite different from the ubiquitous access trend
+where the value of the system is given by the con-tent and the capability of accessing the content
+from anywhere.
+exp - Volume 3 - n. 3 - September 200318Negotiation and Coordination
+JADE simplifies the development of applicationsthat require negotiation and coordinationamong a set of agents, where the resources andthe control logics are distributed in the environ-ment. In fact, easy-to-use software libraries to im-plement peer-to-peer communication and inter-action protocols (i.e. patterns of interaction be-tween autonomous entities) are provided byJADE to developers.
+Pro-activity
+JADE agents control their own thread of executionand, therefore, they can be easily programmedto initiate the execution of actions without human
+intervention just on the basis of a goal and statechanges. This feature, that is usually called pro-activity, makes JADE a suitable environment forthe realization of machine-to-machine (m2m) ap-plications, for example, for industrial plant au-tomati on, traffic control and communication net-
+work management.
+Multi-party applications
+Peer-to-peer architectures are more efficient than
+client-server architectures for developing multi-par-ty applications, as the server might become thebottleneck and the point of failure of the entire sys-tem. Because JADE agents can both provide and
+consume services, they remove any need to distin-guish between clients and servers. JADE agents al-low 
+clients to communicate each-other without the
+intervention of a central server. Moreover, the factthat intelligence, information and control are dis-tributed, allows the realization of applicationswhere the ownership is distributed among thepeers (agents) given that each peer may be able,and authorized to perform, just a subset of the ac-tions of the application. 
+Interoperability
+JADE complies with the FIPA specifications thatenable end-to-end interoperability betweenagents of different agent platforms. All appli-cations where inter-organization communica-tion is needed can benefit from interoperabili-
+ty, including machine-to-machine and holonicmanufacturing.
+Openness 
+JADE is an open-source project that involve thecontributions and collaborations of the user com-munity. This user-driven approach allows both usersand developers to contribute with suggestions andnew code, which guarantees openness and use-fulness of the APIs. Of course, anarchy must beavoided and the JADE Governing Board is the ac-tor that formally controls the evolution of JADE in
+terms of new APIs and functionalities. 
+Versatility
+JADE provides a homogeneous set of APIs that areindependent from the underlying network and Ja-va versi on. It in fact provides the same APIs both for
+the J2EE, J2SE and J2ME environment. This featureallows application developers to reuse the sameapplication code both for a PC, a PDA or a Java-phone, it allows to postpone this choice as late aspossible, in theory, until the deploy-time.
+Easy of use and mobile applications
+JADE API’s are easy to learn and use. JADE hasbeen designed to simplify the management ofcommunication and message transport by mak-ing transparent to the developer the manage-ment of the different communication layers usedto send a message from an agent to another
+agent, and so allowing her/him to concentrateon the logic of the application. Of course, the ef-fect of this feature is to make faster the develop-
+ment of applications. JADE reduces the applica-tion development time in respect to the time nec-essary to develop the same application by usingonly Java standard packages. In particular whendeveloping distributed applications for mobileterminals, J ADE APIs and ready-to-use functional-
+ities allow to strongly reduce the application de-velopment time and costs (some estimations
+have been given that indicates reduction of de-velopment time up to 30%). 
+in search of inn ovation
+exp - Volume 3 - n. 3 - September 2003 19GLOSSARY
+ACL Agent Communication Language
+AMS Agent Management System
+API Application Program Interface
+C/S Client-Server
+CLDC Connected, Limited Device Configuration
+DF Directory Facilitator
+FIPA Foundation for Intelligent Physical Agents
+GPRS General Packet radio System
+HTTP Hyper Text Transfer Protocol
+HW Hardware
+IIOP Internet Inter-ORB Protocol
+IP Internet Protocol
+J2EE Java 2 Enterprise Edition
+J2ME Java 2 Micro Edition
+J2SE Java 2 Standard Edition
+JESS Java Expert System Shell
+JICP JADE Internal Communication Protocol
+JVM Java Virtual Machine
+LGPL Lesser GNU Public License
+M2M Machine to Machine
+MIDP Mobile Internet Device Profile
+MOM Message Oriented Middleware
+OS Operating System
+P2P Peer to Peer
+PC Personal Computer
+PDA Personal Digital Assistant
+R&D Research and Development
+RDF Resource Description Framework
+RPC Remote Procedure Call
+SMTP Simple Mail Transfer Protocol
+SOAP Simple Object Access Protocol
+SSL Secure Socket layer
+TCP Transmission Control Protocol
+URI Uniform Resource Locator
+VAS Value Added Service
+W3C World Wi de Web Consortium
+W-LAN Wireless Local Area Network
+WSDL Web Services Description Language 
+XML eXtensible Markup Language REFERENCES
+[1] JADE Web Site, http://jade.tilab.com/
+[2] Leonardo Chiariglione’s Web site,
+http://www.chiariglione.org
+[3] FIPA Web Site, http://www.fipa.org
+[4] Michael Berger, Steffen Rusitschka, Dmitri Toropov,
+Michael Watzke, Marc Schlichte, Porting Agents toSmall Mobile Devices –The Development of theLightweight Extensible Agent Platform, this numberof EXP
+[5] BlueJADE, http://sourceforge.net/projects/bluejade 
+[6] LGPL license, http://www.opensource.org/licens-
+es/lgpl-license.php
+[7] LEAP Web Site, http://leap.crm-paris.com/
+[8] M. Pezzini - Do MOM, ORBs and Data Access Mid-
+dleware Suit Mobile? Gartner Research Note Num-ber: T-14-3936, 20 September 2001
+[9] F. Bellifemine, A. Poggi, G. Rimassa. Developing mul-
+ti agent systems with a FIPA-compliant agent frame-work. in Software - Practice & Experience, John Wi-ley & Sons, Ltd. vol no. 31, 2001, pagg. 103-128
+[10] Pavel Vrba, E.Cortese, F. Quarta, G. Vitaglione, Scal-
+ability and Performance of the JADE Message Trans-port System. Analysis of suitability for Holonic Man-ufacturing Systems. this number of EXP.
+Fabio Bellifemine
+Telecom Italia Lab
+Tel.: +39 011 228 6175 - Fax +39 011 228 6299
+fabio.bellifemine@telecomitalia.it
+Giovanni Caire
+Telecom Italia Lab
+Tel.: +39 011 228 6107 - Fax +39 011 228 6299
+giovanni.caire@telecomitalia.it
+Agostino Poggi
+Dipartimento di Ingegneria dell’InformazioneUniversità degli Studi di ParmaParco Area delle Scienze, 181AI-43100 Parma – ItalyTel.: +39 0521 90 5728 - Fax  +39 0521 90 5723
+poggi@ce.unipr.it
+Giovanni Rimassa
+Dipartimento di Ingegneria dell’InformazioneUniversità degli Studi di ParmaParco Area delle Scienze, 181AI-43100 Parma – Italy
+Tel.: +39 0521 90 5728 - Fax  +39 0521 90 5723
+rimassa@ce.unipr.itCONTACTS

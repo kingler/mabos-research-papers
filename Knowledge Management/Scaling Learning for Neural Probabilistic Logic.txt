@@ -1,0 +1,905 @@
+EXPLAIN, AGREE, LEARN:
+Scaling Learning for Neural Probabilistic Logic
+Victor Verreeta,*, Lennert De Smeta, Luc De Raedtaand Emanuele Sansoneb
+aDepartment of Computer Science, KU Leuven, Leuven, Belgium
+bDepartment of Electrical Engineering (ESAT), KU Leuven, Leuven, Belgium
+Abstract. Neural probabilistic logic systems follow the neuro-
+symbolic (NeSy) paradigm by combining the perceptive and learning
+capabilities of neural networks with the robustness of probabilistic
+logic. Learning corresponds to likelihood optimization of the neural
+networks. However, to obtain the likelihood exactly, expensive prob-
+abilistic logic inference is required. To scale learning to more com-
+plex systems, we therefore propose to instead optimize a sampling
+based objective. We prove that the objective has a bounded error with
+respect to the likelihood, which vanishes when increasing the sample
+count. Furthermore, the error vanishes faster by exploiting a new con-
+cept of sample diversity. We then develop the EXPLAIN, AGREE,
+LEARN (EXAL) method that uses this objective. EXPLAIN samples
+explanations for the data. AGREE reweighs each explanation in con-
+cordance with the neural component. LEARN uses the reweighed ex-
+planations as a signal for learning. In contrast to previous NeSy meth-
+ods, EXAL can scale to larger problem sizes while retaining theoreti-
+cal guarantees on the error. Experimentally, our theoretical claims are
+verified and EXAL outperforms recent NeSy methods when scaling
+up the MNIST addition and Warcraft pathfinding problems.
+1 Introduction
+The field of neuro-symbolic (NeSy) artificial intelligence (AI) aims
+to combine the perceptive capabilities of neural networks with the
+reasoning capabilities of symbolic systems. Many prominent NeSy
+systems achieve such a combination by attaching a probabilistic logic
+component to the neural output [26, 46]. As a result, they tend to
+generalize better, can deal with uncertainty and require less training
+data compared to pure neural networks. The main challenge that pre-
+vents the widespread adoption of NeSy is the difficulty to learn, be-
+cause the learning signal for the neural network has to be propagated
+through the probabilistic logic component.
+Existing work has tackled propagating the learning signal in a
+plethora of ways. One line of work has tackled this challenge by re-
+lying on exact propagation using knowledge compilation. This scales
+poorly for more complex systems because inference in probabilistic
+logic is #P-complete [12]. Other lines of work propose different ap-
+proximation schemes for the propagation. A couple of approaches
+only consider the k-best solutions that satisfy the probabilistic logic
+component [27, 21], but they introduce biases that can reinforce the
+(possibly incorrect) beliefs of the neural network. More recently, A-
+NeSI [40] proposed to use neural networks to provide a differentiable
+approximation of the logic component. A-NeSI can provide some
+∗Email: victor.verreet@kuleuven.besemantic guarantees, but it has to rely on extensive optimization and
+hyperparameter tuning to reduce the bias of its approximation. While
+it still outperforms other methods in terms of scalability, the long
+training times of A-NeSI still limit its application to more complex
+problems. None of the above methods provide bounds on the error of
+approximation.
+To address these issues, this research focuses on scaling learning
+of the neural component in NeSy systems with a probabilistic logic
+component [26, 43, 40] while providing strong statistical guarantees.
+Concretely, we propose a surrogate objective to approximate the data
+likelihood, and prove it has some desirable properties that k-best or
+A-NeSI lacks. First, it is an unbiased approximation of the likelihood.
+Second, its approximation error is theoretically bounded. Third, we
+show how this error can be decreased using a newly introduced con-
+cept of diversity. Learning the neural component with this approxi-
+mate objective sidesteps the requirement of differentiability for the
+probabilistic logic component that other methods focus on.
+We also introduce the EXPLAIN, AGREE, LEARN (EXAL)
+method for constructing the surrogate objective. First, EXPLAIN
+samples explanations for the data at the level of the neural output,
+propagating the learning signal through the probabilistic logic com-
+ponent. We can control the resource scaling by choosing the num-
+ber of samples. Then AGREE assigns an importance to each sam-
+pled explanation based on the predictions of the neural component.
+Together, EXPLAIN and AGREE construct the surrogate objective.
+LEARN then uses the surrogate objective to perform a classical
+learning iteration for the neural component with direct supervision
+on the neural output.
+Experimentally, we validate our theoretical claims on synthetic
+data and show that all three steps in EXAL are necessary to achieve
+good performance. Moreover, we apply EXAL to two prominent
+NeSy problems, MNIST addition and Warcraft pathfinding and show
+that EXAL outperforms other NeSy methods such as A-NeSI [40] in
+terms of execution time and accuracy for some instances when scal-
+ing to larger problem sizes.
+2 Background
+NeSy systems consist of both a neural and a symbolic component. In
+the case of neural probabilistic logic, the neural component handles
+perception of the world by mapping raw input x∈Rdto a probabil-
+ity distribution over nbinary variables f∈ {0,1}n. The symbolic
+component then performs logical reasoning over these binary vari-
+ables to verify whether a formula ϕis satisfied. More specifically,arXiv:2408.08133v1  [cs.LG]  15 Aug 2024
+Figure 1 : The neural component takes the input x(left) to output probabilities over n= 4 variables. At the top, NeSy-WMC calculates the
+probability that ϕis satisfied. Below, EXAL finds and reweighs explanations for ϕto construct L.
+we choose weighted model counting (WMC) for the symbolic com-
+ponent, because probabilistic inference can be reduced to WMC [8].
+Definition 1. LetA(n) ={0,1,?}n. We call µ∈A(n)anassign-
+ment ofnbinary variables. If µ(k) = ? for some kthen variable kis
+not assigned a value and we call µpartial. Otherwise µis complete.
+Definition 2. Anexplanation of a formula ϕis a complete assign-
+mentµthat satisfies ϕ. Like [33], we use the term explanation, but it
+is also called a model. The set Φcontains all explanations of ϕ.
+Definition 3. A WMC problem over nbinary variables f∈ {0,1}n
+is defined by a propositional logical formula ϕ, together with weight
+assignments wk:{0,1} →R+for each variable. The answer W
+to the WMC problem is W=P
+f∈ΦQ
+kwk(fk)1. A NeSy-WMC
+problem is a WMC problem where the weights are computed by a
+neural network.
+Example 1. The camera of a self-driving car provides an image with
+dpixels as raw input. From this image, the neural component outputs
+n= 4 probabilities for detecting f1(pedestrian), f2(red light), f3
+(driving slow) and f4(crosswalk). The logical component decides
+the car should brake if there is a pedestrian or a red light or if it is
+driving too fast near a crosswalk. This is encoded in ϕ=f1∨f2∨
+(¬f3∧f4). The weights of this NeSy-WMC problem are given by
+the neural component wk(fk) = nk(x)fk(1−nk(x))1−fk, where
+for example n 1(x)is the probability that there is a pedestrian in the
+input image xaccording to the neural network. The answer Wto
+the NeSy-WMC problem is the probability that the car should brake
+given the input image. This is illustrated in Fig. 1. We will use this
+as a running example throughout this paper.
+3 The Objective
+We now consider optimizing a NeSy-WMC model, consisting of a
+neural and logic component. We leave the neural component unspec-
+ified and only require it to be learnable via gradient descent. The
+data set contains ItuplesD={(xi, ϕi)|i= 1, ..., I}, where xi
+is a raw input and ϕiis a logical formula that is assumed to hold for
+1The standard WMC formulation assumes independence of the variables fk,
+but our theory still applies with a global weight w(f)per explanation.
+Figure 2 : Probabilistic graphical model for NeSy-WMC. The full ar-
+rows follow the flow of information during inference. The dashed
+arrows follow the execution of EXAL, where explanations fare sam-
+pled given ϕand reweighed based on the neural output given x.
+that data point and can be seen as its label. For example, if a self-
+driving car does not brake given image xi(see Ex. 1), then the label
+isϕi=¬f1∧ ¬f2∧(f3∨ ¬f4), indicating there is no pedestrian,
+no red light and either there is no crosswalk or the car is driving slow
+enough. We will often drop the index iof the data point.
+Our setup is modelled by the probabilistic graphical model in
+Fig. 2. It contains the input x∈Rd, thenbinary variables f∈
+{0,1}nand whether ϕis satisfied. The logic component is deter-
+ministic P(ϕ|f) = 1 iffsatisfies ϕand zero otherwise. The
+neural component outputs a distribution P(f|x), which are the
+weights of the NeSy-WMC problem. The answer Wof the NeSy-
+WMC problem is the probability P(ϕ|x). The neural component is
+usually learned via likelihood maximization on the data set D. How-
+ever, calculating the likelihood requires expensive inference, which
+is intractable for complex systems. We therefore propose the follow-
+ing surrogate objective Lthat bounds the true likelihood.
+Definition 4. For a data point (xi, ϕi)letQibe an auxiliary distribu-
+tion over the explanations Φiof the label ϕiand let Pibe the distri-
+bution over the explanations that the neural component outputs given
+xi. We then define the surrogate objective L=P
+iKL(Qi|Pi).
+Intuitively, the auxiliary distributions Qipropose explanations for
+the label ϕi, from which the neural component Pican learn (Fig. 2).
+We now show the bound on the negative log-likelihood loss. The full
+derivation of this bound can be found in the appendix.
+−logP(D)≤ −X
+iX
+f∈ΦiQi(f) logP(f|xi)
+Qi(f)
+=X
+iKL(Qi|Pi) =L . (1)
+The tightest bound in Eq. 1 is obtained by minimizing the Kullback-
+Leibler (KL) divergence with respect to both PiandQi. The learning
+signal for the neural component Piis thus provided by Qi, sidestep-
+ping the requirement of backpropagating gradients through the logic
+component [26, 44, 1]. Moreover, we also avoid expensive exact in-
+ference based on knowledge compilation [32] when learning with L.
+4 EXPLAIN, AGREE, LEARN
+The EXPLAIN, AGREE, LEARN method aims to minimize the ob-
+jective Lfrom Def. 4. This objective contains a KL divergence be-
+tween the distributions PiandQi, raising a number of issues. The
+first issue is that each Qiis supported on all explanations of the for-
+mula ϕi, which are unknown a priori and infeasible to obtain for
+complex problems. Hence, we introduce the EXPLAIN algorithm
+thatsamples explanations of ϕiused to approximate the support of
+Qi. After sampling explanations, the samples are reweighted by the
+neural component Piin the AGREE step such that samples deemed
+more likely by Pihave a higher weight. Alternatively, the AGREE
+step can be interpreted as a minimization of Lwith respect to all
+Qi. The EXPLAIN and AGREE steps both serve to construct a suit-
+able proposal distribution Qifor the objective L.Lis then used to
+optimize each Piin the LEARN step, which performs a traditional
+update step using backpropagation.
+4.1 EXPLAIN: Sampling Explanations
+The first step to minimizing Lis to construct the support of the pro-
+posal distributions Q. As the support of each Qconsists of explana-
+tions of the logical formula ϕ, we propose the EXPLAIN algorithm
+to sample such explanations. EXPLAIN is a stochastic variant of the
+Davis–Putnam–Logemann–Loveland (DPLL) algorithm, for which
+we first introduce some necessary concepts.
+Definition 5. Asampling strategy Σ(µ)for an assignment µis a
+probability distribution over the set of all assignments obtained from
+µby assigning one more variable a value.
+EXPLAIN is shown in Alg. 1 and differs from traditional DPLL
+on lines 10 and 11. Specifically, instead of iterating over all possi-
+ble assignments, a new assignment µ′is sampled according to Σ(µ).
+EXPLAIN starts with the formula ϕ, assumed to be in conjunctive
+normal form, the empty assignment µ?, defined as ∀k:µ?(k) = ? ,
+and a uniform sampling strategy Σ(µ). First, trivial variable assign-
+ments, e.g. unit clauses, are propagated to µ. The algorithm then ter-
+minates if ϕis satisfied or restarts if ϕis unsatisfiable. Otherwise, a
+value for one more variable is sampled using Σ(µ)and EXPLAIN is
+recursively called. Notice how the distribution of returned explana-
+tions is entirely determined by the sampling strategy Σ(µ).
+Example 2. Recall Ex. 1 and Fig. 1. If the self-driving car brakes at
+some point, the corresponding query is ϕ(f) =f1∨f2∨(¬f3∧f4).
+EXPLAIN can sample multiple explanations for this query, e.g. µ1=
+(0,1,1,0)(the car brakes due to a red light) or µ2= (1,0,0,1)(the
+car brakes due to a pedestrian on a crosswalk).
+During the execution of EXPLAIN it is possible to encounter con-
+flicting variable assignments. Specifically, a conflict occurs when the
+query ϕis unsatisfiable by µ. The execution of EXPLAIN is stochas-
+tic because of the sampling strategy Σ, so it is possible that some
+sampled assignments lead to a conflict whereas others do not. There
+are several policies for dealing with conflicts. The easiest policy is to
+simply stop execution and restart EXPLAIN from the top. Another
+policy is to backtrack and sample a different new variable assign-
+ment µ′. Furthermore, a limit on the amount of backtracking can beAlgorithm 1 Sampling algorithm EXPLAIN (ϕ, µ,Σ)
+1:Input: formula ϕ, assignment µ, sampling strategy Σ
+2:Output: explanation for ϕ
+3:
+4:µ←propagate (ϕ, µ) ▷trivial assignments
+5:ifµis an explanation for ϕthen
+6: return µ ▷ explanation found
+7:else if µcannot satisfy ϕthen
+8: return EXPLAIN (ϕ, µ ?,Σ) ▷restart due to conflict
+9:end if
+10:µ′←sample from Σ(µ) ▷new variable assignment
+11:return EXPLAIN (ϕ, µ′,Σ) ▷recurse
+imposed before deciding to restart. Although Alg. 1 restarts execu-
+tion upon encountering a conflict, our implementation employs back-
+tracking to the latest sampled assignment. Note that, if backtracking
+and a deterministic sampling strategy are used, EXPLAIN reduces to
+DPLL.
+4.2 AGREE: Updating the Weights
+We can choose any auxiliary distribution Qover explanations of ϕ
+in Def. 4 of Land will choose Qto minimize L. The explanations
+sampled by the EXPLAIN algorithm define the support of Qand
+varying Qamounts to reweighing every sample. It turns out that the
+objective Lis minimized with respect to these weights Qwhen they
+are proportional to the output of the neural component P(f|x). In-
+tuitively, explanations that the neural component deems more likely,
+should be assigned a higher weight to minimize L. We now formalize
+this result and provide a bound on the error of the approximation.
+Theorem 1. LetΨ⊆Φbe the explanations sampled by EXPLAIN
+and define Q∗(f) =P(f|x)/P
+f′∈ΨP(f′|x), then:
+1.Optimality. Q∗globally minimizes Lwith respect to Q.
+2.Optimum. The minimum of Lis given by −P
+ilogP∗(ϕi|xi),
+withP∗(ϕi|xi) =P
+f∈ΨiP(f|xi).
+3.Bounds. For any xandϕthe true probability is bounded by
+P∗(ϕ|x)≤P(ϕ|x)≤1−P∗(¬ϕ|x).
+Proof. Optimality. Let us write out one term of L, dropping the data
+point index i, yielding
+KL(Q|P) =−X
+f∈ΨQ(f) logP(f|x)
+Q(f). (2)
+Next, we use the method of Lagrange multipliers to impose the con-
+straintP
+f∈ΨQ(f) = 1 while minimizing this KL divergence with
+respect to all the Q(f). This method leads to the equations
+∂
+∂Q(f)
+−X
+f′∈ΨQ(f′) logP(f′|x)
+Q(f′)+λ
+X
+f′∈ΨQ(f′)−1
+
+
+=−logP(f|x)
+Q(f)+λ+ 1 = 0 , (3)
+and thus Q(f) = exp( λ+1)P(f|x). From the constraint we solve
+λ=−1−logP
+f∈ΨP(f|x)and filling this into the expression for
+Q(f)gives the optimum at Q∗(f) =P(f|x)/P
+f′∈ΨP(f′|x).
+Optimum. Filling in the optimal value Q∗(f)in Eq. (2) gives
+KL(Q|P) =−logX
+f∈ΨP(f|x) =−logP∗(ϕ|x) (4)
+Algorithm 2 NeSy-WMC learning method EXAL (p,D)
+1:Input: neural parameters p, dataset D
+2:Output: updated p
+3:(x, ϕ)←data point from D
+4:Ψ← {}
+5:fort= 1, ..., T do
+6: Ψ←Ψ∪ {EXPLAIN (ϕ, µ ?,Σ)} ▷EXPLAIN
+7:end for
+8:L←logP
+f∈ΨP(f|x, p) ▷AGREE
+9:p←p+η∇pL ▷ LEARN
+10:return p
+and summing over the data index igives the result.
+Bounds. Since Ψ⊆Φ, the inequality
+P∗(ϕ|x) =X
+f∈ΨP(f|x)≤X
+f∈ΦP(f|x) =P(ϕ|x) (5)
+holds. The upper bound on P(ϕ|x)is the same inequality applied
+to¬ϕand using P(ϕ|x) = 1−P(¬ϕ|x).
+The first result tells us that we can solve the minimization of L
+with respect to Qanalytically, avoiding iterative optimization meth-
+ods. The value reached by the global minimizer is the estimator of
+the true log-likelihood that we use during the LEARN step. The third
+result bounds the error of the approximate objective with respect to
+the true log-likelihood. These bounds get tighter with more samples
+and eventually become exact when all possible explanations of the
+query have been sampled at least once, i.e., whenever Ψ = Φ . This
+convergence of bounds is also shown experimentally in Sec. 6.2.
+Example 3. Assume we have sampled two explanations µ1(the car
+brakes due to a red light) and µ2(the car brakes due to a pedestrian on
+a crosswalk). The support of Qis then Ψ ={µ1, µ2}with weights
+Q(µ1)andQ(µ2)summing to unity. The AGREE step sets the
+weights in accordance to how likely the neural component Pdeems
+each explanation, i.e. Q(µ1) =P(µ1|x)/(P(µ1|x)+P(µ2|x)),
+withP(µ1|x)the probability that there is a red light in image x.
+See also Fig. 1.
+4.3 LEARN: Updating the Neural Component
+The LEARN step minimizes Lwith respect to the parameters of
+the neural component Pusing standard gradient descent techniques.
+When|Ψ|= 1, we observe that the loss Lis equivalent to the tra-
+ditional cross-entropy loss. We can interpret the LEARN step as a
+standard supervised learning step, where the labels are provided by
+the EXPLAIN and AGREE steps. The full EXAL algorithm is shown
+in Alg. 2.
+5 Optimizations using Diversity
+The following section provides an optimization for EXAL using the
+concept of diversity. The formula ϕof a data point can have many
+explanations and the true underlying explanation is not known. Con-
+sequently, sampling a diverse set of explanations with EXPLAIN can
+increase the chance of seeing the true explanation. For example, a
+self-driving car will more often brake because for a pedestrian than
+an animal on the road. An animal should however not be dismissed
+as a possible explanation for braking and could still be the true ex-
+planation for a certain data point. We formalise this intuition throughthe notion of diversity of explanations. Additionally, we provide two
+practical methods to increase the diversity of the samples obtained
+from the EXPLAIN algorithm.
+5.1 Diversity of Explanations
+We formally define diversity and prove in Prop. 1 that sampling a
+more diverse set of explanations leads to a tighter bound Lon the
+negative log-likelihood (see Eq. 1).
+Definition 6. Thediversity of a set Ψof assignments with respect to
+ϕisδ(Ψ) = |Ψ∩Φ|, where Φare the explanations of ϕ.
+Proposition 1. IfΨ1⊆Ψ2thenδ(Ψ1)≤δ(Ψ2)andL2≤L1
+where L1andL2are the objectives constructed from Equation (2)
+using Ψ1andΨ2, respectively (see optimum in Thm. 1).
+Proof. IfΨ1⊆Ψ2thenP
+f∈Ψ1P(f|x)≤P
+f∈Ψ2P(f|x).
+Taking the negative logarithm of both sides gives the result
+L2=−logX
+f∈Ψ2P(f|x)≤ −logX
+f∈Ψ1P(f|x) =L1.(6)
+The following paragraph explains how to increase diversity with a
+suitable sampling strategy. Recall that the execution of EXPLAIN
+depends entirely on the sampling strategy Σ(µ). We parametrize
+Σθ(µ)with parameters θ∈R+and change θto increase the di-
+versity. Concretely, we keep track of how often Σθ(µ)samples a
+(partial) assignment µ′during the execution of EXPLAIN. Call this
+count N(µ′). Every time µ′is sampled, the probability to sample µ′
+will be reduced by a factor of exp(−θ), encouraging the exploration
+of different assignments. In other words, the probability that Σθ(µ)
+samples µ′is chosen proportional to exp(−N(µ′)θ). Uniform sam-
+pling without diversity optimizations corresponds to θ= 0.
+5.2 Reformulation as a Markov Decision Process
+A recent result [5] of generative flow networks (GFlowNets) for
+Markov decision processes (MDPs) also allows us to increase the
+diversity of sampled explanations through optimisation of θ. Their
+results include a method to maximize the expected reward when ex-
+ecuting an MDP with certain properties. If we set the reward in the
+MDP equal to the diversity, their method can be used to increase
+the diversity. To apply the result, running EXPLAIN Ttimes for a
+query ϕto obtain a set of Tsamples first has to be framed as an
+MDP. Recall that A(n) ={0,1,?}nis the set of all assignments
+tonbinary variables. Therefore, the MDP has states (µ, t,Ψ)∈
+A(n)×N×2A(n), where µis the current assignment in the tthrun
+of EXPLAIN and Ψcontains the assignments returned by previous
+runs of EXPLAIN. The initial state is (µ?,0,{}). For an intermediate
+state(µ, t,Ψ)with partial µ, the possible actions are to assign a value
+to an unassigned variable of µ, leading to a new state (µ′, t,Ψ). Ifµ
+is complete, the only action is to go to the next run of EXPLAIN,
+transitioning to the state (µ?, t+ 1,Ψ∪ {µ}). The terminal states
+are(µ?, T,Ψ)which have a reward R(µ?, T,Ψ) = δ(Ψ). All other
+states have no reward.
+Proposition 2. The transition graph of the above MDP is acyclic and
+the MDP will always terminate.
+Proof. For a state (µ, t,Ψ)we define a quantity, which we call the
+progress , as(n+ 1)t+|{k|µ(k)̸= ?}|withnthe number of
+variables. We show that the progress increases by a value of one for
+every transition in the MDP. There are two cases. If µis partial, the
+only action is to assign a value to a variable. This leaves the first term
+of the progress unchanged, but increases the second term by one. If µ
+is complete, the MDP transitions to (µ?, t+ 1,Ψ). The second term
+changes by −n, but the increment of tcauses the first term to increase
+byn+ 1, again resulting in a net gain of one. Since the progress
+always increases when transitioning from state to state, no previous
+state can ever be visited. Hence the MDP is acyclic. Furthermore all
+states with progress (n+ 1)Tare terminal states, so the MDP is
+guaranteed to terminate.
+The execution of EXPLAIN, governed by the sampling strategy
+Σ(µ), translates to a probabilistic policy for the MDP as follows.
+In a state (µ, t,Ψ)with partial µ, the probability to take the action
+transitioning to (µ′, t,Ψ)is chosen equal to the probability of µ′as
+given by Σ(µ). For complete µ, the only possible action is to rerun
+EXPLAIN. There is thus a mapping from sampling strategies Σ(µ)
+to MDP policies. This mapping allows the maximization of the di-
+versity of parametrized sampling strategies Σθ(µ)via GFlowNets.
+Theorem 2. Consider the flow function F: (A(n)×N×2A(n))2→
+R+that solves the flow equation
+X
+s′→sF(s′, s) =R(s) +X
+s→s′F(s, s′) (7)
+where the sums run over all states s′= (µ′, t′,Ψ′)incoming into
+s= (µ, t,Ψ)or outgoing from srespectively. Following the pol-
+icy that transitions from stos′with probabilities proportional to
+F(s, s′), the probability to terminate in sis proportional to R(s) =
+R(µ, t,Ψ) = δ(Ψ), i.e. the diversity of Ψ.
+Proof. Because the MDP is acyclic and guaranteed to terminate
+(Prop. 2), this result follows by applying Prop. 2 in [5] to the
+MDP.
+The above theorem provides a way to optimize the expected diver-
+sity when running EXPLAIN, namely by choosing θsuch that the
+policy given by Σθ(µ)is as close as possible to the policy given by
+F. The solution Fto the flow equation can be difficult to find, but
+Bengio et al. [5] provide one method. The general idea is to minimize
+the logarithmic difference ∆between the left- and right-hand side of
+the flow equation (Eq. 7)
+∆(F) =X
+i"
+log P
+s→siF(s, si)
+R(si) +P
+si→sF(si, s)!#2
+(8)
+with the sum running over states siin trajectories sampled from the
+MDP. We experimentally compare this optimization approach to the
+simpler approach at the end of Sec. 5.1. The results are discussed in
+Sec. 6.1.
+6 Experiments
+Experiments are provided to support our theoretical claims. We show
+that we can learn to generate diverse samples using the EXPLAIN
+algorithm. Then the importance of diversity and the AGREE step
+are illustrated by looking at the convergence of the learning objec-
+tive. Lastly, we apply the EXAL method to the MNIST addition
+and Warcraft pathfinding tasks. Our implementation can be found
+here ( https://anonymous.4open.science/r/exal-526C ) and more de-
+tails about the experiments are in the appendix.6.1 Diversity (EXPLAIN)
+For the first experiment, we want to investigate how different sam-
+pling strategies compare in terms of diversity. To this aim, we run
+EXPLAIN on formulas generated in 3 different classes and with a
+varied number of variables, ranging between 15 and 60. Generation
+details for each class branch ,split andbottomup are in the ap-
+pendix. For every generated formula, we evaluate the diversity of
+different sampling strategies so they can be directly compared. This
+experiment is concerned only with logical explanations and does not
+use neural networks. We count how many unique explanations are
+sampled during subsequent calls to EXPLAIN, i.e. the diversity. The
+counts at each time step are averaged out over 200 runs on the same
+formula. This is done for fixed values of θ, as well as for parame-
+tersθthat are learned using the diversity algorithm in Sec. 5.2. As
+baselines, a uniform sampler and the theoretical maximally diverse
+sampler are considered.
+Fig. 3 shows the evolution of the diversity for each strategy. The
+diversity has been normalized to the unit interval for easy compar-
+ison. Although the EXPLAIN algorithm is not guaranteed to sam-
+ple uniformly, in many instances it is close to uniform. This can be
+seen by the overlapping of the uniform line and the line with θ= 0.
+For the bottomup formulas however, EXPLAIN is not uniform and
+performs worse for θ= 0. The diversity of EXPLAIN is typically
+increased by choosing a larger θand can get close to the optimal
+diversity. In some instances, such as in the split formulas, having
+θ >0increases diversity, but there is little difference in diversity for
+the different values of θ. We also see that learning to optimize the di-
+versity performs better than sampling uniformly. It is recommended
+to choose a higher θfor improving the diversity, but stability issues
+can occur for too high values of θ.
+6.2 Convergence of Bounds (AGREE)
+We now experimentally answer what the importance of diversity and
+of the AGREE step are. For this purpose we compare the surrogate
+objective with the true likelihood for different number of samples.
+More concretely, explanations are sampled for the formula and for
+its negation, using both the diverse and non-diverse versions of EX-
+PLAIN. Then the objectives with and without the AGREE step are
+calculated. The AGREE step makes use of the probabilities given
+by the neural network. We perform this synthetic experiment with-
+out neural networks by generating the probabilities uniformly at ran-
+dom on the unit interval. The results for all four combinations are
+shown in Figure 4. The samples for the formula give a lower bound,
+whereas samples for its negation give an upper bound. The AGREE
+step is necessary for the objectives to converge to the true likelihood.
+Furthermore, convergence happens faster when the samples are more
+diverse, confirming our theoretical results that diversity improves the
+error bounds.
+6.3 MNIST Addition (EXAL)
+We evaluate our approach on the standard NeSy experiment of learn-
+ing to sum MNIST digits [26, 27]. The input to this task is two se-
+quences of NMNIST images, where each sequence represents a dec-
+imal number of length N. The desired output is the sum of these two
+numbers, which is also the only supervision. The sum is encoded in
+a logical formula. For example, if two single-digit numbers aandb
+add up to 3, the formula is ϕ= (a= 0∧b= 3)∨(a= 1∧b=
+2)∨(a= 2∧b= 1)∨(a= 3∧b= 0) . The size of the possible
+Figure 3 : Diversity as a function of EXPLAIN calls for different formulas and sampling strategies. The factor is exp(−θ)∈ {0.1,0.4,0.7,1}.
+Figure 4 : Convergence of objectives for increasing sample count.
+assignments of values to each digit in each sequence ( 102N) in com-
+bination with the distant supervision is what makes learning to sum
+MNIST digits a challenging task. Although our general implemen-
+tation of EXPLAIN is not parallelized, we have used a parallelized
+implementation of EXPLAIN that can sample digits for this experi-
+ment. More details on the experimental setup and hyperparameters is
+given in the appendix.
+Table 1 : Test accuracy of predicting the correct sum of two sequences
+of MNIST digits of length N. Accuracies of A-NeSI, DeepStochLog
+and Embed2Sym were taken as reported by [40]. Additionally, we re-
+port the time in terms of minutes for EXAL and the main competitor,
+A-NeSI, using the exact same computational resources.
+Method N= 2 N= 4 N= 15
+Reference 96.06 92 .27 73 .97
+DeepStochLog 96.40±0.10 92 .70±0.60 T/O
+Embed2Sym 93.81±1.37 91 .65±0.57 60 .46±20.4
+A-NeSI 95.96±0.38 92 .56±0.79 75 .90±2.21
+EXAL 95.82±0.36 91 .77±0.83 73 .27±2.05
+A-NeSI (time) 81.7 198 .2 1979 .9
+EXAL (time) 51.4±2.3 74 .8±7.2 198 .6±15.7
+Table 1 shows how we compare to the state of the art for N= 2,
+N= 4 andN= 15 digits. EXAL is competitive with A-NeSI [40]
+and provides state-of-the-art performance, with the desired referenceaccuracy always within margin of error. This reference expresses the
+expected performance of predicting the correct sum of two Ndigit
+numbers given a 99% accurate digit classifier. Additionally, EXAL
+does not require fine-tuning of a neural approximation of the logic
+component or defining appropriate priors up front, in contrast to A-
+NeSI. Instead, it exploits explanations to directly acquire a suitable
+proposal distribution for learning.
+This suitable proposal translates into an overall procedure that is
+scalable and sample efficient. Looking at the reported average run-
+times in Table 1 for EXAL and A-NeSI, directly leveraging explana-
+tions instead of relying on approximation through optimisation can
+result in an order of magnitude faster learning times. Interestingly,
+the difference in learning time becomes larger as the problem size
+increases.
+6.4 Warcraft Pathfinding (EXAL)
+The task of Warcraft pathfinding, as described in [41], is to find the
+shortest path between two corner points of a two-dimensional grid
+given an image representing the grid. The exact traversal costs of
+each node are not known and have to be predicted from the image by
+the neural component. The only supervision for training the neural
+component is the true shortest path in the grid.
+In this context, the symbolic component is a shortest path finding
+algorithm, e.g. Dijkstra’s algorithm, and an explanation is a cost as-
+signment to every node in the grid such that the shortest path given by
+those costs coincides with the true shortest path. Sampling explana-
+tions is done as follows. First the grid is initialized with all nodes set
+to the highest cost, except for nodes on the true shortest path, which
+are set to the lowest cost. This guarantees that the given shortest path
+coincides with the true shortest path. Then a Gibbs sampling proce-
+dure is executed that resamples node costs with the restriction that
+the shortest path is unchanged. After a burn-in period of 100resam-
+pling steps, the resampled node costs are used as a training signal for
+the neural component.
+Once the neural component has been trained to predict node costs,
+the NeSy system can predict the shortest path given an image of a
+grid. A prediction is only considered correct if the predicted shortest
+path overlaps entirely with the true shortest path.
+Two main conclusions can be drawn from the reported test ac-
+curacies in Table 2. First, the same trend from the MNIST exper-
+iment continues, namely that EXAL provides orders of magnitude
+faster learning times compared to the state-of-the-art. Second, this
+quick convergence time does not impact the acquired accuracies.
+Even more, for the most challenging 30×30grid, EXAL signifi-
+cantly outperforms A-NeSI. Together, they provide strong evidence
+that using explanations improves scaling of NeSy learning.
+Table 2 : Test accuracy of predicting the shortest path given an im-
+age of a grid. Results of RLOO, A-NeSI and A-NeSI with RLOO
+were taken as reported by van Krieken et al. [40]. Runtimes are re-
+ported in minutes. It should be noted that the runtimes from A-NeSI
+and EXAL were measured on different machines. EXAL has been
+executed on a Dell XPS 15 (i7, 16GB, 512GB, FHD, GPU) laptop.
+Method 12×12 30 ×30
+RLOO 43.75±12.35 12 .59±16.38
+A-NeSI 94.57±2.27 17 .13±16.32
+A-NeSI + RLOO 98.96±1.33 67 .57±36.76
+EXAL 94.19±1.74 80 .85±3.83
+A-NeSI (time) 1380 2640
+EXAL (time) 11.1±0.1 84 .3±0.7
+7 Related Work
+We review recent works on neurosymbolic (NeSy) learning and scal-
+able logical inference. For a more detailed discussion on NeSy, we
+refer the reader to recent surveys in [7, 19].
+NeSy relaxations . Several NeSY systems address the scalability
+of inference with continuous relaxations based on fuzzy logic se-
+mantics [3, 18, 11, 25, 17, 34, 14]. However, these relaxations may
+introduce approximations that can yield different outputs for equiva-
+lent logic formulas [39, 20]. In contrast, our work performs inference
+and learning without resorting to such relaxations while retaining a
+probabilistic interpretation. Similar to us, the work in [42] provides a
+NeSy solution based on SMT solvers, which does not require back-
+propagation through the symbolic component. The solution approxi-
+mates the gradient by discretizing the neural representation and solv-
+ing a combinatorial optimization problem. In contrast, our work does
+not require to approximate the gradient as training proceeds in a su-
+pervised fashion thanks to the sampled explanations. Additionally,
+we avoid discretizing the neural representation as we leverage neu-
+ral predicates, essential for neatly integrating probability and logic.
+Lastly, our aim here is different as the paradigm is designed to scale
+probabilistic NeSy and to quantify the quality-speed tradeoff.
+Neural inference strategies . The work from [10] proposes a neu-
+rosymbolic pipeline consisting of a symbolic engine and three neural
+modules. Specifically, a perception network mapping the images to
+their symbolic representations, a neural solver attempting to correct
+the symbolic representation, and a mask predictor to identify pos-
+sible mistakes done by the neural solver. The symbolic solver then
+corrects the mistakes on the neural predictions. The neural modules
+are pre-trained under supervision and fine-tuned using reinforcement
+learning. In contrast, our simplified framework is based on a scalable
+logic engine and single neural component. Learning is performed
+by directly supervising the neural component using the sampled ex-
+planations using variational inference strategies. The work in [40]
+introduces two neural modules for neural-symbolic learning: a per-
+ception component mapping input data to the probabilities of facts,
+and a neural reasoner component mapping probabilities to the query.
+Learning involves training the neural reasoner to mimic synthetic in-
+put/output pairs obtained through logical inference, and then training
+the perception component in a supervised manner using the frozen
+neural reasoner. In contrast, our work only requires a perception
+component and utilizes a sampling algorithm that guarantees logi-
+cally consistent solutions while ensuring diversity. The Neural The-
+orem Prover [29, 30] introduces a continuous and differentiable re-
+laxation of the backward-chaining logic reasoning algorithm. In con-
+trast, our approach does not rely on relaxations or differentiability
+through the logic program. Other neural sampling strategies, such as
+GFlowNets [6, 5, 47], treat sampling as a sequential decision-makingprocess and learn a policy based on a reward function. However, sam-
+pling with hard constraints and exploring solution modes from logi-
+cal programs remains a challenging problem [16, 35].
+Logical inference/sampling strategies . Probabilistic logical in-
+ference can be performed exactly by transforming the logical pro-
+gram into a probabilistic circuit (PC) through knowledge compila-
+tion [12]. This allows for efficient evaluation in polynomial time [9,
+44, 1, 2]. Alternatively, approximate strategies can be used to avoid
+the computational burden of knowledge compilation, but they may
+result in biased learning [27, 22, 36] and in lacking guarantees on the
+uniformity/quality of the sampled solutions [23, 4]. The assumption
+of uniform distribution of worlds is often made when sampling solu-
+tions from a CNF formula, and various uniform samplers have been
+proposed with theoretical guarantees on query complexity and uni-
+formity [28]. State-of-the-art samplers based on hashing-based meth-
+ods and SAT solvers achieve approximate uniformity by partitioning
+the solution space into smaller regions [15, 37, 13, 38, 37, 45]. In
+contrast, our algorithm focuses on a stronger criterion than unifor-
+mity, namely diversity.
+8 Discussion and Conclusion
+The EXAL method is designed as a scalable solution to learning for
+neural probabilistic logic. The key idea is to use explanation sam-
+pling to propagate the learning signal through the symbolic compo-
+nent. This allows the neural component to be trained fast compared to
+exact approaches. We provide theoretical guarantees on the approx-
+imation error and provide practical methods to reduce this error, in
+particular by encouraging diversity. Experimentally, EXAL is shown
+to be competitive with state-of-the-art NeSy methods on larger prob-
+lems in terms of accuracy while significantly outperforming them in
+terms of speed.
+Despite these benefits, sampling explanations is NP-hard and can
+be slow for problems with a large explanation space. Exploring the
+entire space can be expensive, but is often unnecessary in practice.
+A good training signal can be obtained from a sampled subset of
+explanations. For example, in the Warcraft pathfinding problem it is
+unlikely to sample the true grid, but sampling similar grids suffices to
+properly train the network. Whether or not it is necessary to explore
+the entire explanation space is of course problem dependent. In the
+worst case where the explanation space is large and only one expla-
+nation can provide a good training signal, EXAL will also perform
+poorly. Furthermore, if satisfiability is difficult to check, sampling
+explanations for a formula is also difficult, as the existence of an ex-
+planation implies satisfiability. NeSy methods, including EXAL, can
+also suffer from reasoning shortcuts, an issue identified experimen-
+tally in [26]. It will be interesting to address this general NeSy issue
+in future work. Furthermore, this work focuses on scaling learning
+with a fixed logical formula, but scalability for structure learning is
+also an open problem. Lastly, EXAL supports continuous inputs x,
+but does not support continuous variables in the symbolic represen-
+tation f. Extending EXAL with continuous fis another line of re-
+search that would lead into the field of satisfiability modulo theories
+and weighted model integration [31].
+Although this work focused on NeSy-WMC for the symbolic com-
+ponent, EXAL can be used with any symbolic component for which a
+suitable EXPLAIN algorithm can be devised. This makes the method
+flexible to be applied to other use cases in the future.
+Acknowledgements
+This work was supported by the KU Leuven Research Fund
+(C14/18/062), the Flemish Government under the “Onderzoekspro-
+gramma Artificiële Intelligentie (AI) Vlaanderen” programme and
+the EU H2020 ICT48 project “TAILOR” under contract #952215.
+L. D. R. receives funding from the FWO project “Neural Probabilis-
+tic Logic Programming” (reference G097720N). E. S. receives fund-
+ing from the Horizon Europe research and innovation programme
+(MSCA-GF grant agreement n° 101149800, DISCWORLD).
+References
+[1] K. Ahmed, S. Teso, K. Chang, G. V . den Broeck, and A. Vergari. Se-
+mantic Probabilistic Layers for Neuro-Symbolic Learning. In NeurIPS ,
+2022.
+[2] K. Ahmed, K. Chang, and G. V . den Broeck. Semantic Strengthening
+of Neuro-Symbolic Learning. In AISTATS , 2023.
+[3] S. Badreddine, A. S. d’Avila Garcez, L. Serafini, and M. Spranger.
+Logic Tensor Networks. Artif. Intell. , 2022.
+[4] M. Bellare, O. Goldreich, and E. Petrank. Uniform Generation of NP-
+Witnesses Using an NP-Oracle. Inf. Comput. , 2000.
+[5] E. Bengio, M. Jain, M. Korablyov, D. Precup, and Y . Bengio. Flow
+Network based Generative Models for Non-Iterative Diverse Candidate
+Generation. In NeurIPS , 2021.
+[6] Y . Bengio, S. Lahlou, T. Deleu, E. J. Hu, M. Tiwari, and E. Bengio.
+GFlowNet Foundations. arXiv , 2021.
+[7] T. R. Besold et al. Neural-Symbolic Learning and Reasoning: A Survey
+and Interpretation. In Neuro-Symbolic Artificial Intelligence: The State
+of the Art , Frontiers in Artificial Intelligence and Applications, 2021.
+[8] M. Chavira and A. Darwiche. On probabilistic inference by weighted
+model counting. Artificial Intelligence , 2008.
+[9] Y . Choi, A. Vergari, and G. V . den Broeck. Probabilistic Circuits: A
+Unifying Framework for Tractable Probabilistic Models. Technical re-
+port UCLA , 2020.
+[10] C. Cornelio, J. Stuehmer, S. X. Hu, and T. Hospedales. Learning Where
+and When to Reason in Neuro-Symbolic Inference. In ICLR , 2023.
+[11] A. Daniele and L. Serafini. Knowledge Enhanced Neural Networks. In
+PRICAI , 2019.
+[12] A. Darwiche and P. Marquis. A Knowledge Compilation Map. J. Artif.
+Intell. Res. , 2002.
+[13] L. M. de Moura and N. S. Bjørner. Z3: An Efficient SMT Solver. In
+TACAS , 2008.
+[14] I. Donadello and L. Serafini. Compensating Supervision Incomplete-
+ness with Prior Knowledge in Semantic Image Interpretation. In IJCNN ,
+2019.
+[15] N. Eén and N. Sörensson. An Extensible SAT-solver. In SAT, 2003.
+[16] S. Ermon, C. P. Gomes, and B. Selman. Uniform Solution Sampling
+Using a Constraint Solver As an Oracle. In UAI, 2012.
+[17] L. Gan, K. Kuang, Y . Yang, and F. Wu. Judgment Prediction via Inject-
+ing Legal Knowledge into Neural Networks. In AAAI , 2021.
+[18] E. Giunchiglia and T. Lukasiewicz. Multi-Label Classification Neural
+Networks with Hard Logical Constraints. J. Artif. Intell. Res. , 2021.
+[19] E. Giunchiglia, M. C. Stoian, and T. Lukasiewicz. Deep Learning with
+Logical Constraints. In IJCAI , 2022.
+[20] M. M. Grespan, A. Gupta, and V . Srikumar. Evaluating Relaxations of
+Logic for Neural Networks: A Comprehensive Study. In IJCAI , 2021.
+[21] J. Huang, Z. Li, B. Chen, K. Samel, M. Naik, L. Song, and X. Si. Scal-
+lop: From Probabilistic Deductive Databases to Scalable Differentiable
+Reasoning. In NeurIPS , 2021.
+[22] J. Huang, Z. Li, B. Chen, K. Samel, M. Naik, L. Song, and X. Si. Scal-
+lop: From Probabilistic Deductive Databases to Scalable Differentiable
+Reasoning. In NeurIPS , 2021.
+[23] M. Jerrum, L. G. Valiant, and V . V . Vazirani. Random Generation of
+Combinatorial Structures from a Uniform Distribution. Theor. Comput.
+Sci., 1986.
+[24] Y . LeCun, L. Bottou, Y . Bengio, and P. Haffner. Gradient-based learning
+applied to document recognition. Proceedings of the IEEE , 1998.
+[25] T. Li and V . Srikumar. Augmenting Neural Networks with First-order
+Logic. In ACL, 2019.
+[26] R. Manhaeve, S. Dumancic, A. Kimmig, T. Demeester, and L. D. Raedt.
+DeepProbLog: Neural Probabilistic Logic Programming. In NeurIPS ,
+2018.
+[27] R. Manhaeve, G. Marra, and L. D. Raedt. Approximate Inference for
+Neural Probabilistic Logic Programming. In KR, 2021.[28] K. S. Meel. Counting, Sampling, and Synthesis: The Quest for Scala-
+bility. In IJCAI , 2022.
+[29] P. Minervini, M. Bosnjak, T. Rocktäschel, S. Riedel, and E. Grefen-
+stette. Differentiable Reasoning on Large Knowledge Bases and Natural
+Language. In AAAI , 2020.
+[30] P. Minervini, S. Riedel, P. Stenetorp, E. Grefenstette, and T. Rock-
+täschel. Learning Reasoning Strategies in End-to-End Differentiable
+Proving. In ICML , 2020.
+[31] P. Morettin, A. Passerini, and R. Sebastiani. Efficient weighted model
+integration via smt-based predicate abstraction. In Proceedings of the
+Twenty-Sixth International Joint Conference on Artificial Intelligence,
+IJCAI-17 , pages 720–728, 2017.
+[32] U. Oztok and A. Darwiche. A Top-Down Compiler for Sentential De-
+cision Diagrams. In IJCAI , 2015.
+[33] D. Poole. Probabilistic horn abduction and bayesian networks. Artificial
+Intelligence , 64(1):81–129, 1993.
+[34] M. Sachan, K. A. Dubey, T. M. Mitchell, D. Roth, and E. P. Xing. Learn-
+ing Pipelines with Limited Data and Domain Knowledge: A Study in
+Parsing Physics Problems. In NeurIPS , 2018.
+[35] E. Sansone. LSB: Local Self-Balancing MCMC in Discrete Spaces. In
+ICML , 2022.
+[36] A. Skryagin, W. Stammer, D. Ochs, D. S. Dhami, and K. Kersting.
+Neural-Probabilistic Answer Set Programming. In KR, 2022.
+[37] M. Soos, K. Nohl, and C. Castelluccia. Extending SAT Solvers to Cryp-
+tographic Problems. In SAT, 2009.
+[38] M. Soos, S. Gocht, and K. S. Meel. Tinted, Detached, and Lazy CNF-
+XOR Solving and Its Applications to Counting and Sampling. In CAV,
+2020.
+[39] E. van Krieken, E. Acar, and F. van Harmelen. Analyzing Differentiable
+Fuzzy Logic Operators. Artif. Intell. , 2022.
+[40] E. van Krieken, T. Thanapalasingam, J. M. Tomczak, F. van Harme-
+len, and A. ten Teije. A-NeSI: A Scalable Approximate Method for
+Probabilistic Neurosymbolic Inference. In NeSy-GeMs ICLR Workshop ,
+2023.
+[41] M. Vlastelica, A. Paulus, V . Musil, G. Martius, and M. Rolinek. Differ-
+entiation of blackbox combinatorial solvers. In ICLR , 2019.
+[42] Z. Wang, S. Vijayakumar, K. Lu, V . Ganesh, S. Jha, and M. Fredrikson.
+Grounding Neural Inference with Satisfiability Modulo Theories. In
+NeurIPS , 2023.
+[43] T. Winters, G. Marra, R. Manhaeve, and L. D. Raedt. DeepStochLog:
+Neural Stochastic Logic Programming. In AAAI , 2022.
+[44] J. Xu, Z. Zhang, T. Friedman, Y . Liang, and G. Broeck. A Semantic
+Loss Function for Deep Learning with Symbolic Knowledge. In ICML ,
+2018.
+[45] J. Yang and K. S. Meel. Engineering an Efficient PB-XOR Solver. In
+CP, 2021.
+[46] Z. Yang, A. Ishay, and J. Lee. NeurASP: Embracing Neural Networks
+into Answer Set Programming. In IJCAI , 2020.
+[47] D. Zhang, N. Malkin, Z. Liu, A. V olokhova, A. C. Courville, and
+Y . Bengio. Generative Flow Networks for Discrete Probabilistic Mod-
+eling. In ICML , 2022.
+Appendix: Proof of Loss Bounds
+We provide the full proof of Eq. 1 here:
+−logP(D) =−log Y
+iP(ϕi|xi)!
+=−X
+ilogP(ϕi|xi)
+=−X
+ilogX
+fP(ϕi|f)P(f|xi)
+=−X
+ilogX
+f∈ΦiP(f|xi)
+=−X
+ilogX
+f∈ΦiQi(f)P(f|xi)
+Qi(f)
+≤ −X
+iX
+f∈ΦiQi(f) logP(f|xi)
+Qi(f)
+=X
+iKL(Qi|Pi) =L . (9)
+Recall that P(ϕi|f)is an indicator that returns 1if and only
+iffsatisfies ϕi, limiting the sum to only explanations f∈Φi.
+The bound is obtained using Jensen’s inequality, which states that
+log(EQ[X])≥EQ[log(X)]. In this case X=P(f|xi)/Qi(f).
+Appendix: Experimental Details
+Diversity
+The diversity experiment has been performed on 9 formulas, of
+which 4 are shown in Figure 3. These are 3 branch, 3 bottom-up
+and 3 split formulas. Branch formulas contain implications of the
+formf0⇒f1∨...∨fbwithbthe branching factor. It also contains
+one clause with bvariables in disjunction. The branching factors are
+3, 3 and 10 and the formulas have depth of 3, 5 and 3 respectively.
+The bottom-up formulas have as parameters the fraction of starting
+variables, which is always set to 0.5, the number of inferred vari-
+ables, respectively 20, 60 and 60, and the in-degree, respectively 3,
+3 and 4. These formulas recursively define new variables in terms of
+previously existing variables, e.g. f4⇔f1∧(f2∨f3). The split
+formulas alternate between layers of conjunctions and disjunctions.
+All 3 programs have a depth of 4 and a conjunction size of 3 whereas
+the disjunction size varies from 2 to 4 inclusive.
+Convergence of Bounds
+To observe the convergence of bounds, 3 formulas have been created,
+each with 24 variables. The formulas are created so that exactly half
+of the assignments are explanations. The probabilities of the vari-
+ables are then varied in order to set the probability of the query to
+0.3, 0.8 or 0.5, of which the first two are shown in Figure 4. For the
+diverse sampling algorithm we have used EXPLAIN with θ= 3.
+MNIST Addition
+Dataset. Generating the data for the MNIST addition experi-
+ment [26] on two sequences of Ndigits is a straightforward process.
+It involves randomly selecting 2Nimages from the MNIST dataset
+and concatenating them to create two distinct sequences, each with
+a length of N. To supervise these sequences, we easily obtain thedesired values by multiplying the labels of the selected MNIST im-
+ages by the appropriate power of 10. We then sum the resulting se-
+quence of values for each number and further sum the two resulting
+numbers. It is important to note that each MNIST image is only al-
+lowed to appear once in the sequences. Hence, the dataset consists of
+⌊60000 /2N⌋sequences available for learning. The test set follows a
+similar procedure, using the test set partition of the MNIST dataset.
+Modelling. In this experiment, a traditional LeNet [24] neural net-
+work is utilized. The network architecture consists of two convolu-
+tional layers with 6and16filters of size 5, employing ReLU acti-
+vations. These layers are followed by a flattening operation. Subse-
+quently, three dense layers with sizes of 120,84, and 10are em-
+ployed. The first two dense layers also utilize ReLU activations,
+while the final layer applies a softmax activation. The network out-
+puts the probabilities indicating the likelihood that each image in the
+two sequences corresponds to a specific digit.
+Hyperparameters. For this experiment, we adopted the standard
+Adam optimizer with a learning rate of η= 10−3, known for its reli-
+able performance. Other critical hyperparameters include the number
+of samples drawn by EXAL and the number of epochs for training.
+In all cases, 600 samples were used, the same number as A-NeSI.
+The maximum number of epochs available for training was set to 10,
+20and100forN= 2,N= 4andN= 15 , respectively. Reproduc-
+tion of the A-NeSI results for MNIST was done using the optimised
+hyperparameters as reported by van Krieken et al. [40].
+Warcraft Pathfinding
+Hyperparameters. For the Warcraft pathfinding experiment we
+used a batch size of 100, a learning rate of 0.0001 and trained for
+10000 iterations. In every iteration we took a grid, used a burn in
+period of 100tile samples and then sampled 300tiles, which were
+actually used for training. Evaluation was done on 100maps and the
+results were averaged over 5reruns of this entire procedure.
+Logic formula. The logic formula for the symbolic computation in
+the Warcraft pathfinding problem is obtained by converting the below
+logic program into a formula when querying for the atom formula :
+path([target ],0).
+path([N1, N2|P], C)←edge(N1, N2, C1),
+path([N2|P], C2), CisC1 +C2.
+shortest ([source |P])←path([source |P], C),
+not(path([source |AP], AC), AC < C ).
+formula ←shortest (‘path given by label′).

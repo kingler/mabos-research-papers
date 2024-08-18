@@ -1,0 +1,863 @@
+ScienceDirect
+Available online at www.sciencedirect.com
+Procedia Computer Science 159 (2019)  202–211
+1877-0509 © 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.
+10.1016/j.procs.2019.09.175
+10.1016/j.procs.2019.09.175 1877-0509© 2019 The Authors. Published by Elsevier B.V .
+This is an open access article under the CC BY-NC-ND license ( https://creativecommons.org/licenses/by-nc-nd/4.0/ )
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+AIM: Designing a language for AI models
+Ionut ¸ Cristian Pistola,∗, Andrei Arusoaiea,∗
+aAlexandru Ioan Cuza, University of Ia¸ si, General Berthelot 16, Ia¸ si, 700483, Romania
+Abstract
+Describing an unambiguous model for an Artiﬁcial Intelligence (AI) problem has been a signiﬁcant topic in AI for almost 70 years,
+with the main goal of formalizing a natural language description to allow the computer to solve it. Nowadays, an AI problem
+is usually modelled as a transitional system, by following four steps: identify a representation for a problem state, describe the
+initial and ﬁnal states in that representation, describe valid transitions together with a search strategy that looks for a path betweenan initial and a ﬁnal state using the available transitions. This paper proposes a new language for describing AI models with the
+goal to generate executable code. The proposed language is capable of representing all common types of problems, and models
+implemented can be adapted easily to any search strategy with speciﬁc requirements (such as score functions). The language isfully described in this paper together with several non-trivial examples, while the code generation feature is work-in-progress.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords: artiﬁcial intelligence models; model speciﬁcation; programming languages; code generation;
+1. Introduction
+An Artiﬁcial Intelligence (AI) problem ranges from (apparently) simple toy problems, such as the Hanoi towers or
+Queens problem, to protein sequencing and complex game AIs. Whatever the complexity of the problem, the main
+diﬃculty in approaching one is describing the data and the requirements is such a way as to allow the computer
+to solve it. Formalizing an AI problem (also referred as modelling an AI problem) has been done in various ways
+over the years, with proposed approaches such as the original neural networks [11], going through the ﬁrst actualproblem-solving computer model [15] and up to modern approaches, which not only allow a problem to be describedand solved but also allow automated validation of the model, approaches well summarized in [17]. Nowadays, themost common approach to an AI problem is one established in its original form by [1] and [3]. Similar approach
+is described in recent works such as [17] and [6]. First, we identify a representation for a problem state which has
+to be simple enough so that the computer can analyze, modify and store it easily, but expressive enough so that all
+∗Corresponding author
+E-mail address: ipistol@info.uaic.ro
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+AIM: Designing a language for AI models
+Ionut ¸ Cristian Pistola,∗, Andrei Arusoaiea,∗
+aAlexandru Ioan Cuza, University of Ia¸ si, General Berthelot 16, Ia¸ si, 700483, Romania
+Abstract
+Describing an unambiguous model for an Artiﬁcial Intelligence (AI) problem has been a signiﬁcant topic in AI for almost 70 years,
+with the main goal of formalizing a natural language description to allow the computer to solve it. Nowadays, an AI problem
+is usually modelled as a transitional system, by following four steps: identify a representation for a problem state, describe the
+initial and ﬁnal states in that representation, describe valid transitions together with a search strategy that looks for a path betweenan initial and a ﬁnal state using the available transitions. This paper proposes a new language for describing AI models with the
+goal to generate executable code. The proposed language is capable of representing all common types of problems, and models
+implemented can be adapted easily to any search strategy with speciﬁc requirements (such as score functions). The language isfully described in this paper together with several non-trivial examples, while the code generation feature is work-in-progress.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords: artiﬁcial intelligence models; model speciﬁcation; programming languages; code generation;
+1. Introduction
+An Artiﬁcial Intelligence (AI) problem ranges from (apparently) simple toy problems, such as the Hanoi towers or
+Queens problem, to protein sequencing and complex game AIs. Whatever the complexity of the problem, the main
+diﬃculty in approaching one is describing the data and the requirements is such a way as to allow the computer
+to solve it. Formalizing an AI problem (also referred as modelling an AI problem) has been done in various ways
+over the years, with proposed approaches such as the original neural networks [11], going through the ﬁrst actualproblem-solving computer model [15] and up to modern approaches, which not only allow a problem to be describedand solved but also allow automated validation of the model, approaches well summarized in [17]. Nowadays, themost common approach to an AI problem is one established in its original form by [1] and [3]. Similar approach
+is described in recent works such as [17] and [6]. First, we identify a representation for a problem state which has
+to be simple enough so that the computer can analyze, modify and store it easily, but expressive enough so that all
+∗Corresponding author
+E-mail address: ipistol@info.uaic.ro
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Pistol and Arusoaie /00 (2019) 000–000
+required data is included. Then, using the chosen representation, we describe the initial and ﬁnal (goal) states, as well
+as the valid transitions within the problem space (which includes all valid states). A search strategy is then described,looking for a path between an initial and a ﬁnal state using the available transitions.
+Formal languages for describing such models have existed since the original STRIPS language (proposed almost 50
+years ago) [3] to modern action query languages such as PDDL 3 [12] and Action Language C+ [5]. Although current
+languages allow the description of basically all types of AI problems, some even implementing search strategies to
+ﬁnd a solution and model checkers to validate models, they have the disadvantages of being too complicated for
+certain types of problems and of being removed from programming languages. This paper proposes a new language,called AIM (Artiﬁcial Intelligence Models) with the goal of being well formalized and generic enough to allow easy
+description of any model, code generation to common programming languages and checking a model using modernSMT (Satisﬁability Modulo Theories) solvers [2]. In this paper we describe AIM using the traditional Extended
+Backus-Naur Form (shorthanded as EBNF) [14] which is typically used for describing programming language syntax
+(e.g., C-Standard [4], The Java Language Speciﬁcation [7]).
+Fig. 1. Uses of AIM speciﬁcations
+The motivation behind having AIM speciﬁcations is not only to generate executable code. As shown in Figure 1,
+AIM speciﬁcations are meant to serve as a basis for other tools which can provide interactive step-by-step model
+exploration, model execution tools, methodologies and tools for checking formal properties of the models. The main
+design principle of AIM is to write a single formal speciﬁcation and everything else is generated or based on that
+speciﬁcation. Therefore, the results obtained by various tools or methodologies are comparable and consistent due
+to the fact that there is only one speciﬁcation. For example, if one uses model veriﬁcation to prove that the current
+speciﬁcation does not allow any solutions, then the model execution will not ﬁnd any solution for precisely the same
+speciﬁcation.
+AIM usage could be further extended by providing automated conversion to and from other transitional systems
+description languages, such as STRIPS or PDDL, which are already familiar to many potential users and alreadyinclude many implemented models.
+1.1. Paper structure
+Section 2of this paper gives a couple of examples of classic AI problems and some models of representation for
+them. Section 3introduces the AIM language, and section 4exempliﬁes AIM on the previously described models.
+Section 5concludes the paper and gives some ideas about future developments of AIM.
+1.2. Contributions
+We propose a new language to describe AI models. We introduce two classic AI problems (nQueens andmission-
+aries and cannibals with two and respectively one model. We than describe the AIM grammar, deﬁning a language
+able to represent virtually all commonly used types of AI models, including the three previous examples. For them, we
+provide the AIM implementations and we show how search strategies can be speciﬁed in AIM, specifying particular
+search functions or required parameters.
+ Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211 203Available online at www.sciencedirect.com
+00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+AIM: Designing a language for AI models
+Ionut ¸ Cristian Pistola,∗, Andrei Arusoaiea,∗
+aAlexandru Ioan Cuza, University of Ia¸ si, General Berthelot 16, Ia¸ si, 700483, Romania
+Abstract
+Describing an unambiguous model for an Artiﬁcial Intelligence (AI) problem has been a signiﬁcant topic in AI for almost 70 years,
+with the main goal of formalizing a natural language description to allow the computer to solve it. Nowadays, an AI problem
+is usually modelled as a transitional system, by following four steps: identify a representation for a problem state, describe the
+initial and ﬁnal states in that representation, describe valid transitions together with a search strategy that looks for a path betweenan initial and a ﬁnal state using the available transitions. This paper proposes a new language for describing AI models with the
+goal to generate executable code. The proposed language is capable of representing all common types of problems, and models
+implemented can be adapted easily to any search strategy with speciﬁc requirements (such as score functions). The language isfully described in this paper together with several non-trivial examples, while the code generation feature is work-in-progress.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords:
+artiﬁcial intelligence models; model speciﬁcation; programming languages; code generation;
+1. Introduction
+An Artiﬁcial Intelligence (AI) problem ranges from (apparently) simple toy problems, such as the Hanoi towers or
+Queens problem, to protein sequencing and complex game AIs. Whatever the complexity of the problem, the main
+diﬃculty in approaching one is describing the data and the requirements is such a way as to allow the computer
+to solve it. Formalizing an AI problem (also referred as modelling an AI problem) has been done in various ways
+over the years, with proposed approaches such as the original neural networks [11], going through the ﬁrst actualproblem-solving computer model [15] and up to modern approaches, which not only allow a problem to be describedand solved but also allow automated validation of the model, approaches well summarized in [17]. Nowadays, themost common approach to an AI problem is one established in its original form by [1] and [3]. Similar approach
+is described in recent works such as [17] and [6]. First, we identify a representation for a problem state which has
+to be simple enough so that the computer can analyze, modify and store it easily, but expressive enough so that all
+∗Corresponding author
+E-mail address: ipistol@info.uaic.ro
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.Available online at www.sciencedirect.com
+00 (2019) 000–000
+www.elsevier.com/locate/procedia
+23rd International Conference on Knowledge-Based and Intelligent Information & Engineering
+Systems
+AIM: Designing a language for AI models
+Ionut ¸ Cristian Pistola,∗, Andrei Arusoaiea,∗
+aAlexandru Ioan Cuza, University of Ia¸ si, General Berthelot 16, Ia¸ si, 700483, Romania
+Abstract
+Describing an unambiguous model for an Artiﬁcial Intelligence (AI) problem has been a signiﬁcant topic in AI for almost 70 years,
+with the main goal of formalizing a natural language description to allow the computer to solve it. Nowadays, an AI problem
+is usually modelled as a transitional system, by following four steps: identify a representation for a problem state, describe the
+initial and ﬁnal states in that representation, describe valid transitions together with a search strategy that looks for a path betweenan initial and a ﬁnal state using the available transitions. This paper proposes a new language for describing AI models with the
+goal to generate executable code. The proposed language is capable of representing all common types of problems, and models
+implemented can be adapted easily to any search strategy with speciﬁc requirements (such as score functions). The language isfully described in this paper together with several non-trivial examples, while the code generation feature is work-in-progress.
+c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Keywords:
+artiﬁcial intelligence models; model speciﬁcation; programming languages; code generation;
+1. Introduction
+An Artiﬁcial Intelligence (AI) problem ranges from (apparently) simple toy problems, such as the Hanoi towers or
+Queens problem, to protein sequencing and complex game AIs. Whatever the complexity of the problem, the main
+diﬃculty in approaching one is describing the data and the requirements is such a way as to allow the computer
+to solve it. Formalizing an AI problem (also referred as modelling an AI problem) has been done in various ways
+over the years, with proposed approaches such as the original neural networks [11], going through the ﬁrst actualproblem-solving computer model [15] and up to modern approaches, which not only allow a problem to be describedand solved but also allow automated validation of the model, approaches well summarized in [17]. Nowadays, themost common approach to an AI problem is one established in its original form by [1] and [3]. Similar approach
+is described in recent works such as [17] and [6]. First, we identify a representation for a problem state which has
+to be simple enough so that the computer can analyze, modify and store it easily, but expressive enough so that all
+∗Corresponding author
+E-mail address: ipistol@info.uaic.ro
+1877-0509 c/circlecopyrt2019 The Author(s). Published by Elsevier B.V.
+This is an open access article under the CC BY-NC-ND license (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Peer-review under responsibility of KES International.
+Pistol and Arusoaie /00 (2019) 000–000
+required data is included. Then, using the chosen representation, we describe the initial and ﬁnal (goal) states, as well
+as the valid transitions within the problem space (which includes all valid states). A search strategy is then described,looking for a path between an initial and a ﬁnal state using the available transitions.
+Formal languages for describing such models have existed since the original STRIPS language (proposed almost 50
+years ago) [3] to modern action query languages such as PDDL 3 [12] and Action Language C+ [5]. Although current
+languages allow the description of basically all types of AI problems, some even implementing search strategies to
+ﬁnd a solution and model checkers to validate models, they have the disadvantages of being too complicated for
+certain types of problems and of being removed from programming languages. This paper proposes a new language,called AIM (Artiﬁcial Intelligence Models) with the goal of being well formalized and generic enough to allow easy
+description of any model, code generation to common programming languages and checking a model using modernSMT (Satisﬁability Modulo Theories) solvers [2]. In this paper we describe AIM using the traditional Extended
+Backus-Naur Form (shorthanded as EBNF) [14] which is typically used for describing programming language syntax
+(e.g., C-Standard [4], The Java Language Speciﬁcation [7]).
+Fig. 1. Uses of AIM speciﬁcations
+The motivation behind having AIM speciﬁcations is not only to generate executable code. As shown in Figure 1,
+AIM speciﬁcations are meant to serve as a basis for other tools which can provide interactive step-by-step model
+exploration, model execution tools, methodologies and tools for checking formal properties of the models. The main
+design principle of AIM is to write a single formal speciﬁcation and everything else is generated or based on that
+speciﬁcation. Therefore, the results obtained by various tools or methodologies are comparable and consistent due
+to the fact that there is only one speciﬁcation. For example, if one uses model veriﬁcation to prove that the current
+speciﬁcation does not allow any solutions, then the model execution will not ﬁnd any solution for precisely the same
+speciﬁcation.
+AIM usage could be further extended by providing automated conversion to and from other transitional systems
+description languages, such as STRIPS or PDDL, which are already familiar to many potential users and alreadyinclude many implemented models.
+1.1. Paper structure
+Section 2of this paper gives a couple of examples of classic AI problems and some models of representation for
+them. Section 3introduces the AIM language, and section 4exempliﬁes AIM on the previously described models.
+Section 5concludes the paper and gives some ideas about future developments of AIM.
+1.2. Contributions
+We propose a new language to describe AI models. We introduce two classic AI problems (nQueens andmission-
+aries and cannibals with two and respectively one model. We than describe the AIM grammar, deﬁning a language
+able to represent virtually all commonly used types of AI models, including the three previous examples. For them, we
+provide the AIM implementations and we show how search strategies can be speciﬁed in AIM, specifying particular
+search functions or required parameters.
+204 Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211
+Pistol and Arusoaie /00 (2019) 000–000
+2. Artiﬁcial Intelligence problems
+In order to exemplify AIM we introduce some models for a couple of classic AI toy problems: n-Queens problem
+and Missionaries and Cannibals. For each problem we identify the following items:
+·Instance : the parameters required to build the initial state, and the variables within the problem statement;
+·State : all the data required to describe the initial conﬁguration and the problem goal, as well as to allow the
+search strategy to ﬁnd a solution;
+·Initial state : the problem state from which the search strategy starts looking for a solution, built from the
+instance data;
+·Final state : a state which, when reached, indicates that a solution has been found;
+·Transitions : the way in which the current state can be changed by the search strategy;
+·Valid transitions : determines if a transition is valid considering the current state and the rules of the problem.
+2.1. n-Queens
+The n-Queens problem (nQ) can be deﬁned as: Having an nxntable, place nqueen chess pieces on it without
+having any queen attack another (as per the rules of chess).
+Many proposed models for this problem exist, we have selected the couple below as examples.
+2.1.1. nQ ﬁrst model
+We describe the nQ ﬁrst model. A state is a list of Queens placements on columns, each list position corresponds
+to a table row. Since no two queens can be placed on the same row and the number of queens to be placed is equal to
+the number of rows, there is no additional need to identify the row on which a queen is placed. Final state is reached
+if all values are not zero (so a queen is placed on every row). A transition places a queen (currently not placed) on anempty row (value of 0in the state) by changing 0to a column in the table (between 1andn). This transition is valid
+if the placed queen does not attack any other placed queen.
+Instance : n- number of queens, size of n×ntable
+State : (S 1,S2,..., Sn),0≤Si≤n,1≤i≤n
+Initial state : a list (0, 0,..., 0) of size n
+Final state : (S 1,S2,..., Sn),1≤Si≤n,1≤i≤n
+Si/nequalSj, for all 1 ≤i,j≤n;
+Transitions : (S 11,S12,..., S1n)−>(S21,S22,..., S2n),
+Valid transitions : S1i=S2ifor all 1 ≤i≤n, except exactly one ifor which S1i=0 and S2i∈[1..n]
+Si/nequalSj,1≤i,j≤n,i/nequalj
+|Si−Sj|/nequal|i−j|,1≤i,j≤n,i/nequalj
+Fig. 2. nQ ﬁrst model
+2.1.2. nQ second model
+In the second model of nQwe use the same representation of a state but the initial state is a list of randomly placed
+queens. A transition means changing the column on which a queen is placed (the row - position in the list - remainunchanged), and is valid if the the queen in the new placement doesn’t attack another one.
+2.2. Missionaries and cannibals
+The missionaries and cannibals (MC) is another classic AI toy problem, one for which the building of an AI model
+was originally exempliﬁed in [1]. A generalization of the problem statement can be: On the shore of a river there are
+nmissionaries and mcannibals. There is a boat with bcapacity on the same shore. Find, if it exists, a way to move allPistol and Arusoaie /00 (2019) 000–000
+Instance : n- number of queens, size of n×ntable;
+State : (S 1,S2,..., Sn),0≤Si≤n,1≤i≤n;
+Initial state : a list (S 1,S2,..., Sn) of size n, where Si=random(1, 8), forall iwhere 1 ≤i≤n
+Final state : (S 1,S2,..., Sn),1≤Si≤n,1≤i≤n;
+Si/nequalSj, for all 1 ≤i,j≤n;
+Transitions : (S 11,S12,..., S1n)→(S21,S22,..., S2n),
+Valid transitions : S1i=S2ifor all 1 ≤i≤n, except exactly one i;
+Si/nequalSj,1≤i,j≤n,i/nequalj;
+|Si−Sj|/nequal|i−j|,1≤i,j≤n,i/nequalj
+Fig. 3. nQ second model
+people on the initial shore to the other shore, using the boat. Consider that the boat moves only with 1 to bpeople in
+it, and on neither shore there can be more cannibals than missionaries, if there is at least one missionary there.
+2.2.1. MC model
+In this paragraph we describe a possible model for the missionaries and cannibals problem. Here, a state is a list
+with the capacity of the boat, number of missionaries and cannibals (n 1andm1) on the left (initial) shore, placement
+of the boat (left shore - 1, right shore - 2), number of missionaries and cannibals on the right shore (n 2andm2). The
+initial state has all people and the boat on the left shore, while the ﬁnal state has all people and the boat on the right
+shore. The only transition moves a number of people (equal or smaller than the boat capacity b, but greater than zero)
+to the opposite shore the boat is currently on. The transition is valid if the number of missionaries on either shore, if
+greater than zero, is larger than the number of cannibals on that shore.
+Instance : n- number of cannibals, m- number of missionaries, b- capacity of the boat;
+State : (b, n1,m1,bp,n2,m2),b∈[1,2],n1+n2=n,m1+m2=m;
+Initial state : (b, n,m,1,0,0);
+Final state : (b, 0,0,2,n,m);
+Transitions : (b, n1,m1,bp,n2,m2)→(b,n1+v1,n2+v2,3−bp,n2−v1,m2−v2);
+Valid transitions : n1,m1,n2,m2≥0;
+Ifm1>0 then m1≥n1;
+Ifm2>0, then m2≥n2;
+Ifv1+v2>0, then bp=1, else bp=2;
+|v1+v2|≤b.
+Fig. 4. MC model
+The models described in this section serve as examples, and are designed to cover varied aspects frequently oc-
+curring in AI models: lists of varied and ﬁxed length, validations (belonging, comparisons, conditional validations),random values and mathematical expressions. The models make no eﬀort to facilitate particular informed strategies;
+they are however considered in the AIM translation in Section 4.
+3. The AIM grammar
+In this section we present the AIM grammar using the traditional EBNF style [14]. The grammar is shown in
+Figure 5. The language, hereafter denoted as AIM, accepted by this grammar is a declarative one and it is intended to
+be expressive enough to describe AI models. In addition, the language is designed to be extensible with user deﬁnedbasic functions. An AIM speciﬁcation consists in a list of items that describe an AI model:
+ Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211 205
+Pistol and Arusoaie /00 (2019) 000–000
+2. Artiﬁcial Intelligence problems
+In order to exemplify AIM we introduce some models for a couple of classic AI toy problems: n-Queens problem
+and Missionaries and Cannibals. For each problem we identify the following items:
+·Instance : the parameters required to build the initial state, and the variables within the problem statement;
+·State : all the data required to describe the initial conﬁguration and the problem goal, as well as to allow the
+search strategy to ﬁnd a solution;
+·Initial state : the problem state from which the search strategy starts looking for a solution, built from the
+instance data;
+·Final state : a state which, when reached, indicates that a solution has been found;
+·Transitions : the way in which the current state can be changed by the search strategy;
+·Valid transitions : determines if a transition is valid considering the current state and the rules of the problem.
+2.1. n-Queens
+The n-Queens problem (nQ) can be deﬁned as: Having an nxntable, place nqueen chess pieces on it without
+having any queen attack another (as per the rules of chess).
+Many proposed models for this problem exist, we have selected the couple below as examples.
+2.1.1. nQ ﬁrst model
+We describe the nQ ﬁrst model. A state is a list of Queens placements on columns, each list position corresponds
+to a table row. Since no two queens can be placed on the same row and the number of queens to be placed is equal to
+the number of rows, there is no additional need to identify the row on which a queen is placed. Final state is reached
+if all values are not zero (so a queen is placed on every row). A transition places a queen (currently not placed) on anempty row (value of 0in the state) by changing 0to a column in the table (between 1andn). This transition is valid
+if the placed queen does not attack any other placed queen.
+Instance : n- number of queens, size of n×ntable
+State : (S
+1,S2,..., Sn),0≤Si≤n,1≤i≤n
+Initial state : a list (0, 0,..., 0) of size n
+Final state : (S 1,S2,..., Sn),1≤Si≤n,1≤i≤n
+Si/nequalSj, for all 1 ≤i,j≤n;
+Transitions : (S 11,S12,..., S1n)−>(S21,S22,..., S2n),
+Valid transitions : S1i=S2ifor all 1 ≤i≤n, except exactly one ifor which S1i=0 and S2i∈[1..n]
+Si/nequalSj,1≤i,j≤n,i/nequalj
+|Si−Sj|/nequal|i−j|,1≤i,j≤n,i/nequalj
+Fig. 2. nQ ﬁrst model
+2.1.2. nQ second model
+In the second model of nQwe use the same representation of a state but the initial state is a list of randomly placed
+queens. A transition means changing the column on which a queen is placed (the row - position in the list - remainunchanged), and is valid if the the queen in the new placement doesn’t attack another one.
+2.2. Missionaries and cannibals
+The missionaries and cannibals (MC) is another classic AI toy problem, one for which the building of an AI model
+was originally exempliﬁed in [1]. A generalization of the problem statement can be: On the shore of a river there are
+nmissionaries and mcannibals. There is a boat with bcapacity on the same shore. Find, if it exists, a way to move allPistol and Arusoaie /00 (2019) 000–000
+Instance : n- number of queens, size of n×ntable;
+State : (S 1,S2,..., Sn),0≤Si≤n,1≤i≤n;
+Initial state : a list (S 1,S2,..., Sn) of size n, where Si=random(1, 8), forall iwhere 1 ≤i≤n
+Final state : (S 1,S2,..., Sn),1≤Si≤n,1≤i≤n;
+Si/nequalSj, for all 1 ≤i,j≤n;
+Transitions : (S 11,S12,..., S1n)→(S21,S22,..., S2n),
+Valid transitions : S1i=S2ifor all 1 ≤i≤n, except exactly one i;
+Si/nequalSj,1≤i,j≤n,i/nequalj;
+|Si−Sj|/nequal|i−j|,1≤i,j≤n,i/nequalj
+Fig. 3. nQ second model
+people on the initial shore to the other shore, using the boat. Consider that the boat moves only with 1 to bpeople in
+it, and on neither shore there can be more cannibals than missionaries, if there is at least one missionary there.
+2.2.1. MC model
+In this paragraph we describe a possible model for the missionaries and cannibals problem. Here, a state is a list
+with the capacity of the boat, number of missionaries and cannibals (n 1andm1) on the left (initial) shore, placement
+of the boat (left shore - 1, right shore - 2), number of missionaries and cannibals on the right shore (n 2andm2). The
+initial state has all people and the boat on the left shore, while the ﬁnal state has all people and the boat on the right
+shore. The only transition moves a number of people (equal or smaller than the boat capacity b, but greater than zero)
+to the opposite shore the boat is currently on. The transition is valid if the number of missionaries on either shore, if
+greater than zero, is larger than the number of cannibals on that shore.
+Instance : n- number of cannibals, m- number of missionaries, b- capacity of the boat;
+State : (b, n1,m1,bp,n2,m2),b∈[1,2],n1+n2=n,m1+m2=m;
+Initial state : (b, n,m,1,0,0);
+Final state : (b, 0,0,2,n,m);
+Transitions : (b, n1,m1,bp,n2,m2)→(b,n1+v1,n2+v2,3−bp,n2−v1,m2−v2);
+Valid transitions : n1,m1,n2,m2≥0;
+Ifm1>0 then m1≥n1;
+Ifm2>0, then m2≥n2;
+Ifv1+v2>0, then bp=1, else bp=2;
+|v1+v2|≤b.
+Fig. 4. MC model
+The models described in this section serve as examples, and are designed to cover varied aspects frequently oc-
+curring in AI models: lists of varied and ﬁxed length, validations (belonging, comparisons, conditional validations),random values and mathematical expressions. The models make no eﬀort to facilitate particular informed strategies;
+they are however considered in the AIM translation in Section 4.
+3. The AIM grammar
+In this section we present the AIM grammar using the traditional EBNF style [14]. The grammar is shown in
+Figure 5. The language, hereafter denoted as AIM, accepted by this grammar is a declarative one and it is intended to
+be expressive enough to describe AI models. In addition, the language is designed to be extensible with user deﬁned
+basic functions. An AIM speciﬁcation consists in a list of items that describe an AI model:
+206 Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211
+Pistol and Arusoaie /00 (2019) 000–000
+•anInstance which is a list of input parameters declarations;
+•the conditions to be satisﬁed by ValidStates;
+•theInitialState;
+•the conditions to be satisﬁed by the FinalState;
+•theTransition function;
+•theStrategy to be used.
+To describe an instance of an AI problem, we use a list of declarations of the input parameters of the problem.
+For example, #instance: m:int, n:int ; m = 10; n = 5; speciﬁes that the input parameters are mandn, and
+their values are 10 and 5, respectively.
+The initial state is speciﬁed using the #initial-state keyword. The symbol ‘;’ separates a list of declarations
+from a piece of code. The declarations are local variables visible in the code. The code is meant to initialize a state and
+return it. For instance, the following piece of code builds a list of size nwhere each element is 0, and then it returns it:
+#initial-state: inits:list<int> ;
+foreach i <- [0,n]:
+inits[i] = 0 ;
+end
+return inits;
+It is worth noting that we always expect the value returned at #initial-state is always a state. Otherwise, the
+semantics of this language construct is undeﬁned.
+The #valid-state keyword introduces a function which validates a state. For instance, #valid-state:
+s:list<int> ; size(s) == n speciﬁes that a state sis valid if its length is always n. Note that the list of decla-
+rations before the ‘;’ symbol is in fact a list of input parameters for the validity function. Thus, one can specify more
+parameters if needed. The expression after the ‘;’ symbol is always a boolean expression. Boolean expressions are
+described by the Bool non-terminal, and they include: usual boolean operations (negation, conjunction, disjunction,
+implication), comparisons over arithmetic expressions, and a special construct "forall" RangeIter ":" Bool
+needed to express universally quantiﬁed properties. Note that Bool captures the main ﬁrst-order logical constructs,
+and thus, we are able to express complex logical formulas.
+The code that we are allowed to write is fully speciﬁed by the Code non-terminal. Code deﬁnes a simple imperative
+language with assignments, branching statements, loops and return constructs. It allows one to use boolean expressionsand arithmetic expressions: integers, identiﬁers (for variables), arithmetic operations (addition, subtraction, multipli-
+cation, division, and modulo), access to the i
+thelement of a list, and basic (user-deﬁned) builtin functions. These set
+of builtin functions (i.e., BasicFunctions) is intentionally left unspeciﬁed because it is extensible, and may contain
+utility functions like random, min, max, size, etc. The only restriction we have over them is the return type which
+has to be a boolean or an integer.
+Final states are speciﬁed using #final-state. The syntax resembles the syntax of #valid-state: a list of
+declarations, followed by a boolean condition. For example, the following piece of code speciﬁes that a state sis ﬁnal
+if it is a list with non-zero elements:
+#final-state: s:list<int> ;
+forall i <- [0, n-1]: s[i] != 0
+Transitions are speciﬁed using two keywords: #transition and#valid-transition. The former is meant to
+specify how the new state is created, while the latter is used to specify the condition that needs to be satisﬁed for avalid transition. The code below shows an example of a transition function: a transition from stos’means to set
+value von position iins; the transition is valid only if vis greater than the previous element in s.
+#transition: s:list<int>, s’:list<int>, i:int, v:int;
+s’ = s; s’[i] = v; return s’;
+#valid-transition: s:list<int>, i:int, v:int ;
+0 < i && i < size(s) && s[i-1] >= s[i]
+ Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211 207
+Pistol and Arusoaie /00 (2019) 000–000
+•anInstance which is a list of input parameters declarations;
+•the conditions to be satisﬁed by ValidStates;
+•theInitialState;
+•the conditions to be satisﬁed by the FinalState;
+•theTransition function;
+•theStrategy to be used.
+To describe an instance of an AI problem, we use a list of declarations of the input parameters of the problem.
+For example, #instance: m:int, n:int ; m = 10; n = 5; speciﬁes that the input parameters are mandn, and
+their values are 10 and 5, respectively.
+The initial state is speciﬁed using the #initial-state keyword. The symbol ‘;’ separates a list of declarations
+from a piece of code. The declarations are local variables visible in the code. The code is meant to initialize a state and
+return it. For instance, the following piece of code builds a list of size nwhere each element is 0, and then it returns it:
+#initial-state: inits:list<int> ;
+foreach i <- [0,n]:
+inits[i] = 0 ;
+end
+return inits;
+It is worth noting that we always expect the value returned at #initial-state is always a state. Otherwise, the
+semantics of this language construct is undeﬁned.
+The #valid-state keyword introduces a function which validates a state. For instance, #valid-state:
+s:list<int> ; size(s) == n speciﬁes that a state sis valid if its length is always n. Note that the list of decla-
+rations before the ‘;’ symbol is in fact a list of input parameters for the validity function. Thus, one can specify more
+parameters if needed. The expression after the ‘;’ symbol is always a boolean expression. Boolean expressions are
+described by the Bool non-terminal, and they include: usual boolean operations (negation, conjunction, disjunction,
+implication), comparisons over arithmetic expressions, and a special construct "forall" RangeIter ":" Bool
+needed to express universally quantiﬁed properties. Note that Bool captures the main ﬁrst-order logical constructs,
+and thus, we are able to express complex logical formulas.
+The code that we are allowed to write is fully speciﬁed by the Code non-terminal. Code deﬁnes a simple imperative
+language with assignments, branching statements, loops and return constructs. It allows one to use boolean expressionsand arithmetic expressions: integers, identiﬁers (for variables), arithmetic operations (addition, subtraction, multipli-
+cation, division, and modulo), access to the i
+thelement of a list, and basic (user-deﬁned) builtin functions. These set
+of builtin functions (i.e., BasicFunctions) is intentionally left unspeciﬁed because it is extensible, and may contain
+utility functions like random, min, max, size, etc. The only restriction we have over them is the return type which
+has to be a boolean or an integer.
+Final states are speciﬁed using #final-state. The syntax resembles the syntax of #valid-state: a list of
+declarations, followed by a boolean condition. For example, the following piece of code speciﬁes that a state sis ﬁnal
+if it is a list with non-zero elements:
+#final-state: s:list<int> ;
+forall i <- [0, n-1]: s[i] != 0
+Transitions are speciﬁed using two keywords: #transition and#valid-transition. The former is meant to
+specify how the new state is created, while the latter is used to specify the condition that needs to be satisﬁed for avalid transition. The code below shows an example of a transition function: a transition from stos’means to set
+value von position iins; the transition is valid only if vis greater than the previous element in s.
+#transition: s:list<int>, s’:list<int>, i:int, v:int;
+s’ = s; s’[i] = v; return s’;
+#valid-transition: s:list<int>, i:int, v:int ;
+0 < i && i < size(s) && s[i-1] >= s[i]Pistol and Arusoaie /00 (2019) 000–000
+BasicFunctions ::= <builtin functions>
+Id ::= <id regex>
+Int ::= <integers>
+Type ::= "int"
+| list "<" Type ">"
+Decl ::= Id ":" Type
+Decls ::= Decl
+| Decl "," Decls
+Exp ::= Int | Id
+| Exp "[" Exp "]"
+| BasicFunctions
+> Exp "*" Exp [left]
+| Exp "/" Exp [left]
+| Exp "%" Exp [left]> Exp "+" Exp [left]
+| Exp "-" Exp [left]
+Bool ::= BasicFunctions
+| Exp "==" Exp| Exp "!=" Exp
+| Exp "<" Exp
+| Exp ">" Exp
+| Exp "<=" Exp
+| Exp ">=" Exp| "forall" RangeIter ":" Bool
+| Bool "&&" Bool
+| Bool "||" Bool| Bool "->" Bool
+| "!" Bool
+Code ::= Exp "=" Exp ";"
+| "if" Exp "then" Exp "else" Exp "endif"
+| "while" Bool "do" Code "end"
+| "foreach" RangeIter ":" Code "end"
+| "return" Exp ";"
+RangeIter ::= Id "<-" RangeRange ::= "[" Exp ".." Exp "]"
+Strategy ::= "random"
+| "hill-climbing"
+Instance ::= "#instance:" Decls ";" Code
+ValidState ::= "#valid-state:" Decl ";" Bool
+InitialState ::= "#initial-state:" Decls ";" CodeFinalState ::= "#final-state:" Decls ";" Bool
+Transition ::= "#transition-function:" Decls ";" Code
+ValidTransition ::= "#valid-transition:" Decls ";" Bool
+Strategy ::= "#strategy:" StrategyName
+| "#strategy:" StrategyName ";" Decls ";" Code
+Specification ::= Instance State InitialState FinalState
+Transition ValidTransition Strategy
+Fig. 5. The AIM Grammar
+The last element to be provided in an AIM speciﬁcation is the strategy to be used. Here, we provide a list
+of common strategies, which can be extended: random, BFS, uniform cost, DFS, backtracking, iterative
+208 Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211
+Pistol and Arusoaie /00 (2019) 000–000
+deepening, best-first, hill-climbing, A*. The strategies are introduced by the #strategy keyword followed
+by the strategy name, and optionally by some declarations and code. These optional components are needed by:
+•Uninformed strategies, such as iterative deepening, if the user wants to limit the maximum depth of ex-
+ploration of the problem space.
+•All informed strategies, such as best-first, hill-climbing orA*, which require a score function to evaluate
+states.
+In Section 4we show an example where #strategy is used to customize a hill climbing strategy.
+4. Models in AIM
+We describe the models in Section 2inAIM. For each model we have a corresponding speciﬁcation. For each
+model, a search strategy is described in AIM although no strategy was indicated in the model descriptions. This is
+done to show how any strategy can be used in an AIM speciﬁcation, even informed strategies requiring the description
+of additional scoring functions.
+4.1. nQ ﬁrst model
+For the ﬁrst model of the 4-queens problem the input parameter is n, the number of queens to be placed on the
+board. The initial state is a list of zeros of size nand has type list<int>.
+One important feature of AIM is that the language is expressive enough to capture logical conditions. For instance,
+the conditions that establish the validity of a state (i.e., (S 1,S2,..., Sn),0≤Si≤n,1≤i≤n) are easily expressible in
+AIM using the forall construct: (forall i <- [0,n]: 0 <= s[i] && s[i] <= n). Note that [0,n] produces
+a list of integers in the set {0,..., n−1}. Using the same construct we describe the predicate that establishes when a
+state is ﬁnal: forall i <- [0, n]: s[i] != 0.
+The#transition function simply places a queen on a given position: row rand column c. It is worth noting that
+the conditions for a valid transition are implemented in just a few lines of code.
+#instance: n:int ; n = 4;
+#initial-state: n:int, inits:list<int> ;
+foreach i <- [0,n]:
+inits[i] = 0 ;
+end
+return inits;
+#valid-state: s:list<int> ;
+size(s) == n && (forall i <- [0,n]: 0 <= s[i] && s[i] <= n)
+#final-state: s:list<int> ; forall i <- [0, n]: s[i] != 0#transition: s : list<int>, r : int, col:int, s’ : list<int> ;
+s’ = s; s’[r] = col; return s’;
+#valid-transition: s:list<int>, r:int, col:int;
+(forall i <- [0,n]: s[i] != col) &&(forall i <- [0,n]:
+forall j<-[i+1,n]:
+abs(s[i] - s[j]) != abs(i - j)) && s[r] == 0 && col != 0
+#strategy: hill-climbing ;
+s : list<int> ; score : int ;score = 0;foreach i <- [0,size(s)]:
+if (s[i] != 0)
+then score = score + 1
+endif
+endreturn score;Pistol and Arusoaie /00 (2019) 000–000
+For illustrative purposes, we choose here to use an informed strategy (hill-climbing), as it requires an additional
+function that assigns a score to a given state. The scoring function is provided by the user, for this example we have
+implemented a basic score: the number of placed queens. The rest of the implementation for hill-climbing is notrequired, AIM expects only the custom components of a strategy, as mentioned in the previous section of this paper.
+4.2. nQ second model
+For the second model, the AIM implementation diﬀers in two places: when generating the initial-state and
+when validating a transition. These minor changes are well reﬂected in the AIM implementation and have major
+consequences for the diﬃculty of ﬁnding a solution for some search strategies, for example hill-climbing, require
+an entire diﬀerent scoring function. Strategies like iterative-deepening, used in the example below, will also
+generally work much slower than in the previous model.
+#instance: n:int ; n = 4;
+#initial-state: n:int, inits:list<int> ;
+foreach i <- [0,n]:
+inits[i] = random(0,n);
+end
+return inits;
+#valid-state: s:list<int> ;
+size(s) == n && (forall i <- [0,n]: 0 <= s[i] && s[i] <= n)
+#final-state: s:list<int> ; forall i <- [0, n]: s[i] != 0
+#transition: s : list<int>, r : int, col:int, s’ : list<int> ;
+s’ = s; s’[r] = col; return s’;
+#valid-transition: s:list<int>, r:int, col:int;
+(forall i <- [0,n]: s[i] != col) &&
+(forall i <- [0,n]:
+forall j<-[i+1,n]:
+abs(s[i] - s[j]) != abs(i - j)) && col != 0
+#strategy: iterative-deepening; maxdepth : int; maxdepth = 10;
+The fact that the signiﬁcant diﬀerence with regards to search strategies behaviour translates into minor diﬀerences
+in the AIM implementation in welcomed, as it simpliﬁes writing, validating models and generating code from them.
+4.3. MC model
+For the missionaries and cannibals example model, the AIM implementation includes more operations on lists and
+more logical expressions, with AIM code starting to look very similar to actual Python or Java. We exempliﬁed the
+selection of the random strategy, which assigns as new current state a random valid state which can be reached from
+the current state.
+Recall from Figure 4that the state has the form s=(b,n
+1,m1,bp ,n2,m2), where: the number of missionaries and
+cannibals on the left shore are denoted by s[1]=n1ands[2]=m1; the placement of the boat is denote s[3]=bp
+and has value 1 when the boat is on the left shore, or value 2 when the boat is on the right shore; the number of
+missionaries and cannibals on the right shore is denoted by s[4]=n2ands[5]=m2, respectively.
+The initial state for the missionaries and cannibals is (b, n,m,1,0,0) and it is naturally encoded in AIM by simple
+assignments. The ﬁnal state needs to check whether all the cannibals and missionaries have been moved to the other
+shore, and thus, we only need to check if the state has the form (b, 0,0,2,n,m).
+A valid transition requires checking some complex logical formulas as shown in Figure 4.AIM is expressive
+enough to describe such complex condition in a natural manner.
+ Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211 209
+Pistol and Arusoaie /00 (2019) 000–000
+deepening, best-first, hill-climbing, A*. The strategies are introduced by the #strategy keyword followed
+by the strategy name, and optionally by some declarations and code. These optional components are needed by:
+•Uninformed strategies, such as iterative deepening, if the user wants to limit the maximum depth of ex-
+ploration of the problem space.
+•All informed strategies, such as best-first, hill-climbing orA*, which require a score function to evaluate
+states.
+In Section 4we show an example where #strategy is used to customize a hill climbing strategy.
+4. Models in AIM
+We describe the models in Section 2inAIM. For each model we have a corresponding speciﬁcation. For each
+model, a search strategy is described in AIM although no strategy was indicated in the model descriptions. This is
+done to show how any strategy can be used in an AIM speciﬁcation, even informed strategies requiring the description
+of additional scoring functions.
+4.1. nQ ﬁrst model
+For the ﬁrst model of the 4-queens problem the input parameter is n, the number of queens to be placed on the
+board. The initial state is a list of zeros of size nand has type list<int>.
+One important feature of AIM is that the language is expressive enough to capture logical conditions. For instance,
+the conditions that establish the validity of a state (i.e., (S 1,S2,..., Sn),0≤Si≤n,1≤i≤n) are easily expressible in
+AIM using the forall construct: (forall i <- [0,n]: 0 <= s[i] && s[i] <= n). Note that [0,n] produces
+a list of integers in the set {0,..., n−1}. Using the same construct we describe the predicate that establishes when a
+state is ﬁnal: forall i <- [0, n]: s[i] != 0.
+The#transition function simply places a queen on a given position: row rand column c. It is worth noting that
+the conditions for a valid transition are implemented in just a few lines of code.
+#instance: n:int ; n = 4;
+#initial-state: n:int, inits:list<int> ;
+foreach i <- [0,n]:
+inits[i] = 0 ;
+end
+return inits;
+#valid-state: s:list<int> ;
+size(s) == n && (forall i <- [0,n]: 0 <= s[i] && s[i] <= n)
+#final-state: s:list<int> ; forall i <- [0, n]: s[i] != 0#transition: s : list<int>, r : int, col:int, s’ : list<int> ;
+s’ = s; s’[r] = col; return s’;
+#valid-transition: s:list<int>, r:int, col:int;
+(forall i <- [0,n]: s[i] != col) &&(forall i <- [0,n]:
+forall j<-[i+1,n]:
+abs(s[i] - s[j]) != abs(i - j)) && s[r] == 0 && col != 0
+#strategy: hill-climbing ;
+s : list<int> ; score : int ;score = 0;foreach i <- [0,size(s)]:
+if (s[i] != 0)
+then score = score + 1
+endif
+endreturn score;Pistol and Arusoaie /00 (2019) 000–000
+For illustrative purposes, we choose here to use an informed strategy (hill-climbing), as it requires an additional
+function that assigns a score to a given state. The scoring function is provided by the user, for this example we have
+implemented a basic score: the number of placed queens. The rest of the implementation for hill-climbing is notrequired, AIM expects only the custom components of a strategy, as mentioned in the previous section of this paper.
+4.2. nQ second model
+For the second model, the AIM implementation diﬀers in two places: when generating the initial-state and
+when validating a transition. These minor changes are well reﬂected in the AIM implementation and have major
+consequences for the diﬃculty of ﬁnding a solution for some search strategies, for example hill-climbing, require
+an entire diﬀerent scoring function. Strategies like iterative-deepening, used in the example below, will also
+generally work much slower than in the previous model.
+#instance: n:int ; n = 4;
+#initial-state: n:int, inits:list<int> ;
+foreach i <- [0,n]:
+inits[i] = random(0,n);
+end
+return inits;
+#valid-state: s:list<int> ;
+size(s) == n && (forall i <- [0,n]: 0 <= s[i] && s[i] <= n)
+#final-state: s:list<int> ; forall i <- [0, n]: s[i] != 0
+#transition: s : list<int>, r : int, col:int, s’ : list<int> ;
+s’ = s; s’[r] = col; return s’;
+#valid-transition: s:list<int>, r:int, col:int;
+(forall i <- [0,n]: s[i] != col) &&
+(forall i <- [0,n]:
+forall j<-[i+1,n]:
+abs(s[i] - s[j]) != abs(i - j)) && col != 0
+#strategy: iterative-deepening; maxdepth : int; maxdepth = 10;
+The fact that the signiﬁcant diﬀerence with regards to search strategies behaviour translates into minor diﬀerences
+in the AIM implementation in welcomed, as it simpliﬁes writing, validating models and generating code from them.
+4.3. MC model
+For the missionaries and cannibals example model, the AIM implementation includes more operations on lists and
+more logical expressions, with AIM code starting to look very similar to actual Python or Java. We exempliﬁed the
+selection of the random strategy, which assigns as new current state a random valid state which can be reached from
+the current state.
+Recall from Figure 4that the state has the form s=(b,n
+1,m1,bp ,n2,m2), where: the number of missionaries and
+cannibals on the left shore are denoted by s[1]=n1ands[2]=m1; the placement of the boat is denote s[3]=bp
+and has value 1 when the boat is on the left shore, or value 2 when the boat is on the right shore; the number of
+missionaries and cannibals on the right shore is denoted by s[4]=n2ands[5]=m2, respectively.
+The initial state for the missionaries and cannibals is (b, n,m,1,0,0) and it is naturally encoded in AIM by simple
+assignments. The ﬁnal state needs to check whether all the cannibals and missionaries have been moved to the other
+shore, and thus, we only need to check if the state has the form (b, 0,0,2,n,m).
+A valid transition requires checking some complex logical formulas as shown in Figure 4.AIM is expressive
+enough to describe such complex condition in a natural manner.
+210 Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211
+Pistol and Arusoaie /00 (2019) 000–000
+#instance: m:int, n:int, b:int; n = 3; m = 3; b = 3;
+#valid-state: s:list<int> ;
+s[1] + s[4] == n &&
+s[2] + s[5] == m &&(s[3] == 1 || s[3] == 2)
+#initial-state: m:int, n:int, initialstate:list<int> ;
+initialstate[0] = b; initialstate[1] = n;
+initialstate[2] = m; initialstate[3] = 1;
+initialstate[4] = 0; initialstate[5] = 0;return initialstate;
+#final-state: s:list<int> ;
+s[0] == b && s[1] == 0 && s[2] == 0 &&s[3] == 2 && s[4] == n && s[5] == m
+#transition: s:list<int> , v1:int, v2:int, st:list<int> ;
+st[0] = s[0];st[1] = s[1] + v1;st[2] = s[2] + v2;
+st[3] = 3 - s[3];
+st[4] = s[4] - v1;st[5] = s[5] - v2;return st;
+#valid-transition: s:list<int> , v1:int , v2:int;
+(forall i <- [1,6]: s[i] >= 0) &&(s[2] > 0 -> s[2] >= s[1]) &&(s[5] > 0 -> s[5] >= s[4]) &&
+(v1 + v2 > 0 -> s[3] == 1) &&
+(v1 + v2 <= 0 -> s[3] == 2)&&
+abs(v1 + v2) <= s[0]
+#strategy: random
+4.4. Towards generating executable code from AIM speciﬁcations
+AIM is designed to be easily translatable into an existing programming language. Except for #instance and
+#strategy, all the other entries in an AIM speciﬁcation are designed to be functions. For example, the corresponding
+function of an #initial-state for the cannibals and missionaries problem takes as parameters m,n, and b, while
+the body of the function is given by the assignments. We show here a possible translation to the Python language of
+the function which returns the initial state:
+def initial
+state(m, n, b):
+initialstate = list(range(0,6))
+initialstate[0] = b
+initialstate[1] = n
+initialstate[2] = m
+initialstate[3] = 1initialstate[4] = 0
+initialstate[5] = 0
+return initialstate
+Other functions, like the ones corresponding to predicates (#valid-state, #valid-transition,
+#final-state) return boolean results. The #valid-transition function needs to be combined with the
+#transition function, in order to compute valid transitions.
+Depending on the target programming language and the decision of the user, an #instance can be translated using
+global variables, specialized functions, or command line parameters.
+Strategies are completely decoupled from an AIM speciﬁcation. By design, strategies are meant to be implemented
+directly in the target programming language. The implementation of these strategies can be parameterised by some
+other functions (like scoring functions).Pistol and Arusoaie /00 (2019) 000–000
+5. Conclusions and future work
+We have shown how we can use AIM to describe AI models with the goal to generate executable code. The
+language is proposed to be capable of representing all common types of problems, and models implemented can be
+adapted easily to any search strategy that requires it. The ﬁrst programming language to which AIM models will be
+transferred to Python. Some consideration regarding this near future implementation were made in this paper. The
+beneﬁts provided by getting an executable code from an AIM description of a model for any AI problem are evident,
+and go towards the established goal of AI: use computers to solve problems with minimum human intervention.
+AIM speciﬁcations are also meant to serve as a basis for other tools which can provide interactive step-by-step
+model exploration, model execution tools, methodologies and tools for checking formal properties of the models.
+This will serve both didactic purposes as well as high-level model checking, which usually requires a high degree ofcompetence in AI as well as in formal logic and mathematics.
+AIM usage could be further extended by providing automated conversion to and from other description languages
+(e.g., STRIPS, PDDL), which are already familiar to potential users and already include many implemented models.
+Natural language is ambiguous and its correct understanding requires addition information beside its content,
+such as context and general world knowledge. These are the initial diﬃculties faced by automated problem solvers -transferring the natural language statements into an unambiguous and informative representation allowing a computerto use a search strategy to look for solutions. Eﬀorts to automate this process have been made, for instance in [18],
+[16] and more recently in [10], but they generally simplify the issue by expecting the problem to be formulated in
+a particular way, limiting the scope of the approach. We believe a possible new solution could be provided by AIM,
+using implemented problems and the expressive power of the grammar to generate new natural language statements
+by replacing grammar constructs with natural language equivalents and improving the resulted text’s general cohesion
+and coherence, as well as localized grammar, by using established text generation techniques such as those described
+in [9], [13] or more recent one like [19] and [8] which use Deep Learning to train patterns. The resulted alternate text
+statements can be then used to train a machine learning system potentially able to recognize and map new problem
+statements to AIM grammar constructs.
+Acknowledgements. This work was supported by a grant of the “Alexandru Ioan Cuza”, University of Ias ¸i, Research
+Grants program, Grant UAIC, ctr. no. 6/03.01.2018 and by the UEFSCDI research project ctr. no. 73PCCDI/2018.
+References
+[1]Saul Amarel. On representations of problems of reasoning about actions. In Readings in artiﬁcial intelligence, pages 2–22. Elsevier, 1981.
+[2]A Arusoaie and IC Pistol. Using SMT solvers to validate models for AI problems. Technical report, UAIC, March, 22 2019. 1903.09475.
+[3]R Fikes and N Nilsson. Strips: A new approach to the application of theorem proving to problem solving. Artiﬁcial Intelligence, 2(3-4):189–
+208, 1971.
+[4]International Organization for Standardization. Information technology - programming languages - C - ISO/IEC 9899:2018, 2018.
+[5]E. Giunchiglia, J. Lee, V . Lifschitz, N. McCain, and H. Turner. Nonmonotonic causal theories. Artiﬁcial Intelligence, 153(1-2):49–104, 2004.
+[6]Adrian A Hopgood. Intelligent systems for engineers and scientists. CRC press, 2016.
+[7]Guy Steele Gilad Bracha Alex Buckley Daniel Smith James Gosling, Bill Joy. The Java language speciﬁcation - Java SE 12 Edition, 2019.
+[8]Chlo ´e Kiddon, Luke Zettlemoyer, and Yejin Choi. Globally coherent text generation with neural checklist models. In Proceedings of the 2016
+Conference on Empirical Methods in Natural Language Processing, pages 329–339, 2016.
+[9]William C Mann. Discourse structures for text generation. In Proceedings of the 10th international conference on Computational linguistics,
+pages 367–375. Association for Computational Linguistics, 1984.
+[10] C Matuszek, E Herbst, L Zettlemoyer, and D Fox. Learning to parse natural language commands to a robot control system. In Experimental
+Robotics, pages 403–415. Springer, 2013.
+[11] W McCulloch and W Pitts. A logical calculus of the ideas immanent in nervous activity. The bulletin of math. biophysics, 5(4):115–133, 1943.
+[12] D McDermott, M Ghallab, A Howe, C Knoblock, A Ram, M Veloso, and D Weld, D Wilkins. Pddl-the planning domain deﬁnition language.
+1998.
+[13] Kathleen McKeown. Text generation. Cambridge University Press, 1992.
+[14] F.P. Miller, A.F. Vandome, and M.B. John. Extended Backus-Naur Form. VDM Publishing, 2010.
+[15] Allen Newell, Herbert Alexander Simon, et al. Human problem solving, volume 104. Prentice-Hall Englewood Cliﬀs, NJ, 1972.
+[16] F Pereira and D Warren. Parsing as deduction. In 21st Annual Meeting of the Association for Computational Linguistics, 1983.
+[17] Stuart J Russell and Peter Norvig. Artiﬁcial intelligence: a modern approach. Malaysia; Pearson Education Limited,, 2016.
+[18] Candace L Sidner. Plan parsing for intended response recognition in discourse 1. Computational intelligence, 1(1):1–10, 1985.
+[19] Yizhe Zhang, Zhe Gan, Kai Fan, Zhi Chen, Ricardo Henao, Dinghan Shen, and Lawrence Carin. Adversarial feature matching for text
+generation. In Proceedings of the 34th International Conference on Machine Learning-Volume 70, pages 4006–4015. JMLR. org, 2017.
+ Ionuţ Cristian Pistol  et al. / Procedia Computer Science 159 (2019) 202–211 211
+Pistol and Arusoaie /00 (2019) 000–000
+#instance: m:int, n:int, b:int; n = 3; m = 3; b = 3;
+#valid-state: s:list<int> ;
+s[1] + s[4] == n &&
+s[2] + s[5] == m &&(s[3] == 1 || s[3] == 2)
+#initial-state: m:int, n:int, initialstate:list<int> ;
+initialstate[0] = b; initialstate[1] = n;
+initialstate[2] = m; initialstate[3] = 1;
+initialstate[4] = 0; initialstate[5] = 0;return initialstate;
+#final-state: s:list<int> ;
+s[0] == b && s[1] == 0 && s[2] == 0 &&s[3] == 2 && s[4] == n && s[5] == m
+#transition: s:list<int> , v1:int, v2:int, st:list<int> ;
+st[0] = s[0];st[1] = s[1] + v1;st[2] = s[2] + v2;
+st[3] = 3 - s[3];
+st[4] = s[4] - v1;st[5] = s[5] - v2;return st;
+#valid-transition: s:list<int> , v1:int , v2:int;
+(forall i <- [1,6]: s[i] >= 0) &&(s[2] > 0 -> s[2] >= s[1]) &&(s[5] > 0 -> s[5] >= s[4]) &&
+(v1 + v2 > 0 -> s[3] == 1) &&
+(v1 + v2 <= 0 -> s[3] == 2)&&
+abs(v1 + v2) <= s[0]
+#strategy: random
+4.4. Towards generating executable code from AIM speciﬁcations
+AIM is designed to be easily translatable into an existing programming language. Except for #instance and
+#strategy, all the other entries in an AIM speciﬁcation are designed to be functions. For example, the corresponding
+function of an #initial-state for the cannibals and missionaries problem takes as parameters m,n, and b, while
+the body of the function is given by the assignments. We show here a possible translation to the Python language of
+the function which returns the initial state:
+def initial state(m, n, b):
+initialstate = list(range(0,6))
+initialstate[0] = b
+initialstate[1] = n
+initialstate[2] = minitialstate[3] = 1
+initialstate[4] = 0
+initialstate[5] = 0
+return initialstate
+Other functions, like the ones corresponding to predicates (#valid-state, #valid-transition,
+#final-state) return boolean results. The #valid-transition function needs to be combined with the
+#transition function, in order to compute valid transitions.
+Depending on the target programming language and the decision of the user, an #instance can be translated using
+global variables, specialized functions, or command line parameters.
+Strategies are completely decoupled from an AIM speciﬁcation. By design, strategies are meant to be implemented
+directly in the target programming language. The implementation of these strategies can be parameterised by some
+other functions (like scoring functions).Pistol and Arusoaie /00 (2019) 000–000
+5. Conclusions and future work
+We have shown how we can use AIM to describe AI models with the goal to generate executable code. The
+language is proposed to be capable of representing all common types of problems, and models implemented can be
+adapted easily to any search strategy that requires it. The ﬁrst programming language to which AIM models will be
+transferred to Python. Some consideration regarding this near future implementation were made in this paper. The
+beneﬁts provided by getting an executable code from an AIM description of a model for any AI problem are evident,
+and go towards the established goal of AI: use computers to solve problems with minimum human intervention.
+AIM speciﬁcations are also meant to serve as a basis for other tools which can provide interactive step-by-step
+model exploration, model execution tools, methodologies and tools for checking formal properties of the models.
+This will serve both didactic purposes as well as high-level model checking, which usually requires a high degree ofcompetence in AI as well as in formal logic and mathematics.
+AIM usage could be further extended by providing automated conversion to and from other description languages
+(e.g., STRIPS, PDDL), which are already familiar to potential users and already include many implemented models.
+Natural language is ambiguous and its correct understanding requires addition information beside its content,
+such as context and general world knowledge. These are the initial diﬃculties faced by automated problem solvers -
+transferring the natural language statements into an unambiguous and informative representation allowing a computerto use a search strategy to look for solutions. Eﬀorts to automate this process have been made, for instance in [18],
+[16] and more recently in [10], but they generally simplify the issue by expecting the problem to be formulated in
+a particular way, limiting the scope of the approach. We believe a possible new solution could be provided by AIM,
+using implemented problems and the expressive power of the grammar to generate new natural language statements
+by replacing grammar constructs with natural language equivalents and improving the resulted text’s general cohesion
+and coherence, as well as localized grammar, by using established text generation techniques such as those described
+in [9], [13] or more recent one like [19] and [8] which use Deep Learning to train patterns. The resulted alternate text
+statements can be then used to train a machine learning system potentially able to recognize and map new problem
+statements to AIM grammar constructs.
+Acknowledgements. This work was supported by a grant of the “Alexandru Ioan Cuza”, University of Ias ¸i, Research
+Grants program, Grant UAIC, ctr. no. 6/03.01.2018 and by the UEFSCDI research project ctr. no. 73PCCDI/2018.
+References
+[1]Saul Amarel. On representations of problems of reasoning about actions. In Readings in artiﬁcial intelligence, pages 2–22. Elsevier, 1981.
+[2]A Arusoaie and IC Pistol. Using SMT solvers to validate models for AI problems. Technical report, UAIC, March, 22 2019. 1903.09475.
+[3]R Fikes and N Nilsson. Strips: A new approach to the application of theorem proving to problem solving. Artiﬁcial Intelligence, 2(3-4):189–
+208, 1971.
+[4]International Organization for Standardization. Information technology - programming languages - C - ISO/IEC 9899:2018, 2018.
+[5]E. Giunchiglia, J. Lee, V . Lifschitz, N. McCain, and H. Turner. Nonmonotonic causal theories. Artiﬁcial Intelligence, 153(1-2):49–104, 2004.
+[6]Adrian A Hopgood. Intelligent systems for engineers and scientists. CRC press, 2016.
+[7]Guy Steele Gilad Bracha Alex Buckley Daniel Smith James Gosling, Bill Joy. The Java language speciﬁcation - Java SE 12 Edition, 2019.
+[8]Chlo ´e Kiddon, Luke Zettlemoyer, and Yejin Choi. Globally coherent text generation with neural checklist models. In Proceedings of the 2016
+Conference on Empirical Methods in Natural Language Processing, pages 329–339, 2016.
+[9]William C Mann. Discourse structures for text generation. In Proceedings of the 10th international conference on Computational linguistics,
+pages 367–375. Association for Computational Linguistics, 1984.
+[10] C Matuszek, E Herbst, L Zettlemoyer, and D Fox. Learning to parse natural language commands to a robot control system. In Experimental
+Robotics, pages 403–415. Springer, 2013.
+[11] W McCulloch and W Pitts. A logical calculus of the ideas immanent in nervous activity. The bulletin of math. biophysics, 5(4):115–133, 1943.
+[12] D McDermott, M Ghallab, A Howe, C Knoblock, A Ram, M Veloso, and D Weld, D Wilkins. Pddl-the planning domain deﬁnition language.
+1998.
+[13] Kathleen McKeown. Text generation. Cambridge University Press, 1992.
+[14] F.P. Miller, A.F. Vandome, and M.B. John. Extended Backus-Naur Form. VDM Publishing, 2010.
+[15] Allen Newell, Herbert Alexander Simon, et al. Human problem solving, volume 104. Prentice-Hall Englewood Cliﬀs, NJ, 1972.
+[16] F Pereira and D Warren. Parsing as deduction. In 21st Annual Meeting of the Association for Computational Linguistics, 1983.
+[17] Stuart J Russell and Peter Norvig. Artiﬁcial intelligence: a modern approach. Malaysia; Pearson Education Limited,, 2016.
+[18] Candace L Sidner. Plan parsing for intended response recognition in discourse 1. Computational intelligence, 1(1):1–10, 1985.
+[19] Yizhe Zhang, Zhe Gan, Kai Fan, Zhi Chen, Ricardo Henao, Dinghan Shen, and Lawrence Carin. Adversarial feature matching for text
+generation. In Proceedings of the 34th International Conference on Machine Learning-Volume 70, pages 4006–4015. JMLR. org, 2017.

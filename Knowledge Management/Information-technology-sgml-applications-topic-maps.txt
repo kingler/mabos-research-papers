@@ -1,0 +1,116 @@
+INTERNATIONAL
+STANDARDISO/IEC
+13250
+Second edition
+2003-05-15
+Reference number
+ISO/IEC13250:2003(E)
+© ISO/IEC2003Information technology — SGML 
+applications — Topic maps
+Technologies de l'information — Applications SGML — Plans relatifs à 
+des sujets
+                                  
+This is a preview - click here to buy the full publication
+ISO/IEC13250:2003(E)
+ii © ISO/IEC2003 –All rights reservedPDF disclaimer
+This PDF file may contain embedded typefaces. In accordance with Adobe's licensing policy, this file may be printed or viewed b ut shall
+not be edited unless the typefaces which are embedded are licensed to and installed on the computer performing the editing. In
+downloading this file, parties accept therein the responsibility of not infringing Adobe's licensing policy. The ISO Central Se cretariat
+accepts no liability in this area.
+Adobe is a trademark of Adobe Systems Incorporated.
+Details of the software products used to create this PDF file can be found in the General Info relative to the file; the PDF-cr eation
+parameters were optimized for printing. Every care has been taken to ensure that the file is suitable for use by ISO member bod ies. In the
+unlikely event that a problem relating to it is found, please inform the Central Secretariat at the address given below.
+© ISO/IEC2003
+All rights reserved. Unless otherwise specified, no part of this publication may be reproduced or utilized in any form or by an y means,
+electronic or mechanical, including photocopying and microfilm, without permission in writing from either ISO at the address be low or
+ISO's member body in the country of the requester.
+ISO copyright office
+Case postale 56  CH-1211 Geneva 20
+Tel. + 41 22 749 01 11Fax + 41 22 749 09 47E-mail copyright@iso.orgWeb www.iso.org
+Published in SwitzerlandThis is a preview - click here to buy the full publication
+ISO/IEC 13250:2003(E)
+© ISO/IEC 2003 –All rights reserved iiiContents  Page
+1 Scope ........................................................................................................................ ............................ 1
+2 Normative references ......................................................................................................... ................. 1
+3 Terms and definitions ........................................................................................................ .................. 1
+4 Notation ..................................................................................................................... ........................... 6
+5 Topic maps architecture ...................................................................................................... ................ 7
+6 Conformance .................................................................................................................. ....................  24
+Annex A (normative) Topic maps meta-DTD ............................................................................................ 25
+Annex B (informative) Example of an architectural support declaration for the topic maps
+architecture .................................................................................................................. ............................... 38
+Annex C (normative) XML DTD for web-oriented topic maps ................................................................  39This is a preview - click here to buy the full publication
+ISO/IEC13250:2003(E)
+iv © ISO/IEC2003 –All rights reservedForeword
+ISO (the International Organization for Standardization) and IEC (the International Electrotechnical
+Commission) form the specialized system for worldwide standardization. National bodies that are members ofISO or IEC participate in the development of International Standards through technical committees establishedby the respective organization to deal with particular fields of technical activity. ISO and IEC technical
+committees collaborate in fields of mutual interest. Other international organizations, governmental and non-
+governmental, in liaison with ISO and IEC, also take part in the work.
+International Standards are drafted in accordance with the rules given in the ISO/IEC Directives, Part2.In the field of information technology, ISO and IEC have established a joint technical committee, ISO/IEC JTC 1.
+Draft International Standards adopted by the joint technical committee are circulated to national bodies for
+voting. Publication as an International Standard requires approval by at least 75% of the national bodiescasting a vote.
+Attention is drawn to the possibility that some of the elements of this document may be the subject of patent
+rights. ISO and IEC shall not be held responsible for identifying any or all such patent rights.
+ISO/IEC 13250 was prepared by Joint Technical Committee ISO/IEC JTC 1, Information technology ,
+Subcommittee SC 34, Document description and processing languages .
+This second edition cancels and replaces the first edition (ISO/IEC 13250:2000), which has been technically
+revised.This is a preview - click here to buy the full publication
+ISO/IEC 13250:2003(E)
+© ISO/IEC 2003 –All rights reserved vIntroduction
+This International Standard provides a standardized notation for interchangeably representing information
+about the structure of information resources used to define topics, and the relationships between topics. A setof one or more interrelated documents that employs the notation defined by this International Standard is calleda topic map . In general, the structural information conveyed by topic maps includes:
+—groupings of addressable information objects around topics ( “occurrences ”), and
+—relationships between topics ( “associations ”).
+A topic map defines a multidimensional topic space — a space in which the locations are topics, and in which
+the distances between topics are measurable in terms of the number of intervening topics which must be visitedin order to get from one topic to another, and the kinds of relationships that define the path from one topic to
+another, if any, through the intervening topics, if any.
+NOTE1 Two topics may be connected through an association, and they can also be connected by virtue of sharing an
+occurrence.
+In addition, information objects can have properties, as well as values for those properties, assigned to them
+externally. These properties are called facet types .
+NOTE 2 The word facet can mean one side of a many-sided, polished object, or one segment of a compound eye (e.g.  an
+insect's). Its metaphorical use here captures the idea that a facet is a property of a set of information objects that can be
+used to create a view of them.
+Several topic maps can provide topical structure information about the same information resources. The topic
+maps architecture is designed to facilitate merging topic maps without requiring the merged topic maps to becopied or modified. Because of their extrinsic character, topic maps can be thought of as overlays on, or
+extensions to, sets of information objects.
+The base notation of topic maps is SGML; an interchangeable topic map always consists of at least one SGML
+document, and it may include and/or refer to other kinds information resources. A set of information resourcesthat comprise a complete interchangeable topic map can be specified using the “bounded object set (BOS) ”
+facility defined by the HyTime architecture in ISO/IEC 10744:1997.
+As the Extensible Markup Language (XML), a World Wide Web Consortium recommendation, is a subset of
+SGML, as explained in Annex K of SGML (1997), also known as WebSGML, XML can be also used as a base
+notation for Topic Maps.
+The topic map notation is defined as an SGML Architecture , and this International Standard takes the form of an
+architecture definition document  expressed in conformance with Normative Annex A.3 of ISO/IEC 10744:1997,
+the SGML Architectural Form Definition Requirements  (AFDR). The formal definition of the topic map notation
+is expressed as a meta-DTD.This is a preview - click here to buy the full publication
+INTERNATIONAL STANDARD ISO/IEC 13250:2003(E)
+© ISO/IEC 2003 –All rights reserved 1Information technology — SGML applications — Topic maps
+1S c o p e
+NOTE 1 This clause defines the scope of this International Standard. It should not be confused with the concept of “scope”
+defined in 3.16, which only applies in the context of topic maps.
+Topic maps enable multiple, concurrent views of sets of information objects. The structural nature of these views
+is unconstrained; they may reflect an object oriented approach, or they may be relational, hierarchical, ordered,unordered, or any combination of the foregoing. Moreover, an unlimited number of topic maps may be overlaidon a given set of information resources.
+Topic maps can be used:
+—to qualify the content and/or data contained in information objects as topics to enable navigational tools
+such as indexes, cross-references, citation systems, or glossaries;
+—to link topics together in such a way as to enable navigation between them. This capability can be used for
+virtual document assembly, and for creating thesaurus-like interfaces to corpora, knowledge bases, etc.;
+—to filter an information set to create views adapted to specific users or purposes. For example, such filtering
+can aid in the management of multilingual documents, management of access modes depending onsecurity criteria, delivery of partial views depending on user profiles and/or knowledge domains, etc.;
+—to structure unstructured information objects, or to facilitate the creation of topic-oriented user interfaces
+that provide the effect of merging unstructured information bases with structured ones. The overlaymechanism of topic maps can be considered as a kind of external markup mechanism , in the sense that an
+arbitrary structure is imposed on the information without altering its original form.
+This International Standard does not require or disallow the use of any scheme for addressing information
+objects. Except for the requirement that topic map documents themselves be expressed using SGML (orWebSGML) and HyTime, using the syntax described herein, neither does it require or disallow the use of any
+notation used to express information.
+2 Normative references
+The following referenced documents are indispensable for the application of this document. For dated
+references, only the edition cited applies. For undated references, the latest edition of the referenced document(including any amendments) applies.
+ISO 8879:1986, Information processing — Text and office systems — Standard Generalized Markup Language
+(SGML)
+ISO/IEC 10744:1997, Information technology — Hypermedia/Time-based Structuring Language (HyTime)
+3 Terms and definitions
+For the purposes of this document, the terms and definitions given in ISO 8879:1986, ISO/IEC 10744:1997 and
+the following apply.This is a preview - click here to buy the full publication

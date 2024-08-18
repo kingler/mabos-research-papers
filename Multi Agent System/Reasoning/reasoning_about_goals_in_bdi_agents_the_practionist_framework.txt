@@ -1,0 +1,676 @@
+Reasoning about Goals in BDI Agents:
+the PRACTIONIST Framework
+Vito Morreale∗, Susanna Bonura∗, Giuseppe Francaviglia∗, Fabio Centineo∗,
+Massimo Cossentino†§, and Salvatore Gaglio†‡
+∗R&D Laboratory - ENGINEERING Ingegneria Informatica S.p.A .
+†ICAR-Italian National Research Council
+‡DINFO-University of Palermo
+§SET - Universit de Technologie Belfort-Montbliard, France
+Abstract—The representation of goals and the abilityto reason
+about them play an important role in goal-oriented requirem ents
+analysis and modelling techniques, especially in agent-or iented
+software engineering. Moreover goals are more useful and st able
+abstractions than others (e.g. user stories) in the analysi s and
+design of software applications. Thus, the PRACTIONISTfra me-
+work supports a goal-oriented approach for developing agen t
+systems according to the Belief-Desire-Intention (BDI) mo del.
+In this paper we describe the goal model of PRACTIONIST
+agents, in terms of the general structure and the relations a mong
+goals. Furthermore we show how PRACTIONIST agents use
+their goal model to reason about goals during their delibera tion
+process and means-ends reasoning as well as while performin g
+their activities.
+I. INTRODUCTION
+With the increasing management complexity and main-
+tenance cost of advanced information systems, attention in
+recent years has fallen on self-* systems and particularly o n
+the autonomiccomputingapproachand autonomicsystems. In
+[1]authorsarguethat adoptinga designapproachthat suppo rts
+the deﬁnition of a space of possible behaviours related to th e
+same functionis one of the ways to make a system autonomic.
+Then the system should be able to select at runtime the best
+behaviour on the basis of the current situation. Goals can be
+used as an abstraction to model the functions around which
+the systems can autonomously select the proper behaviour.
+In this view, the explicit representation of goals and the
+ability to reason about them play an important role in severa l
+requirements analysis and modelling techniques, especial ly
+when adopting the agent-oriented paradigm.
+In this area, one of the most popular and successful agent
+models is the BDI [2], which derives from the philosophical
+tradition of practical reasoningﬁrst developedby Bratman [3].
+It states that agentsdecide, momentbymoment,which action s
+to perform in order to pursue their goals. Practical reasoni ng
+involvesa deliberation process, to decide what states of af fairs
+to achieve, and a means-ends reasoning, to decide how to
+achieve them.
+Nevertheless there is a gap between BDI theories and
+severalimplementation[4].Indeed,mostofexistingBDIag ent
+platforms(e.g.JACK [5],JAM [6])generallyuse goalsinste ad
+of desires. Moreover, the actual implementations of mental
+states differ somewhat from their original semantics: desi res(orgoals) are treatedas event types(such as in AgentSpeak( L)
+[7]) or procedures (such as in 3APL [8]) and intentions are
+executingplans.Thereforethedeliberationprocessandme ans-
+ends reasoning are not well separated, as being committed to
+an intention (ends) is the same as executing a plan (means).
+Moreover, some available BDI agent platforms do not
+supporttheexplicitrepresentationandimplementationof goals
+ordesireswiththeirpropertiesandrelations,buttheydea lwith
+them in a procedural and event-based fashion. As a result,
+while such an explicit representation of goals provide usef ul
+and stable abstractions when analysing and designing agent -
+based systems, there is a gap between the products of those
+phases and what development frameworks support.
+AccordingtoWinikoffetal.[4],”byomittingthedeclarati ve
+aspect of goals the ability to reason about goals is lost”. Wh at
+is actually lost is the ability to knowif goals are impossible,
+achieved, incompatible with other goals, and so forth. This in
+turn can support the commitment strategies of agents and their
+ability to autonomously drop, reconsider, replace or pursu e
+goals.
+However, some other BDI agent platforms deal with declar-
+ative goals. Indeed, in JADEX goals are explicitly represen ted
+according to a generic model, enabling the agents to handle
+their life cycle and reasoningaboutthem [9].Nevertheless ,the
+model deﬁned in JADEX does not deal with relations among
+goals.
+The PRACTIONIST framework [10] adopts a goal-oriented
+approach to develop BDI agents and stresses the separation
+between the deliberation process and the means-ends reason -
+ing, with the abstraction of goal used to formally deﬁne both
+desires and intentions during the deliberation phase. Inde ed,
+in PRACTIONIST a goal is considered as an analysis, design,
+and implementation abstraction compliant to the semantics
+describedin this paper. In other words, PRACTIONIST agents
+can be programmed in terms of goals, which then will be
+related to either desires or intentions according to whethe r
+some speciﬁc conditions are satisﬁed or not.
+After a brief overview of the general structure of PRAC-
+TIONIST agents and their execution model (section II), this
+paper addresses the deﬁnition of the goal model (section III ).
+We also describe how PRACTIONIST agents are able to
+reason about available goals according to their goal model,
+187
+current beliefs, desires, and intentions (see section IV). All
+aforementionedissuesandtheproposedmodelarefullyimpl e-
+mented in the PRACTIONIST framework and available when
+developing applications by using the goal-oriented approa ch
+and the concepts described in this paper (section V). Finall y,
+in section VI we present a simple example that illustrates th e
+deﬁnition and the usage of goals and their relations.
+II. PRACTIONIST AGENTS
+The PRACTIONIST framework aims at supporting the pro-
+grammerindevelopingBDI agentsandisbuilt ontopofJADE
+[11], a widespread platform that implements the FIPA1spec-
+iﬁcations. Therefore, our agents are deployed within JADE
+containers and their main cycle is implemented by means of
+a JADE cyclic behaviour.
+A PRACTIONIST agent is a software component endowed
+with the following elements:
+•a set ofperceptions andthe corresponding perceptors that
+listen to some relevant external stimuli;
+•a set of beliefsrepresenting the information the agent
+has got about both its internal state and the external
+environment;
+•a set ofgoalsthe agent wishes or wants to pursue. They
+representsome states ofaffairsto bringaboutoractivitie s
+to perform and will be related to either its desires or
+intentions (see below);
+•a set ofgoal relations the agent uses during the deliber-
+ation process and means-ends reasoning;
+•a set ofplansthat are the means to achieve its intentions;
+•a set of actionsthe agent can perform to act over its
+environment; and
+•a set ofeffectors that actually execute the actions.
+Beliefs, plans, andthe executionmodelare brieﬂydescribe d
+in this section,while goalsare the subject of thispaperand are
+presented in the following sections. However, for a detaile d
+description of the structure of PRACTIONIST agents, the
+reader should refer to [10].
+The BDI model refers to beliefs instead of knowledge, as
+beliefsare not necessarily true, while knowledge usually refers
+to something that is true [12]. Accordingto this, an agent ma y
+believe true something that is false from the other agents’ o r
+the designer’s point of view, but the idea is just to provide t he
+agents with a subjective window over the world.
+Therefore each PRACTIONIST agent is endowed with a
+prolog belief base, where beliefs are asserted, removed, or
+entailed through inference on the basis of KD45 modal logic
+rules [12] and user-deﬁned formulas. Currently the PRAC-
+TIONIST framework supports two prolog engines, i.e. SWI-
+Prolog2and one that was derived from TuProlog3.
+In the PRACTIONIST frameworkplans represent an impor-
+tant container in which developers deﬁne the actual behavio rs
+of agents.
+1http://www.ﬁpa.org
+2http://www.swi-prolog.org
+3http://tuprolog.alice.unibo.itEach agent may own a declared set of plans (the plan
+library), each specifying the course of acts the agent will
+undertake in order to pursue its intentions, or to handle
+incoming perceptions, or to react to changes of its beliefs.
+PRACTIONIST plans have a set of slots that are used
+by agents during the means-ends reasoning and the actual
+execution of agent activities. Some of these slots are: the
+trigger event, which deﬁnes the event (i.e. goals, percepti ons,
+and belief updating) each plan is supposed to handle; the
+context, a set of condition that must hold before the plan can
+be actually performed; the body, which includes the acts the
+agent performs during the execution of the plan.
+Through their perceptors, agents search for stimuli (perce p-
+tions)fromtheenvironmentandtransformtheminto(extern al)
+events, which in turn are put into the Event Queue (ﬁgure
+1). Such a queue also contains internal events, which are
+generatedwhen either an agent is committed to a goal or there
+is some belief updates. The former type of internal events is
+particularly important in PRACTIONIST agents, as describe d
+in the following sections.
+The main cycle of a PRACTIONIST agent is implemented
+within a cyclic behaviour, which consists of the following
+steps.
+1) itselectsandextractsaneventfromthequeue,according
+to a proper Event Selection logic;
+2) it handles the selected event through the following
+means-ends reasoning process: (i) the agent ﬁgures out
+thepractical plans, which are those plans whose trigger
+event matches the selected event ( Options in ﬁgure
+1); (ii) among practical plans, the agent detects the
+applicable ones, which are those plan whose context
+is believed true, and selects one of them ( main plan );
+(iii) it builds the intended means , which will contain the
+main plan and other alternative practical plans. In case
+of goal event updates the corresponding intended means
+stack; otherwise it creates a new intended means stack.
+It should be noted that every intended means stack can
+contain several intended means, each able to handle a given
+event, possibly through several alternative means.
+Moreover all intended means stacks are concurrently exe-
+cuted, in order to provide the agents with the capability of
+performing several activities (perhaps referring to relat ed or
+non-relatedobjectives) in parallel. When executingeach s tack,
+thetoplevelintendedmeansisinturnexecuted,byperformi ng
+its main plan. If it fails for some reason, one of alternative
+plans is then performed, until the corresponding ends (rela ted
+to the triggering event) is achieved.
+During the execution of a plan, several acts can be per-
+formed, such as desiringto bring about some states of affairs
+ortoperformsomeaction, addingorremoving beliefs,sending
+ACL messages, and so forth. Particularly, desiring to pursu e
+a goal triggers a deliberation/ﬁltering process, in which t he
+agent ﬁgures out whether that goal must be actually pursued
+or not, on the basis of the goal model declared for that agent.
+The interaction among intended means belonging to differ-
+ent stacks can occur at a goal level, since each plan could wai t
+188
+Fig. 1. PRACTIONIST Agent Architecture
+for the success/failure of some goal that the agent is pursui ng
+through another intended means.
+III. GOALMODEL
+In the PRACTIONIST framework, a goal is an objective
+to pursue and we use it as a mean to transform desires into
+intentions through the satisfaction of some properties. In other
+words, our agents are programmed in terms of goals, which
+then will be related to either desires or intentions accordi ng
+to whether some speciﬁc conditions are satisﬁed or not.
+Formally, a PRACTIONIST goalgis deﬁned as follows:
+g=/angbracketleftσg, πg/angbracketright (1)
+where:
+•σgis thesuccess condition of the goal g;
+•πgis thepossibility condition of the goal gstating
+whether gcan be achieved or not.
+Since we consider such elements as local properties of
+goals, in the PRACTIONIST framework we deﬁned them as
+operations that have to be implemented for each kind of goal
+(ﬁgure 3).
+In order to describe the goal model, we ﬁrst provide some
+deﬁnitions about the properties of goals.
+Deﬁnition 1 A goal g1isinconsistent with a goal g2
+(g1⊥g2) if and only if when g1succeeds, then g2fails.Deﬁnition 2 A goal g1entailsa goal g2or equivalently g2
+isentailed by g1(g1→g2) if and only if when g1succeeds,
+then also g2succeeds.
+Deﬁnition 3 A goal g1is aprecondition of a goal g2
+(g1/mapsto→g2) if and only if g1must succeed in order to be
+possible to pursue g2.
+Deﬁnition 4 A goal g1dependson a goal g2(g1/arrowhookleft→g2) if
+and only if g2is precondition of g1andg2must be successful
+while pursuing g1.
+Thereforethedependenceisastrongerformofprecondition .
+Both deﬁnitions let us specify that some goals must be
+successfulbefore(andduring,incaseofdependency)pursu ing
+some other goals (refer to section IV for more details).
+Now, given a set Gof goals and based on the above
+deﬁnitions, it is also possible to deﬁne some relations
+between those goals.
+Deﬁnition 5 The inconsistency Γ⊆G×Gis a binary
+symmetric relation on G, deﬁning goals that are inconsisten t
+with each other. Formally,
+Γ ={(gi, gj)i, j= 1, ...,|G|:gi⊥gj}.(2)
+When two goals are inconsistent with each other, it might
+189
+be useful to specify that one is preferred to the other. We
+denote that giis preferred to gjwithgi/followsgj.
+Deﬁnition 6 The relation of preference Γ/prime⊆Γdeﬁnes the
+pair of goals (gi, gj)where gi⊥gjandgi/followsgj. Formally,
+Γ/prime={(gi, gj)∈Γ :gi/followsgj}. (3)
+Thereforeif there is no preferencebetween two inconsisten t
+goals, the corresponding pair does not belong to the set Γ/prime.
+Moreover, since several goals can be pursued in parallel,
+there is no need to prefer some goal to another goal if they
+are not inconsistent each other.
+Deﬁnition 7 The entailment Ξ⊆G×Gis a binary relation
+on G, deﬁning which goals entail other goals. Formally,
+Ξ ={(gi, gj)i, j= 1, ...,|G|:gi→gj}.(4)
+Deﬁnition 8 The precondition set Π⊆G×Gis a binary
+relation on G, deﬁning which goals are precondition of other
+goals. Formally,
+Π ={(gi, gj)i, j= 1, ...,|G|:gi/mapsto→gj}.(5)
+Deﬁnition9 Thedependence ∆⊆G×Gisabinaryrelation
+on G, deﬁning which goals depend on other goals. Formally,
+∆ ={(gi, gj)i, j= 1, ...,|G|:gi/arrowhookleft→gj}.(6)
+Finally, on the basis of the above properties and relations
+we can now deﬁne the structure of the goal model of PRAC-
+TIONIST agents as follows
+GM=/angbracketleftG,Γ,Γ/prime,Ξ,Π,∆/angbracketright (7)
+where:
+•Gis the set of goals the agent could pursue;
+•Γis theinconsistency relation among goals;
+•Γ/primeis thepreference relation among inconsistent goals;
+•Ξis theentailment relation among goals;
+•Πis theprecondition relation among goals;
+•∆is thedependence relation among goals.
+IV. REASONING ABOUT GOALS
+In this section we show how the goal elements previously
+deﬁned are used by PRACTIONIST agents when reasoning
+about goals during their deliberation process and the means -
+ends reasoning. We also highlight the actual relations betw een
+them and mental attitudes, i.e. desires and intentions.
+In PRACTIONIST agents goals and their properties are
+deﬁnedonthebasisofwhatagentsbelieve.Thus,anagentwil l
+believe that a goal g=/angbracketleftσg, πg/angbracketrighthas succeeded if it believes
+that its success condition σgis true. The same holds for the
+other properties.
+It is important to note that, in PRACTIONIST, desires and
+intentions are mental attitudes towards goals, which are in
+turn considered as descriptions of objectives. Thus, refer ringto a goal, an agent can just relate it to a desire, which it is
+not committed to because of several possible reasons (e.g. i t
+believes that the goal is not possible). On the other hand, a
+goal can be related to an intention, that is the agent is actually
+and actively committed to pursue it.
+LetGM=/angbracketleftG,Γ,Γ/prime,Ξ,Π,∆/angbracketrightbe agoal model of a
+PRACTIONIST agent αand, at a given time, G/prime⊆Gbe the
+set of its active goals, which are those goals that the agent i s
+already committed to.
+Suppose that αstarts its deliberation process and generates
+the goal g=/angbracketleftσg, πg/angbracketrightas an option.Thereforethe agent would
+like to commit to g, that is its desireis to bring about the goal
+g. However, since an agent will not be able to achieve all its
+desires, it performs the following process in the context of its
+deliberation phase (ﬁgure 2): the agent checks if it believe s
+that the goal gispossibleand notinconsistent (see deﬁnition
+1) with active goals (belonging to G/prime).
+If both conditions hold the desire to pursue gwill be
+promoted to an intention. Otherwise, in case of inconsistency
+among gand some active goals, the desire to pursue gwill
+become an intention only if gis preferred to such inconsistent
+goals, which will in turn be dropped.
+In any case, if the desire to pursue gis promoted to an
+intention, before starting the means-ends reasoning, the agent
+αchecks if it believes that the goal g succeeds (that is, if it
+believes that the success condition σgholds) or whether the
+goalgis entailed (see deﬁnition 2) by some of the current
+active goals. In case of both above conditions do not hold,
+the agent will perform the means-ends reasoning, by either
+selecting a plan from a ﬁxed plan library or dynamically
+generating a plan and ﬁnally executing it (details on this
+means-ends reasoning can be found in [10]).
+Indeed,if the goal gsucceeds or is entailed by some current
+active goals (i.e. some other means is working to achieve a
+goal that entails the goal g), there is no reason to pursue it.
+Therefore, the agent does not need to make any means-ends
+reasoning to ﬁgure out how to pursue the goal g.
+Otherwise, before starting the means-ends reasoning, if
+some declared goals are precondition for g, the agent will
+ﬁrst desire to pursue such goals and then the goal g.
+In the PRACTIONIST framework, as a default, an agent
+will continue to maintain an intention until it believes tha t
+either such an intention has been achieved or it is no longer
+possible to achieve the intention. This commitment strateg y to
+intention is called single-minded commitment [13]. In order to
+perform such a behaviour, the agent continuously checks if i t
+believes that the goal ghas just succeeded and that the goal
+gis still possible.
+Moreover the agent checks if some dependee goal does
+not succeed. If so, it will desire to pursue such a goal and
+then continue pursuing the goal g. When all dependee goals
+succeed, the agent resumes the execution of the plan.
+In order to be able to recover from plan failures and try
+other means to achieve an intention, if the selected plan fai ls
+or is no longer appropriate to achieve the intention, then th e
+agent selects one of applicable alternative plans within the
+190
+check if the goal
+is possiblecheck if the goal
+succeedscheck if the goal is
+inconsistent with active goals
+exception: the goal
+cannot be pursuedcheck if the goal is entailed
+by some active goal
+synchronize with the
+entailing goal
+check about goal
+preconditions[ goal is not possible ][ goal inconsistent AND not preferred ][ goal succeeds ]
+[ goal is not entailed
+   by any active goal ]
+Fig. 2. Reasoning about goals: the deliberation phase.
+same intended means and executes it.
+If none of the alternative plans was able to successfully
+pursue the goal g, the agent take into consideration the goals
+thatentail g. Thus the agent selects one of them and considers
+it as an option, processing it in the way described in this
+section, from deliberation to means-ends reasoning.
+If there is no plan to pursue alternative goals, the achieve-
+mentoftheintentionhasfailed,astheagenthasnototherwa ys
+to pursue its intention. Thus, according to agents beliefs, the
+goal was possible, but the agent was no able to pursue it (i.e.
+there are no plans).
+V. THESUPPORT FOR THE GOALMODEL IN THE
+PRACTIONIST F RAMEWORK
+In order to provide the PRACTIONIST framework with the
+support for the deﬁnition/handling of agent goal models and
+the capabilities for reasoning about goals, we identiﬁed an d
+fulﬁlled the following requirements:
+•registration of the goals that each agent could try to
+pursue during his life cycle;
+•registration of the relations among such goals;
+•checking whether two goals are inconsistent and which
+the preferred one is (if any);
+•getting the list of goals that entail a given goal;
+•getting the list of goals that are precondition of a given
+goal;
+•getting the list of goals which a given goal depends on.
+A proper ad-hoc search algorithm explores the goal model
+and answers the queries, on the basis of both declared and
+implicit relations. Indeed, implicit relations (especial ly incon-
+sistence and entailment) can be inferred from the semantics
+of some built-in goals, such as state goals (e.g. achieve (ϕ),
+cease(ϕ),maintain (ϕ), andavoid(ϕ), where ϕis a closed
+formula of FOL). Therefore, the goal reasoner takes into
+account implicit relations such as achieve (ϕ)⊥achieve (¬ϕ),
+achieve (ϕ)⊥cease(ϕ),maintain (ϕ)⊥avoid(ϕ), and so
+forth.
+Figure 3 shows the actual structure of the GoalModel
+that each agent owns ( PRACTIONISTAgent is the ab-
+stract class that has to be extended when developing
+PRACTIONIST agents). Such a model stores informa-
+tion about declared goals (with their internal properties,
+i.e. success and possibility condition) and the four types
+of relations these goals are involved in. Speciﬁcally the
+interface GoalRelation provides the super interfacefor all goal relations supported by the PRACTIONIST
+framework (i.e. EntailmentRel ,InconsistencyRel ,
+DependencyRel , andPreconditionRel ) and deﬁnes
+the operation verifyRel , whose purpose is to check each
+speciﬁc relation.
+In order to exploit the features provided by the goal model
+and understand if a given goal the agent desires to pursue is
+inconsistent with or implied by some active goals, the agent
+must have information about such active goals and whether
+them are related to either desires or intentions.Therefore ,each
+PRACTIONIST agent owns an ActiveGoalsHandler
+component, which, with the aid of the GoalModel , has the
+responsibilityof keepingtrackof all executingintendedm eans
+stacks with the correspondingwaiting and executinggoals a nd
+managing requests made by the agent.
+Thus, at any given time, the ActiveGoalsHandler is
+aware of current desires and intentions of the agent, referr ing
+them to active goals.
+VI. ANEXAMPLE
+Inthissectionwe presentthe Tileworldexampletoillustra te
+how to use the goal model presented in this paper and the
+support provided by the PRACTIONIST framework.
+The Tileworld example was initially introduced in [14] as
+a system with a highly parameterized environment that could
+be used to investigate the reasoning in agents. The original
+Tileworld consists of a grid of cells on which tiles, obstacl es
+and holes (of different size and point value) can exist. Each
+agent can move up, down left or right within the grid to pick
+up and move tiles in order to ﬁll the holes. Each hole has an
+associated score, which is awarded to the agent that has ﬁlle d
+the hole. The main goal of the agent is to score as manypoints
+as possible.
+Tileworld simulations are dynamic and the environment
+changes continually over time. Since this environment is
+highly parameterized, the experimenter can alter various a s-
+pects of it through a set of available ”knobs”, such as the
+rate at which new holes appear ( dynamism ), the rate at
+which obstacles appear ( hostility), difference in hole scores
+(variability of utility ), and so forth.
+Such applications, with a potentially high degree of dy-
+namism, can beneﬁt from the adoption of a goal-oriented
+design approach, where the abstraction of goal is used to
+declaratively represent agents’ objectives and states of a ffairs
+that can be dynamically achieved through some means.
+191
+Fig. 3. The structure of the support for the goal model in the P RACTIONIST framework.
+Figure 4 shows the Tileworld environment, where new
+agents can be added or removed and the corresponding pa-
+rameters can be dynamically changed.
+In our Tileworld demonstrator two types of agents were
+developed, the Tileworld Management Agent (TWMA) and
+the Tileworld Player Agent (TWPA): the former is the agent
+that manages and controls the environment, by creating and
+destroying tiles, holes and obstacles, according to the par ame-
+ters set by the user; the latter is the agent moving within the
+gridand whose primarygoal is to maximizeits score by ﬁlling
+holes with tiles. A player agent does not get any notiﬁcation
+abouttheenvironmentchanges(i.e.bythemanagementagent ),
+but it can ask such an information (e.g. what the current
+state of a cell is) by means of sensing actions, in order to
+adopt the best strategy on the basis of the current state of
+the environment. In fact, for each state of the environment
+(e.g., static, dynamic, very dynamic, etc.) at least a strat egy is
+provided.All thestrategiesareimplementedthroughplans that
+share the same goal and differ for their operative condition s
+(i.e. the context).
+It should be noted that, since PRACTIONIST agents are
+endowedwiththeabilityofdynamicallybuildingplansstar ting
+fromagivengoalandasetofavailableactions,somestrateg ies
+could be generated on-the-ﬂy by taking into account emergin g
+situations.
+The player agent has beliefs about the objects that are
+placed into the grid, its position, its score, the state of th e
+environment, etc.
+The TWPA top level goal is to score as many points as
+possible, but to do this, it has to register itself with the
+manager, look for the holes and for the tiles, hold a tile, and
+ﬁll a hole.
+We designed the TWPA by adopting the goal-oriented
+approach described in this paper and directly implemented
+its goal-related entities (i.e. goals and relations) thank to the
+support provided by the PRACTIONIST framework. In ﬁgure
+5 a fragment of the goal model of the TWPA is shown as aUML class diagram with dependencies stereotyped with the
+name of the goal relations. Actually some relations only hol d
+under certain condition and the diagram does not show such
+details.
+According to the diagram, the TWPA has to be
+registered with the TWMA before increasing its
+score (the goal ScorePoints depends on the goal
+RegisterWithManager ). Moreover, in order to score
+points, the TWPA has to ﬁll as many holes as possible (the
+goalFillHole entailsthe goal ScorePoints ). But, in
+order to ﬁll a hole, the TWPA has to hold a tile and ﬁnd a
+hole (the goal FillHole depends on the goal HoldTile
+and requires the goal FillHole asprecondition ); ﬁnally,
+the TWPA has to ﬁnd the tile to hold it (the goal HoldTile
+has the goal FindTile as a precondition).
+According to the above-mentioned description, the follow-
+ing source code from the TWPAgent class shows how goals
+and relations among them are added to the agent and thus
+how to create the goal model through the PRACTIONIST
+framework:
+protected void initialize()
+{
+...
+GoalModel gm = getGoalModel();
+// Goal declaration
+gm.add(new RegisterWithManager());
+gm.add(new ScorePoints());
+gm.add(new HoldTile());
+gm.add(new FindTile());
+gm.add(new FillHole(getBeliefBase()));
+gm.add(new FindHole());
+// relations among goals
+gm.add(new Dep_ScorePoints_RegisterWithManager());
+gm.add(new Ent_ScorePoints_FillHole());
+gm.add(new Dep_FillHole_HoldTile());
+gm.add(new Pre_HoldTile_FindTile());
+gm.add(new Pre_FillHole_FindHole());
+...
+}
+192
+Fig. 4. The Tileworld environment.
+In order to better understand how the above-mentioned
+relations are implemented, the following source code shows
+the precondition relation among the goals HoldTile and
+FindTile :
+public class Pre_HoldTile_FindTile
+implements PreconditionRel
+{
+public Goal verifyRel(Goal goal1, Goal goal2)
+{
+if((goal1 instanceof HoldTile) &&
+(goal2 instanceof FindTile))
+return new FindTile;
+return null;
+}
+...
+}
+When the player agent desires to pursue a goal, it checks
+if this goal is involved in some relations and in that case
+it reasons about them during the deliberation, means-ends,
+and intention reconsiderationprocesses. Thus, developer sonly
+need to specify goals and relations among them at the design
+time.
+As an example, when the TWPA desires to ﬁll a hole (i.e.
+FillHole ), according to the deﬁned goal model and the
+semantics described in section 2, the agent automatically w ill
+check if it just holds a tile (i.e. HoldTile ); if not, such a
+goal will be desired. On the other hand, the agent will check
+if it has found a hole (i.e. FindHole ) and again, if not, it
+will desire that.
+Moreover, when pursuing the goal FillHole , the agent
+will continuously check the success of all its dependee goal s
+(i.e.HoldTile ) andmaintain them in case of failure.
+It should be noted that the plan to pursue the goalFillHole does not need to include the statements to desire
+either the dependee (i.e. HoldTile ) or precondition (i.e.
+FindHole ) goals, as shown in the following code fragment.
+public class FillHolePlan extends GoalPlan
+{
+public void body() throws PlanExecutionException
+{
+String posPred = "pos(obj1: X,obj2: Y)";
+AbsPredicate pos =
+getBeliefBase().retrieveAbsPredicate(
+AbsPredicateFactory.create(posPred));
+int xPos = pos.getInteger("obj1");
+int yPos = pos.getInteger("obj2");
+doAction(new ReleaseTileAction(xPos, yPos,
+twaServer.getHoleValue(xPos, yPos)));
+...
+}
+...
+}
+The Tileworld domain highlights how the PRACTIONIST
+goal model is particularly adequate to model dynamic envi-
+ronments in a very declarative manner.
+VII. CONCLUSIONS AND FUTURE WORK
+InthePRACTIONISTframework,desiresandintentionsare
+mental attitudes towards goals, which are in turn considere d
+as descriptions of objectives.
+In this paper we described how a declarative representation
+of goals can support the deﬁnition of desires and intentions in
+PRACTIONIST agents. It also supports the detection and the
+resolution of conﬂicts among agents’ objectives and activi ties.
+This results in a reduction of the gap between BDI theories
+and several available implementations.
+193
+Fig. 5. TWPA’s goal model.
+We also described how goals and relations are used by
+PRACTIONIST agents during their deliberation process and
+theexecutionoftheiractivities; particularlyit isdescr ibedhow
+agents manages these activities by using the support for the
+goal model shown in the previous sections.
+It should be noted that, unlike several BDI and non-BDI
+agent platforms, the PRACTIONIST framework supports the
+declarative deﬁnition of goals and the relations among them ,
+as described in this paper. This provides the ability to believe
+if goals are impossible, already achieved, incompatible wi th
+othergoals, andso forth.Thisin turn supportsthe commitment
+strategies of agents and their ability to autonomously drop,
+reconsider, replace or pursue intentions related to active goals.
+The ability of PRACTIONIST agents to reason about goals
+and the relations among them (as described in section IV)
+lets programmers implicitly specify several behaviours fo r
+several circumstances, without having to explicitly code s uch
+behaviours, letting agents ﬁgure out the right activity to
+perform on the basis of the current state and the relations
+among its potential objectives.
+Goals can be adopted throughout the whole development
+process. Thus, we are deﬁning a development methodology
+where goals play a central role and maintain the same seman-
+tics from early requirements to the implementation phase.
+As a part of our future strategy, we aims at extending the
+proposed model with further properties of goals and relatio ns
+among them. Finally, we aim at applying the concepts and
+the model described in this paper in the development of
+real-world applications based on BDI agents.
+Acknowledgments. This work is partially supported by
+the Italian Ministry of Education, University and Research
+(MIUR) through the project PASAF.
+REFERENCES
+[1] A. Lapouchnian, S. Liaskos, J. Mylopolous, and Y. Yu, “To wards
+requirements-driven autonomic systems design,” Proceedings of the2005 workshop on Design and evolution of autonomic applicat ion
+software, pp. 1–7, 2005, aCM Press, New York, NY, USA.
+[2] A. S. Rao and M. P. Georgeff, “BDI agents: from theory to pr actice,”
+inProceedings of the First International Conference on Multi —Agent
+Systems. San Francisco, CA: MIT Press, 1995, pp. 312–319. [Online].
+Available: http://www.uni-koblenz.de/ ˜fruit/LITERATURE/rg95.ps.gz
+[3] M. E. Bratman, Intention, Plans, and Practical Reason . Cambridge,
+MA: Harvard University Press, 1987.
+[4] M. Winikoff, L. Padgham, J. Harland, and J. Thangarajah, “Declarative
+& procedural goals in intelligent agent systems,” in KR, 2002, pp. 470–
+481.
+[5] P. Busetta, R. Rnnquist, A. Hodgson, and A. Lucas, “Jack i ntelligent
+agents - components for intelligent agents in java,” 1999.
+[6] M.J. Huber, “Jam: A bdi-theoretic mobile agent architec ture.” inAgents,
+1999, pp. 236–243.
+[7] A. S. Rao, “AgentSpeak(L): BDI agents speak out in a
+logical computable language,” in Seventh European Workshop on
+Modelling Autonomous Agents in a Multi-Agent World , R. van
+Hoe, Ed., Eindhoven, The Netherlands, 1996. [Online]. Avai lable:
+citeseer.ist.psu.edu/article/rao96agentspeakl.html
+[8] K. V. Hindriks, F. S. D. Boer, H. W. van der, and J. J. Meyer,
+“Agent programming in 3APL,” Autonomous Agents and Multi-Agent
+Systems, vol. 2, no. 4, pp. 357–401, 1999, publisher: Kluwer Academi c
+Publishers, Netherlands.
+[9] L. Braubach, A. Pokahr, W. Lamersdorf, and D. Moldt, “Goa l repre-
+sentation for bdi agent systems,” in Second International Workshop on
+Programming Multiagent Systems: Languages and Tools , 7 2004, pp.
+9–20.
+[10] V. Morreale, S. Bonura, G. Francaviglia, M. Cossentino , and S. Gaglio,
+“Practionist: a new framework for bdi agents,” in Proceedings of the
+Third European Workshop on Multi-Agent Systems (EUMAS’05) , 2005,
+p. 236.
+[11] F. Bellifemine, A. Poggi, and G. Rimassa, “JADE - a FIPA-
+compliant agent framework,” in Proceedings of the Practical
+Applications of Intelligent Agents , 1999. [Online]. Available:
+http://jmvidal.cse.sc.edu/library/jade.pdf
+[12] B. F. Chellas, Modal Logic: An Introduction . Cambridge: Cambridge
+University Press, 1980.
+[13] A. S. Rao and M. P. Georgeff, “Modeling rational agents w ithin a
+BDI-architecture,” in Proceedings of the 2nd International Conference
+on Principles of Knowledge Representation and Reasoning . Morgan
+Kaufmann publishers Inc.: San Mateo, CA, USA, 1991, pp. 473– 484.
+[Online]. Available: http://citeseer.nj.nec.com/rao91 modeling.html
+[14] M. E. Pollack and M. Ringuette, “Introducing the tilewo rld: Experimen-
+tally evaluating agent architectures,” National Conference on Artiﬁcial
+Intelligence , pp. 183 – 189, 1990.
+194

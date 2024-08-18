@@ -1,0 +1,264 @@
+Transductive Learning: Motivation, Model,
+Algorithms
+Olivier Bousquet
+Centre de Math´ ematiques Appliqu´ ees
+Ecole Polytechnique, FRANCE
+olivier.bousquet@m4x.org
+University of New Mexico, January 2002
+2Goal
+•Provide motivation/potential applications
+•Sketch algorithmic issues
+•Sketch theoretical problems
+O. Bousquet: Transduction UNM, January 2002
+3Overview
+→Induction vs Transduction
+•Algorithms
+•Formalization
+•Open issues
+O. Bousquet: Transduction UNM, January 2002
+4The learning problem
+Induction
+We consider a phenomenon fthat maps inputs ( instances )xto outputs ( labels )
+y=f(x) (here y∈ {− 1,1})
+•Given a set of example pairs ( training set ){(xi, yi) :i= 1, . . . , n },
+•the goal is to recover f
+→This will allow to predict the label yn+1of a previously unseen instance
+xn+1.
+Example: Face recognition
+Train on pictures of a person and recognize him/her the next day
+O. Bousquet: Transduction UNM, January 2002
+5Shortcomings
+But there are situations in which
+•Obtaining labels is expensive
+•Obtaining instances is cheap
+•We know in advance the instances to be classiﬁed
+•We do not care about the classiﬁcation function
+→Transduction applies
+O. Bousquet: Transduction UNM, January 2002
+6Examples
+Information retrieval
+Information retrieval with relevance feedback
+•User enters a query
+•Machine returns sample documents
+•User labels the documents (relevant/non-relevant)
+•Machine selects most relevant documents from database
+Relevance
+•Obtaining labels requires work from the user
+•Obtaining documents is automatic (from database)
+•Instances to be classiﬁed: documents of the database
+•No need to know the classiﬁcation function (changes for each query)
+O. Bousquet: Transduction UNM, January 2002
+7The learning problem
+Transduction
+We consider a phenomenon fthat maps inputs ( instances )xto outputs ( labels )
+y=f(x) (here y∈ {− 1,1})
+•Given a set of labeled examples {(xi, yi) :i= 1, . . . , n },
+•and a set of unlabeled examples x/prime
+1, . . . , x/prime
+m
+•the goal is to ﬁnd the labels y/prime
+1, . . . , y/prime
+m
+→No need to construct a function f, the output of the transduction algorithm
+is a vector of labels.
+→Transfer the information from labeled examples to unlabeled.
+O. Bousquet: Transduction UNM, January 2002
+8Using Transduction for Prediction
+Given training data and data to be classiﬁed, one can either
+•Use induction: build ˆfand classify the data with it
+•Use transduction directly for classifying data
+Even in an inductive setting, one can use transduction.
+Example: News ﬁltering
+•First day user classiﬁes news according to interest
+•Subsequent days, machine classiﬁes incoming news based on ﬁrst day labels
+→Train on the ﬂy, when receiving the data to be classiﬁed
+Retrain the machine every day
+→Maximally use the information and tune the result to the news of the day
+O. Bousquet: Transduction UNM, January 2002
+9Three Learning Tasks
+•Induction: {(xi, yi) :i= 1, . . . , n } /mapsto→f
+•Induction with unlabeled data: {(xi, yi) :i= 1, . . . , n }∪{x/prime
+1, . . . , x/prime
+m} /mapsto→f
+•Transduction: {(xi, yi) :i= 1, . . . , n } ∪ { x/prime
+1, . . . , x/prime
+m} /mapsto→ (y/prime
+1, . . . , y/prime
+m).
+The choice will depend on
+•Availability of unlabeled data
+•Need for interpretability
+•Time considerations
+O. Bousquet: Transduction UNM, January 2002
+10Overview
+•Induction vs Transduction
+→Algorithms
+•Formalization
+•Open issues
+O. Bousquet: Transduction UNM, January 2002
+11Algorithms
+Linear classiﬁcation
+Instances represented in Rd.
+Find a linear separation.
+O. Bousquet: Transduction UNM, January 2002
+12Algorithms
+Large margin classiﬁcation
+Margin = distance from the hyperplane to the closest point
+Maximize the margin →leads to ’robust’ solution
+→Support Vector Machines
+O. Bousquet: Transduction UNM, January 2002
+13Transduction
+•Assumption: separated classes
+•Maximize the margin on unlabeled instances.
+O. Bousquet: Transduction UNM, January 2002
+14Transduction
+Implementation
+Goal: Maximize the margin on all examples
+Algorithmic issues
+•no unlabeled data →quadratic optimization ( n3)
+•unlabeled data →combinatorial problem (NP)
+→Need heuristics
+→Greedy optimization
+O. Bousquet: Transduction UNM, January 2002
+15Algorithms
+Greedy
+•Only the examples in the margin have an inﬂuence
+•Label the ones with largest conﬁdence (largest margin)
+→May add backtracking
+O. Bousquet: Transduction UNM, January 2002
+16Comments
+•Inﬂuenced by starting point (induction)
+•Not fully transductive because builds an ˆf
+•Assumption that data is separated
+→Can we make the data separated ?
+O. Bousquet: Transduction UNM, January 2002
+17Kernel Machines
+Support Vector Machines
+•Map data into a feature space
+x∈ X → Φ(x)∈ F
+•Perform maximal margin classiﬁcation in feature space
+Kernel trick
+•Algorithm can be implemented by computing inner products
+Φ(x)·Φ(x/prime) =k(x,x/prime)
+•Simply choose a kernel and run the linear algorithm on the matrix
+K= (k(xi,xj))i,j∈{1,...,n}
+→kis a measure of similarity. Algorithm works on similarity matrix.
+O. Bousquet: Transduction UNM, January 2002
+18Alignment
+•Choice of Kernel = choice of feature space
+•Ideal kernel = feature space contains label
+•Ideal kernel matrix
+kI(xi,xj) =yiyj
+Measure distance from ideal kernel: Alignment
+A(K) =/summationdisplay
+i,jKijyiyj
+Measures the data separation:
+A(K) =/summationdisplay
+yi=yik(xi,xj)−/summationdisplay
+yi/negationslash=yjk(xi,xj)
+O. Bousquet: Transduction UNM, January 2002
+19Transduction as Optimization
+•Maximize alignment on the labeled data
+•Corresponds to maximizing data separation
+•Diagonalize, ﬁx eigenvectors, optimize eigenvalues
+K(labeled)
+K(unlabeled)Y(labeled)1
+1−1−11Align
+O. Bousquet: Transduction UNM, January 2002
+20Overview
+•Induction vs Transduction
+•Algorithms
+→Formalization
+•Open issues
+O. Bousquet: Transduction UNM, January 2002
+21Formalization
+•Data is ﬁxed
+x1, . . . , x n+m∈ X
+y1, . . . , y n+m∈ {− 1,1}
+•Oracle (teacher) chooses randomly a subset
+I⊂ {1, . . . , n +m}
+•Input to algorithm
+x1, . . . , x n+m
+I
+(yi)i∈I
+•Output of algorithm
+(ˆyi)i∈{1,...,n+m}
+O. Bousquet: Transduction UNM, January 2002
+22Formalization
+Random choice of I
+Randomness models
+•Fixed size
+Choose nexamples among n+mwith uniform probability for every choice,/parenleftbign+m
+n/parenrightbig−1.|I|=n.
+•Variable size
+For each i∈ {1, . . . , n +m}choose independently with probabilityn
+n+mto
+include it.
+→E[|I|] =n.
+→We want to make statements that hold with high probability over the random
+choice of I.
+O. Bousquet: Transduction UNM, January 2002
+23Formalization
+Risk
+Recall output ˆy=ˆy1, . . . , ˆyn+m.
+ˆyis an n+mdimensional vector in {−1,1}n+m.
+•Test error
+R(¯I,y) =1
+|¯I|/summationdisplay
+i∈¯II{ˆyi/negationslash=yi}
+•Cannot be computed: need to estimate it from the data
+O. Bousquet: Transduction UNM, January 2002
+24Formalization
+Error bounds
+We estimate the test error by the empirical error
+R(I,ˆy)
+We want to prove
+PI/bracketleftbig
+R(¯I,ˆy)−R(I,ˆy)> /epsilon1/bracketrightbig
+≤δ
+Choose a set of vectors Y ⊂ {− 1,1}n+m. We want to bound
+PI/bracketleftBigg
+sup
+y∈YR(¯I,y)−R(I,y)> /epsilon1/bracketrightBigg
+O. Bousquet: Transduction UNM, January 2002
+25Results
+When n=m,
+R(¯I,y)≤R(I,y) +KC(Y) +O/parenleftbigg1√n/parenrightbigg
+Where CRademacher complexity ofY.
+When m > n ,
+R(¯I,y)≤R(I,y) +K¯C(Y2n) +O/parenleftbigg1√n/parenrightbigg
+where ¯C(Y2n) is the average Rademacher complexity computed on subsets of
+size 2 nof the data.
+→Complexity can be computed from xionly. Labels don’t play any role !
+O. Bousquet: Transduction UNM, January 2002
+26Overview
+•Induction vs Transduction
+•Algorithms
+•Formalization
+→Open issues
+O. Bousquet: Transduction UNM, January 2002
+27Comparison
+Model Selection
+Induction
+•Deﬁne a structure without any data
+•Compute empirical complexity
+Transduction
+•Deﬁne a structure with all the xi
+•Know exact complexity of this structure
+→Data-dependent classes.
+→Justiﬁes the margin approach.
+O. Bousquet: Transduction UNM, January 2002
+28Open Problems
+•Analyze alignement algorithm in that framework
+•Provide model selection methods
+•Provide Rademacher estimates
+•Prove that unlabeled data really help
+O. Bousquet: Transduction UNM, January 2002
+29Conclusion
+•Diﬀerent framework with potentially interesting applications
+•Very few people studied it: a lot remains to be done
+•Challenges
+–Good empirical evidence →justiﬁcation ?
+–Algorithmic →make transduction eﬃcient
+–Theoretical →provide guarantees
+O. Bousquet: Transduction UNM, January 2002

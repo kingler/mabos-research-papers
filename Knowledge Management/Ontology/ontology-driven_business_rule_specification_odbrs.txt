@@ -1,0 +1,678 @@
+See discussions, st ats, and author pr ofiles f or this public ation at : https://www .researchgate.ne t/public ation/269540203
+Ontology-Driven Business Rule Speciﬁcation
+Article    in  Journal of Inf ormation Syst ems  · June 2013
+DOI: 10.2308/ isys -50428
+CITATIONS
+8READS
+86
+2 author s:
+Some o f the author s of this public ation ar e also w orking on these r elat ed pr ojects:
+Process of Pr ocess Modeling  View pr oject
+Recommendation-b ased Conc eptual Modelling and an Ont olog y Ev olution F rame work (CMOE+)  View pr oject
+Frederik Gailly
+Ghent Univ ersity
+78 PUBLICA TIONS    564 CITATIONS    
+SEE PROFILE
+Guido Geerts
+Univ ersity of Delaw are
+33 PUBLICA TIONS    976 CITATIONS    
+SEE PROFILE
+All c ontent f ollo wing this p age was uplo aded b y Frederik Gailly  on 09 July 2015.
+The user has r equest ed enhanc ement of the do wnlo aded file.
+JOURNAL OF INFORMATION SYSTEMS American Accounting Association
+Vol. 27, No. 1 DOI: 10.2308/isys-50428
+Spring 2013
+pp. 79–104
+Ontology-Driven Business Rule Speciﬁcation
+Frederik Gailly
+Ghent University
+Guido L. Geerts
+University of Delaware
+ABSTRACT: Discovering business rules is a complex task for which many approaches
+have been proposed including analysis, extraction from code, and data mining. In this
+paper, a novel approach is presented in which business rules for an enterprise model are
+generated based on the semantics of a domain ontology. Starting from an enterprise
+model for which the business rules need to be defined, the approach consists of foursteps: (1) classification of the enterprise model in terms of the domain ontology
+(semantic annotation), (2) matching of the enterprise model constructs with ontology-
+based Enterprise Model Configurations (EMCs), (3) determination of Business RulePatterns (BRPs) associated with the EMCs, and (4) use of the semantic annotations to
+instantiate the business rule patterns; that is, to specify the actual business rules. The
+success of this approach depends on two factors: (1) the existence of a semantically richdomain ontology, and (2) the strength of the knowledge base consisting of EMC-BRP
+associations. The focus of this paper is on defining and illustrating the new business rule
+discovery approach: Ontology-Driven Business Rule Specification (ODBRS). Thedomain of interest is enterprise systems, and an extended version of the Resource-
+Event-Agent Enterprise Ontology (REA-EO) is used as the domain ontology. A small set
+of EMC-BRP associations—i.e., an example knowledge base—is developed for
+illustration purposes. The new approach is demonstrated with an example.
+Keywords: business rule discovery and speciﬁcation; enterprise ontologies; REA-EO.
+I. INTRODUCTION
+Business rules are an integral part of enterprise systems and are deﬁned by the Business
+Rules Group (2000, 4) as ‘‘statements that deﬁne or constrain some aspect of the
+business. ’’Integrating business rules in enterprise systems encompasses a wide range of
+activities including discovery, speciﬁcation, and implementation. The focus in this article is on
+discovery and speciﬁcation, tasks that are typically executed by business professionals, not ITprofessionals. Several business rule discovery methods have been proposed throughout the years,including (1) discovery methods originate in requirements engineering (Von Halle 2002; Kardasis
+The authors acknowledge the helpful comments of Julie Smith David, the editor, two anonymous reviewers, and the
+participants of the 6th International Workshop on Value Modeling and Business Ontology.
+Editor’s note: Accepted by Miklos A. Vasarhelyi.
+Published Online: February 2013
+79
+and Loucopoulos 2004), (2) extraction of business rules from existing code (Wang et al. 2004), (3)
+data mining (Rosca et al. 2002), and (4) model-driven discovery methods (Bajec and Krisper 2005;
+Xue and Feng 2006). None of these methods can discover all business rules, and their combined
+use is recommended (Xue and Feng 2006). In this paper, a novel approach for discovering and
+specifying business rules is presented: Ontology-Driven Business Rule Speciﬁcation (ODBRS).
+This approach complements the existing methods, and its application should result in a morecomplete set of business rules. The domain orientation should also make it easy for business
+professionals to understand.
+An ontology is an ‘‘explicit speciﬁcation of a shared conceptualization ’’(Gruber 1993, 199).
+Common applications of ontologies include support of communication, software development, and
+systems integration (Gruninger and Lee 2002). The use of enterprise ontologies, a conceptualspeciﬁcation that shows the ‘‘essence of the operation of an enterprise ’’(Dietz 2006, 8), has been
+discussed at length in McCarthy (1982), Fox (1992), Uschold et al. (1998), Geerts and McCarthy(2000), Gordijn and Akkermans (2001), Dietz (2006), and Hruby et al. (2006). Although any
+enterprise ontology could have been considered for the approach presented in this paper, the
+Resource-Event-Agent Enterprise Ontology (REA-EO) (McCarthy 1982; Geerts and McCarthy
+2000; Hruby et al. 2006) was chosen for the following three reasons: (1) the authors’ familiaritywith the REA-EO, (2) it is the dominant enterprise ontology in the Accounting Information Systems
+(AIS) literature, and (3) it has been formally deﬁned, which facilitates semi-automatic discovery
+and speciﬁcation of business rules (Gailly et al. 2008). Work by McCarthy (1982), Geerts andMcCarthy (2000), Hruby et al. (2006), and Dunn (2012) is referred to for a more in-depth
+discussion of the REA-EO.
+The research contribution of this paper can be summarized as follows. The REA-EO is a
+domain ontology that can be used to express a wide range of enterprise phenomena (Hruby et al.2006). The novel idea is that REA-EO Enterprise Model Conﬁgurations (EMCs)—i.e.,
+stereotypical patterns of economic phenomena deﬁned in terms of the REA-EO—imply businessrules. Identifying Business Rule Patterns (BRPs) and deﬁning them in terms of EMCs represents
+the ODBRS discovery process and is a knowledge-creating activity. Once identiﬁed, BRPs can then
+be used for generating business rule speciﬁcations (BRs) as part of actual enterprise models. Aunique characteristic of ontology-based BRPs is that they are applicable across business processes
+and business organizations.
+The remainder of the paper is organized as follows. Section II describes the paper’s
+contribution from a design science perspective. Section III presents the proposed business rule
+discovery and speciﬁcation approach. Sections IV and V discuss the two supporting artifacts: theextended REA-EO vocabulary and the knowledge speciﬁcations. Section VI demonstrates ODBRS.
+A set of business rules (output) is generated starting from an example enterprise model (input). The
+paper ends with conclusions and further research directions.
+II. RESEARCH METHOD
+Following the Design Science Research Methodology (DSRM) (Peffers et al. 2008; Geerts
+2011), the research contribution of this paper is now deﬁned more formally. The ﬁrst step in theDSRM requests identiﬁcation of the problem and motivation for the research. An in-depth literaturereview indicates that discovering and specifying business rules are challenging tasks (Von Halle
+2002; Xue and Feng 2006), and different approaches have been proposed throughout the years
+including analysis, extraction from code, data mining, and model-driven discovery. Given thecomplexity of the task, these methods are complementary and current practice could beneﬁt from
+improving existing approaches or from adding new ones.80 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+The second step in the DSRM requests the deﬁnition of the objectives of a solution. The overall
+objective is to effectively determine relevant business rules. A unique objective for the approach
+presented in this paper is to discover, specify, and rely on BRPs that can be applied across businessprocesses and business organizations. Further, the BRPs provide a vehicle that enables bestpractices to be applied to business rule speciﬁcation.
+The third step in the DSRM focuses on the actual design of the artifact. The main artifact
+presented in this paper is ODBRS as a novel approach to discovering and specifying business rules
+in which business rules are derived from ontological speciﬁcations. This is a method in terms of theframework presented by March and Smith (1995, 257): ‘‘a set of steps used to perform a task. ’’Two
+supporting artifacts are an integral part of the operationalization of ODBRS. The ﬁrst supportingartifact is an extended REA-EO vocabulary for deﬁning semantic annotations, EMCs, and BRPs.Extensions required for ODBRS include association ends and role declarations. The second
+supporting artifact is the ODBRS knowledge base consisting of EMCs, BRPs, and the associations
+between them. Although an in-depth discussion of the design of such a knowledge base is beyondthe scope of this paper, a small set of knowledge speciﬁcations will be created for illustrationpurposes.
+The fourth step of the DSRM requests a demonstration of the novel artifact. ODBRS is
+demonstrated by applying its steps to an example enterprise model (input). The result is a set offully integrated business rule speciﬁcations (output).
+The ﬁfth step of the DSRM focuses on evaluation: ‘‘Observe and measure how well the artifact
+supports a solution to the problem ’’(Peffers et al. 2008, 56). Important measures for the ODBRS
+include its efﬁcacy and the relevance of the business rules generated. Moreover, whether theproposed method complements other approaches, i.e., whether it results in a more complete set of
+business rules, should be evaluated. As pointed out by Vaishnavi and Kuechler (2007) and Geerts
+(2011), evaluating an artifact requires a different skill set, and this part is left for future research.
+III. ONTOLOGY-DRIVEN BUSINESS RULE SPECIFICATION
+The focus of this paper is on ODBRS as an alternative approach for discovering and specifying
+business rules. Figure 1 portrays the four steps in ODBRS, and each one is brieﬂy discussed.
+(1) Classiﬁcation: Semantic annotations are used to classify the economic phenomena in the
+enterprise model in terms of the REA-EO.
+(2) Matching: Using the REA-EO semantic annotations, the constructs in the enterprise model
+are matched against the EMCs with the latter representing stereotypical, ontology-based
+deﬁnitions of economic phenomena.
+(3) Association: The BRPs associated with the matching EMCs (Step 2) are identiﬁed.
+(4) Instantiation: Business rule speciﬁcations are generated from the BRPs by replacing the
+ontological terms in the BRPs—which act as variables—with enterprise model elements.
+Figure 1 not only portrays the four steps of ODBRS, but also illustrates the following. First, the
+business rule speciﬁcations depend on structural speciﬁcations (Ross 2003), and this dependency is
+illustrated in Figure 1 by the associations between ‘‘Business Rules ’’(left side) and ‘‘Structure ’’
+(right side). BRPs are deﬁned in terms of EMCs while BRs are deﬁned in terms of enterprise model
+constructs. Second, in Figure 1 the actual business rule speciﬁcations integrated with the enterprise
+model (upper part) are clearly separated from the knowledge base speciﬁcations that are used togenerate the business rule speciﬁcations (lower part). The knowledge base consists of EMCs, BRPs,and the associations between them. Third, in Figure 1 the importance of the enterprise ontology isemphasized as a vocabulary for deﬁning the semantic annotations, EMCs, and BRPs.Ontology-Driven Business Rule Speciﬁcation 81
+Journal of Information Systems
+Spring 2013
+
+Although the focus of this paper is on ODBRS as an alternative business rule discovery and
+speciﬁcation approach, the design of two supporting artifacts also needs to be discussed: (1) the
+extended REA-EO vocabulary that enables the knowledge speciﬁcations, and (2) the knowledge
+base itself, which is portrayed in the lower part of Figure 1.
+IV. REA-EO VOCABULARY FOR ODBRS
+As shown in Figure 1, the enterprise ontology—i.e., the REA-EO—is used as a vocabulary for
+deﬁning semantic annotations, EMCs, and BRPs. The deﬁnition of REA-EO based BRPs requires a
+vocabulary1that consists of the following four elements: (1) REA-EO object primitives, (2)
+REA-EO association primitives, (3) REA-EO association ends, and (4) REA-EO role declarations.Association ends and role declarations are typically not considered an integral part of the REA-EOvocabulary, and their role in ODBRS needs more explanation.
+Association ends are instrumental for path navigation in the context of business rule
+speciﬁcation. Therefore, association end deﬁnitions are considered for all REA-EO associationprimitives. Each association end is given a unique name. Role declarations assign a stereotypical,
+domain-speciﬁc role to attributes (Geerts and McCarthy 2006) and are important for generalizingFIGURE 1
+The ODBRS Approach
+1All elements of the REA-EO vocabulary are presented in camel case notation.82 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+business rule speciﬁcations that rely on attribute values. Role declarations can be part of a class or
+an association class (Geerts and McCarthy 2006).
+Table 1 shows the REA-EO vocabulary used in this paper. The ﬁrst column lists the
+ontological primitives (i.e., the vocabulary), the second column deﬁnes each one, and the third
+column provides the source of the deﬁnition. New ontological primitives created for ODBRS are
+indicated by ‘‘This paper ’’in the third column.
+The vocabulary in Table 1 is a subset and an extension of the REA-EO vocabulary presented
+by McCarthy (1982), Geerts and McCarthy (2000), Hruby et al. (2006), and the International
+Organization for Standardization (ISO 2006). To keep things simple, the vocabulary is limited to
+the subset of the REA-EO vocabulary needed to illustrate ODBRS in this paper. For example,
+REA-EO primitives such as linkage, description, and grouping are not included. All extensions are
+association ends and role declarations with the exception of the Involvement and Return associationprimitives. The Speciﬁcation association primitive deﬁnes the types of economic resources
+involved in a commitment (ISO 2006). To our knowledge, a similar association that deﬁnes the
+types of economic resources involved in an economic event is missing from the REA-EO. As
+shown in Table 1, the Involvement association primitive is added to the REA-EO vocabulary to
+address this issue. Return is a speciﬁc type of StockFlow association describing the reversing of a
+previous StockFlow and has its own behavior and constraints.
+V. ODBRS KNOWLEDGE BASE
+As indicated in Figure 1, the ODBRS knowledge base consists of EMCs, BRPs, and the
+associations between them. To illustrate the role of the knowledge base as part of ODBRS in the
+‘‘ODBRS Demonstration ’’section, a small set of knowledge speciﬁcations is developed in this
+section. The discussion starts from the BRPs, and the following are addressed for each one: (1) theconstraint being supported, (2) the EMCs to which the BRP applies, and (3) a formal deﬁnition of
+the corresponding Business Rule Pattern Speciﬁcations (BRPSs).
+The notation used for the representations of the EMCs is the Uniﬁed Modeling Language
+(UML) (Object Management Group 2007). More speciﬁcally, the following UML class diagram
+elements are used: class, association, association class, association end, attribute, and multiplicities.
+To keep things simple, other modeling constructs such as subtyping are ignored. UML was chosen
+because of its widespread use and the fact that UML provides mechanisms to graphically illustrate
+ODBRS such as stereotypes. Other conceptual modeling grammars such as Object Role Modeling
+(ORM) could have been used as well. BRPSs are deﬁned as Object Constraint Language (OCL)
+invariants (Warmer and Kleppe 2003). OCL was chosen because of its widespread use, but other
+business rules representation languages such as Semantics of Business Vocabulary and Business
+Rules (SBVR) could have been used as well. The developed BRPSs must be interpreted at the
+instance level; that is, the actual business rules generated from the BRPSs are used to validateinstances of an enterprise model.
+Business Rule Pattern 1 (BRP1)
+2
+Commitments Should Not Be Preceded by Their Fulﬁllment Economic Events
+An REA-EO fulﬁllment association is sequential and implies the following constraint: ‘‘when a
+commitment and an economic event are associated through a fulﬁllment association then the
+economic event should not precede the commitment. ’’This is different from saying that a
+2The relevance of the BRP, BRPS, and EMC numbers is limited to this paper.Ontology-Driven Business Rule Speciﬁcation 83
+Journal of Information Systems
+Spring 2013
+
+TABLE 1
+REA-EO Vocabulary
+Ontological Primitives Deﬁnition Source
+Object Primitives
+Commitment Agreement to execute an economic
+event in a well-deﬁned future that will
+result in an increase in resources or a
+decrease in resources.Ijiri 1975; Geerts and
+McCarthy 2000
+EconomicAgent Persons and agencies who participate in
+(outside) and are accountable for
+(inside) the economic events andcommitments of the enterprise.McCarthy 1982; Geerts
+and McCarthy 2000
+EconomicEvent A class of phenomena that reﬂects
+changes in scarce means (economicresources) resulting from production,
+exchange, consumption, and
+distribution.Yu 1976; McCarthy 1982
+EconomicResource Objects that (1) are scarce and have
+utility, and (2) are under the controlof an enterprise.Ijiri 1975; McCarthy
+1982
+EconomicResourceType Describes types of economic resources. Geerts and McCarthy
+2006
+Association Primitives
+Duality An association between an economic
+event that results in an increase in theresource set of the enterprise and acorresponding economic event that
+results in a decrease.Ijiri 1975; McCarthy
+1982
+Fulﬁllment An association between a commitment
+and an economic event describing
+how the economic event fulﬁlls the
+commitment.Geerts and McCarthy
+2000
+Involvement An association between an economic
+resource type and an economic eventdescribing the increment
+aor
+decrement in the economic resource
+type.This paper
+Participation An association between an economic
+event and the outside economic agent
+involved in the economic event.McCarthy 1982; Geerts
+and McCarthy 2000
+Reservation An association between an individually
+traced economic resource and a
+commitment describing the agreed-upon inﬂow or outﬂow of theeconomic resource.Geerts and McCarthy
+2000
+(continued on next page)84 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+TABLE 1 (continued)
+Ontological Primitives Deﬁnition Source
+Return An association between an individually
+traced economic resource and an
+economic event describing a reversestockﬂow: an inﬂow reversing a
+previous outﬂow or an outﬂow
+reversing a previous inﬂow.This paper
+Speciﬁcation An association between an economic
+resource type and a commitment
+describing the agreed-upon incrementor decrement in the economicresource type.ISO 2006
+StockFlow An association between an individually
+traced economic resource and an
+economic event describing the inﬂow
+or outﬂow of the economic resourceas a result of the economic event.McCarthy 1982
+Typiﬁcation An association linking instances of an
+object class (e.g., individually tracedeconomic resources) to concepts (e.g.,
+economic resource types) of which
+they are concrete realizations.Geerts and McCarthy
+2006
+Association Ends
+b
+DualityEconomicEventIn/OutcRefers to an inﬂow/outﬂow economic
+event that is the dual of an outﬂow/
+inﬂow economic event as described
+by the duality association.This paper
+FulﬁllmentCommitment Refers to a commitment being fulﬁlled
+by an economic event as described by
+the fulﬁllment association.This paper
+FulﬁllmentEconomicEvent Refers to an economic event fulﬁlling a
+commitment as described by the
+fulﬁllment association.This paper
+InvolvementInc/DecEconomicEvent Refers to an economic event that results
+in an increment/decrement of aneconomic resource type as described
+by the involvement association.This paper
+ParticipationEconomicAgent Refers to the involvement of an
+(outside) economic agent in an
+economic event as described by theparticipation association.This paper
+ReservationEconomicResource Refers to an economic resource
+committed to as described by thereservation association.This paper
+ReturnIn/OutEconomicEvent Refers to an economic event that results
+in a reverse inﬂow/outﬂow of aneconomic resource as described by
+the return association.This paper
+(continued on next page)Ontology-Driven Business Rule Speciﬁcation 85
+Journal of Information Systems
+Spring 2013
+
+commitment can occur without an economic event or that an economic event can occur without a
+commitment; both are business rules that can be expressed with multiplicities.
+The EMC for BRP1 is shown in Figure 2. An EMC represents a unique combination of
+domain-speciﬁc elements, in this particular case, a fulﬁllment association between a commitment
+and an economic event combined with two Time role declarations. A fulﬁllment association withoutthe Time role declarations would be considered a different EMC.
+FIGURE 2
+EMC1TABLE 1 (continued)
+Ontological Primitives Deﬁnition Source
+SpeciﬁcationEconomicResourceType Refers to an economic resource type
+committed to as described by the
+speciﬁcation association.This paper
+StockFlowIn/OutEconomicEvent Refers to an economic event that results
+in an inﬂow/outﬂow of an economic
+resource as described by the
+stockﬂow association.This paper
+StockFlowEconomicResource Refers to an economic resource affected
+by an economic event as described by
+the stockﬂow association.This paper
+TypiﬁcationEconomicResourceType Refers to an economic resource type that
+applies to a speciﬁc economic
+resource as described by thetypiﬁcation association.This paper
+Role Declarations
+Price The amount of money given or set as
+consideration for the exchange of a
+resource.This paper
+Quantity Number of resources in storage,
+committed to, or exchanged.This paper
+Time The speciﬁc point in time at which
+either a commitment is being made oran economic event occurs.This paper
+aWe use inﬂow/outﬂow for individually traced resources and increment/decrement for resource types.
+bOnly the association ends needed for navigation in the BRP deﬁnitions discussed in the ‘‘ODBRS Knowledge Base ’’
+section are included.
+cTo save space, inﬂow(In)/increment(Inc) and outﬂow(Out)/decrement(Dec) association ends are described in one entry.86 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+BRPS1—i.e., the formal speciﬁcation of BRP1—is shown in Table 2. The syntax used is a
+combination of OCL and the REA-EO vocabulary. The latter represents the variables that need to
+be substituted by actual enterprise model elements when ontology-driven business rule
+speciﬁcations are generated. Commitment is an object primitive, FulﬁllmentEconomicEvent is an
+association end, and Time is a role declaration. Regarding economic events, Time refers to the time
+of occurrence; regarding commitments, Time refers to when the commitment is being made.
+Multiplicities are not relevant for EMC1 since the BRPS assumes the more general case that a
+commitment can be fulﬁlled by multiple economic events.
+Business Rule Pattern 2 (BRP2)
+No Future Economic Events Are Recorded
+This rule implies that all economic events are recorded when they occur or after they have
+occurred. Similar to BRP1, an attribute with role declaration Time records the time of occurrence, for
+example, when the shipment of goods occurs. The EMC for BRP2 consists of the Economic Event
+class with a Time role declaration and is shown graphically in Figure 3. The formal speciﬁcation of
+BRP2 (i.e., BRPS2) is represented in Table 3. This BRP shows how a constraint can be speciﬁed for arole declaration that applies across business processes and business organizations.
+Business Rule Pattern 3 (BRP3)
+Prices Have a Positive Numeric Value
+This rule states that all attributes with a Price role declaration should have a positive numeric
+value. This is similar to a sign check (Romney and Steinbart 2012) applied to a role declaration as
+opposed to a speciﬁc attribute. This BRP is different from the two previous ones since it appliesTABLE 2
+BPRS1
+FIGURE 3
+EMC2Ontology-Driven Business Rule Speciﬁcation 87
+Journal of Information Systems
+Spring 2013
+
+to many different REA-EO object and associatio n primitives: EconomicResource (object),
+EconomicResourceType (object), Speciﬁcation (a ssociation), and Involvement (association).
+Thus, this is a case in which a BRP applies to sev eral EMCs (see Figure 4) and, therefore, there
+are several BRPSs for the same BRP. Formal speciﬁcations for all four BRPSs are shown in
+Table 4.TABLE 3
+BRPS2
+FIGURE 4
+EMC3, EMC4, EMC5, and EMC688 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+Business Rule Pattern 4 (BRP4)
+Only Existing Resources Can Participate in an Outﬂow/Decrement Economic Event
+There is a sequential relationship between REA-EO inﬂow/increment economic events and
+outﬂow/decrement economic events. Although resources can be considered at any time, they can be
+given up (outﬂow/decrement) only if they are available. Figure 5 shows that BRP4 applies to two
+different EMCs. EMC7, portrayed in the upper panel of Figure 5, reﬂects the situation in which theresources are individually traced. Following McCarthy (1982), the Economic Resource–Economic
+Event associations are labeled as being of REA-EO type StockFlow. Association ends are used to
+differentiate between inﬂows and outﬂows: StockFlowInEconomicEvent and StockFlowOutEco-nomicEvent.
+EMC8, portrayed in the lower panel of Figure 5, reﬂects the situation in which information is
+recorded for resource types only; that is, information regarding the physical transfer of the resourcesis summarized. Following the deﬁnitions in Table 1, the EMC8 associations are labeled as being of
+REA-EO type Involvement and are further differentiated as either increments (inc) or decrements
+(dec). BRPS40 and BRPS41 are speciﬁed in Table 5.
+Business Rule Pattern 5 (BRP5)
+Economic Resources Transferred Match the Economic Resources Committed To
+Again, there are two different EMCs to which BRP5 applies, and they are presented in Figure
+6. EMC9 represents the situation in which a speciﬁc, uniquely identiﬁed item is committed to. AsTABLE 4
+BRPS30, BRPS31, BRPS32, and BRPS33Ontology-Driven Business Rule Speciﬁcation 89
+Journal of Information Systems
+Spring 2013
+
+shown in the upper panel of Figure 6, this situation is expressed in REA-EO with a reservation
+association. An important validation rule for the scenario deﬁned by EMC9 is whether the resource
+being transferred is the resource committed to. Given that BRP5 holds for inﬂows and outﬂows, theReservationEconomicResource and StockFlowEconomicResource association ends are usedwithout further differentiation.
+EMC10 represents the situation in which a type is committed to. As shown in the lower panel
+of Figure 6, this situation is expressed in REA-EO with a speciﬁcation association. An importantvalidation rule for the scenario deﬁned by EMC10 is whether the resource being transferred is of thetype committed to. The two BRPSs are speciﬁed in Table 6.FIGURE 5
+EMC7 and EMC8
+TABLE 5
+BRPS40 and BRPS4190 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+Business Rule Pattern 6 (BRP6)
+The Number of Items Transferred Should Not Exceed the Number of Items Committed To
+An important characteristic of BRP6 is that multiplicities determine the speciﬁcations. Among
+others, this increases the number of different EMCs to deal with. Two of the possible EMCs are
+discussed. The ﬁrst one, EMC11, is represented in the upper panel of Figure 7 and is similar to EMC9
+but with speciﬁc multiplicity patterns added. The second one, EMC12, is represented in the lowerpanel of Figure 7 and is similar to EMC10 but, again, with speciﬁc multiplicity patterns added.
+EMC11 portrays a scenario in which (1) a commitment is fulﬁlled by one economic event and
+an economic event fulﬁlls one commitment only, and (2) economic resources are individuallytraced. An underscore indicates that the value of the multiplicity is irrelevant for the business rule
+speciﬁcation. Given that there is only one economic event for a commitment, in this scenario, the
+number of items transferred should be equal to the number of items committed to. Table 7 shows
+how this constraint (BRPS60) can be formally deﬁned using OCL.
+EMC12 portrays a more complex scenario that deals with (1) commitments deﬁned in terms of
+resource types—indicated by the REA-EO Speciﬁcation association, (2) a role declaration—
+Quantity—speciﬁed as part of the Speciﬁcation association class, and (3) partial fulﬁllments as
+deﬁned by the multiplicities for the Fulﬁllment association. An important business rule to be
+supported for this scenario is that the total number of resources of a speciﬁc type transferred cannotFIGURE 6
+EMC9 and EMC10Ontology-Driven Business Rule Speciﬁcation 91
+Journal of Information Systems
+Spring 2013
+
+exceed the number of committed resources for that type. The formal deﬁnition for this constraint is
+speciﬁed as BRPS61 in Table 7.
+Business Rule Pattern 7 (BRP7)
+Only Resources That Have Been Transferred Can Be Returned
+EMC13 in Figure 8 represents the stereotypical pattern for incoming returns for individually
+traced economic resources: a duality association connects a Return-inﬂow and a StockFlow-outﬂowin which the same economic resource is involved. Although the return nature of the inﬂow
+association in EMC13 is implied, the semantics are made more explicit by creating a Return
+association primitive. The additional semantics also improve the understanding of the formal
+speciﬁcation of BRP7, which is shown in Table 8.
+Business Rule Pattern 8 (BRP8)
+A Resource Can Be Returned (Inﬂow) Only by the Agent to Whom the Resource Was
+Transferred (Outﬂow)
+EMC14 in Figure 9 extends EMC13 with the economic agents involved in the returns. Now the
+constraint speciﬁes that an economic resource should be returned by the agent to whom the resource
+was transferred. Although multiplicities are not modeled in Figure 9, a more general case is assumedin which more than one (outside) economic agent can be involved in the same economic event. The
+rule then becomes that the agents returning the economic resource should be a subset of the agents to
+whom the resource was transferred. Table 9 formally deﬁnes this constraint using OCL.
+VI. ODBRS DEMONSTRATION
+In this section, ODBRS is demonstrated as an alternative business rule discovery method by
+applying the BRPSs deﬁned to an actual enterprise model. In terms of design science research, theTABLE 6
+BRPS50 and BRPS5192 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+discussion weaves design and demonstration. First, the role of enterprise models in ODBRS is
+explained. Following, each of the four steps indicated in Figure 1 are discussed in more detail:
+classiﬁcation, matching, association, and instantiation.
+Enterprise Models
+An enterprise model is a conceptual speciﬁcation that describes how a speciﬁc business entity
+operates and creates value. Business rules and enterprise models are strongly intertwined: ‘‘rules
+always build on facts and facts always build on terms ’’(Ross 2003, 270). ODBRS assumes that
+business rules are generated starting from an enterprise model that has already been deﬁned. Figure
+10 shows the enterprise model used as input for the example.3,4This model represents part of a
+revenue cycle, but the Delivery economic event is included to illustrate BRP4.
+Figure 11 visually portrays the ODBRS process step-by-step starting from a speciﬁc Enterprise
+Model Fragment (EMF). An EMF is any possible instantiation of a modeling grammar rangingFIGURE 7
+EMC11 and EMC12
+3To save space, the REA-EO semantic annotations are alr eady included. They should be ignored at this point.
+4In Figure 10, all inﬂows, outﬂows, inc rements, and decrements are explicitly deﬁned, even when the applicable
+rules, deﬁned in the ‘‘ODBRS Knowledge Base ’’section, do not require such differentiation (e.g., BRPS51).Ontology-Driven Business Rule Speciﬁcation 93
+Journal of Information Systems
+Spring 2013
+
+from a single construct—e.g., an entity such as Shipment—to the complete enterprise model.
+Obviously, the number of EMFs, even for a simple enterprise model such as the one in Figure 10, ishigh. More speciﬁcally, Figure 11 demonstrates how the business rule in Panel E (BR1) isgenerated from the EMF in Panel A by the application of ODBRS. A visual approach was chosensince it fully exposes the details of the ODBRS process.TABLE 7
+BRPS60 and BRPS61
+FIGURE 8
+EMC1394 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+Classiﬁcation
+Semantic annotations have become increasingly popular with the emergence of the ‘‘Semantic
+Web ’’(Berners-Lee et al. 2001). They give meaning to data and have been used in a wide variety of
+applications, including interchange (Park and Ram 2004; Vujasinovic et al. 2010; Cardoso and
+Bussler 2011) and reasoning (Sedbrook and Newmark 2008). In the AIS area, the use of semantic
+annotations is widespread. The prototypical example of semantically enriched accounting data isthe eXtensible Business Reporting Language (XBRL), which has been used for a wide range of
+applications (Bovee et al. 2005; Debreceny et al. 2009). In addition, numerous studies illustrate
+how to employ REA-EO semantic annotations for validation and information retrieval applications(Geerts 1993; Rockwell and McCarthy 1999; Geerts and McCarthy 2000). This is known as
+augmented intentional reasoning: ‘‘active use of conceptual structures augmented with the domain-
+speciﬁc REA structures imposed on top of the enterprise schema ’’(Geerts and McCarthy 2000,
+128). This technique is also used in this paper.
+For ODBRS, the semantic annotations give domain-speciﬁc meaning to an enterprise model.
+As shown in Panel B in Figure 11, UML stereotypes are used for adding semantic annotations: For
+example, Shipment is classiﬁed as an Economic Event, Order is classiﬁed as a Commitment, the
+association between the two is classiﬁed as an instantiation of the REA-EO Fulﬁllment primitive,TABLE 8
+BRPS7
+FIGURE 9
+EMC14Ontology-Driven Business Rule Speciﬁcation 95
+Journal of Information Systems
+Spring 2013
+
+the shipment association end is classiﬁed as an instance of FulﬁllmentEconomicEvent, and a Time
+role declaration is assigned to both date attributes.
+Figure 10 shows all semantic annotations for the example enterprise model, and they should be
+considered the result of the ﬁrst step of ODBRS: classiﬁcation. Obviously, the classiﬁcation process
+should be subject to validation. For example, a duality association should always be betweenTABLE 9
+BRPS8
+FIGURE 10
+Enterprise Model96 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+economic events with opposite ﬂows. Many studies have explored automated validation based on
+the explicit representation of REA-EO semantics, including work by Geerts (1993), Geerts et al.(1996), and Rockwell and McCarthy (1999).
+Matching
+During this step, EMFs are matched against EMCs. In Figure 11, the REA-EO annotated EMF
+in Panel B matches with—and thus is an instance of—the EMC represented in Panel C. In Figure
+12, ten EMFs are identiﬁed for the example enterprise model, and each one is linked to thematching EMC in Table 10.
+Next, two characteristics of the matching process are discussed in more detail. First, not all
+EMCs discussed occur in the third column of Table 10. Among others, this is because differentpractices and, thus, EMCs can be associated with the same situation, e.g., EMC7 (individually
+traced) versus EMC8 (recording of type-level resources).
+Second, Figure 13 deﬁnes a meta-model for the different ODBRS concepts: EMF, EMC, BRP,
+BRPS, and BR. Table 10 illustrates the ‘‘matches ’’association in the meta-model. There can be
+more than one EMF for an EMC. For example, EMC2 applies to all three Economic Events in the
+enterprise model in Figure 12 and, thus, to three EMFs: EMF2, EMF3, and EMF4. However, atmost one EMC can apply to an EMF.FIGURE 11
+Visual Illustration of ODBRSOntology-Driven Business Rule Speciﬁcation 97
+Journal of Information Systems
+Spring 2013
+
+Although visual matching helps with illustrating the ODBRS matching process, visual
+matching is feasible for very small examples only. Real-world matching would require help from
+automated tools. A prerequisite for automated support is the explicit representation of the semantic
+annotations and the semantics of the EMCs. The use of Prolog for such explicit representation andreasoning is discussed in Geerts (1993) and Geerts and McCarthy (2000). More recently, theintroduction of semantic web technologies has further improved the possibilities of representing and
+reasoning with such annotations.
+Association
+Several associations between EMCs and BRPs were discussed in the ‘‘ODBRS Knowledge
+Base ’’section, and their use as part of ODBRS is elaborated here. Panel D of Figure 11 shows that
+BRPS1 (and thus BRP1) is associated with EMC1 and deﬁned in terms of its vocabulary:
+Commitment, FulﬁllmentEconomicEvent, and Time.
+The association step represents a process that links BRPs with EMCs. The meta-model in
+Figure 13 more formally deﬁnes this link—i.e., the ‘‘associated-with ’’association. For ODBRS,
+only EMCs for which at least one BRP exists are relevant. Obviously, there can be more than one
+BRP for the same EMC. For example, several date-related constraints could be deﬁned for EMC2.Further, there can be more than one EMC for the same BRP as illustrated by BRP4, which applies
+to EMC7 and EMC8. A BRPS—shown as an association class in Figure 13—formally deﬁnes theFIGURE 12
+Enterprise Model with EMF Deﬁnitions98 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+application of a BRP to a speciﬁc EMC. Table 11 summarizes all BRPSs that were developed as
+part of the example knowledge base in the ‘‘ODBRS Knowledge Base ’’section and illustrates the
+‘‘associated-with ’’association. The BRPSs that apply to the enterprise model in Figure 10 are
+italicized.
+Instantiation
+During the ODBRS instantiation process, the actual business rules associated with the
+enterprise model are generated. Here, the REA-EO primitives that function as variables in the
+BRPSs are substituted by actual elements from the enterprise model. The following substitutions
+were made to generate the business rule speciﬁcation in Panel E of Figure 11: Commitment!Order; FulﬁllmentEconomicEvent.Time !shipment.date; Time !date. The ‘‘deﬁned in terms
+of’’association in Figure 11 further indicates that the speciﬁed business rule is fully integrated with
+the enterprise model used as input for the example (Panel A).
+As shown by the meta-model in Figure 13, a BRPS can generate many business rules, but each
+business rule is an instantiation of exactly one BRPS. Table 12 lists all OCL business rule
+speciﬁcations resulting from applying ODBRS to the enterprise model in Figure 10. Stateddifferently, this is the output generated by ODBRS when using the enterprise model in Figure 10 asinput. The ﬁrst column in Table 12 is used to indicate of which BRPS the business rule is an
+instantiation.
+VII. CONCLUSIONS AND FURTHER RESEARCH DIRECTIONS
+This paper presents ODBRS as an alternative approach to discovering and specifying business
+rules. Strengths of this approach include the following: (1) the ability to develop business rulespeciﬁcations based on formally deﬁned patterns that have been refactored and evaluated using testTABLE 10
+EMF-EMC MatchingOntology-Driven Business Rule Speciﬁcation 99
+Journal of Information Systems
+Spring 2013
+
+cases (Correa and Werner 2007), and (2) the reuse of the business rule patterns across business
+processes and business organizations. ODBRS complements other business rule discoveryapproaches such as analysis, extraction from code, and data mining. Having discussed thecharacteristics and mechanics of ODBRS, it is important to differentiate it from other researchprojects in the same area.
+First, a clear distinction needs to be made between ontology-driven design rules and
+ontology-driven business rules. The ﬁrst category represents rules that provide guidance in building
+enterprise models. An example of such a rule in the context of the REA-EO is that for eacheconomic resource in an enterprise model, there must be at least one inﬂow association and at leastone outﬂow association. Business rules apply to instances of REA-EO primitives and are part of theactual software system.
+Second, the ideas presented in this paper somewhat overlap with a series of papers that aim at
+facilitating the development of OCL constraints (Costal et al. 2006; Ackermann and Turowski
+2006), which is time consuming and error prone (Cabot et al. 2010; Wahler et al. 2010). For
+instance, Ackermann and Turowski (2006) develop OCL speciﬁcation patterns that are used toautomatically generate OCL constraints that specify behavioral aspects of software components.The most important differen tiating characteristic of ODBRS is its strong reliance on
+domain-speciﬁc knowledge.
+The focus of this paper is on ODBRS as a method, and many issues that need further
+exploration, including the following four, remain. First, a visual approach to ODBRS was chosen inthis paper. Although this approach helps with understanding the underlying process,FIGURE 13
+ODBRS Meta-Model100 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+operationalization of ODBRS requires advanced automated support, including tool support for
+deﬁning semantic annotations and reasoning capabilities during matching and instantiation.
+Second, the strength of ODBRS depends on the expressivity of the domain-speciﬁc vocabulary
+being used, and the depth and relevance of the knowledge base. In this paper, a limited number of
+examples were presented for illustration purposes, and more in-depth research is required for both:a more advanced study of REA-EO’s vocabulary and the development of more advanced BRPs andBRPSs.
+Third, as pointed out earlier in the paper, none of the methods can discover all rules, and this is
+true for ODBRS as well. Thus, more research is needed that evaluates the complementarity of
+ODBRS to other methods: How many new, relevant rules can be generated by this method? Moreresearch is also needed to fully understand other criteria that determine the success of ODBRS suchas complexity and cost. The development of a full-ﬂedged knowledge base would be a helpful toolfor evaluation purposes.
+Fourth, the visual approach presented here might be helpful in an educational setting. Among
+others, this approach requires students to classify an enterprise model in terms of the REA-EO, to
+fully understand different EMCs and thus different business practices, to identify and analyzeTABLE 11
+EMC-BRP AssociationsOntology-Driven Business Rule Speciﬁcation 101
+Journal of Information Systems
+Spring 2013
+
+TABLE 12
+Business Rule Speciﬁcations102 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+business rule patterns that apply across business processes and business organizations, and to deﬁne
+actual business rule speciﬁcations based on best practices.
+REFERENCES
+Ackermann, J., and K. Turowski. 2006. A library of OCL speciﬁcation patterns for behavioral speciﬁcation
+of software components. In Advanced Information Systems Engineering (CAISE 2006) , edited by
+Dubois, E., and K. Pohl, 225–269. Berlin, Germany: Springer-Verlag.
+Bajec, M., and M. Krisper. 2005. A methodology and tool support for managing business rules in
+organizations. Information Systems 30 (6): 423–443.
+Berners-Lee, T., J. Hendler, and O. Lassila. 2001. The Semantic Web. Scientiﬁc American 284 (5): 34–43.
+Bovee, M., A. Kogan, K. Nelson, R. P. Srivastava, and M. A. Vasarhelyi. 2005. Financial reporting and
+auditing agent with net knowledge (FRAANK) and eXtensible Business Reporting Language
+(XBRL). Journal of Information Systems 19 (1): 19–41.
+Business Rules Group. 2000. Deﬁning business rules—What are they really? Available at: http://www.
+businessrulesgroup.org/ﬁrst_paper/BRG-whatisBR_3ed.pdf
+Cabot, J., R. Pau, and R. Raventos. 2010. From UML/OCL to SBVR speciﬁcations: A challenging
+transformation. Information Systems 35 (4): 417–440.
+Cardoso, J., and C. Bussler. 2011. Mapping between heterogeneous XML and OWL transaction
+representations in B2B integration. Data & Knowledge Engineering 70 (12): 1046–1069.
+Correa, A., and C. Werner. 2007. Refactoring object constraint language speciﬁcations. Software and
+Systems Modeling 6 (2): 113–138.
+Costal, D., C. Go ´mez, A. Queralt, R. Ravento ´s, and E. Teniente. 2006. Facilitating the deﬁnition of general
+constraints in UML. In Model Driven Engineering Languages and Systems (Models 2006) , edited by
+Nierstrasz, O., J. Whittle, D. Harel, and G. Reggio, 260–274. Berlin, Germany: Springer-Verlag.
+Debreceny, R., C. Felden, B. Ochocki, and M. Piechocki. 2009. XBRL for Interactive Data: Engineering the
+Information Value Chain . Berlin, Germany: Springer-Verlag.
+Dietz, J. L. G. 2006. Enterprise Ontology: Theory and Methodology . Berlin, Germany: Springer-Verlag.
+Dunn, C. L. 2012. REA Accounting Systems: Resources-Events-Agents: An Ontology for Designing,
+Controlling, and Using Integrated Enterprise Systems . 4th ed. Boston, MA: McGraw-Hill.
+Fox, M. S. 1992. The TOVE Project: A common-sense model of the enterprise. In Industrial and
+Engineering Applications of Artiﬁcial Intelligence and Expert Systems , edited by Belli, F., and F.
+Radermacher, 25–34. Berlin, Germany: Springer-Verlag.
+Gailly, F., W. Laurier, and G. Poels. 2008. Positioning and formalizing the REA enterprise ontology.
+Journal of Information Systems 22 (2): 219–248.
+Geerts, G. 1993. Toward a New Paradigm in Structuring and Processing Accounting Data . Ph.D.
+dissertation, Free University Brussels.
+Geerts, G. 2011. A design science research methodology and its application to accounting information
+systems research. International Journal of Accounting Information Systems 12 (2): 142–151.
+Geerts, G., and W. E. McCarthy. 2000. Augmented intentional reasoning in knowledge-based accounting
+systems. Journal of Information Systems 14 (2): 127.
+Geerts, G., and W. E. McCarthy. 2006. Policy-level speciﬁcation in REA enterprise information systems.
+Journal of Information Systems 20 (2): 37–63.
+Geerts, G., W. E. McCarthy, and S. R. Rockwell. 1996. Automated integration of enterprise accounting
+models throughout the systems development life cycle. International Journal of Intelligent Systems in
+Accounting, Finance and Management 5 (3): 113–128.
+Gordijn, J., and J. M. Akkermans. 2001. E3-value: Design and evaluation of e-business models. IEEE
+Intelligent Systems 16 (4): 11–17.
+Gruber, T. R. 1993. A translation approach to portable ontology speciﬁcations. Knowledge Acquisition 5
+(2): 199–220.Ontology-Driven Business Rule Speciﬁcation 103
+Journal of Information Systems
+Spring 2013
+
+Gruninger, M., and J. Lee. 2002. Ontology applications and design: Introduction. Communications of the
+ACM 45 (2): 39–41.
+Hruby, P., J. Kiehn, and C. V. Scheller. 2006. Model-Driven Design Using Business Patterns . Berlin,
+Germany: Springer-Verlag.
+Ijiri, Y. 1975. Theory of Accounting Measurement . Sarasota, FL: American Accounting Association.
+International Organization for Standardization (ISO). 2006. Information Technology—Business Operational
+View—Part 4: Business Transaction Scenarios—Accounting and Economic Ontology . Geneva,
+Switzerland: International Organization for Standardization.
+Kardasis, P., and P. Loucopoulos. 2004. Expressing and organizing business rules. Information and
+Software Technology 46 (11): 701–718.
+March, S. T., and G. F. Smith. 1995. Design and natural science research on information technology.
+Decision Support Systems 15 (4): 251–266.
+McCarthy, W. E. 1982. The REA accounting model: A generalized framework for accounting systems in a
+shared data environment. The Accounting Review 57: 554–578.
+Object Management Group (OMG). 2007. Uniﬁed Modeling Language: Infrastructure, Version 2.1.2 .
+Needham, MA: OMG.
+Park, J., and S. Ram. 2004. Information systems interoperability: What lies beneath? ACM Transactions on
+Information Systems 22 (4): 595–632.
+Peffers, K., T. Tuunanen, M. A. Rothenberger, and S. Chatterjee. 2008. A design science research
+methodology for information systems research. Journal of Management Information Systems 24 (3):
+45–77.
+Rockwell, S. R., and W. E. McCarthy. 1999. REACH: Automated database design integrating ﬁrst-order
+theories, reconstructive expertise, and implementation heuristics for accounting information systems.
+International Journal of Intelligent Systems in Accounting, Finance and Management 8 (3): 181–197.
+Romney, M. B., and P. J. Steinbart. 2012. Accounting Information Systems . 12th ed. Upper Saddle River,
+NJ: Prentice Hall.
+Rosca, D., S. Greenspan, and C. Wild. 2002. Enterprise modeling and decision-support for automating the
+business rules lifecycle. Automated Software Engineering 9 (4): 361–404.
+Ross, R. G. 2003. Principles of the Business Rule Approach . Boston, MA: Addison-Wesley.
+Sedbrook, T., and R. I. Newmark. 2008. Automating REA policy level speciﬁcations with semantic web
+technologies. Journal of Information Systems 22 (2): 249–277.
+Uschold, M., M. King, S. Moralee, and Y. Zorgios. 1998. The enterprise ontology. The Knowledge
+Engineering Review: Special Issue on Putting Ontologies to Use 13 (1): 31–89.
+Vaishnavi, V. K., and W. J. Kuechler. 2007. Design Science Research Methods and Patterns: Innovating
+Information and Communication Technology . New York, NY: Auerbach.
+Von Halle, B. 2002. Business Rules Applied. Building Better Systems Using the Business Rules Approach .
+New York, NY: Wiley & Sons.
+Vujasinovic, M., N. Ivezic, B. Kulvatunyou, E. Barkmeyer, M. Missikoff, F. Taglino, Z. Marjanovic, and I.
+Miletic. 2010. Semantic mediation for standard-based B2B interoperability. IEEE Internet
+Computing 14 (1): 52–63.
+Wahler, M., D. Basin, A. Brucker, and J. Koehler. 2010. Efﬁcient analysis of pattern-based constraint
+speciﬁcations. Software and Systems Modeling 9 (2): 225–255.
+Wang, X., J. Sun, X. Yang, Z. He, and S. Maddineni. 2004. Business Rules Extraction from Large Legacy
+Systems . 249–258. Proceedings of the Eighth European Conference on Software Maintenance and
+Reengineering, Tampere, Finland.
+Warmer, J., and A. Kleppe. 2003. The Object Constraint Language: Getting Your Models Ready for MDA .
+2nd ed. Boston, MA: Pearson Education.
+Xue, L., and B. Feng. 2006. A model-driven approach for business constraints discovery. Information
+Technology Journal 5 (3): 454–459.
+Yu, S. C. 1976. The Structure of Accounting Theory . Gainesville, FL: The University Presses of Florida.104 Gailly and Geerts
+Journal of Information Systems
+Spring 2013
+View publication statsView publication stats

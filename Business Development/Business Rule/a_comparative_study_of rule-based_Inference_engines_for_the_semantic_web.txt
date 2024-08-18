@@ -1,0 +1,441 @@
+See discussions, st ats, and author pr ofiles f or this public ation at : https://www .researchgate.ne t/public ation/322193422
+A Comparative Study of Rule-Based Inference Engines for the Semantic Web
+Article    in  IEICE T ransactions on Inf ormation and Syst ems  · Januar y 2018
+DOI: 10.1587/ transinf .2017SWP0004
+CITATIONS
+2READS
+979
+4 author s, including:
+Some o f the author s of this public ation ar e also w orking on these r elat ed pr ojects:
+Geome tric CAP TCHA View pr oject
+Languag e Resour ces View pr oject
+Marut Bur anar ach
+National Electr onics and Comput er T echnolog y Cent er
+52 PUBLICA TIONS    209 CITATIONS    
+SEE PROFILE
+Kanda Runapongsa Saik aew
+Khon Kaen Univ ersity
+44 PUBLICA TIONS    240 CITATIONS    
+SEE PROFILE
+Thepchai Supnithi
+National Electr onics and Comput er T echnolog y Cent er
+137 PUBLICA TIONS    587 CITATIONS    
+SEE PROFILE
+All c ontent f ollo wing this p age was uplo aded b y Marut Bur anar ach on 23 Januar y 2018.
+The user has r equest ed enhanc ement of the do wnlo aded file.
+82IEICE TRANS. INF. & SYST., VOL.E101–D, NO.1 JANUARY 2018
+PAPER Special Section on Semantic Web and Linked Data
+A Comparative Study of Rule-Based Inference Engines for the
+Semantic Web
+Thanyalak RATTANASAWAD†, Marut BURANARACH†a), Kanda Runapongsa SAIKAEW††,Nonmembers ,
+andThepchai SUPNITHI†,Member
+SUMMARY With the Semantic Web data standards deﬁned, more ap-
+plications demand inference engines in providing support for intelligentprocessing of the Semantic Web data. Rule-based inference engines orrule-based reasoners are used in many domains, such as in clinical support,and e-commerce recommender system development. This article reviewsand compares key features of three freely-available rule-based reasoners:Jena inference engine, Euler YAP Engine, and BaseVISor. A performanceevaluation study was conducted to assess the scalability and e ﬃciency of
+these systems using data and rule sets adapted from the Berlin SPARQLBenchmark. We describe our methodology in assessing rule-based reason-ers based on the benchmark. The study result shows the e ﬃciency of the
+systems in performing reasoning tasks over di ﬀerent data sizes and rules
+involving various rule properties. The review and comparison results canprovide a basis for users in choosing appropriate rule-based inference en-gines to match their application requirements.key words: rule language, rule-based reasoner, benchmark
+1. Introduction
+With the Semantic Web data standards deﬁned, meta-
+data and ontologies, i.e., Resource Description Framework
+(RDF), and Web Ontology Language (OWL) data, are in-creasingly published on the Web. In addition, the Seman-tic Web stack [1]emphasizes the need for rule language for
+the Web. The rule language can enhance the ontology lan-
+guage by allowing one to describe relations that cannot be
+described using Description Logic (DL) used in OWL. Forexample, rule language can allow for inference of propertyvalue assignment, e.g. hasParent(?x,?y)ˆhasBrother(?y,?z)
+→hasUncle(?x,?z) , which is impossible in DL. Processing
+of rules typically demands inference engines in providingsupport for an intelligent application. Rule-based inferenceengines or rule-based reasoners are used in several domains,such as clinical support, and e-commerce recommender sys-
+tem development. Functions of rule-based inference engines
+for the Semantic Web typically include high-performancereasoning algorithms, compatibility with the Semantic Webstandards, providing interchangeable syntax and supportingexpressive rule languages with built-in functions.
+This article conducts a comparative study of three rule-
+Manuscript received February 13, 2017.
+Manuscript revised June 2, 2017.Manuscript publicized September 15, 2017.
+†The authors are with the National Electronics and Computer
+Technology Center (NECTEC), Thailand.
+††The author is with Faculty of Engineering, Khon Kaen Uni-
+versity, Thailand.
+a) E-mail: marut.bur@nectec.or.th
+DOI: 10.1587/transinf.2017SWP0004based reasoners designed for the Semantic Web: Jena In-
+ference Engine, Euler YAP Engine (EYE), and BaseVISor.The main criteria for selecting the systems for the studywere based on the following characteristics: available under
+free software or freeware license, having an active user com-
+munity, or updated publications or software. While some re-searchers studied and compared semantic reasoners [2],[3],
+our study focuses on the features of rule-based reasoners de-
+signed for the Semantic Web data.
+In addition to system features, reasoning performance
+is one of the most important factors in evaluating a rule-based inference engine. Di ﬀerent factors of rules can a ﬀect
+the rule-based system performance including join complex-
+ity, production operation, negation, built-in functions, and
+rule dependency. Our study investigated the performanceof the reviewed rule-based reasoners in terms of responsetime in performing rule-based reasoning task. We describean evaluation methodology to assess the scalability and ef-
+ﬁciency of rule-based reasoners using the data and rule sets
+adapted from the Berlin SPARQL Benchmark (BSBM) [4].
+The comparison of features and benchmark result can guideusers in selecting rule-based inference engines.
+2. Review and Comparison of Rule-Based Inference
+Engines for the Semantic Web
+Inference engines (or reasoners) are application software for
+computing or deriving new facts from existing knowledge
+bases. Although there are various types of inference en-gines, our study focuses on only rule-based inference en-gines. A rule-based inference engine applies rules with thedata to reason and derive some new facts. When the data
+matches with rule conditions, the inference engine can mod-
+ify the knowledge base, e.g., fact assertion or retraction, orexecute functions, e.g., displaying the derived facts. Our re-view focuses on rule-based reasoners aimed for the Seman-tic Web data processing.
+2.1 Comparison CriteriaSome comparison criteria for assessing rule-based reasoners
+for the Semantic Web are discussed as follows.
+Reasoning Strategies and Algorithms. Reasoning strategies
+are methods used by an inference engine to perform reason-ing tasks. There are two main strategies of reasoning, for-
+Copyright c/circlecopyrt2018 The Institute of Electronics, Information and Communication Engineers
+RATTANASAWAD et al.: A COMPARATIVE STUDY OF RULE-BASED INFERENCE ENGINES FOR THE SEMANTIC WEB
+83
+ward chaining, and backward chaining [5]. Forward chain-
+ing starts with existing facts and applying rules to derive all
+possible facts, while backward chaining starts with the de-sired conclusion and performs backward to ﬁnd supportingfacts. Optimized algorithms and techniques may be used to
+improve the performance of the reasoning process.
+Expressivity for Reasoning. Inference engines may support
+diﬀerent levels or subsets of logics in reasoning. For the
+Semantic Web data, the common levels of reasoning are
+typically RDFS, various subsets of OWL, and user-deﬁned
+rules. RDFS and OWL reasoning support is typically con-ﬁgured as a set of pre-deﬁned inference rules which sup-port some speciﬁed semantics. For example, RDFS reason-ing support may be provided as a set of rules that covers
+the model-theoretic semantics of RDFS [6]. User-deﬁned
+rules are normally deﬁned as a set of custom inference rulesthat can be applied in addition to the pre-deﬁned RDFS andOWL rules.
+Built-in Functions and User-deﬁned Functions. Built-in
+functions are functions provided for calculating values ofvariables in rule clauses. Some common built-in functionsinclude mathematical, boolean, and string functions. Some
+inference engines may provide supports for users to addi-
+tionally create custom functions.
+Reasoning Features. In addition to performing inference
+and deriving new facts, an inference engine may provide
+some additional useful functions, such as proof explanation,
+and proof tracing. An inference engine may also provide anumber of conﬁguration options of reasoning, for example,caching, and output ﬁltering.
+Supported Rule Languages. Rules for the Semantic Web
+data can be expressed in various languages and formats [7].
+Inference engines either support standard rule languages,e.g., Rule Interchange Format (RIF) [8], Notation3 [9],o r
+their own rule languages, e.g., Jena rules [10].
+2.2 Comparison of Rule-Based Inference EnginesThis section reviews three rule-based reasoners aimed for
+the Semantic Web data processing: Jena Inference Engine,
+EYE, and BaseVISor. Although some systems may pro-vide other functions beyond inference engines, i.e. semanticrepository, programming environment, etc., our review of
+the systems only focuses on its inference engine sub-system.
+The systems selected for the review were based on the fol-lowing characteristics. The software must be available un-der free software or freeware license. It must have someuser community or have updated publications or software
+within the past three years. These requirements are gener-
+ally deﬁned to limit the scope of the studied systems to moreavailable and active systems. It should be noted that the sys-tems included in the study were selective and not intendedto be comprehensive.Jena Inference Engine . Jena Inference Engine [10]is one of
+the development tools of the Jena framework [11],aJ a v a -
+based open-source application framework for developingSemantic Web applications adopted by the Apache SoftwareFoundation. The framework provides a number of prede-
+ﬁned reasoners including an RDFS reasoner, an OWL-lite
+reasoner, and a general-purpose rule reasoner supportinguser-deﬁned rules in the Jena own syntax. The rule rea-soner supports three execution strategies: forward-chaining,tabled backward-chaining, and hybrid. The rule reasoner
+consists of two internal rule engines, a forward engine based
+on the RETE [12]algorithm and a tabled Datalog backward
+engine. A number of primitive built-in functions are pro-vided and can be extended by users. Additional reasoningfeatures include proof tracing, proof explanation, and pre-
+processing attachment.
+Euler YAP Engine. EYE (Euler YAP Engine) [13],[14],i s
+a backward-chaining inference engine based on underlying
+Prolog YAP engine [15], a high-performance Prolog com-
+piler for demand-driven indexing. The inference engine usesbackward-forward-backward chaining reasoning cycle andEuler path detection algorithm to avoid loops in an infer-ence graph. EYE can be conﬁgured with many options of
+reasoning, e.g., not proving false model, output ﬁltering, and
+providing useful information of reasoning, e.g., proof expla-nation, debugging and warning logs. The inference enginealso supports using user-deﬁned plugins. In addition to themain supported language, Notation3, EYE also supports the
+RIF-BLD [16](Basic Logic Dialect) rule language.
+BaseVISor. BaseVISor [17],[18], developed by VIStology,
+is a forward chaining inference engine based on RETE net-work optimized for the processing of RDF triples. The infer-
+ence engine supports OWL2-RL and rule-based reasoning,
+and supports rules in its own format. The priority of a rulemay be speciﬁed. The inference engine supports operationsincluding fact assertion, retraction, and procedural control
+functions, e.g. halting and throwing exception. It also sup-
+ports external procedural attachments. Some optimizationsare provided, e.g. indexing, caching, join optimization. Theengine supports a number of built-in functions, which canalso be extended by users.
+The features of the rule-based reasoners were com-
+pared based on the following software versions: Jena 2.10.1,EYE 2013-05, and BaseVisor 2.0. Table 1 presents a com-parison of the features related to reasoning strategies and
+algorithms of the system, supported RDFS /OWL reasoning,
+rule languages [7], reasoning operations and features pro-
+vided, i.e. built-in and user-deﬁned function, proof explana-tion facility and software license.
+There are some additional inference engines provid-
+ing support for rule-based inference over the Semantic Webdata which are actively being developed. Openllet
+†is an
+†https://github.com/Galigator/openllet
+84IEICE TRANS. INF. & SYST., VOL.E101–D, NO.1 JANUARY 2018
+Table 1 Comparison of the features of reviewed rule-based inference
+engines
+open-source continuation of Pellet [19],a nO W L 2D LR e a -
+soner, which supports reasoning with SWRL (Semantic Web
+Rule Language) rules. The SWRLAPI Drools Engine††is a
+plug-in to the SWRLAPI [20] that supports the execution
+of SWRL rules using the Drools rule engine†††. RDF4J††††
+provides rule-based reasoning support with SPIN (SPARQLInferencing Notation) [21], i.e. rules in SPARQL syntax.
+Review and comparison of these systems is planned for fu-
+ture work.
+3. A Performance Evaluation Study of Rule-Based In-
+ference Engines
+3.1 OverviewPerformance is an important criterion for choosing an in-
+ference engine for an application. One requirement of an
+inference engine for the Semantic Web data is the ability to
+process a large amount of data, i.e. high scalability and e ﬃ-
+ciency. In addition, the performance should be evaluated ac-cording to diﬀerent application requirements. Speciﬁcally,
+each application may be di ﬀerent in terms of required ex-
+pressive power, a dependency of rules, and data sizes.
+There have been comparative studies on the perfor-
+mance of rule-based inference engines for the Web scale.
+††https://github.com/protegeproject/swrlapi-drools-engine
+†††http://www.drools.org/
+††††http://rdf4j.org/OpenRuleBench [22] is one of the most comprehensive
+studies on developing a benchmark for comparing and ana-
+lyzing the performance of these systems. The study involvedevaluation of broad-ranged system technologies includingprolog-based, deductive databases, production rules, triple
+engines, and general knowledge bases. The study also in-
+volved large join tests, datalog recursion, and default nega-tion. Our study di ﬀered from the OpenRuleBench in sev-
+eral aspects. First, our study only investigated inference en-gines that were based on triple engines and were available
+under free software or freeware licenses. Thus, the study in-
+volved some systems that were not in the OpenRuleBenchstudies. Second, our study used the dataset from the BerlinSPARQL Benchmark (BSBM) [4], which simulated an e-
+commerce use case involving data about products, vendors,
+consumers and reviews about the products. The BSBM was
+chosen because it was closer to real-world enterprise appli-cation scenarios than several independent datasets employedin the OpenRuleBench. Third, our study applied tests on
+some general expressive power which were not in the Open-
+RuleBench study. Examples of such tests were built-in func-tions, and fact retraction.
+3.2 Methodology3.2.1 Dataset Description
+Datasets and reasoning tasks are the main components of
+reasoner evaluation resources [23]. In our study, the dataset
+was adapted from the BSBM package which consists ofdataset generators and queries mix that can be used for com-paring the performance of native RDF stores. The bench-
+mark built around an e-commerce use cases in which a set
+of products was oﬀered by diﬀerent vendors and consumers
+had posted reviews about products. The BSBM dataset con-sists of the following classes: product, product type, productfeature, producer, vendor, review, and person.
+Although the BSBM was not originally designed as a
+benchmark tool for inference engines, it was chosen becauseit could simulate real-world enterprise application scenarios,e.g., to create product recommendations for customers. Inaddition, the BSBM dataset is provided in the RDF data for-
+mat, which simulates the Semantic Web data setting. In our
+tests, ﬁve diﬀerent sizes of the dataset were generated and
+varied by the number of products: 1 K, 1.5 K, 2 K, 2.5 K,and 3 K products. The numbers of generated triples wereranged from 375 K to 1 M triples respectively.
+3.2.2 Ruleset DescriptionSix rulesets were designed to test the performance of
+forward-chaining reasoning tasks, i.e., matching, action, and
+ﬁring rules. The rulesets used the vocabularies from the
+benchmark dataset. Each ruleset is di ﬀerent in various cat-
+egories of factors: join complexity, production operation,negation, built-in functions, and rule dependency. Thesefactors can be brieﬂy described as follows.
+RATTANASAWAD et al.: A COMPARATIVE STUDY OF RULE-BASED INFERENCE ENGINES FOR THE SEMANTIC WEB
+85
+Fig. 1 An example rule syntax of ruleset 1
+Fig. 2 An example rule syntax of ruleset 2
+•Join complexity : The uses of joins are classiﬁed into
+three categories: low, medium, and high complexity.
+Low join complexity is deﬁned as when fewer than
+three atoms are involved in joins. Medium complex-ity is deﬁned as when between three and seven atomsare involved. High complexity is deﬁned as when morethan seven atoms are involved.
+•Operation : Operations are deﬁned as whether asser-
+tion or retraction is involved in the consequence part.
+•Negation : Negation is deﬁned as whether negation is
+used in the antecedent part.
+•Built-in functions: Built-in function is deﬁned as
+whether string or math functions, or comparators are
+used.
+•Rule dependency: Rule dependency is deﬁned as
+whether the result of a rule will result in the ﬁring of
+another rule or ﬁring the same rule, i.e. recursion.
+Six rulesets were created to emulate the business logics
+of recommending products to users and data modiﬁcation.
+Using these rulesets, an e-commerce recommender systemcan generate product recommendation results for the userbased on the three information types: user preferences, sea-son preferences, and product-rating preferences. In addi-
+tion, the system modiﬁed the delivery days and the price of
+products sold by a vendor based on some deﬁned criteria.Four rulesets consisted of one rule per ruleset, and two rule-sets consisted of more than one rule per ruleset. Table 2provides a summary of characteristics for each ruleset. The
+details of each ruleset are provided as follows.Table 2 Summary of characteristics of the rulesets
+Ruleset 1: Recommend products based on user preferences.
+The user preferences included text in product label, prod-
+uct features, price, and vendor of products. This ruleset in-
+volved complex join (eight atoms) and function symbols.An example of the rule syntax in the Jena rule format isshown in Fig. 1.
+Ruleset 2: Recommend products based on season prefer-
+ences. Products were matched with each season by ﬁve
+product features. The example showed the partial rules ofsummer season only. This ruleset involved simple join (two
+atoms) of a large number of rules (24 rules). An example of
+the rule syntax in the Jena rule format is shown in Fig. 2.
+Ruleset 3: Recommend products based on product-rating
+preferences. This ruleset involved intermediate join (three
+86IEICE TRANS. INF. & SYST., VOL.E101–D, NO.1 JANUARY 2018
+Fig. 3 An example rule syntax of ruleset 3
+Fig. 4 An example rule syntax of ruleset 4
+Fig. 5 An example rule syntax of ruleset 5
+Fig. 6 An example rule syntax for the base case data generator of ruleset 6
+Fig. 7 An example rule syntax of ruleset 6
+atoms). An example of the rule syntax in the Jena rule for-
+mat is shown in Fig. 3.
+Ruleset 4: Extend the delivery days of products sold by ‘Ven-
+dor5’ by ﬁve days, and decrease the price by ten percent.
+Product data modiﬁcation was written as a combination oftwo operations: retraction and assertion. The assertion of:ﬁredFor predicate was the ﬂag of modiﬁed triples, and the
+condition of the form noValue(?o ﬀer :ﬁredFor <predicate >)
+was added to prevent them from being matched again (ﬁring
+itself). This ruleset involved intermediate join (four atoms),negation, and retraction. An example of the rule syntax inthe Jena rule format is shown in Fig. 4.
+Ruleset 5: This ruleset extended ruleset 1 by adding two
+negation atoms to exclude products having two speciﬁcproduct features. Only added negation atoms were shownin Fig. 5. This ruleset involved complex join and negation.
+Ruleset 6: This ruleset involved a large number of recur-
+sions. The base cases of recursion were connections of re-viewers who wrote reviews of the same product. The re-cursion was transitive closure based on these relations (e.g.two groups of people could connect to each other via some
+people who were in both groups). The base cases of the re-cursion were generated by the base case data generator. Theresults were stored as a pre-processing step so that only re-
+cursion was involved in this test. The conditions of price
+and delivery days of products were used to limit the numberof involved reviewers. An example rule syntax for the basecase data generator is shown in Fig. 6. An example of therule syntax of ruleset 6 is shown in Fig. 7.
+Mixed ruleset: Combination of rulesets 1, 2, and 3.
+3.2.3 Experiment SettingsAll tests were performed on a machine with the following
+speciﬁcations: Intel Core i5 430 M CPU, and 8 GB mainmemory size. The machine was running on Windows 8 andJDK version 1.6 with maximum heap size 6 GB. In each test,
+we warmed up the inference engines by loading data and
+perform reasoning until the execution time was stable. Thenwe measured the average system response time of three-timeexecutions. The following provides the version numbers andconﬁgurations of the tested inference engines.
+RATTANASAWAD et al.: A COMPARATIVE STUDY OF RULE-BASED INFERENCE ENGINES FOR THE SEMANTIC WEB
+87
+Table 3 Execution time of data loading (in seconds)
+1. Apache Jena Inference Engine from Jena framework
+version 2.11.0 using forward chaining strategy with RDFdatasets in Turtle format, and rulesets in Jena’s own rule
+format
+2. Euler YAP Engine (EYE) version 2013-05 with RDF
+datasets in Turtle format, and rulesets in Notation3 format3. BaseVISor version 2.0, with conﬁguration “optimiza-
+tionLevel=high” with RDF datasets and rulesets in Base-
+VISor’s own .bvr format
+The performance metrics used were load time and rea-
+soning time. The load time was the time the system used inloading the dataset. The reasoning time was measured from
+after the data was loaded into the main memory until the in-
+ference phase had ﬁnished. The RDFS /OWL inference rules
+were not applied to the data because they did not a ﬀect the
+inference results of the user-deﬁned rulesets and thus were
+not involved in the reasoning time.
+3.3 Results
+3.3.1 Load TimeTable 3 shows the execution time of loading dataset into the
+inference engines. Comparing the load time performance,Jena inference engine was the fastest for all sizes of datasets,followed by BaseVISor and EYE. At 3,000 products, Jena
+was approximately factor of 12.8 faster than BaseVISor and
+factor of 29.3 faster than EYE. The more load time indicatedthe more time that the systems used in managing indexingof the RDF data.
+3.3.2 Reasoning TimeFigures 8–14 show the result comparison charts for each
+ruleset. Euler YAP Engine was not included in the resultsof rulesets 4 and 5 because its supported rule language, No-
+tation3, did not support non-monotonic negation and retrac-
+tion.
+For rulesets 1 and 5 which involved complex join, Ba-
+seVISor yielded the best performance with a low growthrate. For ruleset 1, Euler YAP Engine showed the second
+best performance with a similar growth rate to BaseVISor.
+Jena’s did not perform well in both rulesets with a highergrowth rate. The execution times of the ruleset 5 for Jena’swere slightly lower than the ruleset 1. The lower executiontime might be because of the exclusion of some results by
+Fig. 8 Result comparison of ruleset 1
+Fig. 9 Result comparison of ruleset 2
+Fig. 10 Result comparison of ruleset 3
+Fig. 11 Result comparison of ruleset 4
+negation, which reduced the size of input to the join opera-
+tions. The result of the mixed rulesets (1 +2+3) also showed
+the performance in the similar growth rates as the ruleset 1for all systems. These results have indicated that join com-plexity has the most e ﬀects on the performance.
+For the ruleset 2 which involved simple join of several
+rules, the result of Jena inference engine was signiﬁcantly
+better than the result of ruleset 1 and was slightly better thanBaseVISor’s. Euler YAP Engine’s showed relatively similarperformance and trend as the result of ruleset 1.
+For ruleset 3 which involved intermediate join, Base-
+88IEICE TRANS. INF. & SYST., VOL.E101–D, NO.1 JANUARY 2018
+Fig. 12 Result comparison of ruleset 5
+Fig. 13 Result comparison of mixed ruleset
+Fig. 14 Result comparison of ruleset 6
+VISor’s had the best performance with a lower growth rate.
+Jena’s showed the second best performance with a highergrowth rate. Euler YAP Engine yielded the third best per-
+formance with a similar growth rate as Jena’s. The result of
+Euler YAP Engine also had similar performance and trendas the result of ruleset 1.
+For ruleset 4, which involved intermediate join, retrac-
+tion and negation, Jena showed the best performance with
+a lower growth rate. BaseVISor’s had lower performance
+with higher growth rate than Jena inference engine. The ex-ecution times of the ruleset 4 for Jena’s were lower than thatof the ruleset 3. This might be because some results were
+excluded from joining by negation and retraction.
+For ruleset 6, which involved recursion of simple
+join, BaseVISor showed the best performance with a lowergrowth rate. Euler YAP Engine had the second best perfor-mance with a higher growth rate. Jena’s yielded the third
+best performance with a similar growth rate as Euler YAP
+Engine at between 1,000 to 2,500 products but the growthhighly increased at 3,000 products.
+Based on the results, we concluded that BaseVISor’s
+had the best overall performance with a low growth rate.Except for the ruleset 4, BaseVISor’s performed the best
+among the studied inference engines. The results showed
+that Jena was extremely fast when simple join was involved(ruleset 2), but did not yield an outstanding performance forcomplex join (rulesets 1, 5, mixed) or recursion (ruleset 6).
+Jena’s also had performance better than other systems for
+retraction and negation when complex join was not involved(ruleset 4). Euler YAP Engine had a longer loading time.Its results for all of our tests were surprisingly in the similarvalue ranges and growth rates (except for ruleset 6).
+We made some observations based on the results as fol-
+lows. Both BaseVISor and Jena’s are based on RETE infer-ence algorithm. However, BaseVISor claimed that its imple-mentation was optimized for RDF triples by using a simpledata structure for its facts (i.e., triples) rather than arbitrary
+list structures, which permitted greatly enhanced e ﬃciency
+in pattern matching of RETE network [18]. In contrast to
+Jena’s, the performance of BaseVISor was marginally af-fected by the complexity of join, which indicated the e ﬀec-
+tiveness of its join optimization technique. Euler YAP En-
+gine performance was also marginally a ﬀected by the com-
+plexity of join for a similar reason, although its forward-chaining reasoning algorithm was generally less e ﬀective
+than BaseVISor’s RETE-based algorithm.
+4. Conclusions
+In this article, we reviewed and compared some freely-
+available rule-based reasoners designed for the SemanticWeb data. One of the main purposes is to identify somecriteria that can be used to compare rule-based reasoners forthe Semantic Web. We compared some key features of three
+rule-based reasoners: Jena’s, EYE, and BaseVISor, based
+on these criteria. Our work also conducted a performanceevaluation study of these rule-based reasoners based on theBerlin SPARQL Benchmark. The study result shows the ef-ﬁciency of the systems in performing reasoning tasks over
+diﬀerent data sizes and rules involving various rule prop-
+erties including join, reasoning operation, negation, built-in function, and rule dependency. Our experimental resultanalysis can be used in guiding researchers and develop-
+ers in the Semantic Web ﬁeld to better choose rule-based
+reasoners that match their application requirements. Ourplanned future work will consider additional benchmark,such as the benchmark of additional reasoning strategy, i.e.,backward reasoning, and comparative study of additional in-
+ference engines.
+AcknowledgementsThe ﬁnancial support from Young Scientist and Technolo-
+gist Program, NSTDA is gratefully acknowledged.
+References
+[1] W3C, “Semantic Web,” [Online] Available: https: //www.w3.org/
+standards/semanticweb/[Accessed: 24-May-2017].
+RATTANASAWAD et al.: A COMPARATIVE STUDY OF RULE-BASED INFERENCE ENGINES FOR THE SEMANTIC WEB
+89
+[2]S. Singh and R. Karwayun, “A comparative study of inference en-
+gines,” Proc. 7th International Conference on Information Technol-
+ogy: New Generations, pp.53–57, 2010.
+[3] W3C, “Category:Reasoner - Semantic Web Standards,” [Online]
+Available: http://www.w3.org/2001/sw/wiki/Category:Reasoner
+[Accessed: 24-May-2017].
+[4]C. Bizer and A. Schultz, “The Berlin SPARQL benchmark,” Int. J.
+Semant. Web Inf. Syst., vol.5, no.2, pp.1–24, April 2009.
+[5] J.C. Giarratano and G. Riley, Expert Systems: Principles and Pro-
+gramming, 2nd ed., PWS Publishing, Boston, MA, USA, 1994.
+[6] P.J. Hayes and P.F. Patel-Schneider, “RDF 1.1 Semantics,” [Online]
+Available: http://www.w3.org/TR/rdf11-mt/[Accessed: 24-May-
+2017].
+[7]T. Rattanasawad, K.R. Saikeaw, M. Buranarach, and T. Supnithi, “A
+review and comparison of rule languages and rule-based inference
+engines for the Semantic Web,” Proc. 2013 International ComputerScience and Engineering Conference - Workshop on Ontology and
+Semantic Web for Big Data, pp.1–6, 2013.
+[8] M. Kifer and H. Boley, “RIF Overview (Second Edition),” [On-
+line] Available: http: //www.w3.org/TR/rif-overview/[Accessed: 24-
+May-2017].
+[9] T. Berners-Lee and D. Connolly, “Notation3 (N3): A readable RDF
+syntax,” [Online] Available: https: //www.w3.org/TeamSubmission/
+n3 [Accessed: 24-May-2017].
+[10] Apache Software Foundation, “Apache Jena - Reasoners and rule
+engines: Jena inference support,” [Online] Available:
+http://jena.apache.org/documentation/inference [Accessed: 24-May-
+2017].
+[11] Apache Software Foundation, “Apache Jena,” [Online] Available:
+http://jena.apache.org/[Accessed: 24-May-2017].
+[12] C.L. Forgy, “Rete: A fast algorithm for the many pattern /many ob-
+ject pattern match problem,” Artif. Intell., vol.19, no.1, pp.17–37,
+Sept. 1982.
+[13] J. De Roo, “Euler Yet Another Proof Engine – EYE,” [Online]
+Available: http://eulersharp.sourceforge.net /[Accessed: 24-May-
+2017].
+[14] R. Verborgh and J. De Roo, “Drawing conclusions from Linked
+data on the Web: The EYE reasoner,” IEEE Software, vol.32, no.3,
+pp.23–27, April 2015.
+[15] V.S. Costa, R. Rocha, and L. Damas, “The YAP Prolog Sys-
+tem,” Theory and Practice of Logic Programming - Prolog Systems,vol.12, no.1-2, Jan. 2012.
+[16] H. Boley and M. Kifer, “RIF Basic Logic Dialect (Second Edition),”
+[Online] Available: http: //www.w3.org/TR/
+rif-bld/[Accessed: 24-
+May-2017].
+[17] VIStology Inc., “BaseVISor 2.0,” [Online] Available:
+http://vistology.com/products/[Accessed: 24-May-2017].
+[18] C.J. Matheus, K. Baclawski, and M.M. Kokar, “BaseVISor: A
+triples-based inference engine outﬁtted to process RuleML and
+R-Entailment rules,” Proc. 2nd International Conference on Rules
+and Rule Languages for the Semantic Web, pp.67–74, 2006.
+[19] E. Sirin, B. Parsia, B.C. Grau, A. Kalyanpur, and Y. Katz, “Pellet: A
+practical OWL-DL reasoner,” Web Semant. Sci. Serv. Agents World
+Wide Web, vol.5, no.2, pp.51–53, June 2007.
+[20] M. O’Connor, H. Knublauch, S. Tu, B. Grosof, M. Dean, W. Grosso,
+and M. Musen, “Supporting rule system interoperability on the Se-
+mantic Web with SWRL,” The Semantic Web – ISWC 2005: 4th
+International Semantic Web Conference, pp.974–986, 2005.
+[21] H. Knublauch, J.A. Hendler, and K. Idehen, “SPIN - Overview and
+Motivation, W3C Member Submission,” [Online] Available:
+http://www.w3.org/Submission/spin-overview [Accessed: 24-May-
+2017].
+[22] S. Liang, P. Fodor, H. Wan, and M. Kifer, “OpenRuleBench: An
+analysis of the performance of rule engines,” Proc. 18th International
+Conference on World Wide Web, pp.601–610, 2009.
+[23] B. Parsia, N. Matentzoglu, R.S. Gonc ¸alves, B. Glimm, and A.
+Steigmiller, “The OWL Reasoner Evaluation (ORE) 2015 Re-sources,” The Semantic Web – ISWC 2016: 15th International Se-
+mantic Web Conference, pp.159–167, 2016.
+Thanyalak Rattanasawad received the
+B.Eng. degree in Computer Engineering with
+First-class Honors from Khon Kaen Universityin 2014. She is a co-researcher at the Language
+and Semantic Technology Lab at NECTEC in
+Thailand.
+Marut Buranarach received the B.Eng.
+degree in Engineering from King Mongkut’s In-
+stitute of Technology Lardkrabang in 1995. Hereceived the M.S. and Ph.D. degrees in Informa-
+tion Science from the University of Pittsburgh
+in 1998 and 2004, respectively. He is currentlya senior researcher at the Language and Seman-
+tic Technology Lab at NECTEC in Thailand.
+Kanda Runapongsa Saikaew received the
+B.S. degree with University and College Honors
+in Electrical and Computer Engineering fromCarnegie Mellon University, USA, in 1997. She
+received the M.S. and Ph.D. degrees in Com-
+puter Science and Engineering from the Univer-
+sity of Michigan at Ann Arbor, USA, in 1999
+and 2003 respectively. She is currently an as-sociate professor of Computer Engineering de-
+partment at Khon Kaen University, Thailand.
+Thepchai Supnithi received the B.S. degree
+in Mathematics from Chulalongkorn University
+in 1992. He received the M.S. and Ph.D. de-grees in Engineering from the Osaka University
+in 1997 and 2001, respectively. He is currently
+the head of the Language and Semantic Tech-
+nology Lab at NECTEC in Thailand.
+View publication statsView publication stats

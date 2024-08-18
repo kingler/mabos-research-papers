@@ -1,0 +1,866 @@
+Universit y of M assachusetts A mherst
+ScholarWorks@U Mass Amherst
+Comput er Science Departme nt Faculty Publication
+SeriesComput er Science
+1999
+Learning Situa tion-S pecific C oordination in
+Cooperative M ulti-agent Systems
+M. V. Nagendra Prasad
+University of M assa chusetts - A mherst
+Victor R . Les ser
+University of M assa chusetts - A mherst
+Follow thi s and a dditional w orks at:https://s cholarworks.umass.edu/c s_fa culty_pubs
+Part of the Comput er Sciences Common s
+This Article i s brought to you for f ree and ope n access by the C omput er Science at ScholarWorks@UM ass Amhe rst. It has be en accepted for inclusion
+in C omput er Science Departme nt Faculty Publication S eries by an author ized admini strator of S cholarWorks@UM ass Amhe rst. For mor e infor mation,
+please contactscholarworks@library.umass.edu.Recomme nded Citation
+Prasad, M. V. Nagendra and L esser, Victor R ., "Learning Situation-S pecific C oordination in C oope rative M ulti-agent Systems" (1999).
+Computer Scien ce D epartment Faculty Publication Ser ies. 156.
+Retrieved from https://s cholarworks.umass.edu/c s_fa culty_pubs/156
+LearningSituation-Speci®cCoordinationinCooperative
+Multi-agentSystems
+M VNagendraPrasad,andVictorR Lesser
+DepartmentofComputerScience
+Universityof Massachusetts,Amherst,MA01002.fnagendra,lesser g@cs.umass.edu
+Abstract
+Achievingeffective cooperationinamulti-agentsystemis a dif®cultproblemforanumberof
+reasonssuchaslimitedandpossiblyout-datedviewsofacti vitiesofotheragentsanduncertainty
+aboutthe outcomesof interactingnon-localtasks. In thisp aper, we presenta learningsystem
+called COLLAGE,thatendowstheagentswiththecapabilityt olearn howtochoosethemost
+appropriate coordinationstrategy from a set of available c oordinationstrategies. COLLAGE
+reliesonmeta-levelinformationaboutagents'problemsol vingsituationstoguidethemtowards
+asuitablechoiceforacoordinationstrategy. Wepresentem piricalresultsthatstronglyindicate
+theeffectivenessofthelearningalgorithm.
+Keywords: Multi-agentSystems, Coordination,Learning
+1
+1 Introduction
+Coordinationistheprocessofeffectivelymanaginginterdependenciesbetwee nactivitiesdistributed
+acrossagentssoastoderivemaximumbene®tfromthem[21,6]. Basedonstructur eanduncertainty
+in their environment, agents have to choose and temporally order their activitie s to mitigate the
+effects of harmful interdependencies and exploit the bene®cial interdependencies a mong them.
+Researchers in both human and computational organizational theories have pointed out t hat there
+is no single organization or coordination protocol that is the best for all environments. In human
+organizations, environmental factors such as dynamism and task uncertainty have a strong effect
+on what coordinated actions are and how organizationally acceptable outcomes aris e[18, 9, 33].
+These effectshave beenobserved inpurelycomputationalorganizationsas well [8,7,6,23,26].
+Achieving effective coordination in a multi-agent system (MAS) is a dif®cul t problem for a
+number of reasons. An agent's local control decisions about what activity to do next or wha t
+informationtocommunicateandto whomorwhat informationtoask othersmaybe ina ppropriate
+orsuboptimalduetoitslimitedviewoftheinteractionsbetweenitsownacti vitiesandthoseofthe
+otheragents. Inorderto makemoreinformedcontroldecisions,the agents have toac quirea view
+ofthetask structuresofother agents. To theextent thatthis resolves agents' unc ertaintyabout the
+non-local problem solving activities, they can act coherently. However, an a gent has to expend
+computationalresourcesinacquiringandexploitingsuchnon-localviewsofotheragents 'activities.
+Thisinvolves communicationdelays andthecomputationalcost ofprovidingthisinform ationand
+assimilatingtheinformationfromotheragents. Giventheinherentuncertaint yinagents'activities
+and the cost of meta-level processing, relying on sophisticated coordination str ategies to acquire
+non-local views of task structures may not be worthwhile for all problem-solving sit uations. In
+certainsituations,coordinationprotocolsthatpermitsomelevelofnon-coherenta ctivityandavoid
+theadditionaloverheadforcoordinationmayleadtobetterperformance[7,6, 23,34]. Forexample,
+when the agents are under severe time pressure and the load of the activities at the agents is high,
+sophisticatedagent coordinationstrategies do notgenerallypayoff. Agents maynotha ve the time
+to bene®t from the increased awareness they derive through coordination in such s ituations. In
+this paper, we will be dealing with how agents can learn to dynamically choose t he appropriate
+coordinationstrategyindifferentcoordinationprobleminstances. Weempirica llydemonstratethat
+evenforanarrowclass ofagentactivities,learningtochoosetheappropriate coordinationstrategy
+based on meta-level characterization of the global problem solving state outper forms using any
+singlecoordinationstrategy across allprobleminstances.
+In order to accomplish learning, we break the coordination problem into two phases. In the
+®rst phase, the agents exchange meta-level information not directly used for coor dination. This
+informationisusedbytheagentstoderiveapredictionoftheeffectivenessof variouscoordination
+mechanismsinthepresentproblemsolvingepisode. Thesemechanismsdifferinthe amountofnon-
+local information they acquire and use, and in the complexity of analysis of intera ctions between
+activities at the agents. Agents choose an appropriate subset of the coordination mec hanisms (or
+a coordinationstrategy) based on the meta-levelinformationand enter Phase I I.In this phase, the
+coordinationstrategyselected inPhase I decides thetypesofinformationtobe exchangedand the
+kindofreasoningaboutlocalandnon-localactivitiestheagentsneedtoperformtoac hievecoherent
+behavior. Wecallthemeta-levelinformationa situationandthetwophaseprocess situation-speci®c
+coordination . Learningsituation-speci®ccoordinationinvolvesassociatingappropriatevi ewsofthe
+globalsituationwiththeknowledgelearnedabouttheeffectivenessofthecoordinat ionmechanisms.
+2
+The agents in a cooperative multi-agent system can learn to coordinate by proact ively resolving
+someoftheiruncertaintyabouttheglobalproblemsolvingstateandsituatingtheirle arninginmore
+globalviews.
+The rest of the paper is organized as follows. We ®rst place our work in context and discuss
+itsrelationshiptotheexistingworkonlearninginmulti-agentsystems. We thenbrie¯yreviewthe
+TáMStask structure representation for coordination problems and the GPGP model for des igning
+coordinationstrategies. Wesubsequentlydescribeourlearningalgorithmthatlea rnshowtochoose
+among coordination strategies of different levels of sophistication. We then pre sent some of our
+experimentalresults andconclude.
+2 RelatedWork
+Previous work related to learning in multi-agent systems is limited and m uch of this work relies
+on techniques derived from reinforcement learning[1, 35], genetic algorithms[16] and classi®er
+systems[17]. In Sen, Sekaran and Hale[29] the agents use reinforcementlear ning to evolve com-
+plimentary policies in a box pushing task, and in Crites and Barto[3] a team of r einforcement
+learningagents optimizeelevatordispatchingperformance. Inboththese works, theagents donot
+communicatewith one another and any agent treats the other agents as a part of the en vironment.
+Weiss[37] uses a variant of Holland's[17] bucket brigade algorithm for learning hier archical or-
+ganization structuring relationships in a block world domain via strengthening promi sing chains
+of actions through bid-rewardcycles. Tan[36] deals with a predator-preydomain in a grid world.
+Theagentsshareperceptioninformationtoovercomeperceptuallimitationsor communicatepolicy
+functionslearnedthroughreinforcementlearning. Grefenstette[14]usesgeneti calgorithmstolearn
+reactivedecision rules foragents in a predator-preydomain similarto tha t in [36]. Sandholm and
+Crites[28]study theemergence ofcooperationin theIteratedPrisoner'sDi lemmaproblem,where
+the agents are self-interested, and an agent is not free to ask for any kind of i nformation from
+the otheragents. Haynes and Sen[15] present studies in learningcases to resolv e con¯icts among
+agents in a predator-prey domain similar to that used by Tan[36]. There is no com munication
+betweentheagents,and thecases resultfromtheagent's perceptionoftheproblem solvingstate.
+The multi-agent systems that this paper deals with consist of complex cooperativ e agents
+(each agent is a sophisticated problem solver), and an agent's local problem sol ving control
+interacts with that of the other agents' in intricate ways. In our work, rather than treating other
+agents as a part of the environment and learning in the presence of increased uncert ainty, agents
+communicatemeta-levelinformationtoresolve theuncertaintytothe exte ntpossible (thereis still
+the environmental uncertainty that the agents cannot do much about). Agents sharing perc eptual
+informationasinTan[36]andGreffenstette[14]orbiddinginformationasinW eiss[37]donotmake
+explicit the notion of situating the local control knowledge in a more global, abstract situation.
+The information shared is weak, and the studies were conducted in domains such as pr edator-
+prey[36, 14] or blocks world[37] where the need for sharing meta-level informationa nd situating
+learninginthis informationisnotapparent.
+Ourpreviousworkexploredlearningsituation-speci®corganizationalrolesinahet erogeneous
+multi-agentsystem[26]. An organizational role represents a set of tasks an age nt can perform on
+a composite solution. Agent use abstractions of problem solving state to learn to pla y the roles
+they are best suited for in a multi-agent search process for cooperatively c onstructing an overall
+3
+solution. The system was tested in a parametric design domain and the learning agents produced
+designsthat,onanaverage,werebetterthanthoseproducedbyasystemwithagent splayingroles
+hand-codedby ahumanexpert.
+SugawaraandLesser[34]alsorecognizetheneedforsituationspeci®cityin learningcoordina-
+tion,thoughthey dohavethenotionoftwo-phasecoordination. Theyareconcernedwithlear ning
+to make the situations more discriminating to avoid using an inappropriate coordina tion strategy
+in the domain of distributed network diagnosis. Their learning mechanisms rely on deep domain
+knowledge and agent homogeneity assumptions in order to progressively re®ne situations based
+on failure-driven explanation and comparative analysis of problem solving trace s. They test the
+theory on a very limited number of coordination situations, and the evidence was anec dotal. It
+is not clear how such knowledge-intensive learning can be generalized to other i nstances without
+signi®cant knowledge engineering and the development of more sophisticated explanation- based
+learning techniques. Despite these limitations, combining their work on learni ng situation repre-
+sentations with the learning presented here on situation-based choice of coordinat ion could have
+interestingimplicationsforsituation-speci®clearning.
+Garland and Alterman[10] discuss issues in knowledge reuse in multi-agent sys tems. Agents
+workinginasimulatedMOVERS-WORLDdomainhavetocollaboratetomoveobj ectstooheavy
+fora single agent to move. Agents use theirpast experience to anticipate coordina tionratherthan
+dynamicallycommunicate to establish it. Motivationforthis workis diffe rentfromours. In their
+work,agentsexploittheirpastexperiencetoreducethecontroleffortneededtoachi evecoordination
+in future probleminstances. Similaruse of past experience has been studied in N agendra Prasad,
+LanderandLesser[25].
+Certain multi-agent learning systems in the literature deal with a diff erent task from that
+presented in this paper. Systems like ILS[32] and MALE[31] use multi-agentt echniques to build
+hybridlearners frommultiplelearningagents. On the otherhand,we deal with lea rningproblem-
+solvingcontrolformulti-agentsystems.
+3 CoordinationinMulti-agentSystems
+In this paper, we show the effectiveness of learning situation-speci®c coordi nation by extend-
+ing a domain-independent coordination framework called Generalized Partial G lobal Planning
+(GPGP)[6, 4]. GPGP is a ¯exible and modular method that recognizes the need for c reating
+tailoredcoordination strategies in response to the characteristics of a pa rticulartask environment.
+It is structured as an extensible set of modular coordination mechanisms so that any subset of
+mechanisms can be used. Each mechanism can be invoked in response to the detect ion of certain
+features of the environment and interdependencies between problem solving activiti es of agents.
+The coordination mechanisms can be con®gured (or parameterized) in different wa ys to derive
+differentcoordinationstrategies. In GPGP (withoutthe learning extensions), once a set of mech-
+anisms are con®gured (by a human expert) to derive a coordination strategy, that s trategy is used
+across all problem instances in the environment. Experimental results have al ready veri®ed that
+for some environments a subset of the mechanisms is more effective than using the entire set of
+mechanisms[6,23]. Inthiswork,wepresentalearningextension,calledCOLLA GE,thatendows
+theagentswiththecapabilitytochooseasuitablesubsetofthecoordinationmechani smsbasedon
+thepresentproblemsolvingsituation,insteadofhavinga®xedsubsetacrossallprobl eminstances
+4
+inanenvironment.
+GPGP coordination mechanisms rely on the coordination problem instance being repres ented
+inaframeworkcalled TáMS[4,5]. The TáMSframework(Task Analysis, EnvironmentModeling,
+and Simulation) [4, 5] represents coordination problems in a formal, domain-independe nt way.
+It captures the essence of the coordination problem instances, independent of the detail s of the
+domain, in terms of trade-offs between multiple ways of accomplishing a goal, progr ess towards
+the achievement of goals, various interactions between the activities in the problem instance and
+theeffectoftheseactivitiesontheperformanceofthesystemasawhole. TáMScanmodelaspects
+ofcoordinationincomplex worth-oriented domains[27]wherestates havefunctionsthatratetheir
+acceptability (not necessarily a binary rating). There are deadlines assoc iated with the tasks and
+some of the subtasks may be interdependent, that is, cannot be solved independently in isol ation.
+Theremaybemultiplewaystoaccomplishataskandthesetradeoffthequality ofaresultproduced
+for the time to produce that result. Qualityis used as a catch-all term representing acceptability
+characteristics like certainty, precision, and completeness, other than temporal characteristics. A
+setofrelatedtasksiscalledataskgrouporataskstructure. Ataskst ructureistheelucidationofthe
+structureoftheproblemanagentistryingtosolve. Thequalityofataskisafunct ionofthequality
+ofitssubtasks. Theleaftasksaredenotedasmethodswithbaselevelqualitya ndduration. Methods
+represent domain actions, like executing a blackboard knowledge source, running an ins tantiated
+plan, or executing a piece of code with its data. A task may have multiple ways t o accomplish
+it, represented by multiple methods, that trade off the time to produce a result f or the quality of
+the result. Figure 1 is an example of a simple tasks structure. Besides task/ subtask relationships,
+therecanbeotherinterdependencies,calledcoordinationinterrelationships,be tweentasksinatask
+group[5]. Inthis paper,we willbedealingwithtwosuch interrelationships:/facilitatesrelationshiporsoftinterrelationship: TaskAfacilitat esTaskBifthetheexecution
+TaskAproducesaresultthataffectsanoptionalparameterofTaskB.TaskB couldhavebeen
+executedwithouttheresultfromTaskA,buttheavailabilityoftheresultpr ovidesconstraints
+on theexecution ofTask B,leadingtoimprovedqualityandreduced timerequir ements./enables relationships orhard interrelationship: IfTask A enables Task B then the execution
+TaskAproducesaresultthatisarequiredinputparameterforTaskB.Theresul tsofexecution
+ofTask Amustbe communicatedtoTask B beforeitcanbe executed.
+In GPGP, each agent can be viewed as having three components: a local scheduler, a coor-
+dination module and a belief database. The belief database of an agent represents i ts subjective
+view of the present coordination problem instance comprising the agent's knowledge about the
+task structures in the environment. The local scheduler of an agent uses the inform ation in the
+beliefdatabasetobuildschedulesofmethodexecution actionsinordertomaxim izeutility. Inthis
+work we use a design-to-time scheduler[12] that can take into account, the constra ints provided
+by the coordination module and provide schedules that maximize the global utility measur e. The
+coordination module modulates the local scheduler by noticing the task structures in t he belief
+database and doing a number of activities like gathering informationabout new task st ructures in
+theenvironment,communicatinginformationaboutlocalbeliefstootheragentsorre ceivinginfor-
+mation from them, and making or retracting commitments. A commitment repre sents a contract
+to achieve a particular quality by a speci®ed deadline. The coordination mechani sms are param-
+eterized independently so that each combination of the parameter settings lea ds to a coordination
+5
+T
+T1T2
+T21T22
+T212T213
+M212M213M22
+EnablesFacilitatesAND
+AND
+OROR
+Figure1: Example ofaTask Structure
+strategy. Differentmechanisms requiredifferenttypes of informationto ope rate. Thus, by choos-
+ingdifferentsets of coordinationmechanisms, theamountof communicationand othero verheads
+associated with coordination can be varied. The interface between the coordi nation mechanisms
+andthelocalscheduler isbidirectionalandnegotiation-based,permittingthe coordi nationmodule
+toaskªwhat-ifºquestions[11]. This is acrucialabilitywhose utilitybec omes obviouslater,when
+wedescribeourlearningalgorithminmoredetail.
+In GPGP, a coordination strategy can be derived by activating a subset of the c oordination
+mechanisms. Given that these mechanisms can be parameterized independentl y, there are large
+number of possible coordination strategies. Learning to choose the best strategy fr om amongst a
+large set can be quite cumbersome. We suggest two ways to prune this search space , leading to a
+moremanageable setofdistinct coordinationstrategies:/Use domain knowledge to prune down the set of possible coordination strategies to sma ll
+number of interesting distinct strategies. In the experiments to be described later, we will
+be dealingwiththe distributeddata processing domain. Inthisdomain,we inves tigatethree
+strategies:
+±balanced (or dynamic-scheduling): It is the same as previously described. Agents
+coordinate their actions by dynamically forming commitments. Relevant result s are
+generated by speci®c times and communicated to the agents to whom corresponding
+commitmentsaremade. Agentsscheduletheirlocaltaskstryingtomaximizet heaccrual
+ofqualitybasedonthecommitmentsmadetoitbytheotheragents,whileensuringtha t
+commitmentstootheragentsaresatis®ed. The agentshavetherelevantnon-loca lview
+ofthe coordinationproblem,detect coordinationrelationships,formcommitmentsand
+communicatethecommittedresults.
+±data-flow strategy: An agent communicates the result of performing a task to all
+theagentsandtheotheragentscanexploittheseresultsiftheystillcan. Thisr epresents
+6
+theotherextremewherethereareno commitmentsfromanyagent toany otherage nt.
+±roughcoordination: This is similar to balanced but commitments do not arise
+out of communication between agents but are known a priori. Each agent has an
+approximate idea of when the other agents complete their tasks and communicate
+resultsbasedonitspastexperience. The agentshavetherelevantnon-localview ofthe
+coordination problem, detect coordination relationships, but use rough commitments
+and communicate the committed results. ªRough commitmentsº are a form of tac it
+social contract between agents about the completion times of their tasks. It mi ght be
+possibleto viewroughcommitmentsas precompiledsociallaws [30]
+/1.
+The latter two coordination strategies are the alternatives normally use d in the distributed
+data processing domain[23]. Deckerand Lesser[6]proposed balanced as a sophisticated
+strategy that exploits a numberofmechanisms to achieve coordination. Inourexperim ents,
+agentslearntochooseamongthesethreecoordinationstrategiesinthedomainofdi stributed
+data processing. In this domain, three types of task groups arise: routine task groups,
+crisis task groups, and low priority task groups (see Section 5 for details). The latter two
+task groups arise only occasionally (i.e. with a probability) and hence it is unrea listic to
+expectcommitmentsoncrisistasksandlowprioritytasks tofollowsuchta citapriorirough
+commitments. So this coordination type uses rough commitments for routine tasks but
+behaves justlikedata¯owforthe non-routinecrisisand lowprioritytasks./Cluster theentireset ofpossiblestrategies ontheperformancespace andchoose aprototyp-
+icalinstancefromeachcluster. Theagentperformancecanbecharacteriz edalonganumber
+of dimensions like total quality, number of methods executed, number of communications,
+and termination time. Decker and Lesser[6] explore the performance space of t he coordi-
+nation strategies based on these four performance measures and identify ®ve pr ototypical
+coordinationstrategies:
+±balanced withallmechanismsfordetectingsoftandhardcoordinationinterrelation-
+ships and forming commitments on them turned on. Only relevant partial views are
+exchangedbetweenagentsfordetectingtheseinterrelationshipsandresultstha tsatisfy
+commitmentsare exchanged.
+±simple withnohardorsoftcoordinationmechanisms orexchange ofrelevantpartial
+non-localviews. Allresultsobtainedduetotaskexecutionsarebroadcasttoal lagents.
+±myopic withallcommitmentmechanisms onbutno non-localview.
+±toughwithnosoftcoordinationbutotherwise sameas balanced
+±mutewith no hard or soft coordination mechanisms and no non-local-views and no
+communicationwhatsoever.
+These ®ve coordinations strategies will be used in our experiments later on some synthetic
+domains./1Roughcommitments couldalso belearned bytheagents.
+7
+4 COLLAGE:LearningCoordination
+4.1 LearningCoordination
+Our learning algorithm, called COLLAGE, uses abstract meta-level inf ormation about coordi-
+nation problem instances to learn to choose, for the given problem instance, the appr opriate
+coordination strategy from the three strategies described previously. Learni ng in COLLAGE
+(COordination Learner for mu LtipleAGEnt systems) falls into the category of Instance-Based
+Learning algorithms[2] originally proposed for supervised classi®cation lea rning. We, however,
+use the IBL-paradigm for unsupervised learning of decision-theoretic choice. We woul d like to
+note that we could as well have used some other method like neural nets or decision tr ees. Our
+interestinthisworkisnotin studyingthecomparativeperformancesofvariousa lgorithms.
+Learning involves running the multi-agent system on a large number of training coordina tion
+problem instances and observing the performance of different coordination strategie s on these
+instances. When anewtask grouparises intheenvironment,each oftheagentshas itsownpartial
+localview ofthe task group. Based onits local view,each agent formsa localsituation vector. A
+local situation represents an agent's assessment of the utility of reacti ng to various characteristics
+oftheenvironment. Suchanassessment canpotentiallyindicatetheneedforac tivatingthevarious
+GPGPmechanismsandconsequentlyhas adirectbearingonthetypeofcoordinationstra tegythat
+is best for the given coordination episode. The agents then exchange their local situat ion vectors
+and each of the agents composes all the local situation vectors into a global situa tion vector. All
+agentsagreeonachoiceofthecoordinationstrategyandthechoicedependsonthekindoflea rning
+modeoftheagents:
+Mode1:Inthismode,theagentsrunalltheavailablecoordinationstrategiesandnotethe irrelative
+performances for the each of the coordination problem instances. Thus, for example, a gents
+run each of data-flow ,rough, andbalanced for a coordination episode and store their
+performancesforeachstrategy.
+Mode2:Inthismode,theagentschooseoneofthecoordinationstrategiesforagivencoordination
+episode and observe and store the performance only for that coordination strategy. The y choose
+thecoordinationthatisrepresentedtheleastnumberoftimesintheneighborhoodofasm allradius
+around the present global situation. This is done to obtain a balanced representation f or all the
+coordinationstrategies across thespace ofpossible globalsituations.
+Mode2isaquasi-onlinealgorithm. Intheinitialstagesitjustexploresandinthe laterstagesit
+justexploitsthelearnedinformation. StudyingCOLLAGEinasetupthatismoret ypicalofonline
+learning algorithms, where exploration and exploitation are interleaved, is hi gh on our agenda of
+futurework.
+At end of each run of the coordination episode with a particular coordination strate gy, the
+performanceof the system is registered. This is represented as a vector of pe rformancemeasures
+suchastotalquality,numberofcommunications,andterminationtime
+/2. Learninginvolvessimply
+adding the new instance formed by the performance of the coordination strategy along wi th the
+associatedproblemsolvingsituationtotheªinstance-baseº. Thus,thetraini ngphasebuildsasetof/2Inthe workpresented here, thecost ofschedulingis ignored and thetime forschedulingis considerednegligible
+comparedtotheexecutiontimeofthemethods. Ourworkcould easilybe generalizedtotakeintoaccount theseother
+forms of coordinationoverhead likethe number of calls to th e scheduler and totalnumber of methods executed. We
+viewthisas oneofourfuturedirectionsofresearch.
+8
+f situation/; coor dination str ateg y /; per f or mance gtripletsforeachoftheagents. Heretheglobal
+situation vector is the abstraction of the global problem solving state associat ed with the choice
+of a coordination-strategy. Note that at the beginning of a problem solving episode, all age nts
+communicate their local problem solving situations to other agents. Thus, each agent aggregates
+thelocal problemsolving situations to forma commonglobalsituation. All agents form identical
+instance-bases because theybuildthesame globalsituationvectors throughcomm unication.
+4.1.1 Forming aLocalSituationVector
+Thesituationvectorisanabstractionofthecoordinationproblemandtheeffect softhecoordination
+mechanismsinGPGP.Itis composedofsix components:/The ®rstcomponentrepresentsanapproximationoftheeffectofdetectingsoftcoordi nation
+relationships on the qualitycomponentof the overall performance. An agent create s virtual
+taskstructuresfromthelocallyavailabletaskstructuresbylettinge achofthefacilitatescoor-
+dinationrelationshipspotentiallyaffectingalocaltasktoactuallytake effectwithmaximum
+strength and calls the scheduler on these task structures. In order to achiev e this, the agent
+detects all the facilitates interrelationshipsthat affect its tasks . An agent can be expected to
+knowtheinterrelationshipsaffectingitstasksthoughitmaynotknowtheexacttas ksinother
+agents thataffectitwithoutcommunicatingwiththem. The agent thenproducesanothe rset
+of virtual task structures, but this time with the assumption that the facil itates relationships
+arenotdetectedandhencethetasks thatcanpotentiallybeaffectedbythemar enotaffected
+inthesetaskstructures. Theschedulerisagaincalledwiththistasks tructure. The®rstcom-
+ponent, representing the effect of detecting facilitates is obtained as the r atio of the quality
+produced by the schedule without facilitates relationships and the quality produced by t he
+schedule with facilitates relationships. Note that that this ratio is only an approximation of
+the actualeffectsofthefacilitatesinterrelationships. Inactualprobl emsolvingprocess,itis
+highlyunlikelythatallfacilitatesinterrelationshipswithbeexploitedwi ththeirfullstrength./The second component represents an approximation of the effect of detecting soft coordi -
+nation relationships on the duration component of the overall performance. It is form ed
+usingthesametechniquesdiscussedaboveforqualitybutusingthedurationofthesche dules
+formedwiththevirtualtaskstructures./Thethirdcomponentrepresentsanapproximationoftheeffectofdetectinghardcoordi nation
+interrelationships on the quality the local task structures at an agent. They a re obtained in
+a manner similar to that described for facilitates inter-relationship. The third component is
+obtained as the ratio of the quality produced by the schedule without enables relationshi ps
+and thequalityproducedbytheschedule withenables relationships./The fourthcomponentrepresentsanapproximationoftheeffectofdetecting hardcoordi na-
+tion relationships on the durationcomponent of the overall performance. It is forme d using
+methods similar to that discussed above for quality but using the duration of the sc hedules
+formedwiththevirtualtaskstructures./The®fthcomponentrepresentsthetimepressureontheagent. Inadesign-to-times cheduler,
+increasedtimepressureonanagentwillleadtoschedulesthatwillstil ladheretothedeadline
+9
+requirements as far as possible but with a sacri®ce in quality. Under time pressure, lower
+quality, lower duration methods are preferred over higher quality, higher durati on methods
+for achieving a particular task. In order to get an estimate of the time press ure, an agent
+generates virtualtask structures fromits local task structures by sett ing the deadlines of the
+task groups, tasks and methods to /1(a large number) and scheduling these virtual task
+structures. The agents schedule again with local task structures set to the actual deadline.
+Time pressure is obtained as the ratio of the schedule quality with the actual de adlines and
+the schedule qualitywithlarge deadlines./Thesixthcomponentrepresentstheload. Itisformedusingmethodssimilartothat discussed
+above for time pressure but using the durationof the schedules formed with the virt ualtask
+structures. The time taken by the schedule when it has no time pressure (deadline is /1)
+represents the amountofworkthe agentwouldhave done underidealconditions. However,
+time pressure makes theagent workalmost rightupto the deadline. It may notworka ll the
+waytothedeadlineasitmaynot®ndamethodthatcanbe®ttedintothelastava ilablechunk
+of time. Thus, load is obtained as the ratio of execution time under actual deadli ne and the
+execution timeundernotimepressure.
+4.1.2 Forming aGlobalSituationVector
+Each agent communicates its local situation vector to all other agents. An a gent composes all the
+localsituation vectors: its ownand those it received fromothers to form a globalsituation vector.
+A number of composition functions are possible. The one we used in the experiments reporte d
+here is simple: component-wise average of the local situation vectors. Thus the global situation
+vectorhassixcomponentswhereeachcomponentistheaverageofthecorrespondingcomponent s
+ofthe localsituationvectors.
+Anexampleglobalsituationvectorlooksasfollows: (0.82 0.77 0.66 0.89 1.0 0.87) .
+Here the low value of the thirdcomponent represents large qualitygains by detecti ng and coordi-
+natingonhardinterrelationships. Thustwoofthemoresophisticatedcoordinations trategiescalled
+balanced andtough[6] are found to be better performersin this situation. On the other hand,
+in a global situation vector such as (0.80 0.90 0.88 0.80 0.61 0.69) the low values
+of®fth and sixth components indicate high time pressure and load in the present proble m solving
+episode. Even if the agents use sophisticated strategies to coordinate, they m ay not have the time
+to bene®t from it. Hence, relatively simple coordination strategies like simple ormute[6] do
+betterin thisscenario.
+Note, however,that in most situation vectors, these trade-offsare subtl e and not as obvious as
+the above examples. It is dif®cult for a human to look at the situations and easil y predict which
+strategyisthebestperformer. Thetrade-offsmaybeveryspeci®ctotheki ndsoftaskstructuresthat
+occurinthedomain. Hence,hand-codingthestrategies byadesigneris notapractical alternative.
+Oncetheentireinstance-baseisformed,eachofthefeaturesforeachinsta nceisnormalizedby
+therangeof maximumand minimumforthat featurewithinthe entireinstance-base . This is done
+inordertoavoid biasingthesimilaritymetricin favorofanyparticula rfeature.
+10
+4.2 ChoosingaCoordinationStrategy
+COLLAGEchoosesacoordinationstrategybased onhowthesetofavailablestra tegiesperformed
+in similar past cases. We adopt the notation from Gilboa and Schmeidler[13]
+/3. Each case cis
+tripleth p/; a/; r i /2 CiCi
+/ P / A / R
+where p /2 Pand Pis the set of situations representing abstract characterization of coordinat ion
+problems, a /2 Aand Aisthesetofcoordinationchoicesavailable, r /2 Rand Risthesetofresults
+fromrunningthe coordinationstrategies.
+Decisions about coordinationstrategy choice are madebased onsimilar past cas es. Outcomes
+decide the desirability of the strategies. We de®ne a similarity function a nd a utility functions as
+follows:s /: P
+/2/! /[/0 /; /1/]u /: R /! /<
+Intheexperimentspresentedlater,weuse the Euclideanmetricforsimil arity.
+The desirability of a coordination strategy is determined by a similarity-w eighted sum of the
+utility it yielded in the similar past cases in a small neighborhood around the pre sent situation
+vector. Weobservedthatsuchanaveragingprocessinaneighborhoodaroundthepresent situation
+vector was more robust than taking the nearest neighbor, possibly because the avera ging process
+was less sensitive to noise. Let Mbe the set of past similar cases to problem pnew
+/2 P(greater
+thanathresholdsimilarity).m /2 M /, s /( pnew
+/; m /) / sthr eshold
+For a /2 A,let Ma
+/ f m /= h p/; //; r i /2 M j / /= a g. The utilityof ais de®nedasU/(
+pnew
+/; a /) /=
+/1j Ma
+j
+Xh q /;a/;r i/2 Ma
+s /( pnew
+/; q /) u /( r /)
+5 Experiments
+5.1 Experimentsinthe DDP domain
+Ourearlierworkon learningcoordination[24]reliedon a weak taskenvironment generatorwhere
+the task structures were generated randomly. The experimenter was limite d to setting certain
+numerical parameters like mean of the task structure depth or mean and vari ance of the number/3Gilboaand Schmeidler[13] describe case-based decisionth eory as a normative theoryofhuman behaviorduring
+decisionmaking. Eventhough,weadopttheirnotation,ther earecrucialdifferencesinthemotivationsandstructureo f
+thetwoworks. GilboaandSchmeidlerareprimaryconcernedw ithadescriptivetheoryofhumandecisionmakingwhile
+ourwork,developed independently,isconcerned primarily withbuildingcomputationalsystems based oncase-based
+decisiontheory.
+11
+of interrelationships in task structures. This often gives rise to a wide r ange of task structures
+and a huge variance in the types of capabilities needed by the system to effectiv ely handle them.
+Accordingly, the learning algorithms showed at best modest gains in performance[ 24]. More
+importantly,it is unlikely that most real applications involve an in®nite va riety of task structures.
+The domain semantics dictate and limit morphology of the task structures. While there is bound
+to be some randomness in these structures, it is highly unlikely that the only regular ity that can
+be modeled in the task structure representations of a coordination problem instance are a few
+parameterslikeitsmeandepthorbranchingfactor. NagendraPrasadet al.[ 23]developedagraph-
+grammar-basedstochastictaskstructuredescriptionlanguageandgeneration toolformodelingtask
+structuresarising in a domain. Such a graph-grammar-basedtask structure s peci®cation language
+ispowerfulenoughtomodelthetopologicalrelationshipsoccurringintaskstructure srepresenting
+manyreallifeapplications. Fortheexperimentsbelow,weusethistooltomode ladistributeddata
+processingdomainasin[23]. Wenowbrie¯yintroducethisdomainandrefertheint erestedreader
+to[23]forfurtherdetails.
+The distributed data processing domain consists of a number of geographicallydispers ed data
+processing centers (agents). Each center is responsible for conducting certai n types of analysis
+tasks on streams of satellite data arrivingat its site: ªroutine analysi sº that needs to be performed
+on data coming in at regular intervals during the day, ªcrisis analysisº that ne eds to be performed
+on the incoming data but with a certain probability and ªlow priority analysisº , the need for
+which arises at the beginningof the day with a certainprobability. Low priorit yanalysis involves
+performing specialized analysis on speci®c archival data. Different type s of analysis tasks have
+different priorities. A center should ®rst attend to the ªcrisis analysis tasksº and then perform
+ªroutinetasksº on the data. Time permitting,it can handle the low-priorityta sks. The processing
+centers have limited resources to conduct their analysis on the incoming data and they have to do
+thiswithincertaindeadlines. Results ofprocessing dataata centermayne ed tobecommunicated
+to other centers due to the interrelationships between the tasks at these cente rs. In [23], we give
+details of how a stochastic graph-grammar can model task structures arising in a domain such
+as this. In the same work, we also present the results of empirical explorati ons of the effects of
+varyingdeadlinesandcrisistaskgrouparrivalprobability. Basedontheexper iments,wenotedthe
+need for different coordination strategies in different situations to achiev e good performance. In
+this section, we intend to demonstrate the power of COLLAGE in choosing the most a ppropriate
+coordinationstrategyina givensituation.
+Weperformedtwosetsofexperimentsvaryingtheprobabilityofthecenterssee ingcrisistasks.
+In the ®rst set of experiments, the crisis task group arrivalprobabilitywa s 0.25 and in the second
+set it was 1.0. For both sets of experiments, low priority tasks arrived wit h a probability of 0.5
+and the routine tasks were always seen at the time of new arrivals. A day consi sted of a time
+slice of 140 time units and hence the deadline for the task structures was ®xed at 140 time units.
+In the experiments described here, utility is the primary performance meas ure. Each message an
+agent communicates to another agent penalizes the overall utility by a factor c alled comm cost.
+However, achieving a better non-local view can potentially lead to higher quali ty that adds to the
+system-wideutility. Thus, util ity /= q ual ity /? total communication / comm cost. Thesystem
+consisted of three agents (or data processing centers) and they had to learn to choose the best
+coordinationstrategyfromamong balanced ,rough,anddata-flow .
+12
+5.1.1 Results
+Fortheexperimentswherecrisistaskgrouparrivalprobabilitywas0.25,COLL AGEwastrainedon
+4500instancesin Mode1and on10000instances inMode 2. Forthecase wherecrisis task group
+arrival probability was 1.0, it was trained on 2500 instances in Mode 1 and on 12500 inst ances
+in Mode 2. In our experiments, the size of the case-base for Mode 1 learning was dete rmined by
+plotting the performance of the learner, averaged over 500 instances randomly gene rated by the
+grammar,forvarioussizes oftheinstance-base,andatcommunicationcostof0. The learningwas
+stopped when the performanceimprovement tapered off. Mode 2, was trained till it achieved the
+performanceofMode1learner,atcommunicationcostof0. Figure2showstheavera gequalityover
+100runs fordifferentcoordinationstrategiesatvariouscommunicationcosts. The curves forboth
+Mode1andMode2learningalgorithmslieabovethoseforalltheothercoordinationstr ategiesfor
+the most part in both experiments. We performeda Wilcoxon matched-pairsigned ra nks analysis
+to test for signi®cant differences(at signi®cance level 0.05) between ave rage performances of the
+strategiesacrosscommunicationscostsupto1.0(asopposedtopairwisetests ateachcommunication
+cost). This testrevealed signi®cantdifferencesbetweenthe learninga lgorithms(bothMode1 and
+ModeII)andtheotherthreecoordinationstrategiesindicatingthatwecanasse rtwithahighdegree
+ofcon®dencethattheperformanceofthelearningalgorithmsacrossvariouscommunica tioncostsis
+betterthanstaticallyusinganyoneofthefamilyofcoordinationstrategies
+/4. Asthecommunication
+costs go up, the mean performance of the coordination strategies go down. For crisis task group
+arrivalprobabilityof0.25,the balanced coordinationstrategyperformsbetterthan thelearning
+algorithmsat very high communicationcosts because, learning algorithmsuse addi tional units of
+communicationto form the global situation vectors. At very high communication c osts, even the
+threeadditionalmeta-levelmessages forlocalsituationcommunication(one foreachagent)ledto
+large penalties on utility of system. At communication cost of 1.0, Mode 1 learner and Mode 2
+learneraverageat77.72and79.98respectively,whereas,choosing balanced alwaysproducesan
+average performanceof 80.48. Similarbehavior was exhibited at very high communica tion costs
+whenthe crisis task grouparrivalprobabilitywas1.0. Figures3 gives thenumber of coordination
+strategies of each type chosen in the 100 test runs for Mode 1 learning when crisis task group
+probabilitywas1.0
+/5.
+5.2 ExperimentswithSyntheticdomains
+In order to test COLLAGE on interesting scenarios with a range of characte ristics, we created a
+numberofªsyntheticdomaintheoriesºusinggraphgrammarformalisms[23]. Asynthe ticgrammar
+representsa domaintheorythatis notgroundedinany reallifeapplication. Wete sted COLLAGE
+on three different synthetic environments generated by their corresponding grammar s. In these
+experiments, there were four agents in the system and each agent has only a partia l view of a
+new task group in the environment. Upon seeing a task group, a COLLAGE agent forms a l ocal
+situation vector and communicates it to other agents to enable them to get a more global view of
+the problem solving process. Each agent forms a global situation vector (the same f or all agents)
+andindexes intoitsinstancebaseofpastexperiencetochooseagoodcoordinationstra tegyforthe/4Testingacross communicationcostsisjusti®edbecause inr eality,thecost mayvary duringthecourse oftheday./5This ®gure shows distributions at communication costs 1.0, 2.0, and 3.0 that are not shown in Figure 2. We
+avoidedthisinFigure2 because, includingitwouldcongest thedisplayatcommunicationcostsbetween 0-1.0.
+13
+a) Crisis TG 0.25b) Crisis TG 1.02636465666768696106
+0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1Average Utility
+Communication CostCollage M1
+Collage M2
+dataflow
+balanced
+rough
+150160170180190200210220230240
+0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1Average Utility
+Communication Cost
+Figure2: Average Qualityversus CommunicationCost
+60
+50
+40
+30
+20
+10
+0
+0102030405060
+ROUGH
+BALANCED
+DATAFLOW0
+0.05
+0.1
+0.25
+0.5
+0.75
+1
+2
+3
+Figure3: Strategies chosen by COLLAGE M1 forCrisis TG Probability1.0 at v arious communi-
+cationcosts
+14
+present situation from among balanced ,mute,myopic,simple, andtoughcoordination
+strategies.
+5.2.1 Grammar 1 &Grammar 2
+ForthedomainrepresentedbyG1,COLLAGEwastrainedon2500instancesinMode1a nd18000
+instances in Mode 2. Figure 4a shows the average quality over the same 100 runs for dif ferent
+coordination strategies at various communication costs. The curves for both Mode 1 and Mode
+2 learning algorithms lie above those for all the other coordination strategies. We performed a
+Wilcoxon matched-pair signed ranks analysis to test for signi®cant differences (at signi®cance
+level0.05)betweenaverageperformancesofthestrategies acrosscommunica tionscosts. Thistest
+revealed signi®cant differences between the learning algorithms (both Mode 1 and Mode 2) and
+theother®vecoordinationstrategies,indicatingthatwecanassertwitha highdegreeofcon®dence
+thatthe performanceofthe learning algorithmsacross various communicationcost s is better than
+statically using any one of the family of coordination strategies. As with t he DDP domain, when
+the communication costs go up, the mean performance of the learning algorithms goes dow n. At
+somehighvalueofcommunicationcost,theperformanceofthelearningalgorithmfal lsbelowthat
+ofmutebecause learning agents use four units of communication to publish their local situat ion
+vectors. The cost of communicating these local situation vectors can overw helm the bene®ts
+derived from a better choice of the coordination strategy. When the communication cost was as
+highas0.25,theperformancesofMode1andMode2learnerswere12.495and12.88respectiv ely.
+Ontheotherhand mutecoordinationgavea meanperformanceof13.55.
+678910111213141516
+0 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08Average Utility
+Communication CostCollage M1
+Collage M2
+modular
+mute
+simple
+tough
+myopic
+3456789101112
+0 0.01 0.02 0.03 0.04 0.05 0.06 0.07 0.08Average Utility
+Communication Cost
+a)  Grammar 1 b)  Grammar 2
+Figure4: Average Qualityversus CommunicationCost
+Grammar2issimilartoGrammar1instructurebutthedistributionofqua lityanddurationofthe
+leafmethodsisdifferentfromthoseinGrammar1. Figure4bshowstheaveragequa lityfordifferent
+coordinationstrategies atvariouscommunicationcosts. Theperformancebehavior ofthelearning
+algorithmsissimilarasinthecaseofGrammar1. ForCOLLAGEMode2,theav erageperformance
+infactfallsbelowthat of muteat communicationcost 0.075. When the communicationcost was
+15
+as high
+/6as 0.25, the performance of COLLAGE Mode 1 was at 10.762 which is still higher than
+muteat 10.17. However, COLLAGE Mode 2 fell to 7.735. A closer examination of Figure 5
+and Figure 6, that give the number of coordination strategies of each type chosen in the 100 test
+runsbyCOLLAGEinMode1andMode2,revealedthereasonsforthis. Ascommunicati oncosts
+increase, mutebecomes the overwhelming favorite but even at as high communication costs as
+0.08,thereare stillproblemswhere muteisnotthebest choice. COLLAGE Mode 1chose mute
+most of the instances (74%) except a few where muteis not a good coordination strategy. This
+led to a better performancethat compensated forthe increased communication cost. On the other
+hand,COLLAGEMode2chosemoreoftheothercommunicationintensivecoordinationstra tegies
+(39%) leading to poorerperformances. We believe that more trainingin the Mode 2 may be able
+to rectify this situation. Note that we stopped the training of Mode 2, when its per formance was
+aroundthatofMode1learneratcommunicationcost0. Thedivergencebetweentheirpe rformances
+occurredat non-zerocommunicationcosts,andhence wasnot detectedduringlearni ng.
+90
+80
+70
+60
+50
+40
+30
+20
+10
+0
+0102030405060708090
+MUTE
+BALANCED
+MYOPIC
+TOUGH
+SIMPLE0
+0.001
+0.0015
+0.0025
+0.005
+0.01
+0.015
+0.025
+0.05
+0.075
+0.25
+Figure5: CoordinationStrategieschosen byCOLLAGE M1 forG2
+5.2.2 WhennottoLearn
+Synthetic grammar ªG3º is an interesting case study. We trained COLLAGE on the G3 domain
+in both Mode 1 and Mode 2 and tested them on 100 runs for different coordination strategie s at
+variouscommunicationcosts. Wefoundthat toughcoordinationstrategyperformsslightlybetter
+than COLLAGE (see Figure 7). Upon closer examination of the problem instances, i t was noted
+thattoughwas the best performerin 81% of the instances and other coordination strategies did
+better in the rest of the 19%. COLLAGE learns to choose the right coordination stra tegy in all
+the 100 instances. However, the agents require additional units of communication of m eta-level
+informationtoformtheglobalsituationvectoranddecidethat toughisthestrategyofchoice(in
+most cases). The lesson we learn from this grammar is that, if there is a n overwhelming favorite
+forbestperformanceinthefamilyofstrategies,thenitmaynotpaytouseCO LLAGEtodetermine/6Theseenvironmentsareentirelydifferentfromthoseforth epreviousexperiments. Whatisaªhighºcommunication
+costobviouslydepends ontheenvironments.
+16
+70
+60
+50
+40
+30
+20
+10
+0
+010203040506070
+MUTE
+SIMPLE
+MYOPIC
+BALANCED
+TOUGH0
+0.001
+0.0025
+0.005
+0.01
+0.015
+0.025
+0.05
+0.075
+0.25
+Figure6: CoordinationStrategieschosen byCOLLAGE M2 forG2
+the best performer through additional situation communication. Sticking to the favor ite without
+awareness of the nonlocal situation may yield as good a performance. However, i f the few cases
+that warrant the choice of another strategy give far superior performance, then t he gains from
+choosing a strategy can more than compensate for the additional communication. This, however,
+wasnotthecase inenvironmentsproducedbygrammarG3.
+-14-4616263646
+0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1Average Quality
+Communication Costibl-offline
+ibl-online
+mute
+balanced
+myopic
+simple
+tough
+Figure7: Average Qualityversus CommunicationCost forGrammarG3
+5.3 Discussion
+COLLAGEchooses anappropriatecoordinationstrategybyprojectingdecisionsfrom pastsimilar
+experienceintothenewlyperceivedsituation. COLLAGEagentsperformedbet terthanthoseusing
+a single coordination strategy across all the 100 instances in all domains we exper imented with,
+except G3. In these domains, the cost incurred by additional communication for detect ing global
+situation is offset by the bene®ts of choosing a coordination strategy based on globall y grounded
+17
+learned knowledge. Domain G3, however, is distinguished by the fact that there i s little variance
+in the choice of the best coordination strategy and it was almost always tough. This highlights
+thefactthat learningis especially bene®cialinmoredynamicenvironments.
+6 Conclusion
+Many researchers have shown that no single coordination mechanism is good for all situations.
+However, there is little in the literature that deals with how to dynami cally choose a coordination
+strategybasedontheproblemsolvingsituation. Inthispaper,wepresentedtheCO LLAGEsystem,
+thatusesmeta-levelinformationintheformofabstractcharacterizat ionofthecoordinationproblem
+instance to learnto choose the appropriatecoordinationstrategy fromamonga cla ss of strategies.
+In the ®rst phase of coordination, agents exchange local situations that are abstract ions of the
+their views of the problem instances and form a global situation. They use this global si tuation
+to guide their learning and the subsequent exploitation of the learned coordination knowle dge.
+Our experiments provide strong empirical evidence of the bene®ts of learning situat ion-speci®c
+coordination.
+However, the scope situation-speci®c learning goes beyond learning coordination. The ideas
+presentedherearerelevanttothemoregeneralproblemoflearning cooperativecontrol inamulti-
+agent system. Effective cooperation in a multi-agent system requires that t he global problem-
+solving state in¯uence the local control decisions made by an agent. We call such an in¯uence
+cooperative control[20]. Coordination strategies are a form of cooperative contr ol. An agent
+with a purely local view of the problem solving state cannot learn to make effect ive problem
+solvingcontroldecisionsaboutcoordinationbecausethesedecisionmayhaveglobalimpli cations.
+Wethusadvocate theneedforlearning globally-situated localcooperativecontrolknowledge. An
+agentassociatesappropriateaspectsoftheglobalproblemsolvingstatewiththec ooperativecontrol
+knowledgethatitlearns. Incooperativesystems,anagentcanªaskºotheragent sforanyinformation
+thatitdeems relevantto appropriatelysituate itslocal controlknowledge. H owever,as mentioned
+previously,an agent cannot utilize the entire global problemsolving state even if ot her agents are
+willingtocommunicateallthenecessaryinformationbecauseofthelimita tionsonitscomputational
+resources,representationalheterogeneity
+/7and phenomenon likedistraction[19]
+/8. This leads us to
+theimportanceofcommunicatingonlyrelevantinformationatsuitableabstract ionstootheragents.
+We call such meta-level information a situation. An agent thus needs to associate appropriate
+viewsoftheglobalsituationwiththeknowledgelearnedabouteffectivecontroldec isions. Wecall
+this form of knowledge situation-speci®c control . We have looked at the relevance of the theory
+of situation-speci®c learning in the context of learning other forms of problem solving control in
+cooperativemulti-agentsystems[25,26].
+Moreover, COLLAGE demonstrates the utility and viability of learning coordi nation in com-
+plex,realisticmulti-agentsystems. The domainsinthis workare realist icand coordinationstrate-/7Representationalheterogeneityimpliesthattheagentsma ybeusingincompatiblerepresentationsoftheirdomain
+and control knowledge, eliminatingthe possibilityof one a gent knowing about the problem solvingstate of another
+agentatverydeeplevelofdetail. Forexample,arule-based agentcannotunderstandtheworkingsofacase-basedagent
+evenifthatagentprovidedallthedetailsaboutitsinterna lstate(similaritymetricused,mostsimilarcaseretrieve dand
+adaptedetc.)./8The phenomenon of distraction arises when incorrect or irre levant information provided by another agent with
+weakconstraintknowledgecouldleadthereceivingagentto explorealongunproductivedirections[19].
+18
+gies are complex. Some of the work in multi-agent robotic systems[22] also deals w ith realistic
+andcomplexsystemsbutthatworkisprimarilyconcernedwithhomogeneousagents. T heworkin
+this paperdeals with heterogeneous agents. They need to speak a common language tothe extent
+ofbeingabletounderstand TáMSrepresentations. They canorganizetheirlocalcomputationsand
+schedulinginany mannerthey desire.
+The work here is exciting to us as much for the kinds of questions and challenges it uncove rs
+as it is for the results obtained so far. Some of the important questions that it ra ises are ªWhat is
+a suitable levelof abstractionfor a situationand how can one determineit?º , ªHowspeci®c is the
+instancebase toa particulardomainand howmuchofitcanbe transferedacros s domains?º.
+OneimportantconcernaboutCOLLAGEisitsscalability. Asthenumberofcoordinat ionalter-
+natives become large in number, the learning phase could become computationallyver y intensive
+and the instance-base size could increase enormously with respect to Mode 2. We are looking at
+how to integrate methods for progressively re®ning situation vectors such as t hose in [34], ways
+to organize the instance-base to access and detect regions where there is insuf ®cient learning and
+alsoways todo moredirectedexperimentationduringlearningratherthan random lysampling the
+problemspace.
+In COLLAGE, all the agents form identical instance-bases. We could as wel l have done with
+onedesignated agent formingthe instance-base and choosingthe coordinationstrategy. However,
+our con®gurationwas set up with a more general scheme in mind. Instead of all agent s choosing
+the same coordination strategy, they can choose in a pairwise or a group-wise manne r so that a
+subset of the agents coordinate to choose the same strategy. This will lead to dif ferentcase-bases
+at different agents and an agent may have more than one case-base if it is a part of more than
+one group. This leads us to another scalability issue: the number of agents. If there ar e a large
+numberofagents,thencommonsituationvectorsmayloseªtoomanyºdetailsaboutt hesituations.
+Pairwiseorgroup-wisecoordinationmaybeabetteroption. However,wehave tode alwithissues
+such as inconsistent and con¯icting knowledge among the case-bases, formation of a ppropriate
+groups,anddifferentamountsoflearningfordifferentgroups.
+References
+[1] R. Sutton A. Barto and C. Watkins. Learning and sequential decision making. I n M. Gariel
+andJ.W.Moore,editors, LearningandComputationalNeuroscience ,Cambridge,MA,1990.
+MITPress.
+[2] D. W. Aha, D. Kibler, and M. K. Albert. Instance-based learning algorit hms.Machine
+Learning,6:37±66,1991.
+[3] RobertH.CritesandAndrewG.Barto. Improvingelevatorperformanceusing reinforcement
+learning. In Advances in Neural Information Processing Systems 8 , MIT Press, Cambridge,
+MA,1996.
+[4] Keith S. Decker. Environment Centered Analysis and Design of Coordination Mechanisms .
+PhDthesis,UniversityofMassachusetts, 1995.
+19
+[5] KeithS.DeckerandVictorR. Lesser. Quantitativemodelingofcomplex c omputationaltask
+environments. In ProceedingsoftheEleventhNationalConference onArti®cialIntelligence ,
+pages 217±224,Washington,July1993.
+[6] Keith S. Decker and Victor R. Lesser. Designing a family of coordination a lgorithms. In
+ProceedingsoftheFirstInternationalConference onMulti-AgentSystems ,pages73±80,San
+Francisco,CA, June1995.AAAI Press.
+[7] E. Durfee and V.Lesser. Predictabilityvs. responsiveness: Coordinati ngproblem solvers in
+dynamic domains. In Proceedings of the Seventh National Conference on Arti®cial Intelli-
+gence,pages 66±71,St.Paul,Minnesota,August 1988.
+[8] MarkS.Fox. Anorganizationalviewofdistributedsystems. IEEE Transactions onSystems,
+Man,andCybernetics , 11(1):70±80,January 1981.
+[9] J.Galbraith. OrganizationalDesign . Addison-Wesley,Reading,MA,1977.
+[10] A.GarlandandR.Alterman.Multi-agentlearningthroughcollectivemem ory.InProceedings
+ofthe1996AAAISpringSymposiumonAdaptation,Co-evolutionandLearninginMultiagent
+Systems,Stanford,CA,1996.
+[11] Alan Garvey, Keith Decker, and Victor Lesser. A negotiation-based int erface between a
+real-time scheduler and a decision-maker. CS Technical Report 94±08, Universit y of Mas-
+sachusetts, 1994.
+[12] Alan Garveyand VictorLesser. Design-to-timereal-timescheduli ng.IEEE Transactions on
+Systems,Man andCybernetics , 23(6):1491±1502,1993.
+[13] ItzhakGilboaand DavidSchmeidler. Case-based Decision Theory. TheQuaterly Journal of
+Economics ,pages 605±639,August 1995.
+[14] John J. Grefenstette. The Evolution of Strategies for multi-agent environm ents.Adaptive
+Behavior,1(1):65±89,1992.
+[15] Thomas Haynes and Sandip Sen. Learning cases to resolve con¯icts and improv e group
+behavior. Submitted,1996.
+[16] J. H. Holland. Adaptation in Natural and Arti®cial Systems . University of Michigan Press,
+AnnArbor,Michigan,1975.
+[17] J. H. Holland. Properties of bucket brigade algorithm. In First International Conference on
+GeneticAlgorithms andtheir Applications ,pages1±7,Pittsburgh,PA,1985.
+[18] Paul Lawrence and Jay Lorsch. Organization and Environment . Harvard University Press,
+Cambridge,MA,1967.
+[19] V.R.Lesser and L.D.Erman. Distributedinterpretation: Amodelanda nexperiment. IEEE
+Transactions onComputers ,C-29(12):1144±1163,December1980.
+20
+[20] VictorR.Lesser.AretrospectiveviewofFA/Cdistributedproblemsol ving.IEEETransactions
+onSystems, Man,andCybernetics , 21(6):1347±1362,1991.
+[21] Thomas Malone and Kevin Crowston. Toward an interdisciplinary theory of coordi nation.
+Center for Coordination Science Technical Report 120, MIT Sloan School of Management,
+1991.
+[22] M. J. Mataric. Learning to behave socially. In Proceedings of the Third International
+Conference onSimulationofAdaptiveBehavior (SAB-94) ,1994.
+[23] M. V. Nagendra Prasad, Keith S. Decker, Alan Garvey, and Victor R. Le sser. Exploring
+Organizational Designs with TAEMS: A Case Study of Distributed Data Proc essing. In
+Proceedings of the Second International Conference on Multi-Agent Systems , Kyoto, Japan,
+December1996.AAAIPress.
+[24] M.V.NagendraPrasadandV.R.Lesser. LearningSituation-Speci®cCoor dinationinGener-
+alizedPartialGlobalPlanning.In 1996AAAISpringSymposiumonAdaptation,Co-evolution
+andLearninginMulti-agentSystems , Stanford,CA,1996.AAAI Press.
+[25] M. V. Nagendra Prasad, V. R. Lesser, and S. E. Lander. Cooperative lear ning over com-
+posite search spaces: Experiences with a multi-agentdesign system. In Thirteenth National
+ConferenceonArti®cialIntelligence(AAAI-96) ,Portland,Oregon,August1996.AAAIPress.
+[26] M. V. Nagendra Prasad, V. R. Lesser, and S. E. Lander. Learning organizat ional roles in a
+heterogeneous multi-agent system. In Proceedings of the Second International Conference
+onMulti-AgentSystems ,Kyoto,Japan,December1996.AAAI Press.
+[27] J. S. Rosenschein and G. Zlotkin. Designing conventions for automated negotition. AI
+Magazine ,pages 29±46,Fall1994.
+[28] T. Sandholm and R. Crites. Multi-agent reinforcement learning in the repea ted prisoner's
+dilemma. toappearinBiosystems, 1995.
+[29] Sandip Sen, M. Sekaran, and J. Hale. Learning to coordinate without sharing inf ormation.
+InProceedings oftheTwelfthNationalConference onArti®cialIntelligence ,pages 426±431,
+Seattle,WA,July 1994.AAAI.
+[30] Y. Shoham and M. Tennenholtz. On the synthesis of useful social laws for arti®ci al agent
+societies (preliminaryreport). In Proceedings of the Tenth NationalConference onArti®cial
+Intelligence ,pages 276±281,SanJose,July 1992.
+[31] S.S.Sian. Extendinglearningtomultipleagents: issuesandamodelformulti -agentmachine
+learning. In Proceedings ofMachine Learning -EWSL 91 ,pages 440±456,Springer-Verlag,
+1991.
+[32] B.Silver,W.Frawely,G.Iba,J.Vittal,andK.Bradford. Aframe workformulti-paradigmatic
+learning.In ProceedingsoftheSeventhInternationalConferenceonMachineLearning ,pages
+348±358,1990.
+21
+[33] Arthur L. Stinchcombe. Information and Organizations . University of California Press,
+Berkeley,CA,1990.
+[34] T. Sugawaraand V.R. Lesser. On-linelearningof coordinationplans. In Proceedings of the
+TwelfthInternationalWorkshop on DistributedAI ,HiddenValley,Pa,May 1993.
+[35] R. Sutton. Learning to predict by the methods of temporal differences. Machine Learning ,
+3:9±44,1988.
+[36] M. Tan. Multi-agent reinforcement learning: Independent vs. cooperative agents. InPro-
+ceedings oftheTenth InternationalConference onMachine Learning ,pages 330±337,1993.
+[37] G.Weiss. Somestudiesindistributedmachinelearningandorganizational design. Technical
+ReportFKI-189-94,Institutf / urInformatik,TU M / unchen,1994.
+22
